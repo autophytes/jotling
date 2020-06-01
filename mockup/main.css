@@ -1,0 +1,59 @@
+html,
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+@font-face {
+	font-family: 'PT Serif';
+	src: url('../src/assets/fonts/PT_Serif/');
+}
+
+body {
+	font-size: 18px;
+	font-family: 'PT Serif', 'Georgia', serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	background-color: #fafafa;
+	color: #111;
+	margin: 0;
+}
+
+.editor-area {
+	padding: 2rem 2rem 0 2rem;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: stretch;
+	align-items: center;
+}
+
+.editor {
+	height: 100%;
+	max-width: 60rem;
+	/* background-color: #eee; */
+	padding-bottom: 8rem;
+	flex-grow: 1;
+}
+
+.editor:focus {
+	outline: none;
+}
+
+.chapter-title {
+	text-align: center;
+	margin: 4rem 0 5rem 0;
+	font-size: 3rem;
+	flex-grow: 0;
+}
+
+.top-nav {
+	height: 3rem;
+	z-index: 3;
+	background-color: #ddd;
+}
+
+.left-nav {
+	position: ;
+}
