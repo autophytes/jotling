@@ -5,6 +5,12 @@ html,
 	box-sizing: border-box;
 }
 
+:root {
+	--top-nav-height: 2.5rem;
+	--left-nav-width: 10rem;
+	--right-nav-width: 10rem;
+}
+
 @font-face {
 	font-family: 'PT Serif';
 	src: url('../src/assets/fonts/PT_Serif/');
@@ -21,19 +27,22 @@ body {
 }
 
 .editor-area {
-	padding: 2rem 2rem 0 2rem;
+	/* padding: 0 2rem 0 2rem; */
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
 	justify-content: stretch;
 	align-items: center;
+	padding-top: var(--top-nav-height);
+	padding-left: calc(var(--left-nav-width) + 2rem);
+	padding-right: calc(var(--right-nav-width) + 2rem);
 }
 
 .editor {
 	height: 100%;
 	max-width: 60rem;
 	/* background-color: #eee; */
-	padding-bottom: 8rem;
+	padding: 2rem 0 8rem 0;
 	flex-grow: 1;
 }
 
@@ -49,11 +58,30 @@ body {
 }
 
 .top-nav {
-	height: 3rem;
+	height: var(--top-nav-height);
+	position: fixed;
+	left: 0;
+	right: 0;
 	z-index: 3;
-	background-color: #ddd;
+	background-color: #eecccc;
 }
 
 .left-nav {
-	position: ;
+	width: var(--right-nav-width);
+	position: fixed;
+	top: var(--top-nav-height);
+	bottom: 0;
+	left: 0;
+
+	background-color: #cceecc;
+}
+
+.right-nav {
+	width: var(--right-nav-width);
+	position: fixed;
+	top: var(--top-nav-height);
+	bottom: 0;
+	right: 0;
+
+	background-color: #ccccee;
 }
