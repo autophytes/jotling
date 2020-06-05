@@ -9,6 +9,7 @@ html,
 	--top-nav-height: 2.5rem;
 	--left-nav-width: 10rem;
 	--right-nav-width: 10rem;
+	--color-primary: #0095ff;
 }
 
 @font-face {
@@ -21,6 +22,7 @@ body {
 	font-family: 'PT Serif', 'Georgia', serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
 	background-color: #fafafa;
 	color: #111;
 	margin: 0;
@@ -34,15 +36,15 @@ body {
 	justify-content: stretch;
 	align-items: center;
 	padding-top: var(--top-nav-height);
-	padding-left: calc(var(--left-nav-width) + 2rem);
-	padding-right: calc(var(--right-nav-width) + 2rem);
+	padding-left: var(--left-nav-width);
+	padding-right: var(--right-nav-width);
 }
 
 .editor {
 	height: 100%;
-	max-width: 60rem;
+	max-width: 64rem;
 	/* background-color: #eee; */
-	padding: 2rem 0 8rem 0;
+	padding: 2rem 2rem 8rem 2rem;
 	flex-grow: 1;
 }
 
@@ -64,6 +66,20 @@ body {
 	right: 0;
 	z-index: 3;
 	background-color: #eecccc;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.editor-nav {
+	height: var(--top-nav-height);
+	width: 100%;
+	background-color: #ddccee;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: center;
 }
 
 .left-nav {
@@ -72,8 +88,56 @@ body {
 	top: var(--top-nav-height);
 	bottom: 0;
 	left: 0;
-
 	background-color: #cceecc;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: stretch;
+}
+
+.left-nav-top-buttons,
+.right-nav-top-buttons {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-top: 0.2rem;
+	margin-bottom: 0.5rem;
+}
+
+.left-nav-sections,
+.right-nav-sections {
+	display: flex;
+	flex-direction: row;
+	justify-content: stretch;
+	align-items: center;
+	width: 100%;
+}
+
+.left-nav-sections > div,
+.right-nav-sections > div {
+	flex-grow: 1;
+	border: 1px solid black;
+	border-top-left-radius: 0.5rem;
+	border-top-right-radius: 0.5rem;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	padding: 0.1rem 0;
+}
+
+.left-nav-content,
+.right-nav-content {
+	height: 100%;
+}
+
+p.file-nav {
+	margin: 0;
+}
+
+.file-nav .folder-contents {
+	margin-left: 0.5rem;
 }
 
 .right-nav {
@@ -82,6 +146,9 @@ body {
 	top: var(--top-nav-height);
 	bottom: 0;
 	right: 0;
-
 	background-color: #ccccee;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: stretch;
 }
