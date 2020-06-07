@@ -8,100 +8,195 @@
 	</head>
 	<body>
 		<nav class="top-nav">
-			<p>Full Screen</p>
-			<p>Cork Board</p>
-			<p>Expanding Outline</p>
-			<p>Stats</p>
-			<p>Doc Settings</p>
-			<p>User Settings</p>
-			<p>Typewriter Mode</p>
-			<p>Tag View</p>
-			<p>Editor Settings</p>
+			<button class="nav-button with-text">
+				<img src="icons/scale.svg" />
+				<span class="nav-button-text">Full Screen</span>
+			</button>
+			<button class="nav-button with-text">
+				<img src="icons/table-grid.svg" />
+				<span class="nav-button-text">Card View</span>
+			</button>
+			<button class="nav-button with-text">
+				<img src="icons/right-alignment.svg" />
+				<span class="nav-button-text">Outline Mode</span>
+			</button>
+			<button class="nav-button with-text">
+				<img src="icons/calendar.svg" />
+				<span class="nav-button-text">Statistics</span>
+			</button>
+			<button class="nav-button with-text">
+				<img src="icons/settings.svg" />
+				<span class="nav-button-text">Project Settings</span>
+			</button>
+			<button class="nav-button with-text">
+				<img src="icons/user-settings.svg" />
+				<span class="nav-button-text">User Settings</span>
+			</button>
+			<button class="nav-button with-text">
+				<img src="icons/typewriter.svg" />
+				<span class="nav-button-text">Typewriter Mode</span>
+			</button>
+			<button class="nav-button with-text">
+				<img src="icons/tags.svg" />
+				<span class="nav-button-text">Tag View</span>
+			</button>
+			<!-- 
+        Full Screen
+        Card View (cork board)
+        Outline Mode
+        Statistics
+        Document Settings
+        User Settings
+        Typewriter Mode
+        Tag View
+       -->
 		</nav>
-		<nav class="left-nav">
-			<div class="left-nav-top-buttons">
-				<button>+ v</button>
-				<button>pin</button>
-			</div>
-			<div class="left-nav-sections">
-				<div>Pge</div>
-				<div>Rch</div>
-				<div>Dft</div>
-			</div>
-			<div class="left-nav-content">
-				<div class="file-nav folder">
-					<p class="file-nav folder title">Chapter 1</p>
-					<div class="folder-contents">
-						<p class="file-nav document">Sub 1</p>
-						<div class="file-nav folder">
-							<p class="file-nav folder title">Sub 2</p>
-							<div class="folder-contents">
-								<p class="file-nav document">Sub sub 1</p>
-								<p class="file-nav document">Sub sub 2</p>
-								<p class="file-nav document">Sub sub 3</p>
+		<nav class="side-nav left-nav">
+			<div class="side-nav-container">
+				<div class="left-nav-top-buttons">
+					<button class="nav-button add-file-button">
+						<img src="icons/add.svg" />
+						<img src="icons/expand-button.svg" style="width: 0.6rem; margin-left: 0.25rem;" />
+					</button>
+					<button class="nav-button">
+						<img src="icons/pushpin.svg" />
+					</button>
+				</div>
+				<div class="left-nav-sections">
+					<div class="nav-section-tab first active"><img src="icons/pages.svg" /></div>
+					<div class="nav-section-tab"><img src="icons/lamp.svg" /></div>
+					<div class="nav-section-tab last"><img src="icons/book (2).svg" /></div>
+				</div>
+				<div class="left-nav-content">
+					<div class="file-nav folder">
+						<p class="file-nav folder title">Chapter 1</p>
+						<div class="folder-contents">
+							<p class="file-nav document">Sub 1</p>
+							<div class="file-nav folder">
+								<p class="file-nav folder title">Sub 2</p>
+								<div class="folder-contents">
+									<p class="file-nav document">Sub sub 1</p>
+									<p class="file-nav document">Sub sub 2</p>
+									<p class="file-nav document">Sub sub 3</p>
+								</div>
 							</div>
 						</div>
 					</div>
+					<p class="file-nav document">Chapter 2</p>
+					<p class="file-nav document">Chapter 3</p>
+					<p class="file-nav document">Chapter 4</p>
+					<p class="file-nav document">Chapter 5</p>
 				</div>
-				<p class="file-nav document">Chapter 2</p>
-				<p class="file-nav document">Chapter 3</p>
-				<p class="file-nav document">Chapter 4</p>
-				<p class="file-nav document">Chapter 5</p>
+				<div class="left-nav-footer">
+					<p>497 words</p>
+					<p>49% today's goal</p>
+				</div>
 			</div>
-			<div class="left-nav-footer">
-				<p>497 words</p>
-				<p>49% today's goal</p>
-			</div>
+			<div class="vertical-rule" style="margin-left: 0.5rem;"></div>
 		</nav>
-		<nav class="right-nav">
-			<div class="right-nav-top-buttons">
-				<button>pin</button>
-			</div>
-			<div class="right-nav-sections">
-				<div>Doc</div>
-				<div>Kwd</div>
-				<div>Set</div>
-			</div>
-			<div class="right-nav-content">
-				<p class="file-nav folder">Chapter 1</p>
-				<p class="file-nav document">Sub 1</p>
-				<p class="file-nav folder">Sub 2</p>
-				<p class="file-nav document">Sub sub 1</p>
-				<p class="file-nav document">Sub sub 2</p>
-				<p class="file-nav document">Sub sub 3</p>
-				<p class="file-nav document">Chapter 2</p>
-				<p class="file-nav document">Chapter 3</p>
-				<p class="file-nav document">Chapter 4</p>
-				<p class="file-nav document">Chapter 5</p>
-			</div>
-			<div class="right-nav-footer">
-				<div>current version</div>
+		<nav class="side-nav right-nav">
+			<div class="vertical-rule" style="margin-right: 0.5rem;"></div>
+			<div class="side-nav-container">
+				<div class="right-nav-top-buttons">
+					<button class="nav-button">
+						<img src="icons/pushpin.svg" />
+					</button>
+				</div>
+				<div class="right-nav-sections">
+					<div class="nav-section-tab first active"><img src="icons/guide-book.svg" /></div>
+					<div class="nav-section-tab"><img src="icons/price-tag.svg" /></div>
+					<div class="nav-section-tab last"><img src="icons/document-settings.svg" /></div>
+				</div>
+				<div class="right-nav-content">
+					<p class="file-nav folder">Chapter 1</p>
+					<p class="file-nav document">Sub 1</p>
+					<p class="file-nav folder">Sub 2</p>
+					<p class="file-nav document">Sub sub 1</p>
+					<p class="file-nav document">Sub sub 2</p>
+					<p class="file-nav document">Sub sub 3</p>
+					<p class="file-nav document">Chapter 2</p>
+					<p class="file-nav document">Chapter 3</p>
+					<p class="file-nav document">Chapter 4</p>
+					<p class="file-nav document">Chapter 5</p>
+				</div>
+				<div class="right-nav-footer">
+					<div>current version</div>
+				</div>
 			</div>
 		</nav>
 
 		<main class="editor-area">
 			<nav class="editor-nav">
-				<button>pin</button>
+				<button class="nav-button">
+					<img src="icons/pushpin.svg" />
+				</button>
 				<!-- Should most of these be document-wide rather than selection specific? -->
-				<p>Font</p>
-				<p>Font Size</p>
-				<p>Font ^</p>
-				<p>Font v</p>
-				<p>Bold</p>
-				<p>Italic</p>
-				<p>Underline</p>
-				<p>Strikethrough(?)</p>
-				<p>Subscript</p>
-				<p>Superscript</p>
-				<p>Highlight</p>
-				<p>Text Color</p>
-				<p>Page Color</p>
-				<p>Bullet/List</p>
-				<p>Left Align</p>
-				<p>Center Align</p>
-				<p>Right Align</p>
-				<p>Justify</p>
-				<p>Line Spacing</p>
+				<select>
+					<option value="Calibri">Calibri</option>
+					<option value="PT Sans">PT Sans</option>
+					<option value="Open Sans">Open Sans</option>
+					<option value="temporary">Note: use systems</option>
+				</select>
+				<select>
+					<option value="12">12</option>
+					<option value="14">14</option>
+					<option value="16">16</option>
+					<option value="18">18</option>
+				</select>
+				<button class="nav-button">
+					<img src="icons/034-format-size.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/006-text-1.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/048-bold.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/041-italic.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/030-underline.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/007-strikethrough-1.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/subscript.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/superscript.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/063-edit.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/044-format.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/046-fill.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/039-list.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/038-list-1.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/050-left-align.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/052-align-center.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/049-right-align.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/051-justify.svg" />
+				</button>
+				<button class="nav-button">
+					<img src="icons/040-spacing.svg" />
+				</button>
 			</nav>
 			<div class="editor" contenteditable>
 				<h1 class="chapter-title" contenteditable="false">Chapter 1</h1>
