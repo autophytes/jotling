@@ -12,8 +12,6 @@ const App = () => (
 		<NavLeft />
 		<NavRight />
 		<Editor />
-
-		<p>Let's start builasdfding your awesome desktop app with electron and React! Test</p>
 	</>
 );
 

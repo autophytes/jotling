@@ -1,5 +1,10 @@
 import React from 'react';
 
+import PushpinSVG from '../../../assets/svg/PushpinSVG';
+import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
+import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
+import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
+
 const NavRight = () => {
 	return (
 		<nav className='side-nav right-nav'>
@@ -7,18 +12,22 @@ const NavRight = () => {
 			<div className='side-nav-container'>
 				<div className='right-nav-top-buttons'>
 					<button className='nav-button'>
-						<img src='icons/pushpin.svg' />
+						{/* <img src='icons/pushpin.svg' /> */}
+						<PushpinSVG />
 					</button>
 				</div>
 				<div className='right-nav-sections'>
 					<div className='nav-section-tab first active'>
-						<img src='icons/guide-book.svg' />
+						{/* <img src='icons/guide-book.svg' /> */}
+						<DocumentInfoSVG />
 					</div>
 					<div className='nav-section-tab'>
-						<img src='icons/price-tag.svg' />
+						{/* <img src='icons/price-tag.svg' /> */}
+						<TagSingleSVG />
 					</div>
 					<div className='nav-section-tab last'>
-						<img src='icons/document-settings.svg' />
+						{/* <img src='icons/document-settings.svg' /> */}
+						<SettingsDocSVG />
 					</div>
 				</div>
 				<div className='right-nav-content'>

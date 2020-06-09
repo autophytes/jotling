@@ -37,6 +37,10 @@ button {
 	font-weight: inherit;
 }
 
+svg {
+	fill: #444;
+}
+
 body {
 	/* font-family: 'PT Serif', 'Georgia', serif; */
 	font-family: 'Source Sans Pro', 'Trebuchet MS', sans-serif;
@@ -70,6 +74,8 @@ body {
 	padding: 2rem 2rem 8rem 2rem;
 	flex-grow: 1;
 	font-family: 'PT Serif', 'Georgia', serif;
+	font-size: 22px;
+	line-height: 1.5em;
 }
 
 .editor:focus {
@@ -207,13 +213,14 @@ body {
 	border-top: 3px solid var(--color-primary);
 	border-bottom: none;
 }
-
-.nav-section-tab.first {
-	border-left: 2px solid #bbb;
-}
-
 .nav-section-tab.last {
 	border-right: none;
+}
+.nav-section-tab.first {
+	border-left: none;
+}
+.nav-section-tab.first.active {
+	border-left: 2px solid #bbb;
 }
 .nav-section-tab.last.active {
 	border-right: 2px solid #bbb;
@@ -237,8 +244,15 @@ p.file-nav {
 	margin-left: 0.5rem;
 }
 
-.nav-button > img {
+.nav-button > img,
+.nav-button > svg,
+.nav-section-tab > svg {
 	width: 1rem;
+	fill: #555;
+}
+
+.nav-section-tab.active > svg {
+	fill: var(--color-primary);
 }
 
 .nav-button.with-text {
@@ -251,8 +265,9 @@ p.file-nav {
 	padding: 0.25rem;
 }
 
-.nav-button.with-text > img {
+.nav-button.with-text > svg {
 	width: 1rem;
+	fill: #eee;
 }
 
 .nav-button-text {

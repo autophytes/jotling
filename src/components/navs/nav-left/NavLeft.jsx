@@ -1,4 +1,10 @@
 import React from 'react';
+import PushpinSVG from '../../../assets/svg/PushpinSVG';
+import PlusSVG from '../../../assets/svg/PlusSVG';
+import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
+import DocumentPagesSVG from '../../../assets/svg/DocumentPagesSVG';
+import LightbulbSVG from '../../../assets/svg/LightbulbSVG';
+import BookDraftSVG from '../../../assets/svg/BookDraftSVG';
 
 const NavLeft = () => {
 	return (
@@ -6,25 +12,29 @@ const NavLeft = () => {
 			<div className='side-nav-container'>
 				<div className='left-nav-top-buttons'>
 					<button className='nav-button add-file-button'>
-						<img src='icons/add.svg' />
-						<img
-							src='icons/expand-button.svg'
-							style={{ width: '0.6rem', marginLeft: '0.25rem' }}
-						/>
+						{/* <img src='icons/add.svg' /> */}
+						<PlusSVG />
+						<span style={{ width: '0.6rem', marginLeft: '0.25rem' }}>
+							<CaratDownSVG />
+						</span>
 					</button>
 					<button className='nav-button'>
-						<img src='icons/pushpin.svg' />
+						{/* <img src='icons/pushpin.svg' /> */}
+						<PushpinSVG />
 					</button>
 				</div>
 				<div className='left-nav-sections'>
-					<div className='nav-section-tab first active'>
-						<img src='icons/pages.svg' />
+					<div className='nav-section-tab first'>
+						{/* <img src='icons/pages.svg' /> */}
+						<DocumentPagesSVG />
 					</div>
 					<div className='nav-section-tab'>
-						<img src='icons/lamp.svg' />
+						{/* <img src='icons/lamp.svg' /> */}
+						<LightbulbSVG />
 					</div>
-					<div className='nav-section-tab last'>
-						<img src='icons/book (2).svg' />
+					<div className='nav-section-tab last active'>
+						{/* <img src='icons/book (2).svg' /> */}
+						<BookDraftSVG />
 					</div>
 				</div>
 				<div className='left-nav-content'>

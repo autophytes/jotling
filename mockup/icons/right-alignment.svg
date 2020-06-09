@@ -5,14 +5,14 @@
 <g>
 	<g id="list_x5F_nested">
 		<g>
-			<circle  fill="#fafafa"  cx="2" cy="4" r="2"/>
-			<rect x="8" y="2"  fill="#fafafa"  width="24" height="4"/>
-			<circle  fill="#fafafa"  cx="10" cy="12" r="2"/>
-			<rect x="16" y="10"  fill="#fafafa"  width="16" height="4"/>
-			<circle  fill="#fafafa"  cx="10" cy="28" r="2"/>
-			<rect x="16" y="26"  fill="#fafafa"  width="16" height="4"/>
-			<circle  fill="#fafafa"  cx="18" cy="20" r="2"/>
-			<rect x="24" y="18"  fill="#fafafa"  width="8" height="4"/>
+			<circle  fill="#111"  cx="2" cy="4" r="2"/>
+			<rect x="8" y="2"  fill="#111"  width="24" height="4"/>
+			<circle  fill="#111"  cx="10" cy="12" r="2"/>
+			<rect x="16" y="10"  fill="#111"  width="16" height="4"/>
+			<circle  fill="#111"  cx="10" cy="28" r="2"/>
+			<rect x="16" y="26"  fill="#111"  width="16" height="4"/>
+			<circle  fill="#111"  cx="18" cy="20" r="2"/>
+			<rect x="24" y="18"  fill="#111"  width="8" height="4"/>
 		</g>
 	</g>
 </g>
