@@ -1,13 +1,31 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import NavEditor from '../navs/nav-editor/NavEditor';
+import { Editor, EditorState } from 'draft-js';
 
-const Editor = () => {
+const EditorContainer = () => {
+	const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
+	const editorRef = useRef(null);
+
+	// Focuses the editor on click
+	const handleEditorWrapperClick = useCallback((e) => {
+		// If clicking inside the editor area but outside the
+		//   actual draft-js editor, refocuses on the editor.
+		if (e.target.className === 'editor') {
+			editorRef.current.focus();
+			console.log(
+				'Refocused on editor. Should only fire when clicking outside the editor component but inside the editor div.'
+			);
+		}
+	});
+
 	return (
 		<main className='editor-area'>
 			<NavEditor />
 
-			<div className='editor' contentEditable>
-				<h1 className='chapter-title' contentEditable='false'>
+			<div className='editor' onClick={handleEditorWrapperClick}>
+				{/* <button onClick={() => editorRef.current.focus()}>Focus</button> */}
+				<Editor editorState={editorState} onChange={setEditorState} ref={editorRef} />
+				{/* <h1 className='chapter-title' contentEditable='false'>
 					Chapter 1
 				</h1>
 				<p>
@@ -58,10 +76,10 @@ const Editor = () => {
 					in conversation with two men, a dark-skinned Azish man who had an odd patch of pale
 					skin on his cheek and a thinner, Alethi-looking man who kept glancing over his
 					shoulder.
-				</p>
+				</p> */}
 			</div>
 		</main>
 	);
 };
 
-export default Editor;
+export default EditorContainer;

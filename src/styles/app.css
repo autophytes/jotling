@@ -24,9 +24,10 @@ html,
 	font-family: 'Lato';
 	src: url('/../../static/fonts/Lato/Lato-Regular.ttf') format('truetype');
 }
+/* NOTE: font's not working right now. Source Sans Pro is loading from Mac locally. */
 @font-face {
 	font-family: 'Source Sans Pro';
-	src: url('/../../static/fonts/Source_Sans_Pro/');
+	src: url('/../../static/fonts/Source_Sans_Pro/') format('truetype');
 }
 
 button {
@@ -69,9 +70,10 @@ body {
 .editor {
 	height: 100%;
 	width: 100%;
-	max-width: 64rem;
+	max-width: 54rem;
 	/* background-color: #eee; */
-	padding: 2rem 2rem 8rem 2rem;
+	padding: 10rem 2rem 8rem 2rem;
+	margin-top: 2rem;
 	flex-grow: 1;
 	font-family: 'PT Serif', 'Georgia', serif;
 	font-size: 22px;

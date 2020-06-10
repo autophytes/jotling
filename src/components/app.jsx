@@ -3,7 +3,7 @@ import React from 'react';
 import NavTop from './navs/nav-top/NavTop';
 import NavLeft from './navs/nav-left/NavLeft';
 import NavRight from './navs/nav-right/NavRight';
-import Editor from './editor/Editor';
+import EditorContainer from './editor/EditorContainer';
 
 // Create main App component
 const App = () => (
@@ -11,7 +11,7 @@ const App = () => (
 		<NavTop />
 		<NavLeft />
 		<NavRight />
-		<Editor />
+		<EditorContainer />
 	</>
 );
 

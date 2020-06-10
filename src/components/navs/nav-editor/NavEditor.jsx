@@ -19,6 +19,7 @@ import AlignCenterSVG from '../../../assets/svg/editor/AlignCenterSVG';
 import AlignRightSVG from '../../../assets/svg/editor/AlignRightSVG';
 import AlignJustifySVG from '../../../assets/svg/editor/AlignJustifySVG';
 import LineSpacingSVG from '../../../assets/svg/editor/LineSpacingSVG';
+import SpellcheckSVG from '../../../assets/svg/editor/SpellcheckSVG';
 
 const NavEditor = () => {
 	return (
@@ -111,6 +112,10 @@ const NavEditor = () => {
 			<button className='nav-button'>
 				{/* <img src='icons/040-spacing.svg' /> */}
 				<LineSpacingSVG />
+			</button>
+			<button className='nav-button'>
+				{/* <img src='icons/040-spacing.svg' /> */}
+				<SpellcheckSVG />
 			</button>
 		</nav>
 	);

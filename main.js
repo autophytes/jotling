@@ -21,6 +21,18 @@ if (process.env.NODE_ENV !== undefined && process.env.NODE_ENV === 'development'
 	dev = true;
 }
 
+// Adds a content security policy. To load external web content, this will need to be updated.
+// https://www.electronjs.org/docs/tutorial/security#:~:text=A%20Content%20Security%20Policy%20(CSP,website%20you%20load%20inside%20Electron.
+//   Tried it, no success. Investigate later. Note, import session from electron.
+// session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+// 	callback({
+// 		responseHeaders: {
+// 			...details.responseHeaders,
+// 			'Content-Security-Policy': ["default-src 'none'"],
+// 		},
+// 	});
+// });
+
 // Temporary fix broken high-dpi scale factor on Windows (125% scaling)
 // info: https://github.com/electron/electron/issues/9691
 if (process.platform === 'win32') {
