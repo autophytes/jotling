@@ -1,10 +1,19 @@
 import React, { useState, useRef, useCallback } from 'react';
+import {
+	Editor,
+	EditorState,
+	RichUtils,
+	getDefaultKeyBinding,
+	KeyBindingUtil,
+} from 'draft-js';
+
 import NavEditor from '../navs/nav-editor/NavEditor';
-import { Editor, EditorState } from 'draft-js';
 
 const EditorContainer = () => {
 	const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
 	const editorRef = useRef(null);
+
+	const { hasCommandModifier } = KeyBindingUtil;
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback((e) => {
@@ -13,10 +22,62 @@ const EditorContainer = () => {
 		if (e.target.className === 'editor') {
 			editorRef.current.focus();
 			console.log(
-				'Refocused on editor. Should only fire when clicking outside the editor component but inside the editor div.'
+				'Refocused on editor. Should only fire when clicking outside' +
+					'the editor component but inside the editor div.'
 			);
 		}
 	});
+
+	// Handle shortcut keys. Using their default function right now.
+	const customKeyBindingFn = (e) => {
+		// Example custom key handling. ALways return the default if mine don't catch it.
+		if (e.keyCode === 83 /* `S` key */ && hasCommandModifier(e)) {
+			return 'myeditor-save'; // This is a custom command, which I would handle in "handleKeyCommand"
+		}
+		if (e.keyCode === 9 /* TAB */) {
+			// NOTE: this just handles indenting list items, not indenting paragraphs.
+			const newEditorState = RichUtils.onTab(e, editorState, 4);
+			if (newEditorState !== editorState) {
+				setEditorState(newEditorState);
+			}
+			return 'handled-in-binding-fn';
+		}
+		return getDefaultKeyBinding(e);
+	};
+
+	const handleKeyCommand = (command) => {
+		// First, handle commands that happen outside the editor (like saving)
+		if (command === 'myeditor-save') {
+			// Insert code to save the file
+			return 'handled'; // Lets Draft know I've taken care of this one.
+		}
+		if (command === 'handled-in-binding-fn') {
+			// For instance, I have to handle tab in the binding fn b/c it needs (e)
+			// Otherwise, the browser tries to do things with the commands.
+			return 'handled';
+		}
+
+		// If not custom handled, use the default handling
+		const newState = RichUtils.handleKeyCommand(editorState, command);
+		if (newState) {
+			setEditorState(newState);
+			console.log(command);
+			console.log('handled in handleKeyCommand');
+			return 'handled';
+		}
+
+		return 'not-handled'; // Lets Draft know to try to handle this itself.
+	};
+
+	// I'll use this and the one below in my NavEditor buttons
+	const toggleBlockType = (blockType) => {
+		setEditorState(RichUtils.toggleBlockType(editorState, blockType));
+	};
+
+	// I'll use this and the one above in my NavEditor buttons
+	const toggleInlineStyle = (inlineStyle) => {
+		setEditorState(RichUtils.toggleInlineStyle(editorState, inlineStyle));
+	};
 
 	return (
 		<main className='editor-area'>
@@ -24,7 +85,13 @@ const EditorContainer = () => {
 
 			<div className='editor' onClick={handleEditorWrapperClick}>
 				{/* <button onClick={() => editorRef.current.focus()}>Focus</button> */}
-				<Editor editorState={editorState} onChange={setEditorState} ref={editorRef} />
+				<Editor
+					editorState={editorState}
+					onChange={setEditorState}
+					ref={editorRef}
+					keyBindingFn={customKeyBindingFn}
+					handleKeyCommand={handleKeyCommand}
+				/>
 				{/* <h1 className='chapter-title' contentEditable='false'>
 					Chapter 1
 				</h1>
