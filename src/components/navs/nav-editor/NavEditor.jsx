@@ -168,7 +168,7 @@ const NavEditor = ({
 
 			<button
 				className='nav-button'
-				onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
+				onMouseDown={(e) => toggleBlockType(e, 'ordered-list-item')}>
 				<ListNumberSVG />
 			</button>
 

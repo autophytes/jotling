@@ -10,6 +10,7 @@ import {
 	RichUtils,
 	getDefaultKeyBinding,
 	KeyBindingUtil,
+	convertToRaw,
 } from 'draft-js';
 
 import NavEditor from '../navs/nav-editor/NavEditor';
@@ -45,6 +46,7 @@ const EditorContainer = () => {
 
 	// Applies classes to certain blocks
 	const blockStyleFn = (block) => {
+		// If the block data for a text-align property, add a class
 		const blockAlignment = block.getData() && block.getData().get('text-align');
 		if (blockAlignment) {
 			return `${blockAlignment}-aligned-block`;
@@ -73,11 +75,13 @@ const EditorContainer = () => {
 		}
 		if (e.keyCode === 9 /* TAB */) {
 			// NOTE: this just handles indenting list items, not indenting paragraphs.
-			const newEditorState = RichUtils.onTab(e, editorState, 4);
+			const newEditorState = RichUtils.onTab(e, editorState, 8);
 			if (newEditorState !== editorState) {
 				setEditorState(newEditorState);
+				console.log('set');
+				console.log(convertToRaw(editorState.getCurrentContent()));
 			}
-			return 'handled-in-binding-fn';
+			return 'custom';
 		}
 		return getDefaultKeyBinding(e);
 	};
