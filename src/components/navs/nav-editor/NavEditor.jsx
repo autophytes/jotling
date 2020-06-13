@@ -1,4 +1,5 @@
 import React from 'react';
+import { getSelectedBlocksMetadata } from 'draftjs-utils';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import IncreaseFontSizeSVG from '../../../assets/svg/editor/IncreaseFontSizeSVG';
@@ -21,7 +22,64 @@ import AlignJustifySVG from '../../../assets/svg/editor/AlignJustifySVG';
 import LineSpacingSVG from '../../../assets/svg/editor/LineSpacingSVG';
 import SpellcheckSVG from '../../../assets/svg/editor/SpellcheckSVG';
 
-const NavEditor = () => {
+import InlineStyleButton from './InlineStyleButton';
+
+const NavEditor = ({
+	editorState,
+	toggleBlockType,
+	toggleBlockStyle,
+	toggleInlineStyle,
+	toggleTextAlign,
+	spellCheck,
+	toggleSpellCheck,
+}) => {
+	// REQUIRES toggleInlineStyle & toggleBlockType
+
+	const currentStyles = editorState.getCurrentInlineStyle();
+	const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
+
+	const BLOCK_TYPES = [
+		{ label: 'H1', style: 'header-one' },
+		{ label: 'H2', style: 'header-two' },
+		{ label: 'H3', style: 'header-three' },
+		{ label: 'H4', style: 'header-four' },
+		{ label: 'H5', style: 'header-five' },
+		{ label: 'H6', style: 'header-six' },
+		{ label: 'Blockquote', style: 'blockquote' },
+		{ label: 'UL', style: 'unordered-list-item' },
+		{ label: 'OL', style: 'ordered-list-item' },
+		{ label: 'Code Block', style: 'code-block' },
+	];
+
+	// AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
+	// unstyled
+	// paragraph
+	// header-one
+	// header-two
+	// header-three
+	// header-four
+	// header-five
+	// header-six
+	// unordered-list-item
+	// ordered-list-item
+	// blockquote
+	// code-block
+	// atomic
+
+	// AVAILABLE STYLES BY DEFAULT - https://draftjs.org/docs/advanced-topics-inline-styles/#mapping-a-style-string-to-css
+	// BOLD
+	// ITALIC
+	// UNDERLINE
+	// CODE (monospace)
+	// STRIKETHROUGH (added in customStyleMap)
+
+	const INLINE_STYLES = [
+		{ label: 'Bold', style: 'BOLD' },
+		{ label: 'Italic', style: 'ITALIC' },
+		{ label: 'Underline', style: 'UNDERLINE' },
+		{ label: 'Monospace', style: 'CODE' },
+	];
+
 	return (
 		<nav className='editor-nav'>
 			<button className='nav-button'>
@@ -42,79 +100,117 @@ const NavEditor = () => {
 				<option value='18'>18</option>
 			</select>
 			<button className='nav-button'>
-				{/* <img src='icons/034-format-size.svg' /> */}
 				<IncreaseFontSizeSVG />
 			</button>
 			<button className='nav-button'>
-				{/* <img src='icons/006-text-1.svg' /> */}
 				<DecreaseFontSizeSVG />
 			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/048-bold.svg' /> */}
+
+			<InlineStyleButton
+				currentStyles={currentStyles}
+				toggleFn={toggleInlineStyle}
+				style='BOLD'>
 				<BoldSVG />
-			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/041-italic.svg' /> */}
+			</InlineStyleButton>
+
+			<InlineStyleButton
+				currentStyles={currentStyles}
+				toggleFn={toggleInlineStyle}
+				style='ITALIC'>
 				<ItalicSVG />
-			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/030-underline.svg' /> */}
+			</InlineStyleButton>
+
+			<InlineStyleButton
+				currentStyles={currentStyles}
+				toggleFn={toggleInlineStyle}
+				style='UNDERLINE'>
 				<UnderlineSVG />
-			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/007-strikethrough-1.svg' /> */}
+			</InlineStyleButton>
+
+			<InlineStyleButton
+				currentStyles={currentStyles}
+				toggleFn={toggleInlineStyle}
+				style='STRIKETHROUGH'>
 				<StrikethroughSVG />
-			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/subscript.svg' /> */}
+			</InlineStyleButton>
+
+			<InlineStyleButton
+				currentStyles={currentStyles}
+				toggleFn={toggleInlineStyle}
+				style='SUBSCRIPT'
+				removeStyle='SUPERSCRIPT'>
 				<SubscriptSVG />
-			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/superscript.svg' /> */}
+			</InlineStyleButton>
+
+			<InlineStyleButton
+				currentStyles={currentStyles}
+				toggleFn={toggleInlineStyle}
+				style='SUPERSCRIPT'
+				removeStyle='SUBSCRIPT'>
 				<SuperscriptSVG />
-			</button>
+			</InlineStyleButton>
+
 			<button className='nav-button'>
-				{/* <img src='icons/063-edit.svg' /> */}
 				<HighlightSVG />
 			</button>
 			<button className='nav-button'>
-				{/* <img src='icons/044-format.svg' /> */}
 				<TextColorSVG />
 			</button>
 			<button className='nav-button'>
-				{/* <img src='icons/046-fill.svg' /> */}
 				<FillColorSVG />
 			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/039-list.svg' /> */}
+
+			<button
+				className='nav-button'
+				onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
 				<ListBulletSVG />
 			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/038-list-1.svg' /> */}
+
+			<button
+				className='nav-button'
+				onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
 				<ListNumberSVG />
 			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/050-left-align.svg' /> */}
+
+			<button
+				className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
+				onMouseDown={(e) => {
+					toggleTextAlign(e, 'left', currentAlignment);
+				}}>
 				<AlignLeftSVG />
 			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/052-align-center.svg' /> */}
+
+			<button
+				className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
+				onMouseDown={(e) => {
+					toggleTextAlign(e, 'center', currentAlignment);
+				}}>
 				<AlignCenterSVG />
 			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/049-right-align.svg' /> */}
+
+			<button
+				className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
+				onMouseDown={(e) => {
+					toggleTextAlign(e, 'right', currentAlignment);
+				}}>
 				<AlignRightSVG />
 			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/051-justify.svg' /> */}
+
+			<button
+				className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
+				onMouseDown={(e) => {
+					toggleTextAlign(e, 'justify', currentAlignment);
+				}}>
 				<AlignJustifySVG />
 			</button>
+
 			<button className='nav-button'>
-				{/* <img src='icons/040-spacing.svg' /> */}
 				<LineSpacingSVG />
 			</button>
-			<button className='nav-button'>
-				{/* <img src='icons/040-spacing.svg' /> */}
+
+			<button
+				className={'nav-button' + (spellCheck ? ' active' : '')}
+				onMouseDown={(e) => toggleSpellCheck(e)}>
 				<SpellcheckSVG />
 			</button>
 		</nav>

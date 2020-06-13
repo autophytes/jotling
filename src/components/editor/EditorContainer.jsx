@@ -1,7 +1,12 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { setBlockData } from 'draftjs-utils';
+
+import Immutable from 'immutable';
+
 import {
 	Editor,
 	EditorState,
+	SelectionState,
 	RichUtils,
 	getDefaultKeyBinding,
 	KeyBindingUtil,
@@ -11,9 +16,41 @@ import NavEditor from '../navs/nav-editor/NavEditor';
 
 const EditorContainer = () => {
 	const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
+	const [styleToRemove, setStyleToRemove] = useState('');
+	const [spellCheck, setSpellCheck] = useState(false);
 	const editorRef = useRef(null);
 
 	const { hasCommandModifier } = KeyBindingUtil;
+
+	// I can add custom inline styles. { Keyword: CSS property }
+	const customStyleMap = {
+		STRIKETHROUGH: {
+			textDecoration: 'line-through',
+		},
+		SUBSCRIPT: {
+			// LINE HEIGHT ISSUES. FIX LATER.
+			verticalAlign: 'sub',
+			fontSize: '60%',
+		},
+		SUPERSCRIPT: {
+			// LINE HEIGHT ISSUES. FIX LATER.
+			verticalAlign: 'super',
+			fontSize: '60%',
+		},
+		'RIGHT-ALIGN': {
+			textAlign: 'right',
+			display: 'inline-block',
+		},
+	};
+
+	// Applies classes to certain blocks
+	const blockStyleFn = (block) => {
+		const blockAlignment = block.getData() && block.getData().get('text-align');
+		if (blockAlignment) {
+			return `${blockAlignment}-aligned-block`;
+		}
+		return '';
+	};
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback((e) => {
@@ -21,10 +58,10 @@ const EditorContainer = () => {
 		//   actual draft-js editor, refocuses on the editor.
 		if (e.target.className === 'editor') {
 			editorRef.current.focus();
-			console.log(
-				'Refocused on editor. Should only fire when clicking outside' +
-					'the editor component but inside the editor div.'
-			);
+			// console.log(
+			// 	'Refocused on editor. Should only fire when clicking outside' +
+			// 		'the editor component but inside the editor div.'
+			// );
 		}
 	});
 
@@ -70,18 +107,87 @@ const EditorContainer = () => {
 	};
 
 	// I'll use this and the one below in my NavEditor buttons
-	const toggleBlockType = (blockType) => {
+	const toggleBlockType = (e, blockType) => {
+		e.preventDefault();
 		setEditorState(RichUtils.toggleBlockType(editorState, blockType));
+		// editorRef.current.focus();
 	};
 
 	// I'll use this and the one above in my NavEditor buttons
-	const toggleInlineStyle = (inlineStyle) => {
+	const toggleInlineStyle = (e, inlineStyle, removeStyle) => {
+		!!e && e.preventDefault();
 		setEditorState(RichUtils.toggleInlineStyle(editorState, inlineStyle));
+
+		// If there's a style being toggled off, queue it up for removal
+		!!removeStyle && setStyleToRemove(removeStyle);
 	};
+
+	// Toggle spellcheck. If turning it off, have to rerender the editor to remove the lines.
+	const toggleSpellCheck = (e) => {
+		e.preventDefault();
+		if (spellCheck) {
+			setSpellCheck(false);
+			editorRef.current.forceUpdate();
+		} else {
+			setSpellCheck(true);
+		}
+	};
+
+	const toggleBlockStyle = (e, blockStyle) => {
+		e.preventDefault();
+
+		// Gets the starting and ending cursor locations (keys)
+		const anchorKey = editorState.getSelection().getAnchorKey();
+		const focusKey = editorState.getSelection().getFocusKey();
+
+		// Selects the ending block
+		const focusBlock = editorState.getCurrentContent().getBlockForKey(focusKey);
+
+		// Create a new selection state to add our selection to
+		const selectionState = SelectionState.createEmpty();
+		const entireBlockSelectionState = selectionState.merge({
+			anchorKey: anchorKey, // Starting position
+			anchorOffset: 0, // How much to adjust from the starting position
+			focusKey: focusKey, // Ending position
+			focusOffset: focusBlock.getText().length, // How much to adjust from the ending position.
+		});
+
+		// Creates a new EditorState to style
+		const newEditorState = EditorState.forceSelection(editorState, entireBlockSelectionState);
+
+		// Sets the editor state to our new
+		setEditorState(RichUtils.toggleInlineStyle(newEditorState, blockStyle));
+	};
+
+	const toggleTextAlign = (e, newAlignment, currentAlignment) => {
+		e.preventDefault();
+
+		if (currentAlignment !== newAlignment) {
+			setEditorState(setBlockData(editorState, { 'text-align': newAlignment }));
+		} else {
+			setEditorState(setBlockData(editorState, { 'text-align': undefined }));
+		}
+	};
+
+	// Removes queued up styles to remove
+	useEffect(() => {
+		if (styleToRemove !== '') {
+			toggleInlineStyle(null, styleToRemove);
+			setStyleToRemove('');
+		}
+	}, [styleToRemove]);
 
 	return (
 		<main className='editor-area'>
-			<NavEditor />
+			<NavEditor
+				editorState={editorState}
+				toggleBlockType={toggleBlockType}
+				toggleBlockStyle={toggleBlockStyle}
+				toggleInlineStyle={toggleInlineStyle}
+				toggleTextAlign={toggleTextAlign}
+				spellCheck={spellCheck}
+				toggleSpellCheck={toggleSpellCheck}
+			/>
 
 			<div className='editor' onClick={handleEditorWrapperClick}>
 				{/* <button onClick={() => editorRef.current.focus()}>Focus</button> */}
@@ -91,6 +197,11 @@ const EditorContainer = () => {
 					ref={editorRef}
 					keyBindingFn={customKeyBindingFn}
 					handleKeyCommand={handleKeyCommand}
+					customStyleMap={customStyleMap}
+					blockStyleFn={blockStyleFn}
+					// blockRenderMap={blockRenderMap}
+					spellCheck={spellCheck}
+					key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
 				/>
 				{/* <h1 className='chapter-title' contentEditable='false'>
 					Chapter 1

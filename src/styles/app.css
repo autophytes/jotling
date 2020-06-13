@@ -123,7 +123,7 @@ body {
 }
 
 .editor-nav > * {
-	margin: 0 0.25rem;
+	padding: 0 0.25rem;
 }
 
 .side-nav {
@@ -272,6 +272,10 @@ p.file-nav {
 	fill: #eee;
 }
 
+.nav-button.active svg {
+	fill: var(--color-primary);
+}
+
 .nav-button-text {
 	text-align: left;
 	margin: 0 0.25rem;
@@ -290,4 +294,17 @@ p.file-nav {
 	flex-direction: row;
 	justify-content: flex-start;
 	align-items: center;
+}
+
+.right-aligned-block {
+	text-align: right;
+}
+.left-aligned-block {
+	text-align: left;
+}
+.center-aligned-block {
+	text-align: center;
+}
+.justify-aligned-block {
+	text-align: justify;
 }
