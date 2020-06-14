@@ -1,48 +1,54 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { setBlockData } from 'draftjs-utils';
-
 import Immutable from 'immutable';
 
 import {
-	Editor,
 	EditorState,
 	SelectionState,
 	RichUtils,
+	Modifier,
 	getDefaultKeyBinding,
 	KeyBindingUtil,
 	convertToRaw,
 } from 'draft-js';
+import Editor from 'draft-js-plugins-editor';
+import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
+import { setBlockData } from 'draftjs-utils';
 
 import NavEditor from '../navs/nav-editor/NavEditor';
 
+import { spaceToAutoList, enterToUnindentList } from './KeyBindFunctions';
+
+const inlineToolbarPlugin = createInlineToolbarPlugin();
+const { InlineToolbar } = inlineToolbarPlugin;
+const { hasCommandModifier } = KeyBindingUtil;
+
+// I can add custom inline styles. { Keyword: CSS property }
+const customStyleMap = {
+	STRIKETHROUGH: {
+		textDecoration: 'line-through',
+	},
+	SUBSCRIPT: {
+		// LINE HEIGHT ISSUES. FIX LATER.
+		verticalAlign: 'sub',
+		fontSize: '60%',
+	},
+	SUPERSCRIPT: {
+		// LINE HEIGHT ISSUES. FIX LATER.
+		verticalAlign: 'super',
+		fontSize: '60%',
+	},
+	'RIGHT-ALIGN': {
+		textAlign: 'right',
+		display: 'inline-block',
+	},
+};
+
+// COMPONENT
 const EditorContainer = () => {
 	const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
 	const editorRef = useRef(null);
-
-	const { hasCommandModifier } = KeyBindingUtil;
-
-	// I can add custom inline styles. { Keyword: CSS property }
-	const customStyleMap = {
-		STRIKETHROUGH: {
-			textDecoration: 'line-through',
-		},
-		SUBSCRIPT: {
-			// LINE HEIGHT ISSUES. FIX LATER.
-			verticalAlign: 'sub',
-			fontSize: '60%',
-		},
-		SUPERSCRIPT: {
-			// LINE HEIGHT ISSUES. FIX LATER.
-			verticalAlign: 'super',
-			fontSize: '60%',
-		},
-		'RIGHT-ALIGN': {
-			textAlign: 'right',
-			display: 'inline-block',
-		},
-	};
 
 	// Applies classes to certain blocks
 	const blockStyleFn = (block) => {
@@ -78,11 +84,26 @@ const EditorContainer = () => {
 			const newEditorState = RichUtils.onTab(e, editorState, 8);
 			if (newEditorState !== editorState) {
 				setEditorState(newEditorState);
-				console.log('set');
-				console.log(convertToRaw(editorState.getCurrentContent()));
 			}
-			return 'custom';
+			return 'handled-in-binding-fn';
 		}
+		if (e.keyCode === 32 /* SPACE */) {
+			// Auto-converts to lists
+			const returnValue = spaceToAutoList(editorState, setEditorState);
+
+			if (!!returnValue) {
+				return returnValue;
+			}
+		}
+		if (e.keyCode === 13 /* ENTER */) {
+			// Un-indents lists
+			const returnValue = enterToUnindentList(editorState, setEditorState);
+
+			if (!!returnValue) {
+				return returnValue;
+			}
+		}
+
 		return getDefaultKeyBinding(e);
 	};
 
@@ -163,6 +184,7 @@ const EditorContainer = () => {
 		setEditorState(RichUtils.toggleInlineStyle(newEditorState, blockStyle));
 	};
 
+	// Handles Text Alignment
 	const toggleTextAlign = (e, newAlignment, currentAlignment) => {
 		e.preventDefault();
 
@@ -204,9 +226,11 @@ const EditorContainer = () => {
 					customStyleMap={customStyleMap}
 					blockStyleFn={blockStyleFn}
 					// blockRenderMap={blockRenderMap}
+					plugins={[inlineToolbarPlugin]}
 					spellCheck={spellCheck}
 					key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
 				/>
+				<InlineToolbar />
 				{/* <h1 className='chapter-title' contentEditable='false'>
 					Chapter 1
 				</h1>

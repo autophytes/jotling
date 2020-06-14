@@ -9,6 +9,7 @@ import App from './components/app';
 import './styles/Draft.css';
 // This is copied from /node_modules/dist/Draft.css.
 // If Draft updates their CSS sheet, I'll need to update this manually.
+import './styles/InlineToolbar.css';
 import './styles/app.css';
 
 // Since we are using HtmlWebpackPlugin WITHOUT a template,
