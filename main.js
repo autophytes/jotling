@@ -4,6 +4,9 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const url = require('url');
+const fontList = require('font-list');
+// const SystemFonts = require('system-font-families');
+// var fontManager = require('font-manager');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -43,6 +46,7 @@ if (process.platform === 'win32') {
 function createWindow() {
 	// Create the browser window.
 	mainWindow = new BrowserWindow({
+		title: 'Jotling',
 		width: 1024,
 		height: 768,
 		show: false,
@@ -87,6 +91,38 @@ function createWindow() {
 			);
 			mainWindow.webContents.openDevTools();
 		}
+
+		// Load system fonts list
+		// console.log(SystemFonts);
+		// const fontList = SystemFonts.getFontsSync();
+		// console.log(fontList);
+
+		fontList
+			.getFonts()
+			.then((fonts) => {
+				mainWindow.webContents.send('font-list', fonts);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+
+		// const systemFonts = SystemFonts();
+		// fontManager.getAvailableFonts(function (fonts) {
+		// 	console.log(fonts);
+		// 	mainWindow.webContents.send('font-list', fonts);
+		// });
+		// systemFonts.getFonts().then(
+		// 	(res) => {
+		// 		// res is an array of font family strings
+		// 		console.log(res);
+		// 		mainWindow.webContents.send('font-list', res);
+		// 	},
+		// 	(err) => {
+		// 		// handle the error
+		// 		console.log('Error loading system fonts in the main process.');
+		// 		console.log(err);
+		// 	}
+		// );
 	});
 
 	// Emitted when the window is closed.

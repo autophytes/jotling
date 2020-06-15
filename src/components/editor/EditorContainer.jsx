@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Immutable from 'immutable';
+import { ipcRenderer } from 'electron';
 
 import {
 	EditorState,
@@ -48,7 +49,15 @@ const EditorContainer = () => {
 	const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
+	const [fontList, setFontList] = useState([]);
 	const editorRef = useRef(null);
+
+	useEffect(() => {
+		ipcRenderer.on('font-list', function (e, fonts) {
+			console.log(fonts);
+			setFontList(fonts);
+		});
+	}, [ipcRenderer, setFontList]);
 
 	// Applies classes to certain blocks
 	const blockStyleFn = (block) => {

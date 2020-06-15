@@ -17,8 +17,10 @@
 		"draft-js-inline-toolbar-plugin": "^3.0.1",
 		"draft-js-plugins-editor": "^3.0.0",
 		"draftjs-utils": "^0.10.2",
+		"font-list": "^1.2.11",
 		"react": "^16.13.1",
-		"react-dom": "^16.13.1"
+		"react-dom": "^16.13.1",
+		"system-font-families": "^0.4.1"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.9.6",

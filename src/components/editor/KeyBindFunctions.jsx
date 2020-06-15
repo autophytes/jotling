@@ -75,7 +75,7 @@ export const enterToUnindentList = (editorState, setEditorState) => {
 	const currentSelection = editorState.getSelection();
 	const currentPosition = currentSelection.getStartOffset();
 
-	// I think current position is quicker to access than the block text,
+	// I suspect current position is quicker to access than the block text,
 	//     so I use that to determine if I should go on.
 	if (currentPosition === 0) {
 		const blockKey = editorState.getSelection().getAnchorKey();
