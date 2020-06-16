@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { getSelectedBlocksMetadata } from 'draftjs-utils';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
@@ -37,6 +37,8 @@ const BLOCK_TYPES = [
 	{ label: 'Code Block', style: 'code-block' },
 ];
 
+const MAX_RECENT_FONTS = 5;
+
 // COMPONENT
 const NavEditor = ({
 	editorState,
@@ -46,11 +48,16 @@ const NavEditor = ({
 	toggleTextAlign,
 	spellCheck,
 	toggleSpellCheck,
+	currentFont,
+	setCurrentFont,
+	fontList,
 }) => {
 	// REQUIRES toggleInlineStyle & toggleBlockType
 
 	const currentStyles = editorState.getCurrentInlineStyle();
 	const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
+
+	const [recentlyUsedFonts, setRecentlyUsedFonts] = useState([]);
 
 	// AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
 	// unstyled
@@ -81,19 +88,58 @@ const NavEditor = ({
 		{ label: 'Monospace', style: 'CODE' },
 	];
 
+	const handleFontSelect = useCallback(
+		(font) => {
+			const fontIndex = recentlyUsedFonts.indexOf(font);
+			if (fontIndex !== 0) {
+				let recentFonts = [...recentlyUsedFonts];
+
+				// If already in the list, remove so we can add it to the front
+				if (fontIndex > 0) {
+					recentFonts.splice(fontIndex, 1);
+				}
+
+				recentFonts.unshift(font);
+
+				// Trim down to max length (min 0)
+				while (recentFonts.length > MAX_RECENT_FONTS && recentFonts.length > 0) {
+					recentFonts.pop();
+				}
+
+				setRecentlyUsedFonts(recentFonts);
+			}
+
+			setCurrentFont(font);
+		},
+		[setCurrentFont, recentlyUsedFonts, setRecentlyUsedFonts]
+	);
+
 	return (
 		<nav className='editor-nav'>
 			<button className='nav-button'>
 				{/* <img src='icons/pushpin.svg' /> */}
 				<PushpinSVG />
 			</button>
+
 			{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
-			<select>
-				<option value='Calibri'>Calibri</option>
-				<option value='PT Sans'>PT Sans</option>
-				<option value='Open Sans'>Open Sans</option>
-				<option value='temporary'>Note: use systems</option>
+			<select value={currentFont} onChange={(e) => handleFontSelect(e.target.value)}>
+				{recentlyUsedFonts.map((font, i) => (
+					<option key={i} value={font}>
+						{font}
+					</option>
+				))}
+				<option disabled>- - - - -</option>
+
+				{fontList.map((font, i) => {
+					const trimFont = font.replace(/["]+/g, '');
+					return (
+						<option key={i} value={trimFont}>
+							{trimFont}
+						</option>
+					);
+				})}
 			</select>
+
 			<select>
 				<option value='12'>12</option>
 				<option value='14'>14</option>

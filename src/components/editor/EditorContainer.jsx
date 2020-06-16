@@ -44,19 +44,24 @@ const customStyleMap = {
 	},
 };
 
+//
+//
 // COMPONENT
 const EditorContainer = () => {
 	const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
 	const [fontList, setFontList] = useState([]);
+	const [currentFont, setCurrentFont] = useState('PT Sans');
 	const editorRef = useRef(null);
 
+	// Load available fonts
 	useEffect(() => {
 		ipcRenderer.on('font-list', function (e, fonts) {
-			console.log(fonts);
 			setFontList(fonts);
+			console.log(fonts);
 		});
+		console.log('ipcRenderer useEffect triggered');
 	}, [ipcRenderer, setFontList]);
 
 	// Applies classes to certain blocks
@@ -222,9 +227,15 @@ const EditorContainer = () => {
 				toggleTextAlign={toggleTextAlign}
 				spellCheck={spellCheck}
 				toggleSpellCheck={toggleSpellCheck}
+				currentFont={currentFont}
+				setCurrentFont={setCurrentFont}
+				fontList={fontList}
 			/>
 
-			<div className='editor' onClick={handleEditorWrapperClick}>
+			<div
+				className='editor'
+				onClick={handleEditorWrapperClick}
+				style={!!currentFont ? { fontFamily: currentFont } : {}}>
 				{/* <button onClick={() => editorRef.current.focus()}>Focus</button> */}
 				<Editor
 					editorState={editorState}
