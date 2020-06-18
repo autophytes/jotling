@@ -223,7 +223,12 @@ const EditorContainer = () => {
 	useEffect(() => {
 		let newStyles = {};
 		!!currentFont && (newStyles['fontFamily'] = currentFont.toString());
-		!isNaN(fontSize) && (newStyles['fontSize'] = currentFont.toString());
+		if (!!fontSize) {
+			console.log('in font size');
+			newStyles['fontSize'] = +fontSize;
+		}
+
+		console.log(newStyles);
 
 		setStyle(newStyles);
 	}, [currentFont, fontSize]);

@@ -51,7 +51,6 @@ const NavEditor = ({
 	currentFont,
 	setCurrentFont,
 	fontList,
-	fontSize,
 	setFontSize,
 }) => {
 	// REQUIRES toggleInlineStyle & toggleBlockType
@@ -143,13 +142,7 @@ const NavEditor = ({
 				})}
 			</select>
 
-			<input list='font-size' onChange={(e) => setFontSize(e.target.value)} />
-			<datalist id='font-size'>
-				<option value={12} />
-				<option value={14} />
-				<option value={16} />
-				<option value={18} />
-			</datalist>
+			<input type='number' min='0' max='999' onChange={(e) => setFontSize(e.target.value)} />
 			<button className='nav-button'>
 				<IncreaseFontSizeSVG />
 			</button>
