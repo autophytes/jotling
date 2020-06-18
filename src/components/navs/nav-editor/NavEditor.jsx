@@ -51,6 +51,8 @@ const NavEditor = ({
 	currentFont,
 	setCurrentFont,
 	fontList,
+	fontSize,
+	setFontSize,
 }) => {
 	// REQUIRES toggleInlineStyle & toggleBlockType
 
@@ -58,6 +60,7 @@ const NavEditor = ({
 	const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
 
 	const [recentlyUsedFonts, setRecentlyUsedFonts] = useState([]);
+	// const [fontSize, setFontSize] = useState(null);
 
 	// AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
 	// unstyled
@@ -140,12 +143,13 @@ const NavEditor = ({
 				})}
 			</select>
 
-			<select>
-				<option value='12'>12</option>
-				<option value='14'>14</option>
-				<option value='16'>16</option>
-				<option value='18'>18</option>
-			</select>
+			<input list='font-size' onChange={(e) => setFontSize(e.target.value)} />
+			<datalist id='font-size'>
+				<option value={12} />
+				<option value={14} />
+				<option value={16} />
+				<option value={18} />
+			</datalist>
 			<button className='nav-button'>
 				<IncreaseFontSizeSVG />
 			</button>

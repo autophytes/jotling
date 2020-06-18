@@ -53,6 +53,8 @@ const EditorContainer = () => {
 	const [spellCheck, setSpellCheck] = useState(false);
 	const [fontList, setFontList] = useState([]);
 	const [currentFont, setCurrentFont] = useState('PT Sans');
+	const [fontSize, setFontSize] = useState(null);
+	const [style, setStyle] = useState({});
 	const editorRef = useRef(null);
 
 	// Load available fonts
@@ -217,6 +219,15 @@ const EditorContainer = () => {
 		}
 	}, [styleToRemove]);
 
+	// Sets editor styles
+	useEffect(() => {
+		let newStyles = {};
+		!!currentFont && (newStyles['fontFamily'] = currentFont.toString());
+		!isNaN(fontSize) && (newStyles['fontSize'] = currentFont.toString());
+
+		setStyle(newStyles);
+	}, [currentFont, fontSize]);
+
 	return (
 		<main className='editor-area'>
 			<NavEditor
@@ -230,12 +241,11 @@ const EditorContainer = () => {
 				currentFont={currentFont}
 				setCurrentFont={setCurrentFont}
 				fontList={fontList}
+				fontSize={fontSize}
+				setFontSize={setFontSize}
 			/>
 
-			<div
-				className='editor'
-				onClick={handleEditorWrapperClick}
-				style={!!currentFont ? { fontFamily: currentFont } : {}}>
+			<div className='editor' onClick={handleEditorWrapperClick} style={style}>
 				{/* <button onClick={() => editorRef.current.focus()}>Focus</button> */}
 				<Editor
 					editorState={editorState}
