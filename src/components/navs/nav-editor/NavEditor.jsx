@@ -51,7 +51,10 @@ const NavEditor = ({
 	currentFont,
 	setCurrentFont,
 	fontList,
+	fontSize,
 	setFontSize,
+	lineHeight,
+	setLineHeight,
 }) => {
 	// REQUIRES toggleInlineStyle & toggleBlockType
 
@@ -116,6 +119,39 @@ const NavEditor = ({
 		[setCurrentFont, recentlyUsedFonts, setRecentlyUsedFonts]
 	);
 
+	// Will either 'increase' or 'decrease' font size
+	const increaseDecreaseFontSize = useCallback(
+		(direction) => {
+			let oldSize = typeof fontSize === 'string' ? Number(fontSize) : fontSize;
+			console.log('parsing ints?');
+
+			if (direction === 'increase') {
+				if (oldSize < 12) {
+					console.log('< 12');
+					setFontSize(Math.floor(oldSize + 1));
+				} else if (oldSize < 28) {
+					setFontSize(Math.floor((oldSize + 2) * 2) / 2);
+				} else if (oldSize < 70) {
+					setFontSize(Math.floor((oldSize + 6) * 6) / 6);
+				} else {
+					setFontSize(Math.floor((oldSize + 12) * 12) / 12);
+				}
+			}
+			if (direction === 'decrease') {
+				if (oldSize > 70) {
+					setFontSize(Math.ceil((oldSize - 12) / 12) * 12);
+				} else if (oldSize > 28) {
+					setFontSize(Math.ceil((oldSize - 6) / 6) * 6);
+				} else if (oldSize > 12) {
+					setFontSize(Math.ceil((oldSize - 2) / 2) * 2);
+				} else {
+					setFontSize(Math.max(Math.ceil(oldSize - 1), 1));
+				}
+			}
+		},
+		[fontSize]
+	);
+
 	return (
 		<nav className='editor-nav'>
 			<button className='nav-button'>
@@ -142,13 +178,35 @@ const NavEditor = ({
 				})}
 			</select>
 
-			<input type='number' min='0' max='999' onChange={(e) => setFontSize(e.target.value)} />
-			<button className='nav-button'>
+			<input
+				type='number'
+				min='0'
+				max='999'
+				value={fontSize}
+				onChange={(e) => setFontSize(e.target.value)}
+				style={{ marginLeft: '0.5rem' }}
+			/>
+			<button className='nav-button' onClick={() => increaseDecreaseFontSize('increase')}>
 				<IncreaseFontSizeSVG />
 			</button>
-			<button className='nav-button'>
+			<button className='nav-button' onClick={() => increaseDecreaseFontSize('decrease')}>
 				<DecreaseFontSizeSVG />
 			</button>
+
+			<input
+				type='number'
+				min='0'
+				max='10'
+				step='0.1'
+				value={lineHeight}
+				onChange={(e) => setLineHeight(e.target.value)}
+				style={{ marginLeft: '0.5rem' }}
+			/>
+			<button className='nav-button' disabled>
+				<LineSpacingSVG />
+			</button>
+
+			<div className='editor-nav-vertical-rule' />
 
 			<InlineStyleButton
 				currentStyles={currentStyles}
@@ -246,10 +304,6 @@ const NavEditor = ({
 					toggleTextAlign(e, 'justify', currentAlignment);
 				}}>
 				<AlignJustifySVG />
-			</button>
-
-			<button className='nav-button'>
-				<LineSpacingSVG />
 			</button>
 
 			<button

@@ -53,7 +53,8 @@ const EditorContainer = () => {
 	const [spellCheck, setSpellCheck] = useState(false);
 	const [fontList, setFontList] = useState([]);
 	const [currentFont, setCurrentFont] = useState('PT Sans');
-	const [fontSize, setFontSize] = useState(null);
+	const [fontSize, setFontSize] = useState(22);
+	const [lineHeight, setLineHeight] = useState(1.5);
 	const [style, setStyle] = useState({});
 	const editorRef = useRef(null);
 
@@ -223,6 +224,7 @@ const EditorContainer = () => {
 	useEffect(() => {
 		let newStyles = {};
 		!!currentFont && (newStyles['fontFamily'] = currentFont.toString());
+		!!lineHeight && (newStyles['lineHeight'] = lineHeight + 'em');
 		if (!!fontSize) {
 			console.log('in font size');
 			newStyles['fontSize'] = +fontSize;
@@ -231,7 +233,7 @@ const EditorContainer = () => {
 		console.log(newStyles);
 
 		setStyle(newStyles);
-	}, [currentFont, fontSize]);
+	}, [currentFont, fontSize, lineHeight]);
 
 	return (
 		<main className='editor-area'>
@@ -248,6 +250,8 @@ const EditorContainer = () => {
 				fontList={fontList}
 				fontSize={fontSize}
 				setFontSize={setFontSize}
+				lineHeight={lineHeight}
+				setLineHeight={setLineHeight}
 			/>
 
 			<div className='editor' onClick={handleEditorWrapperClick} style={style}>
