@@ -55,6 +55,8 @@ const NavEditor = ({
 	setFontSize,
 	lineHeight,
 	setLineHeight,
+	saveFile,
+	loadFile,
 }) => {
 	// REQUIRES toggleInlineStyle & toggleBlockType
 
@@ -252,10 +254,10 @@ const NavEditor = ({
 				<SuperscriptSVG />
 			</InlineStyleButton>
 
-			<button className='nav-button'>
+			<button className='nav-button' onClick={() => saveFile()}>
 				<HighlightSVG />
 			</button>
-			<button className='nav-button'>
+			<button className='nav-button' onClick={() => loadFile()}>
 				<TextColorSVG />
 			</button>
 			<button className='nav-button'>

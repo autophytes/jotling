@@ -72,16 +72,40 @@ body {
 	width: 100%;
 	max-width: 54rem;
 	/* background-color: #eee; */
-	padding: 10rem 2rem 8rem 2rem;
+	padding: 0 2rem 0 2rem;
 	margin-top: 2rem;
 	flex-grow: 1;
 	font-family: 'PT Serif', 'Georgia', serif;
 	font-size: 22px;
-	line-height: 1.5em;
+	line-height: 1.15em;
+	display: flex;
+	flex-direction: column;
+	justify-content: stretch;
 }
 
 .editor:focus {
 	outline: none;
+}
+
+.public-DraftStyleDefault-block {
+	margin-bottom: 0.5em;
+}
+
+li .public-DraftStyleDefault-block {
+	margin-bottom: 0;
+}
+
+.DraftEditor-root {
+	flex-grow: 0;
+}
+
+.editor-top-padding {
+	padding: 5rem 0;
+	flex-grow: 0;
+}
+.editor-bottom-padding {
+	padding: 4rem 0;
+	flex-grow: 1;
 }
 
 .chapter-title {
@@ -311,16 +335,16 @@ p.file-nav {
 	align-items: center;
 }
 
-.right-aligned-block {
+.right-aligned-block .public-DraftStyleDefault-ltr {
 	text-align: right;
 }
-.left-aligned-block {
+.left-aligned-block .public-DraftStyleDefault-ltr {
 	text-align: left;
 }
-.center-aligned-block {
+.center-aligned-block .public-DraftStyleDefault-ltr {
 	text-align: center;
 }
-.justify-aligned-block {
+.justify-aligned-block .public-DraftStyleDefault-ltr {
 	text-align: justify;
 }
 

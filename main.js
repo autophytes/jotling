@@ -4,9 +4,9 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const url = require('url');
-const fontList = require('font-list');
-// const SystemFonts = require('system-font-families');
-// var fontManager = require('font-manager');
+// const fontList = require('font-list');
+
+const { registerHandlers } = require('./backend_files/fileLoader');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -42,6 +42,9 @@ if (process.platform === 'win32') {
 	app.commandLine.appendSwitch('high-dpi-support', 'true');
 	app.commandLine.appendSwitch('force-device-scale-factor', '1');
 }
+
+// Register Handlers
+registerHandlers();
 
 function createWindow() {
 	// Create the browser window.
@@ -92,37 +95,16 @@ function createWindow() {
 			mainWindow.webContents.openDevTools();
 		}
 
-		// Load system fonts list
-		// console.log(SystemFonts);
-		// const fontList = SystemFonts.getFontsSync();
-		// console.log(fontList);
-
-		fontList
-			.getFonts()
-			.then((fonts) => {
-				mainWindow.webContents.send('font-list', fonts);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
-
-		// const systemFonts = SystemFonts();
-		// fontManager.getAvailableFonts(function (fonts) {
-		// 	console.log(fonts);
-		// 	mainWindow.webContents.send('font-list', fonts);
-		// });
-		// systemFonts.getFonts().then(
-		// 	(res) => {
-		// 		// res is an array of font family strings
-		// 		console.log(res);
-		// 		mainWindow.webContents.send('font-list', res);
-		// 	},
-		// 	(err) => {
-		// 		// handle the error
-		// 		console.log('Error loading system fonts in the main process.');
-		// 		console.log(err);
-		// 	}
-		// );
+		// Load the project files
+		// WHEN I GET BACK:
+		// - Load the initial files (look at app.getPath)
+		// - Display the default file
+		// - List all loaded files in the left bar
+		// - Switch files when I click on different ones
+		// - Save changes to files
+		// - Create an index of files for each project with metadata
+		//    - Perhaps a json object with nested children files to establish the tree
+		//    - Title, file name (projectId - 001.txt or whatever it is), add other metadata later
 	});
 
 	// Emitted when the window is closed.

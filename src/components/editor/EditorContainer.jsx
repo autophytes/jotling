@@ -2,14 +2,18 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Immutable from 'immutable';
 import { ipcRenderer } from 'electron';
 
+import { defaultText } from './defaultText';
+
 import {
 	EditorState,
+	ContentState,
 	SelectionState,
 	RichUtils,
 	Modifier,
 	getDefaultKeyBinding,
 	KeyBindingUtil,
 	convertToRaw,
+	convertFromRaw,
 } from 'draft-js';
 import Editor from 'draft-js-plugins-editor';
 import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
@@ -38,17 +42,25 @@ const customStyleMap = {
 		verticalAlign: 'super',
 		fontSize: '60%',
 	},
-	'RIGHT-ALIGN': {
-		textAlign: 'right',
-		display: 'inline-block',
-	},
+};
+
+// Applies classes to certain blocks
+const blockStyleFn = (block) => {
+	// If the block data for a text-align property, add a class
+	const blockAlignment = block.getData() && block.getData().get('text-align');
+	if (blockAlignment) {
+		return `${blockAlignment}-aligned-block`;
+	}
+	return '';
 };
 
 //
 //
 // COMPONENT
 const EditorContainer = () => {
-	const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
+	const [editorState, setEditorState] = useState(() =>
+		EditorState.createWithContent(ContentState.createFromText(defaultText))
+	);
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
 	const [fontList, setFontList] = useState([]);
@@ -60,35 +72,34 @@ const EditorContainer = () => {
 
 	// Load available fonts
 	useEffect(() => {
-		ipcRenderer.on('font-list', function (e, fonts) {
-			setFontList(fonts);
-			console.log(fonts);
-		});
+		const fetchFonts = async () => {
+			const newFontList = await ipcRenderer.invoke('load-font-list');
+			setFontList(newFontList);
+		};
+		fetchFonts();
 		console.log('ipcRenderer useEffect triggered');
 	}, [ipcRenderer, setFontList]);
 
-	// Applies classes to certain blocks
-	const blockStyleFn = (block) => {
-		// If the block data for a text-align property, add a class
-		const blockAlignment = block.getData() && block.getData().get('text-align');
-		if (blockAlignment) {
-			return `${blockAlignment}-aligned-block`;
-		}
-		return '';
-	};
-
 	// Focuses the editor on click
-	const handleEditorWrapperClick = useCallback((e) => {
-		// If clicking inside the editor area but outside the
-		//   actual draft-js editor, refocuses on the editor.
-		if (e.target.className === 'editor') {
-			editorRef.current.focus();
-			// console.log(
-			// 	'Refocused on editor. Should only fire when clicking outside' +
-			// 		'the editor component but inside the editor div.'
-			// );
-		}
-	});
+	const handleEditorWrapperClick = useCallback(
+		(e) => {
+			// If clicking inside the editor area but outside the
+			//   actual draft-js editor, refocuses on the editor.
+			if (['editor', 'editor-top-padding'].includes(e.target.className)) {
+				editorRef.current.focus();
+			} else if (e.target.className === 'editor-bottom-padding') {
+				const newEditorState = EditorState.moveFocusToEnd(editorState);
+				setEditorState(newEditorState);
+			}
+		},
+		[editorRef, editorState]
+	);
+
+	// Focus on load
+	useEffect(() => {
+		console.log('focus on load');
+		editorRef.current.focus();
+	}, [editorRef]);
 
 	// Handle shortcut keys. Using their default function right now.
 	const customKeyBindingFn = (e) => {
@@ -124,6 +135,7 @@ const EditorContainer = () => {
 		return getDefaultKeyBinding(e);
 	};
 
+	// Process the key presses
 	const handleKeyCommand = (command) => {
 		// First, handle commands that happen outside the editor (like saving)
 		if (command === 'myeditor-save') {
@@ -226,14 +238,45 @@ const EditorContainer = () => {
 		!!currentFont && (newStyles['fontFamily'] = currentFont.toString());
 		!!lineHeight && (newStyles['lineHeight'] = lineHeight + 'em');
 		if (!!fontSize) {
-			console.log('in font size');
 			newStyles['fontSize'] = +fontSize;
 		}
 
-		console.log(newStyles);
-
 		setStyle(newStyles);
 	}, [currentFont, fontSize, lineHeight]);
+
+	// Saves current file
+	const saveFile = () => {
+		const currentContent = editorState.getCurrentContent();
+		const rawContent = convertToRaw(currentContent);
+		console.log(rawContent);
+
+		const sendFileToSave = async () => {
+			const newFileName = await ipcRenderer.invoke(
+				'save-single-document',
+				'Jotling/Test Project',
+				'x023jfsf.json',
+				rawContent
+			);
+			console.log(newFileName);
+		};
+		sendFileToSave();
+	};
+
+	// Saves current file
+	const loadFile = () => {
+		const loadFileFromSave = async () => {
+			const loadedFile = await ipcRenderer.invoke(
+				'read-single-document',
+				'Jotling/Test Project',
+				'x023jfsf.json'
+			);
+			console.log(loadedFile);
+			const newContentState = convertFromRaw(loadedFile.fileContents);
+			const newEditorState = EditorState.createWithContent(newContentState);
+			setEditorState(newEditorState);
+		};
+		loadFileFromSave();
+	};
 
 	return (
 		<main className='editor-area'>
@@ -252,10 +295,12 @@ const EditorContainer = () => {
 				setFontSize={setFontSize}
 				lineHeight={lineHeight}
 				setLineHeight={setLineHeight}
+				saveFile={saveFile}
+				loadFile={loadFile}
 			/>
 
 			<div className='editor' onClick={handleEditorWrapperClick} style={style}>
-				{/* <button onClick={() => editorRef.current.focus()}>Focus</button> */}
+				<div className='editor-top-padding' />
 				<Editor
 					editorState={editorState}
 					onChange={setEditorState}
@@ -269,59 +314,8 @@ const EditorContainer = () => {
 					spellCheck={spellCheck}
 					key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
 				/>
+				<div className='editor-bottom-padding' />
 				<InlineToolbar />
-				{/* <h1 className='chapter-title' contentEditable='false'>
-					Chapter 1
-				</h1>
-				<p>
-					Szeth-son-son-Vallano, Truthless of Shinovar, wore white on the day he was to kill a
-					king. The white clothing was a Parshendi tradition, foreign to him. But he did as his
-					masters required and did not ask for an explanation.
-				</p>
-				<p>
-					He sat in a large stone room, baked by enormous firepits that cast a garish light
-					upon the revelers, causing beads of sweat to form on their skin as they danced, and
-					drank, and yelled, and sang, and clapped. Some fell to the ground red-faced, the
-					revelry too much for them, their stomachs proving to be inferior wineskins. They
-					looked as if they were dead, at least until their friends carried them out of the
-					feast hall to waiting beds.
-				</p>
-				<p>
-					Szeth did not sway to the drums, drink the sapphire wine, or stand to dance. He sat
-					on a bench at the back, a still servant in white robes. Few at the treaty-signing
-					celebration noticed him. He was just a servant, and Shin were easy to ignore. Most
-					out here in the East thought Szeth’s kind were docile and harmless. They were
-					generally right.
-				</p>
-				<p>
-					The drummers began a new rhythm. The beats shook Szeth like a quartet of thumping
-					hearts, pumping waves of invisible blood through the room.
-				</p>
-				<p>
-					Szeth’s masters—who were dismissed as savages by those in more civilized kingdoms—sat
-					at their own tables. They were men with skin of black marbled with red. Parshendi,
-					they were named—cousins to the more docile servant peoples known as parshmen in most
-					of the world. An oddity. They did not call themselves Parshendi; this was the Alethi
-					name for them. It meant, roughly, “parshmen who can think.” Neither side seemed to
-					see that as an insult.
-				</p>
-				<p>
-					The Parshendi had brought the musicians. At first, the Alethi lighteyes had been
-					hesitant. To them, drums were base instruments of the common, darkeyed people. But
-					wine was the great assassin of both tradition and propriety, and now the Alethi elite
-					danced with abandon.
-				</p>
-				<p>
-					Szeth stood and began to pick his way through the room. The revelry had lasted long;
-					even the king had retired hours ago. But many still celebrated. As he walked, Szeth
-					was forced to step around Dalinar Kholin—the king’s own brother—who slumped drunken
-					at a small table. The aging but powerfully built man kept waving away those who tried
-					to encourage him to bed. Where was Jasnah, the king’s daughter? Elhokar, the king’s
-					son and heir, sat at the high table, ruling the feast in his father’s absence. He was
-					in conversation with two men, a dark-skinned Azish man who had an odd patch of pale
-					skin on his cheek and a thinner, Alethi-looking man who kept glancing over his
-					shoulder.
-				</p> */}
 			</div>
 		</main>
 	);
