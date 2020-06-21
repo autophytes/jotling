@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { getSelectedBlocksMetadata } from 'draftjs-utils';
+import { ipcRenderer } from 'electron';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import IncreaseFontSizeSVG from '../../../assets/svg/editor/IncreaseFontSizeSVG';
@@ -24,6 +25,28 @@ import SpellcheckSVG from '../../../assets/svg/editor/SpellcheckSVG';
 
 import InlineStyleButton from './InlineStyleButton';
 
+// AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
+// unstyled
+// paragraph
+// header-one
+// header-two
+// header-three
+// header-four
+// header-five
+// header-six
+// unordered-list-item
+// ordered-list-item
+// blockquote
+// code-block
+// atomic
+
+// AVAILABLE STYLES BY DEFAULT - https://draftjs.org/docs/advanced-topics-inline-styles/#mapping-a-style-string-to-css
+// BOLD
+// ITALIC
+// UNDERLINE
+// CODE (monospace)
+// STRIKETHROUGH (added in customStyleMap)
+
 const BLOCK_TYPES = [
 	{ label: 'H1', style: 'header-one' },
 	{ label: 'H2', style: 'header-two' },
@@ -37,10 +60,17 @@ const BLOCK_TYPES = [
 	{ label: 'Code Block', style: 'code-block' },
 ];
 
+const INLINE_STYLES = [
+	{ label: 'Bold', style: 'BOLD' },
+	{ label: 'Italic', style: 'ITALIC' },
+	{ label: 'Underline', style: 'UNDERLINE' },
+	{ label: 'Monospace', style: 'CODE' },
+];
+
 const MAX_RECENT_FONTS = 5;
 
 // COMPONENT
-const NavEditor = ({
+const EditorNav = ({
 	editorState,
 	toggleBlockType,
 	toggleBlockStyle,
@@ -50,7 +80,6 @@ const NavEditor = ({
 	toggleSpellCheck,
 	currentFont,
 	setCurrentFont,
-	fontList,
 	fontSize,
 	setFontSize,
 	lineHeight,
@@ -64,36 +93,8 @@ const NavEditor = ({
 	const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
 
 	const [recentlyUsedFonts, setRecentlyUsedFonts] = useState([]);
+	const [fontList, setFontList] = useState([]);
 	// const [fontSize, setFontSize] = useState(null);
-
-	// AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
-	// unstyled
-	// paragraph
-	// header-one
-	// header-two
-	// header-three
-	// header-four
-	// header-five
-	// header-six
-	// unordered-list-item
-	// ordered-list-item
-	// blockquote
-	// code-block
-	// atomic
-
-	// AVAILABLE STYLES BY DEFAULT - https://draftjs.org/docs/advanced-topics-inline-styles/#mapping-a-style-string-to-css
-	// BOLD
-	// ITALIC
-	// UNDERLINE
-	// CODE (monospace)
-	// STRIKETHROUGH (added in customStyleMap)
-
-	const INLINE_STYLES = [
-		{ label: 'Bold', style: 'BOLD' },
-		{ label: 'Italic', style: 'ITALIC' },
-		{ label: 'Underline', style: 'UNDERLINE' },
-		{ label: 'Monospace', style: 'CODE' },
-	];
 
 	const handleFontSelect = useCallback(
 		(font) => {
@@ -153,6 +154,16 @@ const NavEditor = ({
 		},
 		[fontSize]
 	);
+
+	// Load available fonts
+	useEffect(() => {
+		const fetchFonts = async () => {
+			const newFontList = await ipcRenderer.invoke('load-font-list');
+			setFontList(newFontList);
+		};
+		fetchFonts();
+		console.log('ipcRenderer useEffect triggered');
+	}, [ipcRenderer, setFontList]);
 
 	return (
 		<nav className='editor-nav'>
@@ -317,4 +328,4 @@ const NavEditor = ({
 	);
 };
 
-export default NavEditor;
+export default EditorNav;

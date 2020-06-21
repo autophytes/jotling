@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+import LeftNavContent from './LeftNavContent';
+
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import PlusSVG from '../../../assets/svg/PlusSVG';
 import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
@@ -6,7 +9,8 @@ import DocumentPagesSVG from '../../../assets/svg/DocumentPagesSVG';
 import LightbulbSVG from '../../../assets/svg/LightbulbSVG';
 import BookDraftSVG from '../../../assets/svg/BookDraftSVG';
 
-const NavLeft = () => {
+const LeftNav = ({ docStructure, setDocStructure }) => {
+	const [currentTab, setCurrentTab] = useState('draft');
 	return (
 		<nav className='side-nav left-nav'>
 			<div className='side-nav-container'>
@@ -23,40 +27,31 @@ const NavLeft = () => {
 						<PushpinSVG />
 					</button>
 				</div>
+
 				<div className='left-nav-sections'>
-					<div className='nav-section-tab first'>
-						{/* <img src='icons/pages.svg' /> */}
+					<div
+						className={'nav-section-tab first' + (currentTab === 'pages' ? ' active' : '')}
+						onClick={() => setCurrentTab('pages')}>
 						<DocumentPagesSVG />
 					</div>
-					<div className='nav-section-tab'>
-						{/* <img src='icons/lamp.svg' /> */}
+					<div
+						className={'nav-section-tab' + (currentTab === 'research' ? ' active' : '')}
+						onClick={() => setCurrentTab('research')}>
 						<LightbulbSVG />
 					</div>
-					<div className='nav-section-tab last active'>
-						{/* <img src='icons/book (2).svg' /> */}
+					<div
+						className={'nav-section-tab last' + (currentTab === 'draft' ? ' active' : '')}
+						onClick={() => setCurrentTab('draft')}>
 						<BookDraftSVG />
 					</div>
 				</div>
-				<div className='left-nav-content'>
-					<div className='file-nav folder'>
-						<p className='file-nav folder title'>Chapter 1</p>
-						<div className='folder-contents'>
-							<p className='file-nav document'>Sub 1</p>
-							<div className='file-nav folder'>
-								<p className='file-nav folder title'>Sub 2</p>
-								<div className='folder-contents'>
-									<p className='file-nav document'>Sub sub 1</p>
-									<p className='file-nav document'>Sub sub 2</p>
-									<p className='file-nav document'>Sub sub 3</p>
-								</div>
-							</div>
-						</div>
-					</div>
-					<p className='file-nav document'>Chapter 2</p>
-					<p className='file-nav document'>Chapter 3</p>
-					<p className='file-nav document'>Chapter 4</p>
-					<p className='file-nav document'>Chapter 5</p>
-				</div>
+
+				<LeftNavContent
+					docStructure={docStructure}
+					setDocStructure={setDocStructure}
+					currentTab={currentTab}
+				/>
+
 				<div className='left-nav-footer'>
 					<p>497 words</p>
 					<p>49% today's goal</p>
@@ -67,4 +62,4 @@ const NavLeft = () => {
 	);
 };
 
-export default NavLeft;
+export default LeftNav;

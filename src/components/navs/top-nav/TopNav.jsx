@@ -8,7 +8,7 @@ import SettingsUserSVG from '../../../assets/svg/SettingsUserSVG';
 import TypewriterSVG from '../../../assets/svg/TypewriterSVG';
 import TagMultipleSVG from '../../../assets/svg/TagMultipleSVG';
 
-const NavTop = () => {
+const TopNav = () => {
 	return (
 		<nav className='top-nav'>
 			<button className='nav-button with-text'>
@@ -65,4 +65,4 @@ const NavTop = () => {
 	);
 };
 
-export default NavTop;
+export default TopNav;

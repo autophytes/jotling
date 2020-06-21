@@ -5,7 +5,7 @@ import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
 import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
 import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
 
-const NavRight = () => {
+const RightNav = () => {
 	return (
 		<nav className='side-nav right-nav'>
 			<div className='vertical-rule' style={{ marginRight: '0.5rem' }}></div>
@@ -50,4 +50,4 @@ const NavRight = () => {
 	);
 };
 
-export default NavRight;
+export default RightNav;

@@ -19,7 +19,7 @@ import Editor from 'draft-js-plugins-editor';
 import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
 import { setBlockData } from 'draftjs-utils';
 
-import NavEditor from '../navs/nav-editor/NavEditor';
+import EditorNav from '../navs/editor-nav/EditorNav';
 
 import { spaceToAutoList, enterToUnindentList } from './KeyBindFunctions';
 
@@ -63,22 +63,12 @@ const EditorContainer = () => {
 	);
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
-	const [fontList, setFontList] = useState([]);
+
 	const [currentFont, setCurrentFont] = useState('PT Sans');
-	const [fontSize, setFontSize] = useState(22);
+	const [fontSize, setFontSize] = useState(18);
 	const [lineHeight, setLineHeight] = useState(1.5);
 	const [style, setStyle] = useState({});
 	const editorRef = useRef(null);
-
-	// Load available fonts
-	useEffect(() => {
-		const fetchFonts = async () => {
-			const newFontList = await ipcRenderer.invoke('load-font-list');
-			setFontList(newFontList);
-		};
-		fetchFonts();
-		console.log('ipcRenderer useEffect triggered');
-	}, [ipcRenderer, setFontList]);
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback(
@@ -160,14 +150,14 @@ const EditorContainer = () => {
 		return 'not-handled'; // Lets Draft know to try to handle this itself.
 	};
 
-	// I'll use this and the one below in my NavEditor buttons
+	// I'll use this and the one below in my EditorNav buttons
 	const toggleBlockType = (e, blockType) => {
 		e.preventDefault();
 		setEditorState(RichUtils.toggleBlockType(editorState, blockType));
 		// editorRef.current.focus();
 	};
 
-	// I'll use this and the one above in my NavEditor buttons
+	// I'll use this and the one above in my EditorNav buttons
 	const toggleInlineStyle = (e, inlineStyle, removeStyle) => {
 		!!e && e.preventDefault();
 		setEditorState(RichUtils.toggleInlineStyle(editorState, inlineStyle));
@@ -280,7 +270,7 @@ const EditorContainer = () => {
 
 	return (
 		<main className='editor-area'>
-			<NavEditor
+			<EditorNav
 				editorState={editorState}
 				toggleBlockType={toggleBlockType}
 				toggleBlockStyle={toggleBlockStyle}
@@ -290,7 +280,6 @@ const EditorContainer = () => {
 				toggleSpellCheck={toggleSpellCheck}
 				currentFont={currentFont}
 				setCurrentFont={setCurrentFont}
-				fontList={fontList}
 				fontSize={fontSize}
 				setFontSize={setFontSize}
 				lineHeight={lineHeight}

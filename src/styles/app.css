@@ -7,7 +7,7 @@ html,
 }
 
 :root {
-	font-size: 18px;
+	font-size: 14px;
 	--top-nav-height: 2.5rem;
 	--left-nav-width: 12rem;
 	--right-nav-width: 12rem;
@@ -76,7 +76,7 @@ body {
 	margin-top: 2rem;
 	flex-grow: 1;
 	font-family: 'PT Serif', 'Georgia', serif;
-	font-size: 22px;
+	font-size: 16px;
 	line-height: 1.15em;
 	display: flex;
 	flex-direction: column;
@@ -274,15 +274,24 @@ li .public-DraftStyleDefault-block {
 .left-nav-content,
 .right-nav-content {
 	height: 100%;
-	padding: 0.5rem 0.25rem;
+	padding: 0.5rem 0.5rem;
 }
 
 p.file-nav {
 	margin: 0;
+	user-select: none;
+	cursor: pointer;
 }
 
 .file-nav .folder-contents {
 	margin-left: 0.5rem;
+}
+
+.file-nav svg {
+	height: 0.75rem;
+	width: auto;
+	margin-right: 0.5rem;
+	fill: #aaa;
 }
 
 .nav-button > img,
