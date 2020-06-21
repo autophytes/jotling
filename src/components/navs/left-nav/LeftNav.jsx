@@ -9,7 +9,7 @@ import DocumentPagesSVG from '../../../assets/svg/DocumentPagesSVG';
 import LightbulbSVG from '../../../assets/svg/LightbulbSVG';
 import BookDraftSVG from '../../../assets/svg/BookDraftSVG';
 
-const LeftNav = ({ docStructure, setDocStructure }) => {
+const LeftNav = ({ docStructure, setDocStructure, currentDoc, setCurrentDoc }) => {
 	const [currentTab, setCurrentTab] = useState('draft');
 	return (
 		<nav className='side-nav left-nav'>
@@ -49,6 +49,8 @@ const LeftNav = ({ docStructure, setDocStructure }) => {
 				<LeftNavContent
 					docStructure={docStructure}
 					setDocStructure={setDocStructure}
+					currentDoc={currentDoc}
+					setCurrentDoc={setCurrentDoc}
 					currentTab={currentTab}
 				/>
 

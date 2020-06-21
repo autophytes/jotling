@@ -7,7 +7,7 @@ html,
 }
 
 :root {
-	font-size: 14px;
+	font-size: 18px;
 	--top-nav-height: 2.5rem;
 	--left-nav-width: 12rem;
 	--right-nav-width: 12rem;
@@ -18,16 +18,20 @@ html,
 
 @font-face {
 	font-family: 'PT Serif';
-	src: url('/../../static/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype');
+	/* src: url('/../../static/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype'); */
+	/* src: url('/../../static/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype'); */
+	src: url('/static/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype');
 }
 @font-face {
 	font-family: 'Lato';
-	src: url('/../../static/fonts/Lato/Lato-Regular.ttf') format('truetype');
+	/* src: url('/static/fonts/Lato/Lato-Regular.ttf') format('truetype'); */
+	src: url('/static/fonts/Lato/Lato-Regular.ttf') format('truetype');
 }
 /* NOTE: font's not working right now. Source Sans Pro is loading from Mac locally. */
 @font-face {
 	font-family: 'Source Sans Pro';
-	src: url('/../../static/fonts/Source_Sans_Pro/') format('truetype');
+	/* src: url('/static/fonts/Source_Sans_Pro/') format('truetype'); */
+	src: url('/static/fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf') format('truetype');
 }
 
 button {
@@ -294,6 +298,10 @@ p.file-nav {
 	fill: #aaa;
 }
 
+.file-nav.document.active {
+	font-weight: bold;
+}
+
 .nav-button > img,
 .nav-button > svg,
 .nav-section-tab > svg {
@@ -333,6 +341,7 @@ p.file-nav {
 	height: 0.81rem;
 	color: #fff;
 	text-shadow: 2px 2px 3px rgba(30, 30, 30, 0.1);
+	user-select: none;
 }
 
 .nav-button.add-file-button {

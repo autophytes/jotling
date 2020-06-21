@@ -5,6 +5,7 @@ import { ipcRenderer } from 'electron';
 import { defaultText } from './defaultText';
 
 import {
+	Editor,
 	EditorState,
 	ContentState,
 	SelectionState,
@@ -15,16 +16,16 @@ import {
 	convertToRaw,
 	convertFromRaw,
 } from 'draft-js';
-import Editor from 'draft-js-plugins-editor';
-import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
+// import Editor from 'draft-js-plugins-editor';
+// import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
 import { setBlockData } from 'draftjs-utils';
 
 import EditorNav from '../navs/editor-nav/EditorNav';
 
 import { spaceToAutoList, enterToUnindentList } from './KeyBindFunctions';
 
-const inlineToolbarPlugin = createInlineToolbarPlugin();
-const { InlineToolbar } = inlineToolbarPlugin;
+// const inlineToolbarPlugin = createInlineToolbarPlugin();
+// const { InlineToolbar } = inlineToolbarPlugin;
 const { hasCommandModifier } = KeyBindingUtil;
 
 // I can add custom inline styles. { Keyword: CSS property }
@@ -57,7 +58,7 @@ const blockStyleFn = (block) => {
 //
 //
 // COMPONENT
-const EditorContainer = () => {
+const EditorContainer = ({ currentProj, currentDoc }) => {
 	const [editorState, setEditorState] = useState(() =>
 		EditorState.createWithContent(ContentState.createFromText(defaultText))
 	);
@@ -69,6 +70,8 @@ const EditorContainer = () => {
 	const [lineHeight, setLineHeight] = useState(1.5);
 	const [style, setStyle] = useState({});
 	const editorRef = useRef(null);
+
+	const [prevDoc, setPrevDoc] = useState('');
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback(
@@ -235,7 +238,7 @@ const EditorContainer = () => {
 	}, [currentFont, fontSize, lineHeight]);
 
 	// Saves current file
-	const saveFile = () => {
+	const saveFile = (docName = currentDoc) => {
 		const currentContent = editorState.getCurrentContent();
 		const rawContent = convertToRaw(currentContent);
 		console.log(rawContent);
@@ -243,8 +246,8 @@ const EditorContainer = () => {
 		const sendFileToSave = async () => {
 			const newFileName = await ipcRenderer.invoke(
 				'save-single-document',
-				'Jotling/Test Project',
-				'x023jfsf.json',
+				'Jotling/' + currentProj,
+				docName,
 				rawContent
 			);
 			console.log(newFileName);
@@ -255,18 +258,41 @@ const EditorContainer = () => {
 	// Saves current file
 	const loadFile = () => {
 		const loadFileFromSave = async () => {
+			console.log('Jotling/' + currentProj);
+			console.log(currentDoc);
+
 			const loadedFile = await ipcRenderer.invoke(
 				'read-single-document',
-				'Jotling/Test Project',
-				'x023jfsf.json'
+				'Jotling/' + currentProj,
+				currentDoc
 			);
-			console.log(loadedFile);
-			const newContentState = convertFromRaw(loadedFile.fileContents);
-			const newEditorState = EditorState.createWithContent(newContentState);
-			setEditorState(newEditorState);
+
+			const fileContents = loadedFile.fileContents;
+			console.log(fileContents);
+
+			// If the file isn't empty (potentially meaning it)
+			if (!!fileContents && Object.keys(fileContents).length !== 0) {
+				const newContentState = convertFromRaw(loadedFile.fileContents);
+				const newEditorState = EditorState.createWithContent(newContentState);
+				setEditorState(newEditorState);
+			} else {
+				setEditorState(EditorState.createEmpty());
+			}
 		};
 		loadFileFromSave();
 	};
+
+	// Loading the new current document
+	useEffect(() => {
+		if (currentDoc !== prevDoc) {
+			if (prevDoc !== '') {
+				saveFile(prevDoc);
+			}
+			setPrevDoc(currentDoc);
+			console.log('loading the new currentDoc');
+			loadFile();
+		}
+	}, [currentDoc, prevDoc, setPrevDoc, loadFile]);
 
 	return (
 		<main className='editor-area'>
@@ -299,12 +325,12 @@ const EditorContainer = () => {
 					customStyleMap={customStyleMap}
 					blockStyleFn={blockStyleFn}
 					// blockRenderMap={blockRenderMap}
-					plugins={[inlineToolbarPlugin]}
+					// plugins={[inlineToolbarPlugin]}
 					spellCheck={spellCheck}
 					key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
 				/>
 				<div className='editor-bottom-padding' />
-				<InlineToolbar />
+				{/* <InlineToolbar /> */}
 			</div>
 		</main>
 	);

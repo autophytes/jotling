@@ -2,12 +2,25 @@ import React, { useCallback } from 'react';
 import NavDocument from './NavDocument';
 import NavFolder from './NavFolder';
 
-const LeftNavContent = ({ docStructure, setDocStructure, currentTab }) => {
+const LeftNavContent = ({
+	docStructure,
+	setDocStructure,
+	currentTab,
+	currentDoc,
+	setCurrentDoc,
+}) => {
 	// Loops through the document structure and builds out the file/folder tree
 	const buildFileStructure = useCallback((doc, path) => {
 		return doc.children.map((child) => {
 			if (child.type === 'doc') {
-				return <NavDocument child={child} path={[path, 'children'].join('/')} />;
+				return (
+					<NavDocument
+						child={child}
+						currentDoc={currentDoc}
+						setCurrentDoc={setCurrentDoc}
+						path={[path, 'children'].join('/')}
+					/>
+				);
 			}
 			if (child.type === 'folder') {
 				const hasChildren = !!doc.folders[child.id]['children'].length;
@@ -31,7 +44,7 @@ const LeftNavContent = ({ docStructure, setDocStructure, currentTab }) => {
 			}
 			return <></>;
 		});
-	}, []);
+	});
 
 	return (
 		<div className='left-nav-content'>{buildFileStructure(docStructure[currentTab], '')}</div>

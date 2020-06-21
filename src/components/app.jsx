@@ -86,18 +86,19 @@ const defaultDocStructure2 = {
 // Create main App component
 const App = () => {
 	const [docStructure, setDocStructure] = useState(defaultDocStructure2);
-	console.log(docStructure);
+	const [currentDoc, setCurrentDoc] = useState('x023jfsf.json');
+	const [currentProj, setCurrentProj] = useState('Test Project');
 
 	// Loads the document map (function)
 	const loadDocStructure = useCallback(async () => {
 		const newDocStructure = await ipcRenderer.invoke(
 			'read-single-document',
-			'Jotling/Test Project',
+			'Jotling/' + currentProj,
 			'DocumentStructure.json'
 		);
 		setDocStructure(newDocStructure);
 		console.log('Loaded document structure.');
-	}, [setDocStructure]);
+	}, [setDocStructure, currentProj]);
 
 	// Saves the document map after every change
 	useEffect(() => {
@@ -112,29 +113,34 @@ const App = () => {
 		};
 		saveDocStructure();
 		console.log('Saving document structure.');
-	});
+	}, [docStructure]);
 
-	const loadFile = () => {
-		const loadFileFromSave = async () => {
-			const loadedFile = await ipcRenderer.invoke(
-				'read-single-document',
-				'Jotling/Test Project',
-				'x023jfsf.json'
-			);
-			console.log(loadedFile);
-			const newContentState = convertFromRaw(loadedFile.fileContents);
-			const newEditorState = EditorState.createWithContent(newContentState);
-			setEditorState(newEditorState);
-		};
-		loadFileFromSave();
-	};
+	// const loadFile = () => {
+	// 	const loadFileFromSave = async () => {
+	// 		const loadedFile = await ipcRenderer.invoke(
+	// 			'read-single-document',
+	// 			'Jotling/Test Project',
+	// 			'x023jfsf.json'
+	// 		);
+	// 		console.log(loadedFile);
+	// 		const newContentState = convertFromRaw(loadedFile.fileContents);
+	// 		const newEditorState = EditorState.createWithContent(newContentState);
+	// 		setEditorState(newEditorState);
+	// 	};
+	// 	loadFileFromSave();
+	// };
 
 	return (
 		<>
 			<TopNav />
-			<LeftNav docStructure={docStructure} setDocStructure={setDocStructure} />
+			<LeftNav
+				docStructure={docStructure}
+				setDocStructure={setDocStructure}
+				currentDoc={currentDoc}
+				setCurrentDoc={setCurrentDoc}
+			/>
 			<RightNav />
-			<EditorContainer />
+			<EditorContainer currentProj={currentProj} currentDoc={currentDoc} />
 		</>
 	);
 };
