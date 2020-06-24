@@ -1,6 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import NavDocument from './NavDocument';
 import NavFolder from './NavFolder';
+
+import Collapse from 'react-css-collapse';
 
 const LeftNavContent = ({
 	docStructure,
@@ -9,6 +11,18 @@ const LeftNavContent = ({
 	currentDoc,
 	setCurrentDoc,
 }) => {
+	const [openFolders, setOpenFolders] = useState({});
+
+	// Toggles open/close on folders
+	const handleFolderClick = useCallback(
+		(folderId) => {
+			console.log('folder clicked: ', folderId);
+			console.log('new isOpen: ', !openFolders[folderId]);
+			setOpenFolders({ ...openFolders, [folderId]: !openFolders[folderId] });
+		},
+		[openFolders, setOpenFolders]
+	);
+
 	// Loops through the document structure and builds out the file/folder tree
 	const buildFileStructure = useCallback((doc, path) => {
 		return doc.children.map((child) => {
@@ -24,21 +38,31 @@ const LeftNavContent = ({
 			}
 			if (child.type === 'folder') {
 				const hasChildren = !!doc.folders[child.id]['children'].length;
+				let isOpen;
+				if (openFolders.hasOwnProperty('folder-' + child.id)) {
+					isOpen = openFolders['folder-' + child.id];
+				} else {
+					isOpen = false;
+					setOpenFolders({ ...openFolders, ['folder-' + child.id]: false });
+				}
 				return (
 					<div className='file-nav folder' key={'folder-' + child.id}>
 						<NavFolder
 							child={child}
 							folder={doc.folders[child.id]}
 							path={[path, 'folders'].join('/')}
+							handleFolderClick={handleFolderClick}
 						/>
-						{hasChildren && (
-							<div className='folder-contents'>
-								{buildFileStructure(
-									doc.folders[child.id],
-									[path, 'folders', child.id].join('/')
-								)}
-							</div>
-						)}
+						<Collapse isOpen={isOpen}>
+							{hasChildren && (
+								<div className='folder-contents'>
+									{buildFileStructure(
+										doc.folders[child.id],
+										[path, 'folders', child.id].join('/')
+									)}
+								</div>
+							)}
+						</Collapse>
 					</div>
 				);
 			}

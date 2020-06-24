@@ -12,6 +12,7 @@
 		"postpackage": "electron-packager ./ --out=./builds"
 	},
 	"dependencies": {
+		"@babel/runtime": "^7.10.3",
 		"draft-js": "^0.11.6",
 		"draft-js-autolist-plugin": "^3.0.0",
 		"draft-js-inline-toolbar-plugin": "^3.0.1",
@@ -19,6 +20,7 @@
 		"draftjs-utils": "^0.10.2",
 		"font-list": "^1.2.11",
 		"react": "^16.13.1",
+		"react-css-collapse": "^4.0.6",
 		"react-dom": "^16.13.1",
 		"system-font-families": "^0.4.1"
 	},
