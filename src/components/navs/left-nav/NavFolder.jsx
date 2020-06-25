@@ -1,14 +1,15 @@
 import React from 'react';
-import FolderSVG from '../../../assets/svg/FolderSVG';
+import FolderClosedSVG from '../../../assets/svg/FolderClosedSVG';
+import FolderOpenSVG from '../../../assets/svg/FolderOpenSVG';
 
-const NavFolder = ({ child, folder, path, handleFolderClick }) => {
+const NavFolder = ({ child, folder, path, handleFolderClick, isOpen }) => {
 	return (
 		<p
-			className='file-nav folder title'
+			className={'file-nav folder title' + (isOpen ? ' open' : '')}
 			onClick={() => {
-				handleFolderClick('folder-' + child.id);
+				handleFolderClick(child.id);
 			}}>
-			<FolderSVG />
+			<div className='svg-wrapper'>{isOpen ? <FolderOpenSVG /> : <FolderClosedSVG />}</div>
 			{folder.name}
 		</p>
 	);

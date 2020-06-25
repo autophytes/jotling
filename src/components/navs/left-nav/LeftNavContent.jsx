@@ -12,6 +12,7 @@ const LeftNavContent = ({
 	setCurrentDoc,
 }) => {
 	const [openFolders, setOpenFolders] = useState({});
+	const [lastClicked, setLastClicked] = useState({});
 
 	// Toggles open/close on folders
 	const handleFolderClick = useCallback(
@@ -19,6 +20,7 @@ const LeftNavContent = ({
 			console.log('folder clicked: ', folderId);
 			console.log('new isOpen: ', !openFolders[folderId]);
 			setOpenFolders({ ...openFolders, [folderId]: !openFolders[folderId] });
+			setLastClicked({ type: 'folder', id: folderId });
 		},
 		[openFolders, setOpenFolders]
 	);
@@ -32,6 +34,8 @@ const LeftNavContent = ({
 						child={child}
 						currentDoc={currentDoc}
 						setCurrentDoc={setCurrentDoc}
+						lastClicked={lastClicked}
+						setLastClicked={setLastClicked}
 						path={[path, 'children'].join('/')}
 					/>
 				);
@@ -39,11 +43,11 @@ const LeftNavContent = ({
 			if (child.type === 'folder') {
 				const hasChildren = !!doc.folders[child.id]['children'].length;
 				let isOpen;
-				if (openFolders.hasOwnProperty('folder-' + child.id)) {
-					isOpen = openFolders['folder-' + child.id];
+				if (openFolders.hasOwnProperty(child.id)) {
+					isOpen = openFolders[child.id];
 				} else {
 					isOpen = false;
-					setOpenFolders({ ...openFolders, ['folder-' + child.id]: false });
+					setOpenFolders({ ...openFolders, [child.id]: false });
 				}
 				return (
 					<div className='file-nav folder' key={'folder-' + child.id}>
@@ -52,6 +56,7 @@ const LeftNavContent = ({
 							folder={doc.folders[child.id]}
 							path={[path, 'folders'].join('/')}
 							handleFolderClick={handleFolderClick}
+							isOpen={isOpen}
 						/>
 						<Collapse isOpen={isOpen}>
 							{hasChildren && (

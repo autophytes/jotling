@@ -256,13 +256,13 @@ li .public-DraftStyleDefault-block {
 
 .nav-section-tab.active {
 	border-top: 3px solid var(--color-primary);
-	border-bottom: none;
+	border-bottom: 2px solid rgba(0, 0, 0, 0);
 }
 .nav-section-tab.last {
-	border-right: none;
+	border-right: 2px solid rgba(0, 0, 0, 0);
 }
 .nav-section-tab.first {
-	border-left: none;
+	border-left: 2px solid rgba(0, 0, 0, 0);
 }
 .nav-section-tab.first.active {
 	border-left: 2px solid #bbb;
@@ -294,12 +294,35 @@ p.file-nav {
 .file-nav svg {
 	height: 0.75rem;
 	width: auto;
-	margin-right: 0.5rem;
-	fill: #aaa;
+	/* margin-right: 0.5rem; */
+	fill: #888;
+}
+.file-nav .svg-wrapper {
+	width: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+.file-nav.folder.title,
+.file-nav.document {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
 }
 
 .file-nav.document.active {
 	font-weight: bold;
+	/* text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1); */
+}
+
+.file-nav.document.active svg {
+	fill: var(--color-primary);
+}
+
+.file-nav.folder.title.open svg {
+	height: 0.9rem;
 }
 
 .nav-button > img,
