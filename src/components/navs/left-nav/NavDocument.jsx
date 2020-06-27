@@ -11,19 +11,19 @@ const NavDocument = ({
 }) => {
 	const handleClick = useCallback(() => {
 		currentDoc !== child.fileName && setCurrentDoc(child.fileName);
-		setLastClicked({ type: 'document', id: child.id });
+		setLastClicked({ type: 'doc', id: child.id });
 	}, [setCurrentDoc, child]);
 
 	return (
-		<p
+		<button
 			className={'file-nav document' + (currentDoc === child.fileName ? ' active' : '')}
-			key={'doc-' + child.id}
-			onMouseDown={handleClick}>
+			// key={'doc-' + child.id}
+			onClick={handleClick}>
 			<div className='svg-wrapper'>
 				<DocumentSingleSVG />
 			</div>
 			{child.name}
-		</p>
+		</button>
 	);
 };
 

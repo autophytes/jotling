@@ -10,15 +10,15 @@ const LeftNavContent = ({
 	currentTab,
 	currentDoc,
 	setCurrentDoc,
+	lastClicked,
+	setLastClicked,
 }) => {
 	const [openFolders, setOpenFolders] = useState({});
-	const [lastClicked, setLastClicked] = useState({});
 
 	// Toggles open/close on folders
 	const handleFolderClick = useCallback(
 		(folderId) => {
 			console.log('folder clicked: ', folderId);
-			console.log('new isOpen: ', !openFolders[folderId]);
 			setOpenFolders({ ...openFolders, [folderId]: !openFolders[folderId] });
 			setLastClicked({ type: 'folder', id: folderId });
 		},
@@ -37,6 +37,7 @@ const LeftNavContent = ({
 						lastClicked={lastClicked}
 						setLastClicked={setLastClicked}
 						path={[path, 'children'].join('/')}
+						key={'doc-' + child.id}
 					/>
 				);
 			}
@@ -71,7 +72,7 @@ const LeftNavContent = ({
 					</div>
 				);
 			}
-			return <></>;
+			// return <></>;
 		});
 	});
 

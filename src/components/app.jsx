@@ -86,34 +86,47 @@ const defaultDocStructure2 = {
 // Create main App component
 const App = () => {
 	const [docStructure, setDocStructure] = useState(defaultDocStructure2);
+	const [structureLoaded, setStructureLoaded] = useState(false);
 	const [currentDoc, setCurrentDoc] = useState('x023jfsf.json');
 	const [currentProj, setCurrentProj] = useState('Test Project');
+	const [prevProj, setPrevProj] = useState('');
 
 	// Loads the document map (function)
 	const loadDocStructure = useCallback(async () => {
+		console.log('Loading the new document structure...');
 		const newDocStructure = await ipcRenderer.invoke(
 			'read-single-document',
 			'Jotling/' + currentProj,
 			'DocumentStructure.json'
 		);
-		setDocStructure(newDocStructure);
-		console.log('Loaded document structure.');
-	}, [setDocStructure, currentProj]);
+		setDocStructure(newDocStructure.fileContents);
+		setStructureLoaded(true);
+	}, [setDocStructure, setStructureLoaded, currentProj]);
+
+	// Loads the document structure when the project changes
+	useEffect(() => {
+		if (prevProj !== currentProj) {
+			loadDocStructure();
+			setPrevProj(currentProj);
+		}
+	}, [loadDocStructure, prevProj, currentProj]);
 
 	// Saves the document map after every change
 	useEffect(() => {
-		const saveDocStructure = async () => {
-			const saveResponse = await ipcRenderer.invoke(
-				'save-single-document',
-				'Jotling/Test Project',
-				'DocumentStructure.json',
-				docStructure
-			);
-			console.log(saveResponse);
-		};
-		saveDocStructure();
-		console.log('Saving document structure.');
-	}, [docStructure]);
+		if (structureLoaded) {
+			const saveDocStructure = async () => {
+				const saveResponse = await ipcRenderer.invoke(
+					'save-single-document',
+					'Jotling/Test Project',
+					'DocumentStructure.json',
+					docStructure
+				);
+				console.log(saveResponse);
+			};
+			saveDocStructure();
+			console.log('Saving document structure.');
+		}
+	}, [docStructure, structureLoaded]);
 
 	// const loadFile = () => {
 	// 	const loadFileFromSave = async () => {

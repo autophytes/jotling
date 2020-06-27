@@ -14,6 +14,7 @@ html,
 	--color-primary: #0095ff;
 	--color-primary-dark: #0d75c8;
 	--color-background: #fafafa;
+	--color-primary-rgb: 0, 149, 255;
 }
 
 @font-face {
@@ -281,10 +282,18 @@ li .public-DraftStyleDefault-block {
 	padding: 0.5rem 0.5rem;
 }
 
-p.file-nav {
+p.file-nav,
+button.file-nav {
+	font-size: inherit;
 	margin: 0;
 	user-select: none;
 	cursor: pointer;
+}
+
+button.file-nav:focus {
+	outline: none;
+	/* outline-color: var(--color-primary); */
+	background-color: rgba(var(--color-primary-rgb), 0.2);
 }
 
 .file-nav .folder-contents {
@@ -367,6 +376,11 @@ p.file-nav {
 	user-select: none;
 }
 
+.add-file-folder-wrapper {
+	display: flex;
+	flex-direction: row;
+}
+
 .nav-button.add-file-button {
 	padding: 0.25rem;
 	height: 1.5rem;
@@ -375,6 +389,22 @@ p.file-nav {
 	justify-content: flex-start;
 	align-items: center;
 }
+
+.nav-button.add-file-button > svg {
+	height: 0.75rem;
+}
+.nav-button.add-file-button .plus-sign > svg {
+	height: 0.5rem;
+}
+
+.nav-button.add-file-button .file-or-folder {
+	width: 0.6rem;
+	margin-left: 0.25rem;
+	border-left: 1px solid #444;
+}
+/* .nav-button.add-file-button .file-or-folder > svg {
+
+} */
 
 .right-aligned-block .public-DraftStyleDefault-ltr {
 	text-align: right;
