@@ -39,6 +39,8 @@ export const insertIntoArrayAtPropertyPath = (path, value, object) => {
 	let pathArray = path.split('/');
 	var arrayLength = pathArray.length;
 
+	console.log(pathArray);
+
 	// Move our reference down the file path inside the object
 	for (let i = 0; i < arrayLength - 1; i++) {
 		let pathSegment = pathArray[i];
@@ -84,7 +86,7 @@ export const findMaxFileTypeIds = (currentFolder) => {
 	return childIds;
 };
 
-// For a folder structure, pulls the max id for each file type
+// Finds the file path of a given file a docStructure folder
 export const findFilePath = (currentFolder, path, fileType, fileId) => {
 	// For this folder level's children, look for a matching type and id
 	for (let child of currentFolder.children) {
@@ -108,4 +110,12 @@ export const findFilePath = (currentFolder, path, fileType, fileId) => {
 			return filePath;
 		}
 	}
+};
+
+export const updateChildName = (childType, childId, newName, path) => {
+	console.log('updating child name');
+	let trimmedPath = path[0] === '/' ? path.slice(1) : path;
+
+	let currentChildren = retrieveContentAtPropertyPath(trimmedPath);
+	console.log(currentChildren);
 };

@@ -4,6 +4,10 @@ html,
 *::before,
 *::after {
 	box-sizing: border-box;
+	font-family: 'Source Sans Pro', 'Trebuchet MS', sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
 }
 
 :root {
@@ -39,8 +43,8 @@ button {
 	border: none;
 	background-color: rgba(0, 0, 0, 0);
 	padding: 0;
-	font-family: inherit;
-	font-weight: inherit;
+	/* font-family: inherit; */
+	/* font-weight: inherit; */
 }
 
 svg {
@@ -49,10 +53,6 @@ svg {
 
 body {
 	/* font-family: 'PT Serif', 'Georgia', serif; */
-	font-family: 'Source Sans Pro', 'Trebuchet MS', sans-serif;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	text-rendering: optimizeLegibility;
 	background-color: var(--color-background);
 	/* color: #111; */
 	color: #212529;
@@ -285,9 +285,18 @@ li .public-DraftStyleDefault-block {
 p.file-nav,
 button.file-nav {
 	font-size: inherit;
+	/* font-family: inherit; */
 	margin: 0;
 	user-select: none;
 	cursor: pointer;
+}
+
+button.file-nav input {
+	font-size: inherit;
+	width: 100%;
+	padding: 0.1rem 0 0 0.25rem;
+	border-radius: 0;
+	border: 1px solid var(--color-primary-dark);
 }
 
 button.file-nav:focus {

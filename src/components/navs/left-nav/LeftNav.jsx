@@ -1,10 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
+
+import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import LeftNavContent from './LeftNavContent';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import PlusSVG from '../../../assets/svg/PlusSVG';
-import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
+// import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
 import DocumentPagesSVG from '../../../assets/svg/DocumentPagesSVG';
 import LightbulbSVG from '../../../assets/svg/LightbulbSVG';
 import BookDraftSVG from '../../../assets/svg/BookDraftSVG';
@@ -18,9 +20,12 @@ import {
 	insertIntoArrayAtPropertyPath,
 } from '../../../utils/utils';
 
-const LeftNav = ({ docStructure, setDocStructure, currentDoc, setCurrentDoc }) => {
+const LeftNav = ({ currentDoc, setCurrentDoc }) => {
 	const [currentTab, setCurrentTab] = useState('draft');
 	const [lastClicked, setLastClicked] = useState({ type: '', id: '' });
+	const [editFile, setEditFile] = useState('');
+
+	const { docStructure, setDocStructure } = useContext(LeftNavContext);
 
 	const addFile = useCallback(
 		(fileType) => {
@@ -42,18 +47,21 @@ const LeftNav = ({ docStructure, setDocStructure, currentDoc, setCurrentDoc }) =
 			}
 
 			// Build the object that will go in 'children' at the path
-			let childObject = { type: fileType, id: maxIds[fileType] + 1 };
+			let childObject = {
+				type: fileType,
+				id: maxIds[fileType] + 1,
+				name: fileType === 'Doc' ? 'New Document' : `New ${fileType}`,
+			};
 			if (fileType === 'doc') {
-				childObject.name = 'New Document';
 				childObject.fileName = 'doc' + childObject.id + '.json';
 			}
 
 			// Build the object that will go in 'folders' at the path.
 			if (fileType === 'folder') {
-				let folderObject = { name: 'New Folder', folders: {}, children: [] };
+				let folderObject = { folders: {}, children: [] };
 				// Insert the folder into the folder structure
 				folderStructure = setObjPropertyAtPropertyPath(
-					filePath + '/folders/' + childObject.id,
+					filePath + (filePath === '' ? '' : '/') + 'folders/' + childObject.id,
 					folderObject,
 					folderStructure
 				);
@@ -61,10 +69,14 @@ const LeftNav = ({ docStructure, setDocStructure, currentDoc, setCurrentDoc }) =
 
 			// Inserts the new child into our folderStructure at the destination path
 			folderStructure = insertIntoArrayAtPropertyPath(
-				filePath + '/children',
+				filePath + (filePath === '' ? '' : '/') + 'children',
 				childObject,
 				folderStructure
 			);
+
+			// Will put the file name into edit mode
+			let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
+			setEditFile(newEditFileId);
 
 			setDocStructure({ ...docStructure, [currentTab]: folderStructure });
 		},
@@ -120,6 +132,8 @@ const LeftNav = ({ docStructure, setDocStructure, currentDoc, setCurrentDoc }) =
 					currentTab={currentTab}
 					lastClicked={lastClicked}
 					setLastClicked={setLastClicked}
+					editFile={editFile}
+					setEditFile={setEditFile}
 				/>
 
 				<div className='left-nav-footer'>

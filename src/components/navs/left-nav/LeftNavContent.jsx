@@ -1,19 +1,23 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useContext } from 'react';
 import NavDocument from './NavDocument';
 import NavFolder from './NavFolder';
+
+import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import Collapse from 'react-css-collapse';
 
 const LeftNavContent = ({
-	docStructure,
-	setDocStructure,
 	currentTab,
 	currentDoc,
 	setCurrentDoc,
 	lastClicked,
 	setLastClicked,
+	editFile,
+	setEditFile,
 }) => {
 	const [openFolders, setOpenFolders] = useState({});
+
+	const { docStructure, setDocStructure } = useContext(LeftNavContext);
 
 	// Toggles open/close on folders
 	const handleFolderClick = useCallback(
@@ -32,10 +36,13 @@ const LeftNavContent = ({
 				return (
 					<NavDocument
 						child={child}
+						docStructure={docStructure}
 						currentDoc={currentDoc}
 						setCurrentDoc={setCurrentDoc}
 						lastClicked={lastClicked}
 						setLastClicked={setLastClicked}
+						editFile={editFile}
+						setEditFile={setEditFile}
 						path={[path, 'children'].join('/')}
 						key={'doc-' + child.id}
 					/>
@@ -54,8 +61,7 @@ const LeftNavContent = ({
 					<div className='file-nav folder' key={'folder-' + child.id}>
 						<NavFolder
 							child={child}
-							folder={doc.folders[child.id]}
-							path={[path, 'folders'].join('/')}
+							path={[path, 'children'].join('/')}
 							handleFolderClick={handleFolderClick}
 							isOpen={isOpen}
 						/>
