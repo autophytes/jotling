@@ -1,8 +1,7 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Immutable from 'immutable';
+import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import { ipcRenderer } from 'electron';
 
-import { defaultText } from './defaultText';
+import { LeftNavContext } from '../../contexts/leftNavContext';
 
 import {
 	Editor,
@@ -16,14 +15,16 @@ import {
 	convertToRaw,
 	convertFromRaw,
 } from 'draft-js';
-// import Editor from 'draft-js-plugins-editor';
-// import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
 import { setBlockData } from 'draftjs-utils';
 
 import EditorNav from '../navs/editor-nav/EditorNav';
 
+import { defaultText } from './defaultText';
 import { spaceToAutoList, enterToUnindentList } from './KeyBindFunctions';
 
+// import Immutable from 'immutable';a
+// import Editor from 'draft-js-plugins-editor';
+// import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
 // const inlineToolbarPlugin = createInlineToolbarPlugin();
 // const { InlineToolbar } = inlineToolbarPlugin;
 const { hasCommandModifier } = KeyBindingUtil;
@@ -58,7 +59,8 @@ const blockStyleFn = (block) => {
 //
 //
 // COMPONENT
-const EditorContainer = ({ currentProj, currentDoc }) => {
+const EditorContainer = () => {
+	// STATE
 	const [editorState, setEditorState] = useState(() =>
 		EditorState.createWithContent(ContentState.createFromText(defaultText))
 	);
@@ -72,6 +74,9 @@ const EditorContainer = ({ currentProj, currentDoc }) => {
 	const editorRef = useRef(null);
 
 	const [prevDoc, setPrevDoc] = useState('');
+
+	// CONTEXT
+	const { navData } = useContext(LeftNavContext);
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback(
@@ -238,7 +243,7 @@ const EditorContainer = ({ currentProj, currentDoc }) => {
 	}, [currentFont, fontSize, lineHeight]);
 
 	// Saves current file
-	const saveFile = (docName = currentDoc) => {
+	const saveFile = (docName = navData.currentDoc) => {
 		const currentContent = editorState.getCurrentContent();
 		const rawContent = convertToRaw(currentContent);
 		console.log(rawContent);
@@ -246,7 +251,7 @@ const EditorContainer = ({ currentProj, currentDoc }) => {
 		const sendFileToSave = async () => {
 			const newFileName = await ipcRenderer.invoke(
 				'save-single-document',
-				'Jotling/' + currentProj,
+				'Jotling/' + navData.currentProj,
 				docName,
 				rawContent
 			);
@@ -258,13 +263,12 @@ const EditorContainer = ({ currentProj, currentDoc }) => {
 	// Saves current file
 	const loadFile = () => {
 		const loadFileFromSave = async () => {
-			console.log('Jotling/' + currentProj);
-			console.log(currentDoc);
+			console.log('Jotling/' + navData.currentProj);
 
 			const loadedFile = await ipcRenderer.invoke(
 				'read-single-document',
-				'Jotling/' + currentProj,
-				currentDoc
+				'Jotling/' + navData.currentProj,
+				navData.currentDoc
 			);
 
 			const fileContents = loadedFile.fileContents;
@@ -284,15 +288,15 @@ const EditorContainer = ({ currentProj, currentDoc }) => {
 
 	// Loading the new current document
 	useEffect(() => {
-		if (currentDoc !== prevDoc) {
+		if (navData.currentDoc !== prevDoc) {
 			if (prevDoc !== '') {
 				saveFile(prevDoc);
 			}
-			setPrevDoc(currentDoc);
+			setPrevDoc(navData.currentDoc);
 			console.log('loading the new currentDoc');
 			loadFile();
 		}
-	}, [currentDoc, prevDoc, setPrevDoc, loadFile]);
+	}, [navData.currentDoc, prevDoc, setPrevDoc, loadFile]);
 
 	return (
 		<main className='editor-area'>

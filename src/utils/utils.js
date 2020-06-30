@@ -1,9 +1,10 @@
 // Retrieves a value along an object property path string (draft/1/folders/5/children)
 // Uses '/' as the property delimiter.
 export const retrieveContentAtPropertyPath = (key, obj) => {
-	return key.split('/').reduce(function (a, b) {
+	let newContent = key.split('/').reduce(function (a, b) {
 		return a && a[b];
 	}, obj);
+	return JSON.parse(JSON.stringify(newContent));
 };
 
 // Inserts a value at an object property path string (draft/1/folders/5/children)
@@ -112,10 +113,36 @@ export const findFilePath = (currentFolder, path, fileType, fileId) => {
 	}
 };
 
-export const updateChildName = (childType, childId, newName, path) => {
-	console.log('updating child name');
+// Updates the name of a file/folder in a given 'children' array in the docStructure
+export const updateChildName = (
+	childType,
+	childId,
+	newName,
+	path,
+	docStructure,
+	setDocStructure,
+	currentTab
+) => {
+	// Removes a preceding / from the path if it exists
 	let trimmedPath = path[0] === '/' ? path.slice(1) : path;
 
-	let currentChildren = retrieveContentAtPropertyPath(trimmedPath);
-	console.log(currentChildren);
+	// Gets the children array at that path
+	let currentChildren = retrieveContentAtPropertyPath(trimmedPath, docStructure[currentTab]);
+
+	// Finds the matching child and updates the name
+	for (let i in currentChildren) {
+		if (currentChildren[i].id === childId && currentChildren[i].type === childType) {
+			currentChildren[i].name = newName;
+		}
+	}
+
+	// Inserts the children array back into the docStructure for our copy of the current tab
+	let newStructure = setObjPropertyAtPropertyPath(
+		trimmedPath,
+		currentChildren,
+		docStructure[currentTab]
+	);
+
+	// Updates the docStructure
+	setDocStructure({ ...docStructure, [currentTab]: newStructure });
 };

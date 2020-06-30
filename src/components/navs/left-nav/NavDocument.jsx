@@ -5,50 +5,58 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import { updateChildName } from '../../../utils/utils';
 
-const NavDocument = ({
-	path,
-	child,
-	currentDoc,
-	setCurrentDoc,
-	lastClicked,
-	setLastClicked,
-	editFile,
-	setEditFile,
-}) => {
+const NavDocument = ({ path, child }) => {
 	const [fileName, setFileName] = useState(child.name);
 
-	const { docStructure } = useContext(LeftNavContext);
+	const { navData, setNavData, docStructure, setDocStructure } = useContext(LeftNavContext);
 
 	const handleClick = useCallback(() => {
-		currentDoc !== child.fileName && setCurrentDoc(child.fileName);
-		setLastClicked({ type: 'doc', id: child.id });
-	}, [setCurrentDoc, child]);
+		navData.currentDoc !== child.fileName &&
+			setNavData({
+				...navData,
+				currentDoc: child.fileName,
+				lastClicked: { type: 'doc', id: child.id },
+			});
+	}, [navData.currentDoc, setNavData, child]);
 
 	const saveDocNameChange = useCallback(
 		(newName) => {
 			// update
-			updateChildName('doc', child.id, newName, path);
+			updateChildName(
+				'doc',
+				child.id,
+				newName,
+				path,
+				docStructure,
+				setDocStructure,
+				navData.currentTab
+			);
+			setNavData({ ...navData, editFile: '' });
 		},
 		[child, path]
 	);
 
-	console.log(path);
-
 	return (
 		<button
-			className={'file-nav document' + (currentDoc === child.fileName ? ' active' : '')}
+			className={
+				'file-nav document' + (navData.currentDoc === child.fileName ? ' active' : '')
+			}
 			// key={'doc-' + child.id}
 			onClick={handleClick}
-			onDoubleClick={() => setEditFile('doc-' + child.id)}>
+			onDoubleClick={() => setNavData({ ...navData, editFile: 'doc-' + child.id })}>
 			<div className='svg-wrapper'>
 				<DocumentSingleSVG />
 			</div>
-			{editFile === 'doc-' + child.id ? (
+			{navData.editFile === 'doc-' + child.id ? (
 				<input
 					type='text'
 					value={fileName}
+					autoFocus
 					onChange={(e) => setFileName(e.target.value)}
 					onBlur={(e) => saveDocNameChange(e.target.value)}
+					onKeyPress={(e) => {
+						e.key === 'Enter' && e.target.blur();
+					}}
 				/>
 			) : (
 				child.name

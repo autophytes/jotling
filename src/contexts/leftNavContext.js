@@ -48,8 +48,12 @@ const defaultDocStructure3 = {
 
 const LeftNavContextProvider = (props) => {
 	const [docStructure, setDocStructure] = useState(defaultDocStructure3);
-	const [leftNavData, setLeftNavData] = useState({
-		currentDoc: '',
+	const [navData, setNavData] = useState({
+		currentProj: 'Test Project',
+		currentDoc: 'x023jfsf.json',
+		currentTab: 'draft',
+		lastClicked: { type: '', id: '' },
+		editFile: '',
 	});
 	// const [globalData, setGlobalData] = useState({
 	// 	user: {
@@ -86,8 +90,7 @@ const LeftNavContextProvider = (props) => {
 	// });
 
 	return (
-		<LeftNavContext.Provider
-			value={{ docStructure, setDocStructure, leftNavData, setLeftNavData }}>
+		<LeftNavContext.Provider value={{ docStructure, setDocStructure, navData, setNavData }}>
 			{props.children}
 		</LeftNavContext.Provider>
 	);

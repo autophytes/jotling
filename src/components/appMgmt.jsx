@@ -12,33 +12,30 @@ import { LeftNavContext } from '../contexts/leftNavContext';
 
 // Create main App component
 const AppMgmt = () => {
-	// const [docStructure, setDocStructure] = useState({});
 	const [structureLoaded, setStructureLoaded] = useState(false);
-	const [currentDoc, setCurrentDoc] = useState('x023jfsf.json');
-	const [currentProj, setCurrentProj] = useState('Test Project');
 	const [prevProj, setPrevProj] = useState('');
 
-	const { docStructure, setDocStructure } = useContext(LeftNavContext);
+	const { docStructure, setDocStructure, navData } = useContext(LeftNavContext);
 
 	// Loads the document map (function)
 	const loadDocStructure = useCallback(async () => {
 		console.log('Loading the new document structure...');
 		const newDocStructure = await ipcRenderer.invoke(
 			'read-single-document',
-			'Jotling/' + currentProj,
+			'Jotling/' + navData.currentProj,
 			'DocumentStructure.json'
 		);
 		setDocStructure(newDocStructure.fileContents);
 		setStructureLoaded(true);
-	}, [setDocStructure, setStructureLoaded, currentProj]);
+	}, [setDocStructure, setStructureLoaded, navData.currentProj]);
 
 	// Loads the document structure when the project changes
 	useEffect(() => {
-		if (prevProj !== currentProj) {
+		if (prevProj !== navData.currentProj) {
 			loadDocStructure();
-			setPrevProj(currentProj);
+			setPrevProj(navData.currentProj);
 		}
-	}, [loadDocStructure, prevProj, currentProj]);
+	}, [loadDocStructure, prevProj, navData.currentProj]);
 
 	// Saves the document map after every change
 	useEffect(() => {
@@ -60,14 +57,9 @@ const AppMgmt = () => {
 	return (
 		<>
 			<TopNav />
-			<LeftNav
-				docStructure={docStructure}
-				setDocStructure={setDocStructure}
-				currentDoc={currentDoc}
-				setCurrentDoc={setCurrentDoc}
-			/>
+			<LeftNav />
 			<RightNav />
-			<EditorContainer currentProj={currentProj} currentDoc={currentDoc} />
+			<EditorContainer />
 		</>
 	);
 };

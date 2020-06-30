@@ -20,18 +20,14 @@ import {
 	insertIntoArrayAtPropertyPath,
 } from '../../../utils/utils';
 
-const LeftNav = ({ currentDoc, setCurrentDoc }) => {
-	const [currentTab, setCurrentTab] = useState('draft');
-	const [lastClicked, setLastClicked] = useState({ type: '', id: '' });
-	const [editFile, setEditFile] = useState('');
-
-	const { docStructure, setDocStructure } = useContext(LeftNavContext);
+const LeftNav = () => {
+	const { docStructure, setDocStructure, navData, setNavData } = useContext(LeftNavContext);
 
 	const addFile = useCallback(
 		(fileType) => {
 			// Create a docStructure object for our current tab.
 			// We'll insert our file and overwrite this section of docStructure.
-			let folderStructure = JSON.parse(JSON.stringify(docStructure[currentTab]));
+			let folderStructure = JSON.parse(JSON.stringify(docStructure[navData.currentTab]));
 			// Note the spread operator only performs a shallow copy (nested objects are still refs).
 			//   The JSON method performs a deep copy.
 
@@ -40,10 +36,16 @@ const LeftNav = ({ currentDoc, setCurrentDoc }) => {
 
 			// Find out where we need to insert the new file
 			let filePath = '';
-			if (lastClicked.type !== '') {
-				let tempPath = findFilePath(folderStructure, '', lastClicked.type, lastClicked.id);
+			if (navData.lastClicked.type !== '') {
+				let tempPath = findFilePath(
+					folderStructure,
+					'',
+					navData.lastClicked.type,
+					navData.lastClicked.id
+				);
 				filePath =
-					tempPath + (lastClicked.type === 'folder' ? `/folders/${lastClicked.id}` : '');
+					tempPath +
+					(navData.lastClicked.type === 'folder' ? `/folders/${navData.lastClicked.id}` : '');
 			}
 
 			// Build the object that will go in 'children' at the path
@@ -76,11 +78,11 @@ const LeftNav = ({ currentDoc, setCurrentDoc }) => {
 
 			// Will put the file name into edit mode
 			let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
-			setEditFile(newEditFileId);
+			setNavData({ ...navData, editFile: newEditFileId });
 
-			setDocStructure({ ...docStructure, [currentTab]: folderStructure });
+			setDocStructure({ ...docStructure, [navData.currentTab]: folderStructure });
 		},
-		[currentTab, lastClicked, docStructure, setDocStructure]
+		[navData.currentTab, navData.lastClicked, docStructure, setDocStructure]
 	);
 
 	return (
@@ -108,33 +110,29 @@ const LeftNav = ({ currentDoc, setCurrentDoc }) => {
 
 				<div className='left-nav-sections'>
 					<div
-						className={'nav-section-tab first' + (currentTab === 'pages' ? ' active' : '')}
-						onClick={() => setCurrentTab('pages')}>
+						className={
+							'nav-section-tab first' + (navData.currentTab === 'pages' ? ' active' : '')
+						}
+						onClick={() => setNavData({ ...navData, currentTab: 'pages' })}>
 						<DocumentPagesSVG />
 					</div>
 					<div
-						className={'nav-section-tab' + (currentTab === 'research' ? ' active' : '')}
-						onClick={() => setCurrentTab('research')}>
+						className={
+							'nav-section-tab' + (navData.currentTab === 'research' ? ' active' : '')
+						}
+						onClick={() => setNavData({ ...navData, currentTab: 'research' })}>
 						<LightbulbSVG />
 					</div>
 					<div
-						className={'nav-section-tab last' + (currentTab === 'draft' ? ' active' : '')}
-						onClick={() => setCurrentTab('draft')}>
+						className={
+							'nav-section-tab last' + (navData.currentTab === 'draft' ? ' active' : '')
+						}
+						onClick={() => setNavData({ ...navData, currentTab: 'draft' })}>
 						<BookDraftSVG />
 					</div>
 				</div>
 
-				<LeftNavContent
-					docStructure={docStructure}
-					setDocStructure={setDocStructure}
-					currentDoc={currentDoc}
-					setCurrentDoc={setCurrentDoc}
-					currentTab={currentTab}
-					lastClicked={lastClicked}
-					setLastClicked={setLastClicked}
-					editFile={editFile}
-					setEditFile={setEditFile}
-				/>
+				<LeftNavContent />
 
 				<div className='left-nav-footer'>
 					<p>497 words</p>
