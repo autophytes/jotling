@@ -17,7 +17,7 @@ const NavDocument = ({ path, child }) => {
 				currentDoc: child.fileName,
 				lastClicked: { type: 'doc', id: child.id },
 			});
-	}, [navData.currentDoc, setNavData, child]);
+	}, [setNavData, child, navData]);
 
 	const saveDocNameChange = useCallback(
 		(newName) => {
@@ -33,7 +33,7 @@ const NavDocument = ({ path, child }) => {
 			);
 			setNavData({ ...navData, editFile: '' });
 		},
-		[child, path]
+		[child, path, navData, docStructure, setDocStructure]
 	);
 
 	return (
@@ -42,6 +42,7 @@ const NavDocument = ({ path, child }) => {
 				'file-nav document' + (navData.currentDoc === child.fileName ? ' active' : '')
 			}
 			// key={'doc-' + child.id}
+			draggable
 			onClick={handleClick}
 			onDoubleClick={() => setNavData({ ...navData, editFile: 'doc-' + child.id })}>
 			<div className='svg-wrapper'>

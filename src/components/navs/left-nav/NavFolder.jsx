@@ -25,7 +25,7 @@ const NavFolder = ({ child, path, handleFolderClick, isOpen }) => {
 			);
 			setNavData({ ...navData, editFile: '' });
 		},
-		[child, path]
+		[child, path, docStructure, setDocStructure, setNavData, navData]
 	);
 
 	return (

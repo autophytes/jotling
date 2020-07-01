@@ -1,0 +1,29 @@
+{
+	"env": {
+		"browser": true,
+		"es2020": true,
+		"node": true
+	},
+	"extends": [
+		"eslint:recommended",
+		"plugin:react/recommended",
+		"plugin:react-hooks/recommended",
+		"plugin:import/warnings",
+		"plugin:jsx-a11y/recommended",
+		"plugin:flowtype/recommended"
+	],
+	"parserOptions": {
+		"ecmaFeatures": {
+			"jsx": true
+		},
+		"ecmaVersion": 11,
+		"sourceType": "module"
+	},
+	"plugins": ["react", "flowtype", "import", "jsx-a11y", "react-hooks"],
+	"rules": {
+		"no-unused-vars": "warn",
+		"no-prototype-builtins": "off",
+		"react/prop-types": "off",
+		"jsx-a11y/no-autofocus": "off"
+	}
+}

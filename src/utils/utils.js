@@ -37,7 +37,8 @@ export const setObjPropertyAtPropertyPath = (path, value, object) => {
 export const insertIntoArrayAtPropertyPath = (path, value, object) => {
 	let newObject = JSON.parse(JSON.stringify(object)); // This method performs a deep copy
 	let objectRef = newObject; // A moving reference to internal objects within 'object'
-	let pathArray = path.split('/');
+	let trimPath = path[0] === '/' ? path.slice(1) : path;
+	let pathArray = trimPath.split('/');
 	var arrayLength = pathArray.length;
 
 	console.log(pathArray);
@@ -106,7 +107,7 @@ export const findFilePath = (currentFolder, path, fileType, fileId) => {
 			fileId
 		);
 		// console.log(filePath);
-		if (!!filePath) {
+		if (filePath) {
 			console.log(`returned filePath: ${filePath}`);
 			return filePath;
 		}

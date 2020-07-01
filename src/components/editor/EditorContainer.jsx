@@ -117,7 +117,7 @@ const EditorContainer = () => {
 			// Auto-converts to lists
 			const returnValue = spaceToAutoList(editorState, setEditorState);
 
-			if (!!returnValue) {
+			if (returnValue) {
 				return returnValue;
 			}
 		}
@@ -125,7 +125,7 @@ const EditorContainer = () => {
 			// Un-indents lists
 			const returnValue = enterToUnindentList(editorState, setEditorState);
 
-			if (!!returnValue) {
+			if (returnValue) {
 				return returnValue;
 			}
 		}
@@ -260,8 +260,8 @@ const EditorContainer = () => {
 		sendFileToSave();
 	};
 
-	// Saves current file
-	const loadFile = () => {
+	// Loads current file
+	const loadFile = useCallback(() => {
 		const loadFileFromSave = async () => {
 			console.log('Jotling/' + navData.currentProj);
 
@@ -284,7 +284,7 @@ const EditorContainer = () => {
 			}
 		};
 		loadFileFromSave();
-	};
+	}, [navData]);
 
 	// Loading the new current document
 	useEffect(() => {
