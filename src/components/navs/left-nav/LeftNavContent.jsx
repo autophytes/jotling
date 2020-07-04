@@ -21,6 +21,14 @@ const LeftNavContent = () => {
 		[openFolders, setOpenFolders]
 	);
 
+	// Toggles open/close on folders
+	const openCloseFolder = useCallback(
+		(folderId, isOpen) => {
+			setOpenFolders({ ...openFolders, [folderId]: isOpen });
+		},
+		[openFolders, setOpenFolders]
+	);
+
 	// Loops through the document structure and builds out the file/folder tree
 	const buildFileStructure = useCallback((doc, path) => {
 		return doc.children.map((child) => {
@@ -48,6 +56,7 @@ const LeftNavContent = () => {
 							child={child}
 							path={[path, 'children'].join('/')}
 							handleFolderClick={handleFolderClick}
+							openCloseFolder={openCloseFolder}
 							isOpen={isOpen}
 						/>
 						<Collapse isOpen={isOpen}>

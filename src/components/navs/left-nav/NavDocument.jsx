@@ -55,6 +55,7 @@ const NavDocument = ({ path, child }) => {
 					autoFocus
 					onChange={(e) => setFileName(e.target.value)}
 					onBlur={(e) => saveDocNameChange(e.target.value)}
+					onFocus={(e) => e.target.select()}
 					onKeyPress={(e) => {
 						e.key === 'Enter' && e.target.blur();
 					}}

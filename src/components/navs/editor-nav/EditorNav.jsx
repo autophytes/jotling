@@ -126,7 +126,6 @@ const EditorNav = ({
 	const increaseDecreaseFontSize = useCallback(
 		(direction) => {
 			let oldSize = typeof fontSize === 'string' ? Number(fontSize) : fontSize;
-			console.log('parsing ints?');
 
 			if (direction === 'increase') {
 				if (oldSize < 12) {
@@ -199,11 +198,11 @@ const EditorNav = ({
 				onChange={(e) => setFontSize(e.target.value)}
 				style={{ marginLeft: '0.5rem' }}
 			/>
-			<button className='nav-button' onClick={() => increaseDecreaseFontSize('increase')}>
-				<IncreaseFontSizeSVG />
-			</button>
 			<button className='nav-button' onClick={() => increaseDecreaseFontSize('decrease')}>
 				<DecreaseFontSizeSVG />
+			</button>
+			<button className='nav-button' onClick={() => increaseDecreaseFontSize('increase')}>
+				<IncreaseFontSizeSVG />
 			</button>
 
 			<input
