@@ -32,6 +32,31 @@ export const setObjPropertyAtPropertyPath = (path, value, object) => {
 	return newObject;
 };
 
+// Deletes a property at an object property path string (draft/1/folders/5/children)
+// Uses '/' as the property delimiter.
+export const deleteObjPropertyAtPropertyPath = (path, object) => {
+	let newObject = JSON.parse(JSON.stringify(object)); // This method performs a deep copy
+	let objectRef = newObject; // A moving reference to internal objects within 'object'
+	let pathArray = path.split('/');
+	var arrayLength = pathArray.length;
+
+	// Move our reference down the file path inside the object
+	for (let i = 0; i < arrayLength - 1; i++) {
+		let pathSegment = pathArray[i];
+		// If the object at the path doesn't exist, we'll create it.
+		if (!objectRef[pathSegment]) {
+			objectRef[pathSegment] = {};
+		}
+		// Move the object reference to the next location down.
+		objectRef = objectRef[pathSegment];
+	}
+
+	// Set the final property in our path to our value
+	delete objectRef[pathArray[arrayLength - 1]];
+	// Object was mutated by our change at the reference location above.
+	return newObject;
+};
+
 // Inserts a value into an array at an object property path string (draft/1/folders/5/children)
 // Uses '/' as the property delimiter.
 export const insertIntoArrayAtPropertyPath = (path, value, object) => {
@@ -146,4 +171,62 @@ export const updateChildName = (
 
 	// Updates the docStructure
 	setDocStructure({ ...docStructure, [currentTab]: newStructure });
+};
+
+// Move a document/folder to a new destination, including the folder tree
+export const moveFileToPath = (currentFolder, moveFile, destFile) => {
+	let { type, id, path } = moveFile;
+	let { type: destType, id: destId, path: destPath } = destFile;
+	let folder = JSON.parse(JSON.stringify(currentFolder));
+
+	// Trim leading '/' from the paths
+	path = path[0] === '/' ? path.slice(1) : path;
+	destPath = destPath[0] === '/' ? destPath.slice(1) : destPath;
+
+	// Remove our file from it's original children path
+	let moveChildren = retrieveContentAtPropertyPath(path, folder);
+	let moveChild;
+	for (let i in moveChildren) {
+		if (moveChildren[i].type === type && moveChildren[i].id === id) {
+			moveChild = moveChildren.splice(i, 1);
+			break;
+		}
+	}
+
+	// Update folder with the mutated children
+	folder = setObjPropertyAtPropertyPath(path, moveChildren, folder);
+
+	// Find the index of the destination child
+	let destChildren = retrieveContentAtPropertyPath(destPath, folder);
+	let destChildIndex = destChildren.findIndex(
+		(child) => child.type === destType && child.id === destId
+	);
+
+	// Insert our moved child after the destination child
+	destChildren.splice(destChildIndex + 1, 0, moveChild[0]);
+	// Update folder with our mutated destChildren
+	folder = setObjPropertyAtPropertyPath(destPath, destChildren, folder);
+
+	// If we're moving a folder, also need to move it's file tree
+	if (type === 'folder') {
+		// Pull the moving folder path (using the folder ID, not 'children')
+		let moveFolderPath =
+			path.slice(-8) === 'children'
+				? path.slice(0, -8).concat('folders/', id)
+				: path.concat('folders/', id);
+		// Pull the destination folder path (using the folder ID, not 'children')
+		let destFolderPath =
+			destPath.slice(-8) === 'children'
+				? destPath.slice(0, -8).concat('folders/', id)
+				: destPath.concat('folders/', id);
+
+		// Extract the folder we're moving out
+		let moveFolder = retrieveContentAtPropertyPath(moveFolderPath.toString(), folder);
+		// Delete the folder we're moving
+		folder = deleteObjPropertyAtPropertyPath(moveFolderPath, folder);
+		// Insert the folder we're moving into the new location
+		folder = setObjPropertyAtPropertyPath(destFolderPath, moveFolder, folder);
+	}
+
+	return folder;
 };

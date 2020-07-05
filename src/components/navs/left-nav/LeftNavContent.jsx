@@ -8,17 +8,17 @@ import Collapse from 'react-css-collapse';
 
 const LeftNavContent = () => {
 	const [openFolders, setOpenFolders] = useState({});
+	const [currentlyDragging, setCurrentlyDragging] = useState({ type: '', id: '', path: '' });
 
 	const { docStructure, navData, setNavData } = useContext(LeftNavContext);
 
 	// Toggles open/close on folders
 	const handleFolderClick = useCallback(
 		(folderId) => {
-			console.log('folder clicked: ', folderId);
 			setOpenFolders({ ...openFolders, [folderId]: !openFolders[folderId] });
 			setNavData({ ...navData, lastClicked: { type: 'folder', id: folderId } });
 		},
-		[openFolders, setOpenFolders]
+		[openFolders, setOpenFolders, navData]
 	);
 
 	// Toggles open/close on folders
@@ -37,6 +37,8 @@ const LeftNavContent = () => {
 					<NavDocument
 						child={child}
 						path={[path, 'children'].join('/')}
+						currentlyDragging={currentlyDragging}
+						setCurrentlyDragging={setCurrentlyDragging}
 						key={'doc-' + child.id}
 					/>
 				);
@@ -57,6 +59,8 @@ const LeftNavContent = () => {
 							path={[path, 'children'].join('/')}
 							handleFolderClick={handleFolderClick}
 							openCloseFolder={openCloseFolder}
+							currentlyDragging={currentlyDragging}
+							setCurrentlyDragging={setCurrentlyDragging}
 							isOpen={isOpen}
 						/>
 						<Collapse isOpen={isOpen}>

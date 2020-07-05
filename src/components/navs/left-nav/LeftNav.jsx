@@ -36,6 +36,7 @@ const LeftNav = () => {
 
 			// Find out where we need to insert the new file
 			let filePath = '';
+			console.log(navData.lastClicked.type);
 			if (navData.lastClicked.type !== '') {
 				let tempPath = findFilePath(
 					folderStructure,
@@ -43,9 +44,15 @@ const LeftNav = () => {
 					navData.lastClicked.type,
 					navData.lastClicked.id
 				);
+				console.log(tempPath);
 				filePath =
 					tempPath +
-					(navData.lastClicked.type === 'folder' ? `/folders/${navData.lastClicked.id}` : '');
+					(navData.lastClicked.type === 'folder'
+						? tempPath === ''
+							? ''
+							: '/' + `folders/${navData.lastClicked.id}`
+						: '');
+				console.log(filePath);
 			}
 
 			// Build the object that will go in 'children' at the path
@@ -62,6 +69,7 @@ const LeftNav = () => {
 			if (fileType === 'folder') {
 				let folderObject = { folders: {}, children: [] };
 				// Insert the folder into the folder structure
+				console.log('filepath: ', filePath);
 				folderStructure = setObjPropertyAtPropertyPath(
 					filePath + (filePath === '' ? '' : '/') + 'folders/' + childObject.id,
 					folderObject,
@@ -79,6 +87,8 @@ const LeftNav = () => {
 			// Will put the file name into edit mode
 			let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
 			setNavData({ ...navData, editFile: newEditFileId });
+
+			console.log(folderStructure);
 
 			setDocStructure({ ...docStructure, [navData.currentTab]: folderStructure });
 		},

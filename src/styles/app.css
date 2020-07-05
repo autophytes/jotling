@@ -4,7 +4,7 @@ html,
 *::before,
 *::after {
 	box-sizing: border-box;
-	font-family: 'Source Sans Pro', 'Trebuchet MS', sans-serif;
+	font-family: inherit;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	text-rendering: optimizeLegibility;
@@ -53,6 +53,7 @@ svg {
 
 body {
 	/* font-family: 'PT Serif', 'Georgia', serif; */
+	font-family: 'Source Sans Pro', 'Trebuchet MS', sans-serif;
 	background-color: var(--color-background);
 	/* color: #111; */
 	color: #212529;
@@ -328,6 +329,7 @@ button.file-nav:focus {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
+	min-width: 5rem;
 }
 
 .file-nav.document.active {
