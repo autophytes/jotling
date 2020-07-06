@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useContext } from 'react';
 import NavDocument from './NavDocument';
 import NavFolder from './NavFolder';
+import NavFolderEmpty from './NavFolderEmpty';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
@@ -64,14 +65,19 @@ const LeftNavContent = () => {
 							isOpen={isOpen}
 						/>
 						<Collapse isOpen={isOpen}>
-							{hasChildren && (
-								<div className='folder-contents'>
-									{buildFileStructure(
+							<div className='folder-contents'>
+								{hasChildren ? (
+									buildFileStructure(
 										doc.folders[child.id],
 										[path, 'folders', child.id].join('/')
-									)}
-								</div>
-							)}
+									)
+								) : (
+									<NavFolderEmpty
+										path={[path, 'folders', child.id, 'children'].join('/')}
+										currentlyDragging={currentlyDragging}
+									/>
+								)}
+							</div>
 						</Collapse>
 					</div>
 				);

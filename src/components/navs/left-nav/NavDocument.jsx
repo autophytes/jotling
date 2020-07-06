@@ -62,7 +62,6 @@ const NavDocument = ({ path, child, currentlyDragging, setCurrentlyDragging }) =
 				'file-nav document' + (navData.currentDoc === child.fileName ? ' active' : '')
 			}
 			style={fileStyles}
-			// key={'doc-' + child.id}
 			draggable
 			onDragStart={() => setCurrentlyDragging({ type: 'doc', id: child.id, path })}
 			onDragEnter={() => setFileStyles({ borderBottom: '2px solid var(--color-primary)' })}
@@ -83,8 +82,10 @@ const NavDocument = ({ path, child, currentlyDragging, setCurrentlyDragging }) =
 					onChange={(e) => setFileName(e.target.value)}
 					onBlur={(e) => saveDocNameChange(e.target.value ? e.target.value : 'Unnamed')}
 					onFocus={(e) => e.target.select()}
-					onKeyPress={(e) => {
-						e.key === 'Enter' && e.target.blur();
+					onKeyUp={(e) => {
+						if (e.key === 'Enter' || e.keyCode === 27) {
+							e.target.blur();
+						}
 					}}
 				/>
 			) : (

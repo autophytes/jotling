@@ -183,6 +183,8 @@ export const moveFileToPath = (currentFolder, moveFile, destFile) => {
 	path = path[0] === '/' ? path.slice(1) : path;
 	destPath = destPath[0] === '/' ? destPath.slice(1) : destPath;
 
+	console.log(destPath);
+
 	// Remove our file from it's original children path
 	let moveChildren = retrieveContentAtPropertyPath(path, folder);
 	let moveChild;

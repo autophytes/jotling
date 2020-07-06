@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback, useRef } from 'react';
+import React, { useState, useContext, useCallback, useRef, useEffect } from 'react';
 import FolderClosedSVG from '../../../assets/svg/FolderClosedSVG';
 import FolderOpenSVG from '../../../assets/svg/FolderOpenSVG';
 
@@ -18,12 +18,29 @@ const NavFolder = ({
 	const [fileName, setFileName] = useState(child.name);
 	const [folderStyles, setFolderStyles] = useState({});
 	const [isBeingDragged, setIsBeingDragged] = useState(false);
+	// const [clicks, setClicks] = useState(0);
 	const isDraggedOver = useRef(false);
 
 	// NEED A WAY to flag when currently dragged over so that when the 1sec timer goes off,
 	// it can check if it's still being hovered over
 
 	const { navData, setNavData, docStructure, setDocStructure } = useContext(LeftNavContext);
+
+	// Handle single/double clicks
+	//  Possible solution, but introduces some lag to the single click...
+	// useEffect(() => {
+	// 	let singleClickTimer;
+	// 	if (clicks === 1) {
+	// 		singleClickTimer = setTimeout(function () {
+	// 			navData.editFile !== 'folder-' + child.id && handleFolderClick(child.id);
+	// 			setClicks(0);
+	// 		}, 150);
+	// 	} else if (clicks >= 2) {
+	// 		setNavData({ ...navData, editFile: 'folder-' + child.id });
+	// 		setClicks(0);
+	// 	}
+	// 	return () => clearTimeout(singleClickTimer);
+	// }, [clicks]);
 
 	// Updates the folder with the new name
 	const saveFolderNameChange = useCallback(
@@ -103,6 +120,7 @@ const NavFolder = ({
 			}}
 			onDragOver={(e) => e.preventDefault()}
 			onDrop={handleDrop}
+			// onClick={() => setClicks(clicks + 1)}
 			onClick={() => navData.editFile !== 'folder-' + child.id && handleFolderClick(child.id)}
 			onDoubleClick={() => setNavData({ ...navData, editFile: 'folder-' + child.id })}>
 			<div className='svg-wrapper'>{isOpen ? <FolderOpenSVG /> : <FolderClosedSVG />}</div>
@@ -114,8 +132,10 @@ const NavFolder = ({
 					onChange={(e) => setFileName(e.target.value)}
 					onBlur={(e) => saveFolderNameChange(e.target.value ? e.target.value : 'Unnamed')}
 					onFocus={(e) => e.target.select()}
-					onKeyPress={(e) => {
-						e.key === 'Enter' && e.target.blur();
+					onKeyUp={(e) => {
+						if (e.key === 'Enter' || e.keyCode === 27) {
+							e.target.blur();
+						}
 					}}
 				/>
 			) : (
