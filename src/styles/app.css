@@ -151,6 +151,9 @@ li .public-DraftStyleDefault-block {
 	align-items: center;
 	background-color: var(--color-background);
 	z-index: 2;
+
+	transition: 350ms cubic-bezier(0.45, 0.41, 0.175, 0.93) transform,
+		350ms cubic-bezier(0.45, 0.41, 0.175, 0.93) opacity;
 }
 
 .editor-nav > * {
@@ -167,6 +170,9 @@ li .public-DraftStyleDefault-block {
 	align-items: center;
 	padding: 0.25rem 0.5rem;
 	font-size: 0.95rem;
+
+	transition: 350ms cubic-bezier(0.45, 0.41, 0.175, 0.93) transform,
+		350ms cubic-bezier(0.45, 0.41, 0.175, 0.93) opacity;
 }
 
 .side-nav-container {
@@ -222,6 +228,28 @@ li .public-DraftStyleDefault-block {
 		rgba(0, 0, 0, 0.04) 75%,
 		rgba(0, 0, 0, 0) 100%
 	);
+}
+
+.side-nav.left-nav.hidden {
+	transform: translateX(calc(var(--left-nav-width) / 3 * -2));
+	opacity: 0;
+}
+
+.side-nav.right-nav.hidden {
+	transform: translateX(calc(var(--right-nav-width) / 3 * 2));
+	opacity: 0;
+}
+
+.editor-nav.hidden {
+	transform: translateY(calc(var(--top-nav-height) / -2));
+	opacity: 0;
+}
+
+.side-nav.left-nav.hidden:hover,
+.side-nav.right-nav.hidden:hover,
+.editor-nav.hidden:hover {
+	transform: none;
+	opacity: 1;
 }
 
 .left-nav-top-buttons,
@@ -343,6 +371,10 @@ button.file-nav:focus {
 
 .file-nav.folder.title.open svg {
 	height: 0.9rem;
+}
+
+.nav-button {
+	outline: none;
 }
 
 .nav-button > img,

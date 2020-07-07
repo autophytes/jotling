@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
@@ -6,13 +6,16 @@ import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
 import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
 
 const RightNav = () => {
+	const [hideSideNav, setHideSideNav] = useState(false);
+
 	return (
-		<nav className='side-nav right-nav'>
+		<nav className={'side-nav right-nav' + (hideSideNav ? ' hidden' : '')}>
 			<div className='vertical-rule' style={{ marginRight: '0.5rem' }}></div>
 			<div className='side-nav-container'>
 				<div className='right-nav-top-buttons'>
-					<button className='nav-button'>
-						{/* <img src='icons/pushpin.svg' /> */}
+					<button
+						className={'nav-button' + (hideSideNav ? '' : ' active')}
+						onMouseUp={() => setHideSideNav(!hideSideNav)}>
 						<PushpinSVG />
 					</button>
 				</div>

@@ -92,6 +92,7 @@ const EditorNav = ({
 	const currentStyles = editorState.getCurrentInlineStyle();
 	const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
 
+	const [hideEditorNav, setHideEditorNav] = useState(false);
 	const [recentlyUsedFonts, setRecentlyUsedFonts] = useState([]);
 	const [fontList, setFontList] = useState([]);
 	// const [fontSize, setFontSize] = useState(null);
@@ -165,9 +166,10 @@ const EditorNav = ({
 	}, [ipcRenderer, setFontList]);
 
 	return (
-		<nav className='editor-nav'>
-			<button className='nav-button'>
-				{/* <img src='icons/pushpin.svg' /> */}
+		<nav className={'editor-nav' + (hideEditorNav ? ' hidden' : '')}>
+			<button
+				className={'nav-button' + (hideEditorNav ? '' : ' active')}
+				onMouseUp={() => setHideEditorNav(!hideEditorNav)}>
 				<PushpinSVG />
 			</button>
 

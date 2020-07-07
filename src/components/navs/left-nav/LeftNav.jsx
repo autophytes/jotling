@@ -22,6 +22,7 @@ import {
 
 const LeftNav = () => {
 	const { docStructure, setDocStructure, navData, setNavData } = useContext(LeftNavContext);
+	const [hideSideNav, setHideSideNav] = useState(false);
 
 	const addFile = useCallback(
 		(fileType) => {
@@ -96,7 +97,7 @@ const LeftNav = () => {
 	);
 
 	return (
-		<nav className='side-nav left-nav'>
+		<nav className={'side-nav left-nav' + (hideSideNav ? ' hidden' : '')}>
 			<div className='side-nav-container'>
 				<div className='left-nav-top-buttons'>
 					<div className='add-file-folder-wrapper'>
@@ -113,7 +114,9 @@ const LeftNav = () => {
 							<FolderOpenSVG />
 						</button>
 					</div>
-					<button className='nav-button'>
+					<button
+						className={'nav-button' + (hideSideNav ? '' : ' active')}
+						onMouseUp={() => setHideSideNav(!hideSideNav)}>
 						<PushpinSVG />
 					</button>
 				</div>
