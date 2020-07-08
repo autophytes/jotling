@@ -113,3 +113,11 @@ export const enterToUnindentList = (editorState, setEditorState) => {
 	}
 	return false;
 };
+
+export const doubleDashToLongDash = (editorState, setEditorState) => {
+	// Verify that the two characters immediately before the space we just inserted are --
+	// Replace "--" with "– " including the space we just typed
+	//   a long dash (em dash?) with a space
+
+	return false;
+};

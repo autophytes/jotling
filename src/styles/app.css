@@ -176,8 +176,12 @@ li .public-DraftStyleDefault-block {
 }
 
 .side-nav-container {
+	height: 100%;
 	width: 100%;
 	align-self: stretch;
+	display: flex;
+	flex-direction: column;
+	justify-content: stretch;
 }
 
 .vertical-rule {
@@ -212,9 +216,9 @@ li .public-DraftStyleDefault-block {
 	/* background-color: #cceecc; */
 	background: linear-gradient(
 		90deg,
-		rgba(0, 0, 0, 0.06) 0%,
-		rgba(0, 0, 0, 0.04) 75%,
-		rgba(0, 0, 0, 0) 100%
+		rgba(16, 149, 255, 0.04) 0%,
+		rgba(16, 149, 255, 0.02) 75%,
+		rgba(16, 149, 255, 0) 100%
 	);
 }
 
@@ -307,8 +311,10 @@ li .public-DraftStyleDefault-block {
 
 .left-nav-content,
 .right-nav-content {
-	height: 100%;
+	/* height: 100%; */
 	padding: 0.5rem 0.5rem;
+	flex-grow: 1;
+	overflow-y: scroll;
 }
 
 p.file-nav,

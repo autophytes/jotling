@@ -29,11 +29,12 @@ const LeftNav = () => {
 			// Create a docStructure object for our current tab.
 			// We'll insert our file and overwrite this section of docStructure.
 			let folderStructure = JSON.parse(JSON.stringify(docStructure[navData.currentTab]));
+			let maxIds = JSON.parse(JSON.stringify(docStructure.maxIds));
 			// Note the spread operator only performs a shallow copy (nested objects are still refs).
 			//   The JSON method performs a deep copy.
 
 			// Find the max ID for file types (so we can increment for the new one)
-			let maxIds = findMaxFileTypeIds(folderStructure);
+			// let maxIds = findMaxFileTypeIds(folderStructure);
 
 			// Find out where we need to insert the new file
 			let filePath = '';
@@ -89,9 +90,12 @@ const LeftNav = () => {
 			let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
 			setNavData({ ...navData, editFile: newEditFileId });
 
-			console.log(folderStructure);
+			// console.log(folderStructure);
 
-			setDocStructure({ ...docStructure, [navData.currentTab]: folderStructure });
+			// Increment the max ID for a file type
+			maxIds[fileType] = maxIds[fileType] + 1;
+
+			setDocStructure({ ...docStructure, [navData.currentTab]: folderStructure, maxIds });
 		},
 		[navData.currentTab, navData.lastClicked, docStructure, setDocStructure]
 	);
@@ -126,21 +130,39 @@ const LeftNav = () => {
 						className={
 							'nav-section-tab first' + (navData.currentTab === 'pages' ? ' active' : '')
 						}
-						onClick={() => setNavData({ ...navData, currentTab: 'pages' })}>
+						onClick={() =>
+							setNavData({
+								...navData,
+								currentTab: 'pages',
+								lastClicked: { type: '', id: '' },
+							})
+						}>
 						<DocumentPagesSVG />
 					</div>
 					<div
 						className={
 							'nav-section-tab' + (navData.currentTab === 'research' ? ' active' : '')
 						}
-						onClick={() => setNavData({ ...navData, currentTab: 'research' })}>
+						onClick={() =>
+							setNavData({
+								...navData,
+								currentTab: 'research',
+								lastClicked: { type: '', id: '' },
+							})
+						}>
 						<LightbulbSVG />
 					</div>
 					<div
 						className={
 							'nav-section-tab last' + (navData.currentTab === 'draft' ? ' active' : '')
 						}
-						onClick={() => setNavData({ ...navData, currentTab: 'draft' })}>
+						onClick={() =>
+							setNavData({
+								...navData,
+								currentTab: 'draft',
+								lastClicked: { type: '', id: '' },
+							})
+						}>
 						<BookDraftSVG />
 					</div>
 				</div>

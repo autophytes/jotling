@@ -20,7 +20,12 @@ import { setBlockData } from 'draftjs-utils';
 import EditorNav from '../navs/editor-nav/EditorNav';
 
 import { defaultText } from './defaultText';
-import { spaceToAutoList, enterToUnindentList } from './KeyBindFunctions';
+import {
+	spaceToAutoList,
+	enterToUnindentList,
+	doubleDashToLongDash,
+} from './KeyBindFunctions';
+var oneKeyStrokeAgo, twoKeyStrokesAgo;
 
 // import Immutable from 'immutable';a
 // import Editor from 'draft-js-plugins-editor';
@@ -111,13 +116,22 @@ const EditorContainer = () => {
 			if (newEditorState !== editorState) {
 				setEditorState(newEditorState);
 			}
+			twoKeyStrokesAgo = oneKeyStrokeAgo;
+			oneKeyStrokeAgo = e.keyCode;
 			return 'handled-in-binding-fn';
 		}
 		if (e.keyCode === 32 /* SPACE */) {
 			// Auto-converts to lists
-			const returnValue = spaceToAutoList(editorState, setEditorState);
+			let returnValue = spaceToAutoList(editorState, setEditorState);
+
+			// If the two previous keystrokes were hyphens
+			if (!returnValue && oneKeyStrokeAgo === 189 && twoKeyStrokesAgo === 189) {
+				returnValue = doubleDashToLongDash(editorState, setEditorState);
+			}
 
 			if (returnValue) {
+				twoKeyStrokesAgo = oneKeyStrokeAgo;
+				oneKeyStrokeAgo = e.keyCode;
 				return returnValue;
 			}
 		}
@@ -126,10 +140,14 @@ const EditorContainer = () => {
 			const returnValue = enterToUnindentList(editorState, setEditorState);
 
 			if (returnValue) {
+				twoKeyStrokesAgo = oneKeyStrokeAgo;
+				oneKeyStrokeAgo = e.keyCode;
 				return returnValue;
 			}
 		}
 
+		twoKeyStrokesAgo = oneKeyStrokeAgo;
+		oneKeyStrokeAgo = e.keyCode;
 		return getDefaultKeyBinding(e);
 	};
 
