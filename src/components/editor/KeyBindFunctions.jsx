@@ -114,10 +114,55 @@ export const enterToUnindentList = (editorState, setEditorState) => {
 	return false;
 };
 
+// Replace '-- ' with '– ' (a long dash vs two short)
 export const doubleDashToLongDash = (editorState, setEditorState) => {
-	// Verify that the two characters immediately before the space we just inserted are --
-	// Replace "--" with "– " including the space we just typed
-	//   a long dash (em dash?) with a space
+	const currentSelection = editorState.getSelection();
+	const currentPosition = currentSelection.getStartOffset();
+	const blockKey = editorState.getSelection().getAnchorKey();
 
-	return false;
+	// Ensure the previous 2 characters are '--'. If not, exit.
+	const block = editorState.getCurrentContent().getBlockForKey(blockKey);
+	const blockText = block.getText().slice(currentPosition - 2, currentPosition); // Just the first 2 characters of text
+	if (blockText !== '--') {
+		return;
+	}
+
+	// Push the new space (for the undo stack);
+	const currentContent = editorState.getCurrentContent();
+	const contentWSpace = Modifier.insertText(currentContent, currentSelection, ' ');
+	const editorStateWSpace = EditorState.push(editorState, contentWSpace, 'insert-characters');
+
+	// Clear out the typed text we're replacing for a list
+	const selectionState = SelectionState.createEmpty(blockKey);
+	const doubleDashSelectionState = selectionState.merge({
+		anchorOffset: currentPosition - 2, // Capture the two dashes before the space we inserted
+		focusOffset: currentPosition + 1, // We added the space, so add 1 to this.
+	});
+
+	// Replace the double dash with the long dash
+	const longDashContent = Modifier.replaceText(
+		editorStateWSpace.getCurrentContent(),
+		doubleDashSelectionState,
+		'– '
+	);
+
+	// Push it to a new editor state
+	const longDashEditorState = EditorState.push(
+		editorStateWSpace,
+		longDashContent,
+		'change-block-type'
+	);
+
+	// Move the cursor to the new list item
+	const finalSelectionState = SelectionState.createEmpty(blockKey).merge({
+		anchorOffset: currentPosition,
+		focusOffset: currentPosition,
+	});
+	const finalEditorState = EditorState.forceSelection(
+		longDashEditorState,
+		finalSelectionState
+	);
+
+	setEditorState(finalEditorState);
+	return 'handled-in-binding-fn';
 };

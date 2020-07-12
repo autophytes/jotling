@@ -174,7 +174,7 @@ export const updateChildName = (
 };
 
 // Move a document/folder to a new destination, including the folder tree
-export const moveFileToPath = (currentFolder, moveFile, destFile) => {
+export const moveFileToPath = (currentFolder, moveFile, destFile, isTopBottom) => {
 	let { type, id, path } = moveFile;
 	let { type: destType, id: destId, path: destPath } = destFile;
 	let folder = JSON.parse(JSON.stringify(currentFolder));
@@ -204,8 +204,10 @@ export const moveFileToPath = (currentFolder, moveFile, destFile) => {
 		(child) => child.type === destType && child.id === destId
 	);
 
-	// Insert our moved child after the destination child
-	destChildren.splice(destChildIndex + 1, 0, moveChild[0]);
+	// If we're inserting below the element, offset the childIndex by 1,
+	let destIndexOffest = isTopBottom === 'top' ? 0 : 1;
+	// Insert our moved child before/after the destination child
+	destChildren.splice(destChildIndex + destIndexOffest, 0, moveChild[0]);
 	// Update folder with our mutated destChildren
 	folder = setObjPropertyAtPropertyPath(destPath, destChildren, folder);
 

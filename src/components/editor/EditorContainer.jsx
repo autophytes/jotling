@@ -168,7 +168,6 @@ const EditorContainer = () => {
 		const newState = RichUtils.handleKeyCommand(editorState, command);
 		if (newState) {
 			setEditorState(newState);
-			console.log(command);
 			console.log('handled in handleKeyCommand');
 			return 'handled';
 		}
@@ -264,7 +263,6 @@ const EditorContainer = () => {
 	const saveFile = (docName = navData.currentDoc) => {
 		const currentContent = editorState.getCurrentContent();
 		const rawContent = convertToRaw(currentContent);
-		console.log(rawContent);
 
 		const sendFileToSave = async () => {
 			const newFileName = await ipcRenderer.invoke(
@@ -273,7 +271,6 @@ const EditorContainer = () => {
 				docName,
 				rawContent
 			);
-			console.log(newFileName);
 		};
 		sendFileToSave();
 	};

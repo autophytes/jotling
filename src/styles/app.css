@@ -220,6 +220,7 @@ li .public-DraftStyleDefault-block {
 		rgba(16, 149, 255, 0.02) 75%,
 		rgba(16, 149, 255, 0) 100%
 	);
+	/* Recosider the background color */
 }
 
 .right-nav {
@@ -228,10 +229,11 @@ li .public-DraftStyleDefault-block {
 	/* background-color: #ccccee; */
 	background: linear-gradient(
 		270deg,
-		rgba(0, 0, 0, 0.06) 0%,
-		rgba(0, 0, 0, 0.04) 75%,
-		rgba(0, 0, 0, 0) 100%
+		rgba(16, 149, 255, 0.04) 0%,
+		rgba(16, 149, 255, 0.02) 75%,
+		rgba(16, 149, 255, 0) 100%
 	);
+	/* Recosider the background color */
 }
 
 .side-nav.left-nav.hidden {
@@ -364,6 +366,15 @@ button.file-nav:focus {
 	flex-direction: row;
 	align-items: center;
 	min-width: 5rem;
+	border-top: 2px solid transparent;
+	border-bottom: 2px solid transparent;
+	margin: -1px 0;
+}
+
+.file-nav.folder.title span,
+.file-nav.document span {
+	display: inline-block;
+	margin: -1px 0;
 }
 
 .file-nav.document.active {
