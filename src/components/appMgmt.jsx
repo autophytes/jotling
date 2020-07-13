@@ -10,6 +10,8 @@ import EditorContainer from './editor/EditorContainer';
 // import LeftNavContextProvider from '../contexts/leftNavContext';
 import { LeftNavContext } from '../contexts/leftNavContext';
 
+// import ReactResizeDetector from 'react-resize-detector';
+
 // Create main App component
 const AppMgmt = () => {
 	const [structureLoaded, setStructureLoaded] = useState(false);
@@ -59,7 +61,9 @@ const AppMgmt = () => {
 			<TopNav />
 			<LeftNav />
 			<RightNav />
+			{/* <ReactResizeDetector handleWidth> */}
 			<EditorContainer />
+			{/* </ReactResizeDetector> */}
 		</>
 	);
 };

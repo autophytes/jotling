@@ -167,164 +167,175 @@ const EditorNav = ({
 
 	return (
 		<nav className={'editor-nav' + (hideEditorNav ? ' hidden' : '')}>
-			<button
-				className={'nav-button' + (hideEditorNav ? '' : ' active')}
-				onMouseUp={() => setHideEditorNav(!hideEditorNav)}>
-				<PushpinSVG />
-			</button>
-
 			{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
-			<select value={currentFont} onChange={(e) => handleFontSelect(e.target.value)}>
-				{recentlyUsedFonts.map((font, i) => (
-					<option key={i} value={font}>
-						{font}
-					</option>
-				))}
-				<option disabled>- - - - -</option>
+			<span className='editor-nav-subsection'>
+				<button
+					className={'nav-button' + (hideEditorNav ? '' : ' active')}
+					style={{ marginRight: '0.5rem' }}
+					onMouseUp={() => setHideEditorNav(!hideEditorNav)}>
+					<PushpinSVG />
+				</button>
 
-				{fontList.map((font, i) => {
-					const trimFont = font.replace(/["]+/g, '');
-					return (
-						<option key={i} value={trimFont}>
-							{trimFont}
+				<select value={currentFont} onChange={(e) => handleFontSelect(e.target.value)}>
+					{recentlyUsedFonts.map((font, i) => (
+						<option key={i} value={font}>
+							{font}
 						</option>
-					);
-				})}
-			</select>
+					))}
+					<option disabled>- - - - -</option>
 
-			<input
-				type='number'
-				min='0'
-				max='999'
-				value={fontSize}
-				onChange={(e) => setFontSize(e.target.value)}
-				style={{ marginLeft: '0.5rem' }}
-			/>
-			<button className='nav-button' onClick={() => increaseDecreaseFontSize('decrease')}>
-				<DecreaseFontSizeSVG />
-			</button>
-			<button className='nav-button' onClick={() => increaseDecreaseFontSize('increase')}>
-				<IncreaseFontSizeSVG />
-			</button>
+					{fontList.map((font, i) => {
+						const trimFont = font.replace(/["]+/g, '');
+						return (
+							<option key={i} value={trimFont}>
+								{trimFont}
+							</option>
+						);
+					})}
+				</select>
 
-			<input
-				type='number'
-				min='0'
-				max='10'
-				step='0.1'
-				value={lineHeight}
-				onChange={(e) => setLineHeight(e.target.value)}
-				style={{ marginLeft: '0.5rem' }}
-			/>
-			<button className='nav-button' disabled>
-				<LineSpacingSVG />
-			</button>
+				<input
+					type='number'
+					min='0'
+					max='999'
+					value={fontSize}
+					onChange={(e) => setFontSize(e.target.value)}
+					style={{ marginLeft: '0.5rem' }}
+				/>
+				<button
+					className='nav-button'
+					onClick={() => increaseDecreaseFontSize('decrease')}
+					style={{ marginRight: '0' }}>
+					<DecreaseFontSizeSVG />
+				</button>
+				<button
+					className='nav-button'
+					onClick={() => increaseDecreaseFontSize('increase')}
+					style={{ marginLeft: '0' }}>
+					<IncreaseFontSizeSVG />
+				</button>
 
-			<div className='editor-nav-vertical-rule' />
+				<input
+					type='number'
+					min='0'
+					max='10'
+					step='0.1'
+					value={lineHeight}
+					onChange={(e) => setLineHeight(e.target.value)}
+					style={{ marginLeft: '0.5rem' }}
+				/>
+				<button className='nav-button' disabled>
+					<LineSpacingSVG />
+				</button>
+			</span>
 
-			<InlineStyleButton
-				currentStyles={currentStyles}
-				toggleFn={toggleInlineStyle}
-				style='BOLD'>
-				<BoldSVG />
-			</InlineStyleButton>
+			{/* <div className='editor-nav-vertical-rule' /> */}
 
-			<InlineStyleButton
-				currentStyles={currentStyles}
-				toggleFn={toggleInlineStyle}
-				style='ITALIC'>
-				<ItalicSVG />
-			</InlineStyleButton>
+			<span className='editor-nav-subsection'>
+				<InlineStyleButton
+					currentStyles={currentStyles}
+					toggleFn={toggleInlineStyle}
+					style='BOLD'>
+					<BoldSVG />
+				</InlineStyleButton>
 
-			<InlineStyleButton
-				currentStyles={currentStyles}
-				toggleFn={toggleInlineStyle}
-				style='UNDERLINE'>
-				<UnderlineSVG />
-			</InlineStyleButton>
+				<InlineStyleButton
+					currentStyles={currentStyles}
+					toggleFn={toggleInlineStyle}
+					style='ITALIC'>
+					<ItalicSVG />
+				</InlineStyleButton>
 
-			<InlineStyleButton
-				currentStyles={currentStyles}
-				toggleFn={toggleInlineStyle}
-				style='STRIKETHROUGH'>
-				<StrikethroughSVG />
-			</InlineStyleButton>
+				<InlineStyleButton
+					currentStyles={currentStyles}
+					toggleFn={toggleInlineStyle}
+					style='UNDERLINE'>
+					<UnderlineSVG />
+				</InlineStyleButton>
 
-			<InlineStyleButton
-				currentStyles={currentStyles}
-				toggleFn={toggleInlineStyle}
-				style='SUBSCRIPT'
-				removeStyle='SUPERSCRIPT'>
-				<SubscriptSVG />
-			</InlineStyleButton>
+				<InlineStyleButton
+					currentStyles={currentStyles}
+					toggleFn={toggleInlineStyle}
+					style='STRIKETHROUGH'>
+					<StrikethroughSVG />
+				</InlineStyleButton>
 
-			<InlineStyleButton
-				currentStyles={currentStyles}
-				toggleFn={toggleInlineStyle}
-				style='SUPERSCRIPT'
-				removeStyle='SUBSCRIPT'>
-				<SuperscriptSVG />
-			</InlineStyleButton>
+				<InlineStyleButton
+					currentStyles={currentStyles}
+					toggleFn={toggleInlineStyle}
+					style='SUBSCRIPT'
+					removeStyle='SUPERSCRIPT'>
+					<SubscriptSVG />
+				</InlineStyleButton>
 
-			<button className='nav-button' onClick={() => saveFile()}>
-				<HighlightSVG />
-			</button>
-			<button className='nav-button' onClick={() => loadFile()}>
-				<TextColorSVG />
-			</button>
-			<button className='nav-button'>
+				<InlineStyleButton
+					currentStyles={currentStyles}
+					toggleFn={toggleInlineStyle}
+					style='SUPERSCRIPT'
+					removeStyle='SUBSCRIPT'>
+					<SuperscriptSVG />
+				</InlineStyleButton>
+
+				<button className='nav-button' onClick={() => saveFile()}>
+					<HighlightSVG />
+				</button>
+				<button className='nav-button' onClick={() => loadFile()}>
+					<TextColorSVG />
+				</button>
+				{/* <button className='nav-button'>
 				<FillColorSVG />
-			</button>
+			</button> */}
 
-			<button
-				className='nav-button'
-				onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
-				<ListBulletSVG />
-			</button>
+				<button
+					className='nav-button'
+					onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
+					<ListBulletSVG />
+				</button>
 
-			<button
-				className='nav-button'
-				onMouseDown={(e) => toggleBlockType(e, 'ordered-list-item')}>
-				<ListNumberSVG />
-			</button>
+				<button
+					className='nav-button'
+					onMouseDown={(e) => toggleBlockType(e, 'ordered-list-item')}>
+					<ListNumberSVG />
+				</button>
 
-			<button
-				className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
-				onMouseDown={(e) => {
-					toggleTextAlign(e, 'left', currentAlignment);
-				}}>
-				<AlignLeftSVG />
-			</button>
+				<button
+					className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
+					onMouseDown={(e) => {
+						toggleTextAlign(e, 'left', currentAlignment);
+					}}>
+					<AlignLeftSVG />
+				</button>
 
-			<button
-				className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
-				onMouseDown={(e) => {
-					toggleTextAlign(e, 'center', currentAlignment);
-				}}>
-				<AlignCenterSVG />
-			</button>
+				<button
+					className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
+					onMouseDown={(e) => {
+						toggleTextAlign(e, 'center', currentAlignment);
+					}}>
+					<AlignCenterSVG />
+				</button>
 
-			<button
-				className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
-				onMouseDown={(e) => {
-					toggleTextAlign(e, 'right', currentAlignment);
-				}}>
-				<AlignRightSVG />
-			</button>
+				<button
+					className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
+					onMouseDown={(e) => {
+						toggleTextAlign(e, 'right', currentAlignment);
+					}}>
+					<AlignRightSVG />
+				</button>
 
-			<button
-				className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
-				onMouseDown={(e) => {
-					toggleTextAlign(e, 'justify', currentAlignment);
-				}}>
-				<AlignJustifySVG />
-			</button>
+				<button
+					className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
+					onMouseDown={(e) => {
+						toggleTextAlign(e, 'justify', currentAlignment);
+					}}>
+					<AlignJustifySVG />
+				</button>
 
-			<button
-				className={'nav-button' + (spellCheck ? ' active' : '')}
-				onMouseDown={(e) => toggleSpellCheck(e)}>
-				<SpellcheckSVG />
-			</button>
+				<button
+					className={'nav-button' + (spellCheck ? ' active' : '')}
+					onMouseDown={(e) => toggleSpellCheck(e)}>
+					<SpellcheckSVG />
+				</button>
+			</span>
 		</nav>
 	);
 };

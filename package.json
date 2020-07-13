@@ -22,6 +22,7 @@
 		"react": "^16.13.1",
 		"react-css-collapse": "^4.0.6",
 		"react-dom": "^16.13.1",
+		"react-resize-detector": "^5.0.6",
 		"system-font-families": "^0.4.1"
 	},
 	"devDependencies": {

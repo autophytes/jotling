@@ -64,7 +64,7 @@ const blockStyleFn = (block) => {
 //
 //
 // COMPONENT
-const EditorContainer = () => {
+const EditorContainer = ({ width, targetRef }) => {
 	// STATE
 	const [editorState, setEditorState] = useState(() =>
 		EditorState.createWithContent(ContentState.createFromText(defaultText))
@@ -76,9 +76,12 @@ const EditorContainer = () => {
 	const [fontSize, setFontSize] = useState(18);
 	const [lineHeight, setLineHeight] = useState(1.5);
 	const [style, setStyle] = useState({});
-	const editorRef = useRef(null);
 
 	const [prevDoc, setPrevDoc] = useState('');
+
+	// REFS
+	// const editorContainerRef = useRef(null);
+	const editorRef = useRef(null);
 
 	// CONTEXT
 	const { navData } = useContext(LeftNavContext);
@@ -313,8 +316,15 @@ const EditorContainer = () => {
 		}
 	}, [navData.currentDoc, prevDoc, setPrevDoc, loadFile]);
 
+	// useEffect(() => {
+	// 	console.log(editorContainerRef.current.offsetWidth);
+	// }, [editorContainerRef.current]);
+
 	return (
-		<main className='editor-area'>
+		<main
+			className='editor-area'
+			// ref={targetRef}
+		>
 			<EditorNav
 				editorState={editorState}
 				toggleBlockType={toggleBlockType}
