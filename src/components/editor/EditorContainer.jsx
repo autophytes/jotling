@@ -64,7 +64,7 @@ const blockStyleFn = (block) => {
 //
 //
 // COMPONENT
-const EditorContainer = ({ width, targetRef }) => {
+const EditorContainer = ({ editorWidth, width, targetRef }) => {
 	// STATE
 	const [editorState, setEditorState] = useState(() =>
 		EditorState.createWithContent(ContentState.createFromText(defaultText))
@@ -73,8 +73,8 @@ const EditorContainer = ({ width, targetRef }) => {
 	const [spellCheck, setSpellCheck] = useState(false);
 
 	const [currentFont, setCurrentFont] = useState('PT Sans');
-	const [fontSize, setFontSize] = useState(18);
-	const [lineHeight, setLineHeight] = useState(1.5);
+	const [fontSize, setFontSize] = useState(24);
+	const [lineHeight, setLineHeight] = useState(1.15);
 	const [style, setStyle] = useState({});
 
 	const [prevDoc, setPrevDoc] = useState('');
@@ -323,9 +323,14 @@ const EditorContainer = ({ width, targetRef }) => {
 	return (
 		<main
 			className='editor-area'
+			style={{
+				paddingLeft: editorWidth.leftIsPinned ? editorWidth.leftNav + 'rem' : 0,
+				paddingRight: editorWidth.rightIsPinned ? editorWidth.rightNav + 'rem' : 0,
+			}}
 			// ref={targetRef}
 		>
 			<EditorNav
+				editorWidth={editorWidth}
 				editorState={editorState}
 				toggleBlockType={toggleBlockType}
 				toggleBlockStyle={toggleBlockStyle}

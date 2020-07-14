@@ -73,6 +73,7 @@ body {
 	padding-left: var(--left-nav-width);
 	padding-right: var(--right-nav-width);
 	z-index: 0;
+	transition: 400ms ease padding;
 }
 
 .editor {
@@ -149,7 +150,7 @@ li .public-DraftStyleDefault-block {
 	max-width: calc(100% - var(--left-nav-width) - var(--right-nav-width));
 	/* margin-left: var(--left-nav-width); */
 	/* margin-right: var(--right-nav-width); */
-	margin-top: 0.25rem;
+	padding-top: 0.25rem;
 	/* background-color: #ddccee; */
 	display: flex;
 	flex-direction: row;
@@ -199,6 +200,7 @@ li .public-DraftStyleDefault-block {
 	align-items: center;
 	padding: 0.25rem 0.5rem;
 	font-size: 0.95rem;
+	z-index: 3;
 
 	transition: 350ms cubic-bezier(0.45, 0.41, 0.175, 0.93) transform,
 		350ms cubic-bezier(0.45, 0.41, 0.175, 0.93) opacity;
@@ -243,7 +245,7 @@ li .public-DraftStyleDefault-block {
 .left-nav {
 	width: var(--left-nav-width);
 	left: 0;
-	/* background-color: #cceecc; */
+	background-color: #cceecc;
 	background: linear-gradient(
 		90deg,
 		rgba(16, 149, 255, 0.04) 0%,
@@ -256,7 +258,7 @@ li .public-DraftStyleDefault-block {
 .right-nav {
 	width: var(--right-nav-width);
 	right: 0;
-	/* background-color: #ccccee; */
+	background-color: #ccccee;
 	background: linear-gradient(
 		270deg,
 		rgba(16, 149, 255, 0.04) 0%,
@@ -388,6 +390,7 @@ button.file-nav:focus {
 	flex-direction: column;
 	justify-content: center;
 	align-items: flex-start;
+	flex-shrink: 0;
 }
 
 .file-nav.folder.title,

@@ -20,9 +20,9 @@ import {
 	insertIntoArrayAtPropertyPath,
 } from '../../../utils/utils';
 
-const LeftNav = () => {
+const LeftNav = ({ editorWidth, setEditorWidth }) => {
 	const { docStructure, setDocStructure, navData, setNavData } = useContext(LeftNavContext);
-	const [hideSideNav, setHideSideNav] = useState(false);
+	const [pinNav, setPinNav] = useState(true);
 
 	const addFile = useCallback(
 		(fileType) => {
@@ -101,7 +101,9 @@ const LeftNav = () => {
 	);
 
 	return (
-		<nav className={'side-nav left-nav' + (hideSideNav ? ' hidden' : '')}>
+		<nav
+			className={'side-nav left-nav' + (pinNav ? '' : ' hidden')}
+			style={{ width: editorWidth.leftNav + 'rem' }}>
 			<div className='side-nav-container'>
 				<div className='left-nav-top-buttons'>
 					<div className='add-file-folder-wrapper'>
@@ -119,8 +121,11 @@ const LeftNav = () => {
 						</button>
 					</div>
 					<button
-						className={'nav-button' + (hideSideNav ? '' : ' active')}
-						onMouseUp={() => setHideSideNav(!hideSideNav)}>
+						className={'nav-button' + (pinNav ? ' active' : '')}
+						onMouseUp={() => {
+							setPinNav(!pinNav);
+							setEditorWidth({ ...editorWidth, leftIsPinned: !pinNav });
+						}}>
 						<PushpinSVG />
 					</button>
 				</div>

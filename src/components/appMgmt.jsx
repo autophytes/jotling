@@ -16,6 +16,12 @@ import { LeftNavContext } from '../contexts/leftNavContext';
 const AppMgmt = () => {
 	const [structureLoaded, setStructureLoaded] = useState(false);
 	const [prevProj, setPrevProj] = useState('');
+	const [editorWidth, setEditorWidth] = useState({
+		leftNav: 12,
+		leftIsPinned: true,
+		rightNav: 12,
+		rightIsPinned: true,
+	});
 
 	const { docStructure, setDocStructure, navData } = useContext(LeftNavContext);
 
@@ -59,10 +65,10 @@ const AppMgmt = () => {
 	return (
 		<>
 			<TopNav />
-			<LeftNav />
-			<RightNav />
+			<LeftNav editorWidth={editorWidth} setEditorWidth={setEditorWidth} />
+			<RightNav editorWidth={editorWidth} setEditorWidth={setEditorWidth} />
 			{/* <ReactResizeDetector handleWidth> */}
-			<EditorContainer />
+			<EditorContainer editorWidth={editorWidth} />
 			{/* </ReactResizeDetector> */}
 		</>
 	);

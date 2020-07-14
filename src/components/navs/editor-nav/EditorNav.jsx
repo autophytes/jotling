@@ -86,14 +86,17 @@ const EditorNav = ({
 	setLineHeight,
 	saveFile,
 	loadFile,
+	editorWidth,
 }) => {
 	// REQUIRES toggleInlineStyle & toggleBlockType
+
+	// NOTE:: need to calculate the width(?) of the editor nav based on the side navs
 
 	const currentStyles = editorState.getCurrentInlineStyle();
 	const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
 
-	const [hideEditorNav, setHideEditorNav] = useState(false);
-	const [recentlyUsedFonts, setRecentlyUsedFonts] = useState([]);
+	const [pinNav, setPinNav] = useState(true);
+	const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);
 	const [fontList, setFontList] = useState([]);
 	// const [fontSize, setFontSize] = useState(null);
 
@@ -166,13 +169,20 @@ const EditorNav = ({
 	}, [ipcRenderer, setFontList]);
 
 	return (
-		<nav className={'editor-nav' + (hideEditorNav ? ' hidden' : '')}>
+		<nav
+			className={'editor-nav' + (pinNav ? '' : ' hidden')}
+			style={{
+				maxWidth: `calc(100% - ${
+					(editorWidth.leftIsPinned ? editorWidth.leftNav : 0) +
+					(editorWidth.rightIsPinned ? editorWidth.rightNav : 0)
+				}rem)`,
+			}}>
 			{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
 			<span className='editor-nav-subsection'>
 				<button
-					className={'nav-button' + (hideEditorNav ? '' : ' active')}
+					className={'nav-button' + (pinNav ? ' active' : '')}
 					style={{ marginRight: '0.5rem' }}
-					onMouseUp={() => setHideEditorNav(!hideEditorNav)}>
+					onMouseUp={() => setPinNav(!pinNav)}>
 					<PushpinSVG />
 				</button>
 

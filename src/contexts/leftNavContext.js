@@ -55,39 +55,6 @@ const LeftNavContextProvider = (props) => {
 		lastClicked: { type: '', id: '' },
 		editFile: '',
 	});
-	// const [globalData, setGlobalData] = useState({
-	// 	user: {
-	// 		id: 1,
-	// 		name: 'Matthew Travis',
-	// 		initials: 'MT',
-	// 		role: 'ADVISOR',
-	// 		admin: true,
-	// 		firstName: 'Matthew',
-	// 		lastName: 'Travis',
-	// 		email: 'matthewtest@test.com',
-	// 	},
-	// 	clients: [
-	// 		{
-	// 			id: 1,
-	// 			name: 'Loading...',
-	// 			status: 'Client',
-	// 			advisorId: 1,
-	// 		},
-	// 	],
-	// 	users: [
-	// 		{
-	// 			id: 2,
-	// 			name: 'Loading...',
-	// 			lastFirstName: 'Loading...',
-	// 			initials: 'JSM',
-	// 			role: 'ADVISOR',
-	// 			admin: true,
-	// 			firstName: 'Loading',
-	// 			lastName: 'Loading',
-	// 			email: 'Loading',
-	// 		},
-	// 	],
-	// });
 
 	return (
 		<LeftNavContext.Provider value={{ docStructure, setDocStructure, navData, setNavData }}>

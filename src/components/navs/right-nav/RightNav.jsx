@@ -5,17 +5,22 @@ import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
 import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
 import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
 
-const RightNav = () => {
-	const [hideSideNav, setHideSideNav] = useState(false);
+const RightNav = ({ editorWidth, setEditorWidth }) => {
+	const [pinNav, setPinNav] = useState(true);
 
 	return (
-		<nav className={'side-nav right-nav' + (hideSideNav ? ' hidden' : '')}>
+		<nav
+			className={'side-nav right-nav' + (pinNav ? '' : ' hidden')}
+			style={{ width: editorWidth.rightNav + 'rem' }}>
 			<div className='vertical-rule' style={{ marginRight: '0.5rem' }}></div>
 			<div className='side-nav-container'>
 				<div className='right-nav-top-buttons'>
 					<button
-						className={'nav-button' + (hideSideNav ? '' : ' active')}
-						onMouseUp={() => setHideSideNav(!hideSideNav)}>
+						className={'nav-button' + (pinNav ? ' active' : '')}
+						onMouseUp={() => {
+							setPinNav(!pinNav);
+							setEditorWidth({ ...editorWidth, rightIsPinned: !pinNav });
+						}}>
 						<PushpinSVG />
 					</button>
 				</div>
