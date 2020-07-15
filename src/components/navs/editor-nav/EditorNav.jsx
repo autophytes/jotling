@@ -71,7 +71,6 @@ const MAX_RECENT_FONTS = 5;
 
 // COMPONENT
 const EditorNav = ({
-	editorState,
 	toggleBlockType,
 	toggleBlockStyle,
 	toggleInlineStyle,
@@ -87,13 +86,18 @@ const EditorNav = ({
 	saveFile,
 	loadFile,
 	editorWidth,
+	currentAlignment,
+	currentStyles,
 }) => {
 	// REQUIRES toggleInlineStyle & toggleBlockType
 
 	// NOTE:: need to calculate the width(?) of the editor nav based on the side navs
 
-	const currentStyles = editorState.getCurrentInlineStyle();
-	const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
+	// const currentStyles = editorState.getCurrentInlineStyle();
+	// const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
+
+	// console.log(currentStyles);
+	// console.log(currentAlignment);
 
 	const [pinNav, setPinNav] = useState(true);
 	const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);

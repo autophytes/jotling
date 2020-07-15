@@ -1,5 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
+import { getSelectedBlocksMetadata } from 'draftjs-utils';
 import { ipcRenderer } from 'electron';
+import Immutable from 'immutable';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
 
@@ -76,12 +78,15 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 	const [fontSize, setFontSize] = useState(24);
 	const [lineHeight, setLineHeight] = useState(1.15);
 	const [style, setStyle] = useState({});
+	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
+	const [currentAlignment, setCurrentAlignment] = useState('');
 
 	const [prevDoc, setPrevDoc] = useState('');
 
 	// REFS
 	// const editorContainerRef = useRef(null);
 	const editorRef = useRef(null);
+	const editorStateRef = useRef();
 
 	// CONTEXT
 	const { navData } = useContext(LeftNavContext);
@@ -316,6 +321,23 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 		}
 	}, [navData.currentDoc, prevDoc, setPrevDoc, loadFile]);
 
+	// As we type, updates alignment/styles to pass down to the editorNav. We do it here
+	// instead of there to prevent unnecessary renders.
+	useEffect(() => {
+		const newCurrentStyles = editorState.getCurrentInlineStyle();
+		const newCurrentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
+
+		if (!Immutable.is(newCurrentStyles, currentStyles)) {
+			console.log('new current styles');
+			setCurrentStyles(newCurrentStyles);
+		}
+
+		if (newCurrentAlignment !== currentAlignment) {
+			console.log('new current alignment');
+			setCurrentAlignment(newCurrentAlignment);
+		}
+	}, [editorState, currentStyles, currentAlignment]);
+
 	// useEffect(() => {
 	// 	console.log(editorContainerRef.current.offsetWidth);
 	// }, [editorContainerRef.current]);
@@ -331,7 +353,9 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 		>
 			<EditorNav
 				editorWidth={editorWidth}
-				editorState={editorState}
+				// editorState={editorState}
+				currentStyles={currentStyles}
+				currentAlignment={currentAlignment}
 				toggleBlockType={toggleBlockType}
 				toggleBlockStyle={toggleBlockStyle}
 				toggleInlineStyle={toggleInlineStyle}

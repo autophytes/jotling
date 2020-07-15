@@ -79,10 +79,10 @@ body {
 .editor {
 	height: 100%;
 	width: 100%;
-	max-width: 54rem;
+	max-width: 60rem;
 	/* background-color: #eee; */
-	padding: 0 2rem 0 2rem;
-	margin-top: 2rem;
+	padding: 2rem 5rem 0 5rem;
+	/* margin-top: 2rem; */
 	flex-grow: 1;
 	font-family: 'PT Serif', 'Georgia', serif;
 	font-size: 16px;
@@ -90,6 +90,8 @@ body {
 	display: flex;
 	flex-direction: column;
 	justify-content: stretch;
+	box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.03), 3px 3px 15px rgba(0, 0, 0, 0.05),
+		3px 3px 25px rgba(0, 0, 0, 0.15);
 }
 
 .editor:focus {
@@ -130,7 +132,7 @@ li .public-DraftStyleDefault-block {
 	left: 0;
 	right: 0;
 	top: 0;
-	z-index: 3;
+	z-index: 4;
 	/* background-color: #eecccc; */
 	background-color: var(--color-primary);
 	color: #fafafa;
@@ -208,7 +210,7 @@ li .public-DraftStyleDefault-block {
 
 .side-nav-container {
 	height: 100%;
-	width: 100%;
+	width: calc(100% - 0.5rem - 1px);
 	align-self: stretch;
 	display: flex;
 	flex-direction: column;
@@ -245,26 +247,28 @@ li .public-DraftStyleDefault-block {
 .left-nav {
 	width: var(--left-nav-width);
 	left: 0;
-	background-color: #cceecc;
-	background: linear-gradient(
+	background-color: var(--color-background);
+	padding-right: 0;
+	/* background: linear-gradient(
 		90deg,
 		rgba(16, 149, 255, 0.04) 0%,
 		rgba(16, 149, 255, 0.02) 75%,
 		rgba(16, 149, 255, 0) 100%
-	);
+	); */
 	/* Recosider the background color */
 }
 
 .right-nav {
 	width: var(--right-nav-width);
 	right: 0;
-	background-color: #ccccee;
-	background: linear-gradient(
+	background-color: var(--color-background);
+	padding-left: 0;
+	/* background: linear-gradient(
 		270deg,
 		rgba(16, 149, 255, 0.04) 0%,
 		rgba(16, 149, 255, 0.02) 75%,
 		rgba(16, 149, 255, 0) 100%
-	);
+	); */
 	/* Recosider the background color */
 }
 
