@@ -70,288 +70,290 @@ const INLINE_STYLES = [
 const MAX_RECENT_FONTS = 5;
 
 // COMPONENT
-const EditorNav = ({
-	toggleBlockType,
-	toggleBlockStyle,
-	toggleInlineStyle,
-	toggleTextAlign,
-	spellCheck,
-	toggleSpellCheck,
-	currentFont,
-	setCurrentFont,
-	fontSize,
-	setFontSize,
-	lineHeight,
-	setLineHeight,
-	saveFile,
-	loadFile,
-	editorWidth,
-	currentAlignment,
-	currentStyles,
-}) => {
-	// REQUIRES toggleInlineStyle & toggleBlockType
+const EditorNav = React.memo(
+	({
+		toggleBlockType,
+		toggleBlockStyle,
+		toggleInlineStyle,
+		toggleTextAlign,
+		spellCheck,
+		toggleSpellCheck,
+		currentFont,
+		setCurrentFont,
+		fontSize,
+		setFontSize,
+		lineHeight,
+		setLineHeight,
+		saveFile,
+		loadFile,
+		editorWidth,
+		currentAlignment,
+		currentStyles,
+	}) => {
+		// REQUIRES toggleInlineStyle & toggleBlockType
 
-	// NOTE:: need to calculate the width(?) of the editor nav based on the side navs
+		// NOTE:: need to calculate the width(?) of the editor nav based on the side navs
 
-	// const currentStyles = editorState.getCurrentInlineStyle();
-	// const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
+		// const currentStyles = editorState.getCurrentInlineStyle();
+		// const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
 
-	// console.log(currentStyles);
-	// console.log(currentAlignment);
+		// console.log(currentStyles);
+		// console.log(currentAlignment);
 
-	const [pinNav, setPinNav] = useState(true);
-	const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);
-	const [fontList, setFontList] = useState([]);
-	// const [fontSize, setFontSize] = useState(null);
+		const [pinNav, setPinNav] = useState(true);
+		const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);
+		const [fontList, setFontList] = useState([]);
+		// const [fontSize, setFontSize] = useState(null);
 
-	const handleFontSelect = useCallback(
-		(font) => {
-			const fontIndex = recentlyUsedFonts.indexOf(font);
-			if (fontIndex !== 0) {
-				let recentFonts = [...recentlyUsedFonts];
+		const handleFontSelect = useCallback(
+			(font) => {
+				const fontIndex = recentlyUsedFonts.indexOf(font);
+				if (fontIndex !== 0) {
+					let recentFonts = [...recentlyUsedFonts];
 
-				// If already in the list, remove so we can add it to the front
-				if (fontIndex > 0) {
-					recentFonts.splice(fontIndex, 1);
+					// If already in the list, remove so we can add it to the front
+					if (fontIndex > 0) {
+						recentFonts.splice(fontIndex, 1);
+					}
+
+					recentFonts.unshift(font);
+
+					// Trim down to max length (min 0)
+					while (recentFonts.length > MAX_RECENT_FONTS && recentFonts.length > 0) {
+						recentFonts.pop();
+					}
+
+					setRecentlyUsedFonts(recentFonts);
 				}
 
-				recentFonts.unshift(font);
+				setCurrentFont(font);
+			},
+			[setCurrentFont, recentlyUsedFonts, setRecentlyUsedFonts]
+		);
 
-				// Trim down to max length (min 0)
-				while (recentFonts.length > MAX_RECENT_FONTS && recentFonts.length > 0) {
-					recentFonts.pop();
+		// Will either 'increase' or 'decrease' font size
+		const increaseDecreaseFontSize = useCallback(
+			(direction) => {
+				let oldSize = typeof fontSize === 'string' ? Number(fontSize) : fontSize;
+
+				if (direction === 'increase') {
+					if (oldSize < 12) {
+						console.log('< 12');
+						setFontSize(Math.floor(oldSize + 1));
+					} else if (oldSize < 28) {
+						setFontSize(Math.floor((oldSize + 2) * 2) / 2);
+					} else if (oldSize < 70) {
+						setFontSize(Math.floor((oldSize + 6) * 6) / 6);
+					} else {
+						setFontSize(Math.floor((oldSize + 12) * 12) / 12);
+					}
 				}
-
-				setRecentlyUsedFonts(recentFonts);
-			}
-
-			setCurrentFont(font);
-		},
-		[setCurrentFont, recentlyUsedFonts, setRecentlyUsedFonts]
-	);
-
-	// Will either 'increase' or 'decrease' font size
-	const increaseDecreaseFontSize = useCallback(
-		(direction) => {
-			let oldSize = typeof fontSize === 'string' ? Number(fontSize) : fontSize;
-
-			if (direction === 'increase') {
-				if (oldSize < 12) {
-					console.log('< 12');
-					setFontSize(Math.floor(oldSize + 1));
-				} else if (oldSize < 28) {
-					setFontSize(Math.floor((oldSize + 2) * 2) / 2);
-				} else if (oldSize < 70) {
-					setFontSize(Math.floor((oldSize + 6) * 6) / 6);
-				} else {
-					setFontSize(Math.floor((oldSize + 12) * 12) / 12);
+				if (direction === 'decrease') {
+					if (oldSize > 70) {
+						setFontSize(Math.ceil((oldSize - 12) / 12) * 12);
+					} else if (oldSize > 28) {
+						setFontSize(Math.ceil((oldSize - 6) / 6) * 6);
+					} else if (oldSize > 12) {
+						setFontSize(Math.ceil((oldSize - 2) / 2) * 2);
+					} else {
+						setFontSize(Math.max(Math.ceil(oldSize - 1), 1));
+					}
 				}
-			}
-			if (direction === 'decrease') {
-				if (oldSize > 70) {
-					setFontSize(Math.ceil((oldSize - 12) / 12) * 12);
-				} else if (oldSize > 28) {
-					setFontSize(Math.ceil((oldSize - 6) / 6) * 6);
-				} else if (oldSize > 12) {
-					setFontSize(Math.ceil((oldSize - 2) / 2) * 2);
-				} else {
-					setFontSize(Math.max(Math.ceil(oldSize - 1), 1));
-				}
-			}
-		},
-		[fontSize]
-	);
+			},
+			[fontSize]
+		);
 
-	// Load available fonts
-	useEffect(() => {
-		const fetchFonts = async () => {
-			const newFontList = await ipcRenderer.invoke('load-font-list');
-			setFontList(newFontList);
-		};
-		fetchFonts();
-		console.log('ipcRenderer useEffect triggered');
-	}, [ipcRenderer, setFontList]);
+		// Load available fonts
+		useEffect(() => {
+			const fetchFonts = async () => {
+				const newFontList = await ipcRenderer.invoke('load-font-list');
+				setFontList(newFontList);
+			};
+			fetchFonts();
+			console.log('ipcRenderer useEffect triggered');
+		}, [ipcRenderer, setFontList]);
 
-	return (
-		<nav
-			className={'editor-nav' + (pinNav ? '' : ' hidden')}
-			style={{
-				maxWidth: `calc(100% - ${
-					(editorWidth.leftIsPinned ? editorWidth.leftNav : 0) +
-					(editorWidth.rightIsPinned ? editorWidth.rightNav : 0)
-				}rem)`,
-			}}>
-			{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
-			<span className='editor-nav-subsection'>
-				<button
-					className={'nav-button' + (pinNav ? ' active' : '')}
-					style={{ marginRight: '0.5rem' }}
-					onMouseUp={() => setPinNav(!pinNav)}>
-					<PushpinSVG />
-				</button>
+		return (
+			<nav
+				className={'editor-nav' + (pinNav ? '' : ' hidden')}
+				style={{
+					maxWidth: `calc(100% - ${
+						(editorWidth.leftIsPinned ? editorWidth.leftNav : 0) +
+						(editorWidth.rightIsPinned ? editorWidth.rightNav : 0)
+					}rem)`,
+				}}>
+				{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
+				<span className='editor-nav-subsection'>
+					<button
+						className={'nav-button' + (pinNav ? ' active' : '')}
+						style={{ marginRight: '0.5rem' }}
+						onMouseUp={() => setPinNav(!pinNav)}>
+						<PushpinSVG />
+					</button>
 
-				<select value={currentFont} onChange={(e) => handleFontSelect(e.target.value)}>
-					{recentlyUsedFonts.map((font, i) => (
-						<option key={i} value={font}>
-							{font}
-						</option>
-					))}
-					<option disabled>- - - - -</option>
-
-					{fontList.map((font, i) => {
-						const trimFont = font.replace(/["]+/g, '');
-						return (
-							<option key={i} value={trimFont}>
-								{trimFont}
+					<select value={currentFont} onChange={(e) => handleFontSelect(e.target.value)}>
+						{recentlyUsedFonts.map((font, i) => (
+							<option key={i} value={font}>
+								{font}
 							</option>
-						);
-					})}
-				</select>
+						))}
+						<option disabled>- - - - -</option>
 
-				<input
-					type='number'
-					min='0'
-					max='999'
-					value={fontSize}
-					onChange={(e) => setFontSize(e.target.value)}
-					style={{ marginLeft: '0.5rem' }}
-				/>
-				<button
-					className='nav-button'
-					onClick={() => increaseDecreaseFontSize('decrease')}
-					style={{ marginRight: '0' }}>
-					<DecreaseFontSizeSVG />
-				</button>
-				<button
-					className='nav-button'
-					onClick={() => increaseDecreaseFontSize('increase')}
-					style={{ marginLeft: '0' }}>
-					<IncreaseFontSizeSVG />
-				</button>
+						{fontList.map((font, i) => {
+							const trimFont = font.replace(/["]+/g, '');
+							return (
+								<option key={i} value={trimFont}>
+									{trimFont}
+								</option>
+							);
+						})}
+					</select>
 
-				<input
-					type='number'
-					min='0'
-					max='10'
-					step='0.1'
-					value={lineHeight}
-					onChange={(e) => setLineHeight(e.target.value)}
-					style={{ marginLeft: '0.5rem' }}
-				/>
-				<button className='nav-button' disabled>
-					<LineSpacingSVG />
-				</button>
-			</span>
+					<input
+						type='number'
+						min='0'
+						max='999'
+						value={fontSize}
+						onChange={(e) => setFontSize(e.target.value)}
+						style={{ marginLeft: '0.5rem' }}
+					/>
+					<button
+						className='nav-button'
+						onClick={() => increaseDecreaseFontSize('decrease')}
+						style={{ marginRight: '0' }}>
+						<DecreaseFontSizeSVG />
+					</button>
+					<button
+						className='nav-button'
+						onClick={() => increaseDecreaseFontSize('increase')}
+						style={{ marginLeft: '0' }}>
+						<IncreaseFontSizeSVG />
+					</button>
 
-			{/* <div className='editor-nav-vertical-rule' /> */}
+					<input
+						type='number'
+						min='0'
+						max='10'
+						step='0.1'
+						value={lineHeight}
+						onChange={(e) => setLineHeight(e.target.value)}
+						style={{ marginLeft: '0.5rem' }}
+					/>
+					<button className='nav-button' disabled>
+						<LineSpacingSVG />
+					</button>
+				</span>
 
-			<span className='editor-nav-subsection'>
-				<InlineStyleButton
-					currentStyles={currentStyles}
-					toggleFn={toggleInlineStyle}
-					style='BOLD'>
-					<BoldSVG />
-				</InlineStyleButton>
+				{/* <div className='editor-nav-vertical-rule' /> */}
 
-				<InlineStyleButton
-					currentStyles={currentStyles}
-					toggleFn={toggleInlineStyle}
-					style='ITALIC'>
-					<ItalicSVG />
-				</InlineStyleButton>
+				<span className='editor-nav-subsection'>
+					<InlineStyleButton
+						currentStyles={currentStyles}
+						toggleFn={toggleInlineStyle}
+						style='BOLD'>
+						<BoldSVG />
+					</InlineStyleButton>
 
-				<InlineStyleButton
-					currentStyles={currentStyles}
-					toggleFn={toggleInlineStyle}
-					style='UNDERLINE'>
-					<UnderlineSVG />
-				</InlineStyleButton>
+					<InlineStyleButton
+						currentStyles={currentStyles}
+						toggleFn={toggleInlineStyle}
+						style='ITALIC'>
+						<ItalicSVG />
+					</InlineStyleButton>
 
-				<InlineStyleButton
-					currentStyles={currentStyles}
-					toggleFn={toggleInlineStyle}
-					style='STRIKETHROUGH'>
-					<StrikethroughSVG />
-				</InlineStyleButton>
+					<InlineStyleButton
+						currentStyles={currentStyles}
+						toggleFn={toggleInlineStyle}
+						style='UNDERLINE'>
+						<UnderlineSVG />
+					</InlineStyleButton>
 
-				<InlineStyleButton
-					currentStyles={currentStyles}
-					toggleFn={toggleInlineStyle}
-					style='SUBSCRIPT'
-					removeStyle='SUPERSCRIPT'>
-					<SubscriptSVG />
-				</InlineStyleButton>
+					<InlineStyleButton
+						currentStyles={currentStyles}
+						toggleFn={toggleInlineStyle}
+						style='STRIKETHROUGH'>
+						<StrikethroughSVG />
+					</InlineStyleButton>
 
-				<InlineStyleButton
-					currentStyles={currentStyles}
-					toggleFn={toggleInlineStyle}
-					style='SUPERSCRIPT'
-					removeStyle='SUBSCRIPT'>
-					<SuperscriptSVG />
-				</InlineStyleButton>
+					<InlineStyleButton
+						currentStyles={currentStyles}
+						toggleFn={toggleInlineStyle}
+						style='SUBSCRIPT'
+						removeStyle='SUPERSCRIPT'>
+						<SubscriptSVG />
+					</InlineStyleButton>
 
-				<button className='nav-button' onClick={() => saveFile()}>
-					<HighlightSVG />
-				</button>
-				<button className='nav-button' onClick={() => loadFile()}>
-					<TextColorSVG />
-				</button>
-				{/* <button className='nav-button'>
+					<InlineStyleButton
+						currentStyles={currentStyles}
+						toggleFn={toggleInlineStyle}
+						style='SUPERSCRIPT'
+						removeStyle='SUBSCRIPT'>
+						<SuperscriptSVG />
+					</InlineStyleButton>
+
+					<button className='nav-button' onClick={() => saveFile()}>
+						<HighlightSVG />
+					</button>
+					<button className='nav-button' onClick={() => loadFile()}>
+						<TextColorSVG />
+					</button>
+					{/* <button className='nav-button'>
 				<FillColorSVG />
 			</button> */}
 
-				<button
-					className='nav-button'
-					onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
-					<ListBulletSVG />
-				</button>
+					<button
+						className='nav-button'
+						onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
+						<ListBulletSVG />
+					</button>
 
-				<button
-					className='nav-button'
-					onMouseDown={(e) => toggleBlockType(e, 'ordered-list-item')}>
-					<ListNumberSVG />
-				</button>
+					<button
+						className='nav-button'
+						onMouseDown={(e) => toggleBlockType(e, 'ordered-list-item')}>
+						<ListNumberSVG />
+					</button>
 
-				<button
-					className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
-					onMouseDown={(e) => {
-						toggleTextAlign(e, 'left', currentAlignment);
-					}}>
-					<AlignLeftSVG />
-				</button>
+					<button
+						className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
+						onMouseDown={(e) => {
+							toggleTextAlign(e, 'left', currentAlignment);
+						}}>
+						<AlignLeftSVG />
+					</button>
 
-				<button
-					className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
-					onMouseDown={(e) => {
-						toggleTextAlign(e, 'center', currentAlignment);
-					}}>
-					<AlignCenterSVG />
-				</button>
+					<button
+						className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
+						onMouseDown={(e) => {
+							toggleTextAlign(e, 'center', currentAlignment);
+						}}>
+						<AlignCenterSVG />
+					</button>
 
-				<button
-					className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
-					onMouseDown={(e) => {
-						toggleTextAlign(e, 'right', currentAlignment);
-					}}>
-					<AlignRightSVG />
-				</button>
+					<button
+						className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
+						onMouseDown={(e) => {
+							toggleTextAlign(e, 'right', currentAlignment);
+						}}>
+						<AlignRightSVG />
+					</button>
 
-				<button
-					className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
-					onMouseDown={(e) => {
-						toggleTextAlign(e, 'justify', currentAlignment);
-					}}>
-					<AlignJustifySVG />
-				</button>
+					<button
+						className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
+						onMouseDown={(e) => {
+							toggleTextAlign(e, 'justify', currentAlignment);
+						}}>
+						<AlignJustifySVG />
+					</button>
 
-				<button
-					className={'nav-button' + (spellCheck ? ' active' : '')}
-					onMouseDown={(e) => toggleSpellCheck(e)}>
-					<SpellcheckSVG />
-				</button>
-			</span>
-		</nav>
-	);
-};
+					<button
+						className={'nav-button' + (spellCheck ? ' active' : '')}
+						onMouseDown={(e) => toggleSpellCheck(e)}>
+						<SpellcheckSVG />
+					</button>
+				</span>
+			</nav>
+		);
+	}
+);
 
 export default EditorNav;

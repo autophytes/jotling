@@ -86,7 +86,7 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 	// REFS
 	// const editorContainerRef = useRef(null);
 	const editorRef = useRef(null);
-	const editorStateRef = useRef();
+	const editorStateRef = useRef(null);
 
 	// CONTEXT
 	const { navData } = useContext(LeftNavContext);
@@ -111,6 +111,11 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 		console.log('focus on load');
 		editorRef.current.focus();
 	}, [editorRef]);
+
+	// Updates the editorStateRef with the updated editorState
+	useEffect(() => {
+		editorStateRef.current = editorState;
+	}, [editorState]);
 
 	// Handle shortcut keys. Using their default function right now.
 	const customKeyBindingFn = (e) => {
@@ -184,41 +189,44 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 	};
 
 	// I'll use this and the one below in my EditorNav buttons
-	const toggleBlockType = (e, blockType) => {
+	const toggleBlockType = useCallback((e, blockType) => {
 		e.preventDefault();
-		setEditorState(RichUtils.toggleBlockType(editorState, blockType));
+		setEditorState(RichUtils.toggleBlockType(editorStateRef.current, blockType));
 		// editorRef.current.focus();
-	};
+	}, []);
 
 	// I'll use this and the one above in my EditorNav buttons
-	const toggleInlineStyle = (e, inlineStyle, removeStyle) => {
+	const toggleInlineStyle = useCallback((e, inlineStyle, removeStyle) => {
 		!!e && e.preventDefault();
-		setEditorState(RichUtils.toggleInlineStyle(editorState, inlineStyle));
+		setEditorState(RichUtils.toggleInlineStyle(editorStateRef.current, inlineStyle));
 
 		// If there's a style being toggled off, queue it up for removal
 		!!removeStyle && setStyleToRemove(removeStyle);
-	};
+	}, []);
 
 	// Toggle spellcheck. If turning it off, have to rerender the editor to remove the lines.
-	const toggleSpellCheck = (e) => {
-		e.preventDefault();
-		if (spellCheck) {
-			setSpellCheck(false);
-			editorRef.current.forceUpdate();
-		} else {
-			setSpellCheck(true);
-		}
-	};
+	const toggleSpellCheck = useCallback(
+		(e) => {
+			e.preventDefault();
+			if (spellCheck) {
+				setSpellCheck(false);
+				editorRef.current.forceUpdate();
+			} else {
+				setSpellCheck(true);
+			}
+		},
+		[spellCheck]
+	);
 
-	const toggleBlockStyle = (e, blockStyle) => {
+	const toggleBlockStyle = useCallback((e, blockStyle) => {
 		e.preventDefault();
 
 		// Gets the starting and ending cursor locations (keys)
-		const anchorKey = editorState.getSelection().getAnchorKey();
-		const focusKey = editorState.getSelection().getFocusKey();
+		const anchorKey = editorStateRef.current.getSelection().getAnchorKey();
+		const focusKey = editorStateRef.current.getSelection().getFocusKey();
 
 		// Selects the ending block
-		const focusBlock = editorState.getCurrentContent().getBlockForKey(focusKey);
+		const focusBlock = editorStateRef.current.getCurrentContent().getBlockForKey(focusKey);
 
 		// Create a new selection state to add our selection to
 		const selectionState = SelectionState.createEmpty();
@@ -230,22 +238,25 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 		});
 
 		// Creates a new EditorState to style
-		const newEditorState = EditorState.forceSelection(editorState, entireBlockSelectionState);
+		const newEditorState = EditorState.forceSelection(
+			editorStateRef.current,
+			entireBlockSelectionState
+		);
 
 		// Sets the editor state to our new
 		setEditorState(RichUtils.toggleInlineStyle(newEditorState, blockStyle));
-	};
+	}, []);
 
 	// Handles Text Alignment
-	const toggleTextAlign = (e, newAlignment, currentAlignment) => {
+	const toggleTextAlign = useCallback((e, newAlignment, currentAlignment) => {
 		e.preventDefault();
 
 		if (currentAlignment !== newAlignment) {
-			setEditorState(setBlockData(editorState, { 'text-align': newAlignment }));
+			setEditorState(setBlockData(editorStateRef.current, { 'text-align': newAlignment }));
 		} else {
-			setEditorState(setBlockData(editorState, { 'text-align': undefined }));
+			setEditorState(setBlockData(editorStateRef.current, { 'text-align': undefined }));
 		}
-	};
+	}, []);
 
 	// Removes queued up styles to remove
 	useEffect(() => {
@@ -268,20 +279,23 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 	}, [currentFont, fontSize, lineHeight]);
 
 	// Saves current file
-	const saveFile = (docName = navData.currentDoc) => {
-		const currentContent = editorState.getCurrentContent();
-		const rawContent = convertToRaw(currentContent);
+	const saveFile = useCallback(
+		(docName = navData.currentDoc) => {
+			const currentContent = editorStateRef.current.getCurrentContent();
+			const rawContent = convertToRaw(currentContent);
 
-		const sendFileToSave = async () => {
-			const newFileName = await ipcRenderer.invoke(
-				'save-single-document',
-				'Jotling/' + navData.currentProj,
-				docName,
-				rawContent
-			);
-		};
-		sendFileToSave();
-	};
+			const sendFileToSave = async () => {
+				const newFileName = await ipcRenderer.invoke(
+					'save-single-document',
+					'Jotling/' + navData.currentProj,
+					docName,
+					rawContent
+				);
+			};
+			sendFileToSave();
+		},
+		[navData]
+	);
 
 	// Loads current file
 	const loadFile = useCallback(() => {
@@ -316,7 +330,6 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 				saveFile(prevDoc);
 			}
 			setPrevDoc(navData.currentDoc);
-			console.log('loading the new currentDoc');
 			loadFile();
 		}
 	}, [navData.currentDoc, prevDoc, setPrevDoc, loadFile]);
@@ -328,12 +341,10 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 		const newCurrentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
 
 		if (!Immutable.is(newCurrentStyles, currentStyles)) {
-			console.log('new current styles');
 			setCurrentStyles(newCurrentStyles);
 		}
 
 		if (newCurrentAlignment !== currentAlignment) {
-			console.log('new current alignment');
 			setCurrentAlignment(newCurrentAlignment);
 		}
 	}, [editorState, currentStyles, currentAlignment]);
@@ -353,7 +364,6 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 		>
 			<EditorNav
 				editorWidth={editorWidth}
-				// editorState={editorState}
 				currentStyles={currentStyles}
 				currentAlignment={currentAlignment}
 				toggleBlockType={toggleBlockType}
