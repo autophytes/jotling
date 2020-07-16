@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext, useRef } from 'react';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
@@ -23,6 +23,42 @@ import {
 const LeftNav = ({ editorWidth, setEditorWidth }) => {
 	const { docStructure, setDocStructure, navData, setNavData } = useContext(LeftNavContext);
 	const [pinNav, setPinNav] = useState(true);
+	const [rootFontSize, setRootFontSize] = useState(18);
+	const [resizeWidth, setResizeWidth] = useState(null);
+	const [isResizing, setIsResizing] = useState(false);
+
+	const navRef = useRef(null);
+
+	console.log(isResizing);
+	console.log();
+
+	const handleResizeMouseDown = () => {
+		console.log('mouse resizing');
+		setIsResizing(true);
+		// let rootSize = window
+		// 	.getComputedStyle(document.querySelector(':root'))
+		// 	.getPropertyValue('font-size');
+
+		// setRootFontSize(rootSize.replace('px', ''));
+	};
+
+	const handleResizeMouseMove = (e) => {
+		navRef.current.style.width = e.clientX + 'px';
+	};
+
+	const handleResizeMouseUp = (e) => {
+		console.log('resize ending!');
+		setIsResizing(false);
+		navRef.current.style.width = e.clientX + 'px';
+
+		let rootSize = Number(
+			window
+				.getComputedStyle(document.querySelector(':root'))
+				.getPropertyValue('font-size')
+				.replace('px', '')
+		);
+		setEditorWidth({ ...editorWidth, leftNav: e.clientX / rootSize });
+	};
 
 	const addFile = useCallback(
 		(fileType) => {
@@ -103,7 +139,8 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 	return (
 		<nav
 			className={'side-nav left-nav' + (pinNav ? '' : ' hidden')}
-			style={{ width: editorWidth.leftNav + 'rem' }}>
+			style={isResizing ? {} : { width: editorWidth.leftNav + 'rem' }}
+			ref={navRef}>
 			<div className='side-nav-container'>
 				<div className='left-nav-top-buttons'>
 					<div className='add-file-folder-wrapper'>
@@ -179,7 +216,13 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 					<p>49% today's goal</p>
 				</div>
 			</div>
-			<div className='vertical-rule' style={{ marginLeft: '0.5rem' }}></div>
+			<div
+				className='vertical-rule vr-left-nav'
+				draggable
+				onDragStart={handleResizeMouseDown}
+				onDrag={handleResizeMouseMove}
+				onDragEnd={handleResizeMouseUp}
+			/>
 		</nav>
 	);
 };

@@ -230,6 +230,15 @@ li .public-DraftStyleDefault-block {
 	flex-shrink: 0;
 }
 
+.vertical-rule.vr-left-nav {
+	margin-left: 0.5rem;
+	cursor: ew-resize;
+}
+.vertical-rule.vr-right-nav {
+	margin-right: 0.5rem;
+	cursor: ew-resize;
+}
+
 .editor-nav-vertical-rule {
 	width: 1px;
 	background-image: linear-gradient(

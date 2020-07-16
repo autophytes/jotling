@@ -12,7 +12,7 @@ const RightNav = ({ editorWidth, setEditorWidth }) => {
 		<nav
 			className={'side-nav right-nav' + (pinNav ? '' : ' hidden')}
 			style={{ width: editorWidth.rightNav + 'rem' }}>
-			<div className='vertical-rule' style={{ marginRight: '0.5rem' }}></div>
+			<div className='vertical-rule vr-right-nav' />
 			<div className='side-nav-container'>
 				<div className='right-nav-top-buttons'>
 					<button
