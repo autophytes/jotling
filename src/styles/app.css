@@ -218,7 +218,7 @@ li .public-DraftStyleDefault-block {
 }
 
 .vertical-rule {
-	width: 1px;
+	width: 1.1px;
 	background-image: linear-gradient(
 		to bottom,
 		rgba(105, 103, 89, 0) 0%,
@@ -228,15 +228,34 @@ li .public-DraftStyleDefault-block {
 	);
 	height: 90%;
 	flex-shrink: 0;
+	user-select: none;
+}
+
+.vertical-rule.primary-color {
+	width: 2.2px;
+	background-image: linear-gradient(
+		to bottom,
+		rgba(var(--color-primary-rgb), 0) 0%,
+		rgba(var(--color-primary-rgb), 0.6) 25%,
+		rgba(var(--color-primary-rgb), 0.6) 75%,
+		rgba(var(--color-primary-rgb), 0) 100%
+	);
+}
+
+.vertical-rule-side-nav-wrapper {
+	cursor: col-resize;
+	height: 100%;
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
 .vertical-rule.vr-left-nav {
 	margin-left: 0.5rem;
-	cursor: ew-resize;
 }
 .vertical-rule.vr-right-nav {
 	margin-right: 0.5rem;
-	cursor: ew-resize;
 }
 
 .editor-nav-vertical-rule {

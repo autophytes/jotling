@@ -23,41 +23,53 @@ import {
 const LeftNav = ({ editorWidth, setEditorWidth }) => {
 	const { docStructure, setDocStructure, navData, setNavData } = useContext(LeftNavContext);
 	const [pinNav, setPinNav] = useState(true);
-	const [rootFontSize, setRootFontSize] = useState(18);
-	const [resizeWidth, setResizeWidth] = useState(null);
+	// const [rootFontSize, setRootFontSize] = useState(18);
+	// const [resizeWidth, setResizeWidth] = useState(null);
 	const [isResizing, setIsResizing] = useState(false);
 
 	const navRef = useRef(null);
 
-	console.log(isResizing);
-	console.log();
-
-	const handleResizeMouseDown = () => {
+	const handleResizeMouseDown = (e) => {
 		console.log('mouse resizing');
 		setIsResizing(true);
-		// let rootSize = window
-		// 	.getComputedStyle(document.querySelector(':root'))
-		// 	.getPropertyValue('font-size');
-
-		// setRootFontSize(rootSize.replace('px', ''));
-	};
-
-	const handleResizeMouseMove = (e) => {
-		navRef.current.style.width = e.clientX + 'px';
-	};
-
-	const handleResizeMouseUp = (e) => {
-		console.log('resize ending!');
-		setIsResizing(false);
-		navRef.current.style.width = e.clientX + 'px';
-
 		let rootSize = Number(
 			window
 				.getComputedStyle(document.querySelector(':root'))
 				.getPropertyValue('font-size')
 				.replace('px', '')
 		);
-		setEditorWidth({ ...editorWidth, leftNav: e.clientX / rootSize });
+
+		let minWidth = 7 * rootSize;
+		let maxWidth = 25 * rootSize;
+		let widthOffset = rootSize / 4;
+
+		let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX)) + widthOffset;
+		navRef.current.style.width = newWidth + 'px';
+
+		const handleResizeMouseMove = (e) => {
+			if (e.clientX !== 0) {
+				let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX)) + widthOffset;
+				navRef.current.style.width = newWidth + 'px';
+			}
+		};
+
+		const handleResizeMouseUp = (e) => {
+			setIsResizing(false);
+			window.removeEventListener('mousemove', handleResizeMouseMove);
+			window.removeEventListener('mouseup', handleResizeMouseUp);
+
+			let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX)) + widthOffset;
+
+			setEditorWidth({ ...editorWidth, leftNav: newWidth / rootSize });
+		};
+
+		window.addEventListener('mousemove', handleResizeMouseMove);
+		window.addEventListener('mouseup', handleResizeMouseUp);
+
+		// Set a transparent ghost image for the drag
+		// var img = new Image();
+		// img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+		// e.dataTransfer.setDragImage(img, 0, 0);
 	};
 
 	const addFile = useCallback(
@@ -217,12 +229,11 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 				</div>
 			</div>
 			<div
-				className='vertical-rule vr-left-nav'
-				draggable
-				onDragStart={handleResizeMouseDown}
-				onDrag={handleResizeMouseMove}
-				onDragEnd={handleResizeMouseUp}
-			/>
+				className='vertical-rule-side-nav-wrapper'
+				style={pinNav ? {} : { cursor: 'inherit' }}
+				{...(pinNav && { onMouseDown: handleResizeMouseDown })}>
+				<div className={'vertical-rule vr-left-nav' + (isResizing ? ' primary-color' : '')} />
+			</div>
 		</nav>
 	);
 };
