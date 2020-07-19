@@ -7,6 +7,7 @@ const url = require('url');
 // const fontList = require('font-list');
 
 const { registerHandlers } = require('./backend_files/fileLoader');
+const { registerMenu } = require('./backend_files/menu');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -45,6 +46,7 @@ if (process.platform === 'win32') {
 
 // Register Handlers
 registerHandlers();
+registerMenu(dev);
 
 function createWindow() {
 	// Create the browser window.
@@ -56,6 +58,11 @@ function createWindow() {
 		webPreferences: {
 			nodeIntegration: true,
 		},
+	});
+
+	// Prevents the title bar flicker from 'Webpack App' to 'Jotling'
+	mainWindow.on('page-title-updated', function (e) {
+		e.preventDefault();
 	});
 
 	// and load the index.html of the app.

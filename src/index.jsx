@@ -20,6 +20,7 @@ let root = document.createElement('div');
 // Append root div to body
 root.id = 'root';
 document.body.appendChild(root);
+document.title = 'Jotling';
 
 // Render the app into the root div
 render(<App />, document.getElementById('root'));
