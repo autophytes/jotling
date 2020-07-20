@@ -1,6 +1,6 @@
-const { app, Menu } = require('electron');
+const { app, Menu, dialog, ipcMain } = require('electron');
 
-const registerMenu = (dev) => {
+const registerMenu = (dev, mainWindow) => {
 	const isMac = process.platform === 'darwin';
 
 	const template = [
@@ -36,7 +36,7 @@ const registerMenu = (dev) => {
 				{
 					label: 'Open',
 					click: async () => {
-						console.log('Open!');
+						openFolder(mainWindow);
 					},
 				},
 				{
@@ -66,6 +66,7 @@ const registerMenu = (dev) => {
 				{
 					label: 'Save',
 					accelerator: 'CommandOrControl+S',
+					registerAccelerator: true,
 					// acceleratorWorksWhenHidden: true,
 					click: async () => {
 						console.log('Saving document!');
@@ -74,6 +75,7 @@ const registerMenu = (dev) => {
 				{
 					label: 'Save As',
 					accelerator: 'CommandOrControl+Shift+S',
+					registerAccelerator: true,
 					// acceleratorWorksWhenHidden: true,
 					click: async () => {
 						console.log('Saving document as!');
@@ -158,6 +160,16 @@ const registerMenu = (dev) => {
 
 	const menu = Menu.buildFromTemplate(template);
 	Menu.setApplicationMenu(menu);
+};
+
+//hold the array of directory paths selected by user
+
+const openFolder = async (mainWindow) => {
+	let directory = await dialog.showOpenDialog(mainWindow, {
+		properties: ['openDirectory'],
+	});
+	console.log('dir selected: ', directory);
+	mainWindow.webContents.send('open-project', directory);
 };
 
 module.exports = { registerMenu };

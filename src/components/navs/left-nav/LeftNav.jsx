@@ -112,7 +112,7 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 				name: fileType === 'Doc' ? 'New Document' : `New ${fileType}`,
 			};
 			if (fileType === 'doc') {
-				childObject.fileName = 'doc' + childObject.id + '.json';
+				childObject.fileName = 'doc' + childObject.id + '.jots';
 			}
 
 			// Build the object that will go in 'folders' at the path.

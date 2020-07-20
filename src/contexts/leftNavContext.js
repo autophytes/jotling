@@ -50,7 +50,7 @@ const LeftNavContextProvider = (props) => {
 	const [docStructure, setDocStructure] = useState(defaultDocStructure3);
 	const [navData, setNavData] = useState({
 		currentProj: 'Test Project',
-		currentDoc: 'x023jfsf.json',
+		currentDoc: 'x023jfsf.jots',
 		currentTab: 'draft',
 		lastClicked: { type: '', id: '' },
 		editFile: '',

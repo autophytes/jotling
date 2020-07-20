@@ -31,7 +31,7 @@ const AppMgmt = () => {
 		const newDocStructure = await ipcRenderer.invoke(
 			'read-single-document',
 			'Jotling/' + navData.currentProj,
-			'DocumentStructure.json'
+			'Test Project.jots'
 		);
 		setDocStructure(newDocStructure.fileContents);
 		setStructureLoaded(true);
@@ -52,7 +52,7 @@ const AppMgmt = () => {
 				const saveResponse = await ipcRenderer.invoke(
 					'save-single-document',
 					'Jotling/Test Project',
-					'DocumentStructure.json',
+					'Test Project.jots',
 					docStructure
 				);
 				console.log(saveResponse);
@@ -61,6 +61,15 @@ const AppMgmt = () => {
 			console.log('Saving document structure.');
 		}
 	}, [docStructure, structureLoaded]);
+
+	// Registers ipcRenderer listeners
+	useEffect(() => {
+		ipcRenderer.on('open-project', (event, arg) => {
+			console.log('event: ', event);
+			console.log('arg: ', arg);
+			console.log('arg.filePaths[0]: ', arg.filePaths[0]);
+		});
+	}, []);
 
 	return (
 		<>

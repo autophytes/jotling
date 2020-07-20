@@ -46,7 +46,6 @@ if (process.platform === 'win32') {
 
 // Register Handlers
 registerHandlers();
-registerMenu(dev);
 
 function createWindow() {
 	// Create the browser window.
@@ -59,6 +58,9 @@ function createWindow() {
 			nodeIntegration: true,
 		},
 	});
+
+	// Build the application Menu
+	registerMenu(dev, mainWindow);
 
 	// Prevents the title bar flicker from 'Webpack App' to 'Jotling'
 	mainWindow.on('page-title-updated', function (e) {

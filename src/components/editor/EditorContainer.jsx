@@ -287,7 +287,7 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 			const sendFileToSave = async () => {
 				const newFileName = await ipcRenderer.invoke(
 					'save-single-document',
-					'Jotling/' + navData.currentProj,
+					'Jotling/' + navData.currentProj + '/docs',
 					docName,
 					rawContent
 				);
@@ -304,7 +304,7 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 
 			const loadedFile = await ipcRenderer.invoke(
 				'read-single-document',
-				'Jotling/' + navData.currentProj,
+				'Jotling/' + navData.currentProj + '/docs',
 				navData.currentDoc
 			);
 
