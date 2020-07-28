@@ -6,8 +6,9 @@ const path = require('path');
 const url = require('url');
 // const fontList = require('font-list');
 
-const { registerHandlers } = require('./backend_files/fileLoader');
+const { registerHandlers } = require('./backend_files/ipcListeners');
 const { registerMenu } = require('./backend_files/menu');
+const { createNewProject } = require('./backend_files/fileFunctions');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -46,6 +47,9 @@ if (process.platform === 'win32') {
 
 // Register Handlers
 registerHandlers();
+
+// TEMPORARY
+createNewProject();
 
 function createWindow() {
 	// Create the browser window.

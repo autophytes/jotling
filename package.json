@@ -19,11 +19,15 @@
 		"draft-js-plugins-editor": "^3.0.0",
 		"draftjs-utils": "^0.10.2",
 		"font-list": "^1.2.11",
+		"ncp": "^2.0.0",
 		"react": "^16.13.1",
 		"react-css-collapse": "^4.0.6",
 		"react-dom": "^16.13.1",
 		"react-resize-detector": "^5.0.6",
-		"system-font-families": "^0.4.1"
+		"rimraf": "^3.0.2",
+		"system-font-families": "^0.4.1",
+		"tar": "^6.0.2",
+		"uuid": "^8.3.0"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.9.6",

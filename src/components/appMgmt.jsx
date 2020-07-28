@@ -31,7 +31,7 @@ const AppMgmt = () => {
 		const newDocStructure = await ipcRenderer.invoke(
 			'read-single-document',
 			'Jotling/' + navData.currentProj,
-			'Test Project.jots'
+			'documentStructure.json'
 		);
 		setDocStructure(newDocStructure.fileContents);
 		setStructureLoaded(true);
@@ -52,7 +52,7 @@ const AppMgmt = () => {
 				const saveResponse = await ipcRenderer.invoke(
 					'save-single-document',
 					'Jotling/Test Project',
-					'Test Project.jots',
+					'documentStructure.json',
 					docStructure
 				);
 				console.log(saveResponse);

@@ -1,0 +1,31 @@
+{
+	"projectName": "Project Name",
+	"maxIds": { "folder": 4, "doc": 1 },
+	"draft": {
+		"folders": {
+			"1": { "folders": {}, "children": [] }
+		},
+		"children": [{ "type": "folder", "name": "Chapter 1", "id": 1 }]
+	},
+	"research": {
+		"folders": {
+			"2": {
+				"folders": {},
+				"children": [
+					{ "type": "doc", "id": 1, "name": "Test Document #2", "fileName": "doc1.json" }
+				]
+			}
+		},
+		"children": [{ "type": "folder", "id": 2, "name": "Research Folder" }]
+	},
+	"pages": {
+		"folders": {
+			"3": { "folders": {}, "children": [] },
+			"4": { "folders": {}, "children": [] }
+		},
+		"children": [
+			{ "type": "folder", "id": 3, "name": "Characters" },
+			{ "type": "folder", "id": 4, "name": "Locations" }
+		]
+	}
+}

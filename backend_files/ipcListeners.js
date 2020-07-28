@@ -3,6 +3,12 @@ const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
 
+// NOTE: Use node-tar to bundle and then compress files.
+//  - When opening folder, extract the tar.gz (.jots) into a temporary folder to work from.
+//  - All changes happen in the temporary folder, and mirror the changes in the tar.gz.
+//  - This way it maintains the performance of working on uncompressed files.
+//  - Probably no need to use high compression. Maybe just 3 or 4? Need it to stay quick.
+
 const registerHandlers = () => {
 	loadFonts();
 	saveSingleDocument();
@@ -51,6 +57,7 @@ const saveSingleDocument = () => {
 	});
 };
 
+// Read a single file
 const readSingleDocument = () => {
 	ipcMain.handle('read-single-document', (e, projectDirectory, fileName) => {
 		// File path to the Documents folder, combined with the folders and file name
