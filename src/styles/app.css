@@ -218,7 +218,7 @@ li .public-DraftStyleDefault-block {
 }
 
 .vertical-rule {
-	width: 1.1px;
+	width: 1.2px;
 	background-image: linear-gradient(
 		to bottom,
 		rgba(105, 103, 89, 0) 0%,
@@ -226,7 +226,7 @@ li .public-DraftStyleDefault-block {
 		rgba(105, 103, 89, 0.6) 75%,
 		rgba(105, 103, 89, 0) 100%
 	);
-	height: 90%;
+	height: 95%;
 	flex-shrink: 0;
 	user-select: none;
 }

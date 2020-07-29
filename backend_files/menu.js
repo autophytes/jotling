@@ -1,4 +1,5 @@
 const { app, Menu, dialog, ipcMain } = require('electron');
+const { createNewProject } = require('./fileFunctions');
 
 const registerMenu = (dev, mainWindow) => {
 	const isMac = process.platform === 'darwin';
@@ -29,9 +30,7 @@ const registerMenu = (dev, mainWindow) => {
 			submenu: [
 				{
 					label: 'New Project',
-					click: async () => {
-						console.log('New Project!');
-					},
+					click: async () => createNewProject(mainWindow),
 				},
 				{
 					label: 'Open',
