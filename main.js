@@ -8,7 +8,10 @@ const url = require('url');
 
 const { registerHandlers } = require('./backend_files/ipcListeners');
 const { registerMenu } = require('./backend_files/menu');
-// const { createNewProject } = require('./backend_files/fileFunctions');
+const {
+	createNewProject,
+	createTempProjectOnStartup,
+} = require('./backend_files/fileFunctions');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -92,7 +95,8 @@ function createWindow() {
 	mainWindow.loadURL(indexPath);
 
 	// Don't show until we are ready and loaded
-	mainWindow.once('ready-to-show', () => {
+	mainWindow.once('ready-to-show', async () => {
+		mainWindow.maximize();
 		mainWindow.show();
 
 		// Open the DevTools automatically if developing
@@ -105,8 +109,13 @@ function createWindow() {
 			installExtension(REACT_DEVELOPER_TOOLS).catch((err) =>
 				console.log('Error loading React DevTools: ', err)
 			);
-			mainWindow.webContents.openDevTools();
+
+			// RE-ENABLE to automatically open the devtools
+			// mainWindow.webContents.openDevTools();
 		}
+
+		// Load the default project files
+		createTempProjectOnStartup(mainWindow);
 
 		// Load the project files
 		// WHEN I GET BACK:

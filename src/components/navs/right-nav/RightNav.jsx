@@ -5,7 +5,7 @@ import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
 import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
 import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
 
-const RightNav = ({ editorWidth, setEditorWidth }) => {
+const RightNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 	const [pinNav, setPinNav] = useState(true);
 	const [isResizing, setIsResizing] = useState(false);
 
@@ -25,10 +25,6 @@ const RightNav = ({ editorWidth, setEditorWidth }) => {
 		let minWidth = 7 * rootSize;
 		let maxWidth = 25 * rootSize;
 		let widthOffset = rootSize / 4;
-
-		let newWidth =
-			Math.min(maxWidth, Math.max(minWidth, windowWidth - e.clientX)) + widthOffset;
-		navRef.current.style.width = newWidth + 'px';
 
 		const handleResizeMouseMove = (e) => {
 			if (e.clientX !== 0) {
@@ -61,7 +57,10 @@ const RightNav = ({ editorWidth, setEditorWidth }) => {
 			<div
 				className='vertical-rule-side-nav-wrapper'
 				style={pinNav ? {} : { cursor: 'inherit' }}
-				{...(pinNav && { onMouseDown: handleResizeMouseDown })}>
+				{...(pinNav && {
+					onMouseDown: handleResizeMouseDown,
+					onDoubleClick: () => resetNavWidth('leftNav'),
+				})}>
 				<div className={'vertical-rule vr-right-nav' + (isResizing ? ' primary-color' : '')} />
 			</div>
 			<div className='side-nav-container'>

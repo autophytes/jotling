@@ -66,7 +66,7 @@ const blockStyleFn = (block) => {
 //
 //
 // COMPONENT
-const EditorContainer = ({ editorWidth, width, targetRef }) => {
+const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	// STATE
 	const [editorState, setEditorState] = useState(() =>
 		EditorState.createWithContent(ContentState.createFromText(defaultText))
@@ -89,7 +89,7 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 	const editorStateRef = useRef(null);
 
 	// CONTEXT
-	const { navData } = useContext(LeftNavContext);
+	const { navData, project, setProject } = useContext(LeftNavContext);
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback(
@@ -278,34 +278,86 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 		setStyle(newStyles);
 	}, [currentFont, fontSize, lineHeight]);
 
-	// Saves current file
+	// Saves current document file
 	const saveFile = useCallback(
 		(docName = navData.currentDoc) => {
 			const currentContent = editorStateRef.current.getCurrentContent();
 			const rawContent = convertToRaw(currentContent);
 
-			const sendFileToSave = async () => {
-				const newFileName = await ipcRenderer.invoke(
-					'save-single-document',
-					'Jotling/' + navData.currentProj + '/docs',
-					docName,
-					rawContent
-				);
-			};
-			sendFileToSave();
+			ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath, // Must be the root temp path, not a subfolder
+				project.jotsPath,
+				'docs/' + docName, // Saved in the docs folder
+				rawContent
+			);
+			// const sendFileToSave = async () => {
+			// 	const newFileName = await ipcRenderer.invoke(
+			// 		'save-single-document',
+			// 		project.tempPath + '/docs',
+			// 		docName,
+			// 		rawContent
+			// 	);
+			// };
+			// sendFileToSave();
 		},
-		[navData]
+		[project.tempPath]
 	);
+
+	// Saves the current file and calls the main process to save the project
+	const saveFileAndProject = useCallback(
+		async (saveProject) => {
+			const docName = navData.currentDoc;
+			const currentContent = editorStateRef.current.getCurrentContent();
+			const rawContent = convertToRaw(currentContent);
+
+			// Save the current document
+			let response = await ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath, // Must be the root temp path, not a subfolder
+				project.jotsPath,
+				'docs/' + docName, // Saved in the docs folder
+				rawContent
+			);
+
+			if (response) {
+				if (saveProject === 'save-as') {
+					// Leave the jotsPath argument blank to indicate a Save As
+					let { tempPath, jotsPath } = await ipcRenderer.invoke(
+						'save-project',
+						project.tempPath,
+						''
+					);
+					// Save the updated path names
+					setProject({ tempPath, jotsPath });
+				} else {
+					// Request a save, don't wait for a response
+					ipcRenderer.invoke('save-project', project.tempPath, project.jotsPath);
+				}
+			}
+		},
+		[project, navData.currentDoc]
+	);
+
+	// Monitors for needing to save the current file and then whole project
+	useEffect(() => {
+		if (saveProject) {
+			saveFileAndProject(saveProject);
+			setSaveProject('');
+		}
+	}, [saveProject, saveFileAndProject]);
 
 	// Loads current file
 	const loadFile = useCallback(() => {
 		const loadFileFromSave = async () => {
-			console.log('Jotling/' + navData.currentProj);
-
+			if (!navData.currentDoc) {
+				console.log("There's no currentDoc to load. loadFile() aborted.");
+				return;
+			}
 			const loadedFile = await ipcRenderer.invoke(
 				'read-single-document',
-				'Jotling/' + navData.currentProj + '/docs',
-				navData.currentDoc
+				project.tempPath,
+				'docs/' + navData.currentDoc
 			);
 
 			const fileContents = loadedFile.fileContents;
@@ -321,7 +373,7 @@ const EditorContainer = ({ editorWidth, width, targetRef }) => {
 			}
 		};
 		loadFileFromSave();
-	}, [navData]);
+	}, [navData, project.tempPath]);
 
 	// Loading the new current document
 	useEffect(() => {

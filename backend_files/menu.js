@@ -1,5 +1,10 @@
 const { app, Menu, dialog, ipcMain } = require('electron');
-const { createNewProject } = require('./fileFunctions');
+const {
+	createNewProject,
+	openProject,
+	requestSaveProject,
+	requestSaveAsProject,
+} = require('./fileFunctions');
 
 const registerMenu = (dev, mainWindow) => {
 	const isMac = process.platform === 'darwin';
@@ -34,9 +39,7 @@ const registerMenu = (dev, mainWindow) => {
 				},
 				{
 					label: 'Open',
-					click: async () => {
-						openFolder(mainWindow);
-					},
+					click: async () => openProject(mainWindow),
 				},
 				{
 					label: 'Open Recent',
@@ -68,7 +71,7 @@ const registerMenu = (dev, mainWindow) => {
 					registerAccelerator: true,
 					// acceleratorWorksWhenHidden: true,
 					click: async () => {
-						console.log('Saving document!');
+						requestSaveProject(mainWindow);
 					},
 				},
 				{
@@ -77,7 +80,7 @@ const registerMenu = (dev, mainWindow) => {
 					registerAccelerator: true,
 					// acceleratorWorksWhenHidden: true,
 					click: async () => {
-						console.log('Saving document as!');
+						requestSaveAsProject(mainWindow);
 					},
 				},
 				{ type: 'separator' },
@@ -159,16 +162,6 @@ const registerMenu = (dev, mainWindow) => {
 
 	const menu = Menu.buildFromTemplate(template);
 	Menu.setApplicationMenu(menu);
-};
-
-//hold the array of directory paths selected by user
-
-const openFolder = async (mainWindow) => {
-	let directory = await dialog.showOpenDialog(mainWindow, {
-		properties: ['openDirectory'],
-	});
-	console.log('dir selected: ', directory);
-	mainWindow.webContents.send('open-project', directory);
 };
 
 module.exports = { registerMenu };

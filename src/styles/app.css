@@ -21,23 +21,18 @@ html,
 	--color-primary-rgb: 0, 149, 255;
 }
 
-@font-face {
+/* @font-face {
 	font-family: 'PT Serif';
-	/* src: url('/../../static/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype'); */
-	/* src: url('/../../static/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype'); */
 	src: url('/static/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype');
 }
 @font-face {
 	font-family: 'Lato';
-	/* src: url('/static/fonts/Lato/Lato-Regular.ttf') format('truetype'); */
 	src: url('/static/fonts/Lato/Lato-Regular.ttf') format('truetype');
 }
-/* NOTE: font's not working right now. Source Sans Pro is loading from Mac locally. */
 @font-face {
 	font-family: 'Source Sans Pro';
-	/* src: url('/static/fonts/Source_Sans_Pro/') format('truetype'); */
 	src: url('/static/fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf') format('truetype');
-}
+} */
 
 button {
 	border: none;
@@ -171,6 +166,7 @@ li .public-DraftStyleDefault-block {
 	height: 1.2rem;
 	font-size: 0.85rem;
 	border-radius: 0.5rem;
+	padding-bottom: 1px;
 	border: 1px solid #999;
 	color: #555;
 }
@@ -352,6 +348,7 @@ li .public-DraftStyleDefault-block {
 	justify-content: center;
 	align-items: center;
 	padding: 0.25rem 0;
+	cursor: pointer;
 }
 
 .nav-section-tab.active {
@@ -378,7 +375,7 @@ li .public-DraftStyleDefault-block {
 .left-nav-content,
 .right-nav-content {
 	/* height: 100%; */
-	padding: 0.5rem 0.5rem;
+	padding: 0.5rem 0 0.5rem 0.5rem;
 	flex-grow: 1;
 	overflow-y: scroll;
 }
@@ -465,6 +462,7 @@ button.file-nav:focus {
 	border-radius: 0.25rem;
 	padding: 3px 3px 1px 3px;
 	margin: 0 0.2rem;
+	cursor: pointer;
 }
 
 .nav-button:hover {
@@ -566,4 +564,33 @@ input[type='number']::-webkit-outer-spin-button {
 
 .react-css-collapse-transition {
 	transition: height 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.loadingOverlay {
+	position: absolute;
+	z-index: 999;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+
+	background-color: white;
+
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+
+	opacity: 1;
+	transition: 1000ms ease opacity;
+}
+
+.loadingOverlay.fadeOut {
+	opacity: 0;
+}
+
+.loadingOverlay h1 {
+	color: var(--color-primary);
+	font-size: 5rem;
+	text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
 }

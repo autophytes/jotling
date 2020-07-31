@@ -47,17 +47,19 @@ const defaultDocStructure3 = {
 };
 
 const LeftNavContextProvider = (props) => {
-	const [docStructure, setDocStructure] = useState(defaultDocStructure3);
+	const [docStructure, setDocStructure] = useState({});
+	const [project, setProject] = useState({ tempPath: '', jotsPath: '' });
 	const [navData, setNavData] = useState({
-		currentProj: 'Test Project',
-		currentDoc: 'x023jfsf.json',
+		currentDoc: '',
 		currentTab: 'draft',
 		lastClicked: { type: '', id: '' },
 		editFile: '',
+		parentFolders: [],
 	});
 
 	return (
-		<LeftNavContext.Provider value={{ docStructure, setDocStructure, navData, setNavData }}>
+		<LeftNavContext.Provider
+			value={{ docStructure, setDocStructure, navData, setNavData, project, setProject }}>
 			{props.children}
 		</LeftNavContext.Provider>
 	);

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useContext } from 'react';
+import React, { useCallback, useState, useContext, useEffect } from 'react';
 import NavDocument from './NavDocument';
 import NavFolder from './NavFolder';
 import NavFolderEmpty from './NavFolderEmpty';
@@ -12,6 +12,19 @@ const LeftNavContent = () => {
 	const [currentlyDragging, setCurrentlyDragging] = useState({ type: '', id: '', path: '' });
 
 	const { docStructure, navData, setNavData } = useContext(LeftNavContext);
+	let { parentFolders } = navData;
+
+	// When opening a new document, open the parent folders of the first document
+	useEffect(() => {
+		if (parentFolders.length) {
+			let newOpenFolders = { ...openFolders };
+			for (let folderId of parentFolders) {
+				newOpenFolders[folderId] = true;
+			}
+			setNavData({ ...navData, parentFolders: [] });
+			setOpenFolders({ ...newOpenFolders });
+		}
+	}, [parentFolders, openFolders, navData]);
 
 	// Toggles open/close on folders
 	const handleFolderClick = useCallback(
@@ -88,7 +101,11 @@ const LeftNavContent = () => {
 
 	return (
 		<div className='left-nav-content'>
-			{buildFileStructure(docStructure[navData.currentTab], '')}
+			{Object.keys(docStructure).length ? (
+				buildFileStructure(docStructure[navData.currentTab], '')
+			) : (
+				<></>
+			)}
 		</div>
 	);
 };

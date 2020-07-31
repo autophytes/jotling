@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext, useRef } from 'react';
+import React, { useState, useCallback, useContext, useRef, useEffect } from 'react';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
@@ -14,13 +14,13 @@ import DocumentSingleSVG from '../../../assets/svg/DocumentSingleSVG';
 import FolderOpenSVG from '../../../assets/svg/FolderOpenSVG';
 
 import {
-	findMaxFileTypeIds,
 	findFilePath,
 	setObjPropertyAtPropertyPath,
 	insertIntoArrayAtPropertyPath,
+	findFirstDocInFolder,
 } from '../../../utils/utils';
 
-const LeftNav = ({ editorWidth, setEditorWidth }) => {
+const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 	const { docStructure, setDocStructure, navData, setNavData } = useContext(LeftNavContext);
 	const [pinNav, setPinNav] = useState(true);
 	// const [rootFontSize, setRootFontSize] = useState(18);
@@ -29,6 +29,29 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 
 	const navRef = useRef(null);
 
+	// If no current doc, finds the first document in the current tab
+	useEffect(() => {
+		if (!navData.currentDoc && Object.keys(docStructure).length) {
+			// Find the first document in the current tab
+			let response = findFirstDocInFolder(docStructure[navData.currentTab]);
+			if (response) {
+				// Document was found
+				// Mark the document as the currentDoc
+				console.log('Top document was found!');
+				console.log('docName: ', response.docName);
+				setNavData({
+					...navData,
+					currentDoc: response.docName,
+					lastClicked: { type: 'doc', id: response.docId },
+					parentFolders: response.parentFolders,
+				});
+			} else {
+				console.log('No document was found in the current tab!');
+			}
+		}
+	}, [docStructure, navData.currentDoc, setNavData]);
+
+	// Resizes the leftNav width when dragging the handle
 	const handleResizeMouseDown = (e) => {
 		console.log('mouse resizing');
 		setIsResizing(true);
@@ -43,9 +66,7 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 		let maxWidth = 25 * rootSize;
 		let widthOffset = rootSize / 4;
 
-		let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX)) + widthOffset;
-		navRef.current.style.width = newWidth + 'px';
-
+		// When the mouse moves, update the width to reflext the mouse's X coordinate
 		const handleResizeMouseMove = (e) => {
 			if (e.clientX !== 0) {
 				let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX)) + widthOffset;
@@ -53,6 +74,7 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 			}
 		};
 
+		// When finshed resizing, set the width in REMs so it responds to root size changes
 		const handleResizeMouseUp = (e) => {
 			setIsResizing(false);
 			window.removeEventListener('mousemove', handleResizeMouseMove);
@@ -65,11 +87,6 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 
 		window.addEventListener('mousemove', handleResizeMouseMove);
 		window.addEventListener('mouseup', handleResizeMouseUp);
-
-		// Set a transparent ghost image for the drag
-		// var img = new Image();
-		// img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-		// e.dataTransfer.setDragImage(img, 0, 0);
 	};
 
 	const addFile = useCallback(
@@ -151,7 +168,7 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 	return (
 		<nav
 			className={'side-nav left-nav' + (pinNav ? '' : ' hidden')}
-			style={isResizing ? {} : { width: editorWidth.leftNav + 'rem' }}
+			style={{ width: editorWidth.leftNav + 'rem' }}
 			ref={navRef}>
 			<div className='side-nav-container'>
 				<div className='left-nav-top-buttons'>
@@ -231,7 +248,10 @@ const LeftNav = ({ editorWidth, setEditorWidth }) => {
 			<div
 				className='vertical-rule-side-nav-wrapper'
 				style={pinNav ? {} : { cursor: 'inherit' }}
-				{...(pinNav && { onMouseDown: handleResizeMouseDown })}>
+				{...(pinNav && {
+					onMouseDown: handleResizeMouseDown,
+					onDoubleClick: () => resetNavWidth('leftNav'),
+				})}>
 				<div className={'vertical-rule vr-left-nav' + (isResizing ? ' primary-color' : '')} />
 			</div>
 		</nav>

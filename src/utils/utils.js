@@ -234,3 +234,25 @@ export const moveFileToPath = (currentFolder, moveFile, destFile, isTopBottom) =
 
 	return folder;
 };
+
+// Returns the name of the topmost document and any parent folder ids,
+//    or false if no documents were found
+export const findFirstDocInFolder = (currentFolder, parentFolders = []) => {
+	console.log(currentFolder);
+	// Loop through all children in order
+	for (let child of currentFolder.children) {
+		// If the child is a folder, check that folder for documents
+		if (child.type === 'folder') {
+			let newParentFolders = [...parentFolders, child.id];
+			let response = findFirstDocInFolder(currentFolder.folders[child.id], newParentFolders);
+			if (response) {
+				return response;
+			}
+			// If the child is a document, return that document
+		} else if (child.type === 'doc') {
+			return { docName: child.fileName, parentFolders, docId: child.id };
+		}
+	}
+	// No documents were found
+	return false;
+};
