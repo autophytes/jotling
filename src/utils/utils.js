@@ -238,7 +238,6 @@ export const moveFileToPath = (currentFolder, moveFile, destFile, isTopBottom) =
 // Returns the name of the topmost document and any parent folder ids,
 //    or false if no documents were found
 export const findFirstDocInFolder = (currentFolder, parentFolders = []) => {
-	console.log(currentFolder);
 	// Loop through all children in order
 	for (let child of currentFolder.children) {
 		// If the child is a folder, check that folder for documents

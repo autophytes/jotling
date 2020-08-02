@@ -12,7 +12,6 @@ const LoadingOverlay = ({ structureLoaded }) => {
 		}
 	}, [structureLoaded]);
 
-	console.log('structureLoaded: ', structureLoaded);
 	return disabled ? (
 		<></>
 	) : (

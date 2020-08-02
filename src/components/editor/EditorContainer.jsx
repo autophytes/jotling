@@ -307,9 +307,11 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	// Saves the current file and calls the main process to save the project
 	const saveFileAndProject = useCallback(
 		async (saveProject) => {
+			const { command, options } = saveProject;
 			const docName = navData.currentDoc;
 			const currentContent = editorStateRef.current.getCurrentContent();
 			const rawContent = convertToRaw(currentContent);
+			console.log('editorContainer options: ', options);
 
 			// Save the current document
 			let response = await ipcRenderer.invoke(
@@ -321,18 +323,19 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 			);
 
 			if (response) {
-				if (saveProject === 'save-as') {
+				if (command === 'save-as') {
 					// Leave the jotsPath argument blank to indicate a Save As
 					let { tempPath, jotsPath } = await ipcRenderer.invoke(
 						'save-project',
 						project.tempPath,
-						''
+						'',
+						options
 					);
 					// Save the updated path names
 					setProject({ tempPath, jotsPath });
 				} else {
 					// Request a save, don't wait for a response
-					ipcRenderer.invoke('save-project', project.tempPath, project.jotsPath);
+					ipcRenderer.invoke('save-project', project.tempPath, project.jotsPath, options);
 				}
 			}
 		},
@@ -341,9 +344,9 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 
 	// Monitors for needing to save the current file and then whole project
 	useEffect(() => {
-		if (saveProject) {
+		if (Object.keys(saveProject).length) {
 			saveFileAndProject(saveProject);
-			setSaveProject('');
+			setSaveProject({});
 		}
 	}, [saveProject, saveFileAndProject]);
 

@@ -1,17 +1,16 @@
 'use strict';
 
 // Import parts of electron to use
+require('v8-compile-cache'); // Speeds up boot time
 const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const url = require('url');
-// const fontList = require('font-list');
 
-const { registerHandlers } = require('./backend_files/ipcListeners');
-const { registerMenu } = require('./backend_files/menu');
 const {
-	createNewProject,
-	createTempProjectOnStartup,
-} = require('./backend_files/fileFunctions');
+	registerHandlers,
+	checkShouldQuitApp,
+	setIsQuitting,
+} = require('./backend_files/ipcListeners');
+const { requestSaveAndQuit } = require('./backend_files/fileFunctions');
+const { createWindow } = require('./backend_files/createWindow');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -28,6 +27,11 @@ let dev = false;
 if (process.env.NODE_ENV !== undefined && process.env.NODE_ENV === 'development') {
 	dev = true;
 }
+
+const getMainWindow = () => {
+	let allBrowserWindows = BrowserWindow.getAllWindows();
+	return allBrowserWindows.length ? allBrowserWindows[0] : null;
+};
 
 // Adds a content security policy. To load external web content, this will need to be updated.
 // https://www.electronjs.org/docs/tutorial/security#:~:text=A%20Content%20Security%20Policy%20(CSP,website%20you%20load%20inside%20Electron.
@@ -48,100 +52,36 @@ if (process.platform === 'win32') {
 	app.commandLine.appendSwitch('force-device-scale-factor', '1');
 }
 
-// Register Handlers
-registerHandlers();
-
 // TEMPORARY
 // createNewProject();
 
-function createWindow() {
-	// Create the browser window.
-	mainWindow = new BrowserWindow({
-		title: 'Jotling',
-		width: 1024,
-		height: 768,
-		show: false,
-		webPreferences: {
-			nodeIntegration: true,
-		},
-	});
+// Register after createWindow is defined so it can be imported in registerMenu
+const { registerMenu } = require('./backend_files/menu');
 
-	// Build the application Menu
-	registerMenu(dev, mainWindow);
-
-	// Prevents the title bar flicker from 'Webpack App' to 'Jotling'
-	mainWindow.on('page-title-updated', function (e) {
-		e.preventDefault();
-	});
-
-	// and load the index.html of the app.
-	let indexPath;
-
-	if (dev && process.argv.indexOf('--noDevServer') === -1) {
-		indexPath = url.format({
-			protocol: 'http:',
-			host: 'localhost:8080',
-			pathname: 'index.html',
-			slashes: true,
-		});
-	} else {
-		indexPath = url.format({
-			protocol: 'file:',
-			pathname: path.join(__dirname, 'dist', 'index.html'),
-			slashes: true,
-		});
-	}
-
-	mainWindow.loadURL(indexPath);
-
-	// Don't show until we are ready and loaded
-	mainWindow.once('ready-to-show', async () => {
-		mainWindow.maximize();
-		mainWindow.show();
-
-		// Open the DevTools automatically if developing
-		if (dev) {
-			const {
-				default: installExtension,
-				REACT_DEVELOPER_TOOLS,
-			} = require('electron-devtools-installer');
-
-			installExtension(REACT_DEVELOPER_TOOLS).catch((err) =>
-				console.log('Error loading React DevTools: ', err)
-			);
-
-			// RE-ENABLE to automatically open the devtools
-			// mainWindow.webContents.openDevTools();
-		}
-
-		// Load the default project files
-		createTempProjectOnStartup(mainWindow);
-
-		// Load the project files
-		// WHEN I GET BACK:
-		// - Load the initial files (look at app.getPath)
-		// - Display the default file
-		// - List all loaded files in the left bar
-		// - Switch files when I click on different ones
-		// - Save changes to files
-		// - Create an index of files for each project with metadata
-		//    - Perhaps a json object with nested children files to establish the tree
-		//    - Title, file name (projectId - 001.txt or whatever it is), add other metadata later
-	});
-
-	// Emitted when the window is closed.
-	mainWindow.on('closed', function () {
-		// Dereference the window object, usually you would store windows
-		// in an array if your app supports multi windows, this is the time
-		// when you should delete the corresponding element.
-		mainWindow = null;
-	});
-}
+// Open a file with Jotling (opening a .jots file)
+app.on('open-file', () => {
+	// The user is opening a file with Jotling.
+	// See https://www.electronjs.org/docs/api/app#event-open-file-macos
+	// Know I also need to handle if it's not a .jots file
+	//    Say it's not a supported file type
+	//      Maybe check if it is and just has the wrong extension / no extension?
+	//    Open Jotling with a default project
+});
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+	mainWindow = createWindow(dev);
+
+	console.log(app.getPath('userData'));
+
+	// Build the application Menu
+	registerMenu();
+
+	// Register Handlers
+	registerHandlers();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -150,12 +90,37 @@ app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
 		app.quit();
 	}
+
+	// Reregister the menu now that the mainWindow is closed. Bump to end of stack.
+	setTimeout(() => {
+		registerMenu();
+	}, 0);
+});
+
+// When a new window is created, refreshes the menu
+app.on('browser-window-created', () => {
+	// Reregister the menu now that a new window is open
+	registerMenu();
 });
 
 app.on('activate', () => {
 	// On macOS it's common to re-create a window in the app when the
 	// dock icon is clicked and there are no other windows open.
-	if (mainWindow === null) {
-		createWindow();
+	if (getMainWindow() === null) {
+		mainWindow = createWindow(dev);
+		// No need to re-register handlers
+	}
+});
+
+app.on('before-quit', (e) => {
+	console.log('Is quitting!');
+	// If we haven't done our pre-quit routine
+	if (checkShouldQuitApp() === false) {
+		// Prevent the app from quitting
+		e.preventDefault();
+		// Flag we're quitting (so the window close isn't prevented)
+		setIsQuitting(true);
+		// Request a project save
+		requestSaveAndQuit();
 	}
 });

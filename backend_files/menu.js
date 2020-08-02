@@ -1,13 +1,55 @@
-const { app, Menu, dialog, ipcMain } = require('electron');
+const { app, Menu, BrowserWindow } = require('electron');
+const Store = require('electron-store');
+const store = new Store();
+
 const {
-	createNewProject,
-	openProject,
 	requestSaveProject,
 	requestSaveAsProject,
+	requestSaveAndCreateNew,
+	requestSaveAndOpen,
 } = require('./fileFunctions');
+const { createWindow } = require('./createWindow');
 
-const registerMenu = (dev, mainWindow) => {
+// Checks if we're in dev mode
+let dev = false;
+if (process.env.NODE_ENV !== undefined && process.env.NODE_ENV === 'development') {
+	dev = true;
+}
+
+// Constructs the recent projects menu subsection
+const buildRecentProjects = (isWindowOpen) => {
+	let recentProjects = store.get('recent-projects');
+	if (!recentProjects) {
+		recentProjects = [];
+	}
+
+	let displayRecentProjects = [];
+	if (requestSaveAndOpen) {
+		for (let projectPath of recentProjects.slice(0, 10)) {
+			let lastSlash = projectPath.lastIndexOf('/');
+			let projectName = projectPath.slice(lastSlash + 1);
+
+			displayRecentProjects.push({
+				label: projectName,
+				click: async () => {
+					isWindowOpen
+						? requestSaveAndOpen(projectPath)
+						: createWindow(dev, () => requestSaveAndOpen(projectPath));
+				},
+			});
+		}
+	}
+
+	return displayRecentProjects;
+};
+
+const registerMenu = () => {
+	let allBrowserWindows = BrowserWindow.getAllWindows();
+	let isWindowOpen = !!(allBrowserWindows.length ? allBrowserWindows[0] : null);
+
 	const isMac = process.platform === 'darwin';
+
+	let recentProjects = buildRecentProjects(isWindowOpen);
 
 	const template = [
 		// { role: 'appMenu' }
@@ -35,34 +77,23 @@ const registerMenu = (dev, mainWindow) => {
 			submenu: [
 				{
 					label: 'New Project',
-					click: async () => createNewProject(mainWindow),
+					click: async () => {
+						isWindowOpen
+							? requestSaveAndCreateNew()
+							: createWindow(dev, () => requestSaveAndCreateNew());
+					},
 				},
 				{
 					label: 'Open',
-					click: async () => openProject(mainWindow),
+					click: async () => {
+						isWindowOpen
+							? requestSaveAndOpen()
+							: createWindow(dev, () => requestSaveAndOpen());
+					},
 				},
 				{
 					label: 'Open Recent',
-					submenu: [
-						{
-							label: 'Old Project 1',
-							click: async () => {
-								console.log('Opening old project 1!');
-							},
-						},
-						{
-							label: 'Old Project 2',
-							click: async () => {
-								console.log('Opening old project 2!');
-							},
-						},
-						{
-							label: 'Old Project 3',
-							click: async () => {
-								console.log('Opening old project 3!');
-							},
-						},
-					],
+					submenu: recentProjects.length ? recentProjects : [{ label: 'No recent projects.' }],
 				},
 				{ type: 'separator' },
 				{
@@ -71,8 +102,9 @@ const registerMenu = (dev, mainWindow) => {
 					registerAccelerator: true,
 					// acceleratorWorksWhenHidden: true,
 					click: async () => {
-						requestSaveProject(mainWindow);
+						requestSaveProject();
 					},
+					enabled: isWindowOpen,
 				},
 				{
 					label: 'Save As',
@@ -80,8 +112,9 @@ const registerMenu = (dev, mainWindow) => {
 					registerAccelerator: true,
 					// acceleratorWorksWhenHidden: true,
 					click: async () => {
-						requestSaveAsProject(mainWindow);
+						requestSaveAsProject();
 					},
+					enabled: isWindowOpen,
 				},
 				{ type: 'separator' },
 				...(isMac ? [{ role: 'close' }] : [{ role: 'quit' }]),

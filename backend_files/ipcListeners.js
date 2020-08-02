@@ -1,10 +1,18 @@
-const { ipcMain, app, dialog } = require('electron');
+const { ipcMain, app, dialog, BrowserWindow } = require('electron');
 const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
 const tar = require('tar');
+const { createNewProject, openProject } = require('./fileFunctions');
+// const { getCurrentMainWindow } = require('../main');
+// const { setShouldCloseMainWindow, setShouldQuitApp } = require('../main');
 
 var lastSaveTimeout = { timeout: null, projectTempPath: '', projectJotsPath: '' };
+
+// Global variables for confirming we've done our close/quit routines
+var shouldCloseMainWindow = false;
+var shouldQuitApp = false;
+var isQuitting = false;
 
 // NOTE: Use node-tar to bundle and then compress files.
 //  - When opening folder, extract the tar.gz (.jots) into a temporary folder to work from.
@@ -19,6 +27,12 @@ const registerHandlers = () => {
 	saveProjectListener();
 };
 
+// Utility function
+const getMainWindow = () => {
+	let allBrowserWindows = BrowserWindow.getAllWindows();
+	return allBrowserWindows.length ? allBrowserWindows[0] : null;
+};
+
 // Loading a list of system fonts
 const loadFontsListener = () => {
 	ipcMain.handle('load-font-list', async (e) => {
@@ -31,7 +45,7 @@ const loadFontsListener = () => {
 			return [];
 		}
 	});
-	console.log('load-font-list handler registered.');
+	// console.log('load-font-list handler registered.');
 };
 
 // Save a document, creating a new one if necessary
@@ -59,24 +73,41 @@ const saveSingleDocumentListener = () => {
 
 				// Update the .jots file after a delay.
 				let newTimeout = setTimeout(() => {
-					console.time('Updating .jots');
+					console.time(`Updating ${fileName} in ${projectJotsPath}`);
 					// An array of all project files to add to the tar
-					let projectFilesToAdd = fs.readdirSync(projectTempPath);
 
-					// Creates the bundled project from the temp files
-					tar.create(
-						{
-							gzip: { level: 1 }, // Disabled: 4096b, 1: 540b, 3: 524b, 9: 475b
-							file: projectJotsPath, // output file path & name
-							cwd: projectTempPath, // Directory paths are relative from: inside our temp folder
-							// sync: true, // ASYNC so that it doesn't block the main process
-						},
-						[...projectFilesToAdd], // Relative to the cwd path
-						() => {
-							// sync, so no callback
-							console.timeEnd('Updating .jots');
+					// Makes sure the temp folder hasn't been cleaned up before saving.
+					// We always save the project before folder cleanup.
+					let folderExists = fs.existsSync(projectTempPath);
+					if (folderExists) {
+						try {
+							let projectFilesToAdd = fs.readdirSync(projectTempPath);
+
+							// Creates the bundled project from the temp files
+							tar.create(
+								{
+									gzip: { level: 1 },
+									// Decided on gzip level 1. Saves 80% of text size.
+									// Saving 88kb of text took ~20ms
+									// Saving 70mb of songs took ~2,000ms
+									// Saving 1.6gb photos took ~43,000ms
+									file: projectJotsPath, // output file path & name
+									cwd: projectTempPath, // Directory paths are relative from: inside our temp folder
+									// sync: true, // ASYNC so that it doesn't block the main process
+								},
+								[...projectFilesToAdd], // Relative to the cwd path
+								() => {
+									// sync, so no callback
+									console.timeEnd(`Updating ${fileName} in ${projectJotsPath}`);
+								}
+							);
+						} catch (err) {
+							console.log(
+								'Error updating the .jots from the temp folder in the timeout save.'
+							);
+							console.log(err);
 						}
-					);
+					}
 
 					// Reset the timeout tracker if another project hasn't been called
 					if (
@@ -113,8 +144,6 @@ const readSingleDocumentListener = () => {
 		// File path to the Documents folder, combined with the folders and file name
 		const filePath = path.join(projectTempPath, fileName);
 
-		console.log('reading from: ', filePath);
-
 		// If it exists, read the file
 		if (fs.existsSync(filePath)) {
 			// Convert to JSON, then write to file
@@ -136,17 +165,36 @@ const readSingleDocumentListener = () => {
 	});
 };
 
-// Update the project .jots file
+// Update the project .jots file. Quit the app after if requested.
 const saveProjectListener = () => {
-	ipcMain.handle('save-project', (e, projectTempPath, projectJotsPath) => {
+	ipcMain.handle('save-project', (e, projectTempPath, projectJotsPath, options = {}) => {
+		let { shouldQuit, shouldClose, shouldCreateNew, shouldOpen, openJotsPath } = options;
+		let mainWindow = getMainWindow();
+
 		if (projectTempPath) {
 			console.log('projectJotsPath: ', projectJotsPath);
-			let isSaveAs = !projectJotsPath;
+
+			let saveBefore = 1; // 0 means save, 1 means don't save
+			if (!projectJotsPath) {
+				// Tweak the dialog text based on the action we're performing
+				let saveBeforeText = 'quitting';
+				shouldCreateNew && (saveBeforeText = 'creating a new project');
+				shouldOpen && (saveBeforeText = 'opening a new project');
+
+				saveBefore = dialog.showMessageBoxSync({
+					type: 'warning',
+					message: `Your current project isn't saved. Would you like to save before ${saveBeforeText}?`,
+					title: `Save before ${saveBeforeText}?`,
+					buttons: [`Don't Save`, `Save`],
+					defaultId: 1,
+				});
+			}
+
 			// If we weren't given a jotsPath, prompt the user for a file name
-			if (isSaveAs) {
+			while (!projectJotsPath && saveBefore === 1) {
 				// Asks the user what project to open
-				// projectJotsPath = dialog.showSaveDialogSync(mainWindow, {
-				projectJotsPath = dialog.showSaveDialogSync({
+				projectJotsPath = dialog.showSaveDialogSync(mainWindow, {
+					// projectJotsPath = dialog.showSaveDialogSync({
 					title: 'Save As',
 					defaultPath: app.getPath('documents'),
 					buttonLabel: 'Save',
@@ -156,36 +204,110 @@ const saveProjectListener = () => {
 				});
 				console.log(projectJotsPath);
 
-				// Exit if no project was selected
-				if (projectJotsPath === undefined) {
+				// No save directory was chosen
+				if (
+					projectJotsPath === undefined &&
+					(shouldQuit || shouldClose || shouldCreateNew || shouldOpen)
+				) {
+					// Tweak the dialog text based on the action we're performing
+					let dialogText = 'Quit';
+					shouldCreateNew && (dialogText = 'Create');
+					shouldOpen && (dialogText = 'Open');
+
+					// Confirm quit without saving
+					let confirmQuit = dialog.showMessageBoxSync({
+						type: 'warning',
+						message: `Are you sure you want to ${dialogText} without saving?`,
+						title: `${dialogText} without saving?`,
+						buttons: ['Save', `${dialogText} Without Saving`, `Don't ${dialogText}`],
+						defaultId: 0,
+					});
+					console.log('confirmQuit: ', confirmQuit);
+					// Aborting the quit/close
+					if (confirmQuit === 2) {
+						isQuitting = false;
+						return;
+					}
+					// If 'Quit Without Saving', quit the app,
+					if (confirmQuit === 1 && shouldQuit) {
+						console.log('Quitting without saving.');
+						shouldQuitApp = true;
+						app.quit();
+						return;
+					}
+					if (confirmQuit === 1 && shouldClose) {
+						console.log('Closing without saving.');
+						shouldCloseMainWindow = true;
+						// Prevent the timeout save
+						if (lastSaveTimeout.timeout) {
+							clearTimeout(lastSaveTimeout.timeout);
+						}
+						mainWindow.close();
+						return;
+					}
+					if (confirmQuit === 1 && (shouldCreateNew || shouldOpen)) {
+						return;
+					}
+					// Cancel the save
+				} else if (projectJotsPath === undefined) {
 					console.log('Save was cancelled.');
 					return;
 				}
 			}
 
-			// Appends .jots to the file name if the user didn't
-			if (projectJotsPath.slice(-5) !== '.jots') {
-				projectJotsPath = projectJotsPath.concat('.jots');
+			// If saving:
+			if (saveBefore === 1) {
+				// Appends .jots to the file name if the user didn't
+				if (projectJotsPath.slice(-5) !== '.jots') {
+					projectJotsPath = projectJotsPath.concat('.jots');
+				}
+				// console.log('Saving project...');
+				// console.log('jotsPath: ', projectJotsPath);
+				console.time(`Updating ${projectJotsPath}`);
+
+				// An array of all project files to add to the tar
+				let projectFilesToAdd = fs.readdirSync(projectTempPath);
+
+				// Creates the bundled project from the temp files
+				tar.create(
+					{
+						gzip: { level: 1 }, // Disabled: 4096b, 1: 540b, 3: 524b, 9: 475b
+						file: projectJotsPath, // output file path & name
+						cwd: projectTempPath, // Directory paths are relative from: inside our temp folder
+						sync: true, // ASYNC so that it doesn't block the main process
+					},
+					[...projectFilesToAdd] // Relative to the cwd path
+				);
+
+				console.timeEnd(`Updating ${projectJotsPath}`);
 			}
-			console.log('Saving project...');
-			console.log('jotsPath: ', projectJotsPath);
-			console.time('Updating .jots');
 
-			// An array of all project files to add to the tar
-			let projectFilesToAdd = fs.readdirSync(projectTempPath);
+			// If this was a save and quit, quit the app
+			if (shouldQuit) {
+				console.log('Quitting after saving.');
+				shouldQuitApp = true;
+				app.quit();
+			}
 
-			// Creates the bundled project from the temp files
-			tar.create(
-				{
-					gzip: { level: 1 }, // Disabled: 4096b, 1: 540b, 3: 524b, 9: 475b
-					file: projectJotsPath, // output file path & name
-					cwd: projectTempPath, // Directory paths are relative from: inside our temp folder
-					sync: true, // ASYNC so that it doesn't block the main process
-				},
-				[...projectFilesToAdd] // Relative to the cwd path
-			);
+			// If this was save and close, close the mainWindow
+			if (shouldClose) {
+				console.log('Closing window after saving.');
+				shouldCloseMainWindow = true;
+				// Prevent the timeout save
+				if (lastSaveTimeout.timeout) {
+					clearTimeout(lastSaveTimeout.timeout);
+				}
+				mainWindow.close();
+			}
 
-			console.timeEnd('Updating .jots');
+			if (shouldCreateNew) {
+				createNewProject();
+			}
+
+			if (shouldOpen) {
+				openProject(openJotsPath);
+			}
+
 			return {
 				tempPath: projectTempPath,
 				jotsPath: projectJotsPath,
@@ -194,4 +316,31 @@ const saveProjectListener = () => {
 	});
 };
 
-module.exports = { registerHandlers };
+const checkShouldCloseMainWindow = () => {
+	return shouldCloseMainWindow;
+};
+
+const setShouldCloseMainWindow = (shouldClose) => {
+	shouldCloseMainWindow = shouldClose;
+};
+
+const checkShouldQuitApp = () => {
+	return shouldQuitApp;
+};
+
+const setIsQuitting = (shouldQuit) => {
+	isQuitting = shouldQuit;
+};
+
+const checkIsQuitting = () => {
+	return isQuitting;
+};
+
+module.exports = {
+	registerHandlers,
+	checkShouldCloseMainWindow,
+	setShouldCloseMainWindow,
+	checkShouldQuitApp,
+	setIsQuitting,
+	checkIsQuitting,
+};

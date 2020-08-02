@@ -18,6 +18,7 @@
 		"draft-js-inline-toolbar-plugin": "^3.0.1",
 		"draft-js-plugins-editor": "^3.0.0",
 		"draftjs-utils": "^0.10.2",
+		"electron-store": "^6.0.0",
 		"font-list": "^1.2.11",
 		"ncp": "^2.0.0",
 		"react": "^16.13.1",
@@ -26,7 +27,8 @@
 		"react-resize-detector": "^5.0.6",
 		"system-font-families": "^0.4.1",
 		"tar": "^6.0.2",
-		"uuid": "^8.3.0"
+		"uuid": "^8.3.0",
+		"v8-compile-cache": "^2.1.1"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.10.5",

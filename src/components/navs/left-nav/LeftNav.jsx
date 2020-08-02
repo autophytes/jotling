@@ -17,7 +17,6 @@ import {
 	findFilePath,
 	setObjPropertyAtPropertyPath,
 	insertIntoArrayAtPropertyPath,
-	findFirstDocInFolder,
 } from '../../../utils/utils';
 
 const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
@@ -28,28 +27,6 @@ const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 	const [isResizing, setIsResizing] = useState(false);
 
 	const navRef = useRef(null);
-
-	// If no current doc, finds the first document in the current tab
-	useEffect(() => {
-		if (!navData.currentDoc && Object.keys(docStructure).length) {
-			// Find the first document in the current tab
-			let response = findFirstDocInFolder(docStructure[navData.currentTab]);
-			if (response) {
-				// Document was found
-				// Mark the document as the currentDoc
-				console.log('Top document was found!');
-				console.log('docName: ', response.docName);
-				setNavData({
-					...navData,
-					currentDoc: response.docName,
-					lastClicked: { type: 'doc', id: response.docId },
-					parentFolders: response.parentFolders,
-				});
-			} else {
-				console.log('No document was found in the current tab!');
-			}
-		}
-	}, [docStructure, navData.currentDoc, setNavData]);
 
 	// Resizes the leftNav width when dragging the handle
 	const handleResizeMouseDown = (e) => {

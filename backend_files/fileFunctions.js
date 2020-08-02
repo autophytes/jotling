@@ -1,15 +1,17 @@
-const { app, dialog, remote } = require('electron');
+const { app, dialog, remote, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const ncp = require('ncp').ncp;
 const tar = require('tar');
+const Store = require('electron-store');
+const store = new Store();
 
 // Creates a temp folder and extracts a project to that folder
 const extractProjToTempFolder = async (projectPath) => {
 	// Create the temp folder path
 	let projectFolderName = 'jotling-' + uuidv4();
-	let projectTempDirectory = path.join(
+	let projectTempFolderDirectory = path.join(
 		app.getPath('temp'),
 		'JotlingProjectFiles',
 		projectFolderName
@@ -21,23 +23,107 @@ const extractProjToTempFolder = async (projectPath) => {
 	}
 
 	// Create the temp folder we'll be working out of
-	fs.mkdirSync(projectTempDirectory);
+	fs.mkdirSync(projectTempFolderDirectory);
 
 	// Extracts the bundled project to a temp folder
 	tar.extract(
 		{
 			file: projectPath, // The file to extract
-			cwd: projectTempDirectory, // Where to extract to
+			cwd: projectTempFolderDirectory, // Where to extract to
 			sync: true,
 		},
 		[] // Files to extract from the tar. Blank extracts all.
 	);
 
 	// Return the temp folder that contains the project files
-	return projectTempDirectory;
+	return { projectFolderName, projectTempFolderDirectory };
 };
 
-const openProject = async (mainWindow, projectPath) => {
+const getMainWindow = () => {
+	let allBrowserWindows = BrowserWindow.getAllWindows();
+	return allBrowserWindows.length ? allBrowserWindows[0] : null;
+};
+
+// Removes old temp folders that aren't our current project.
+// REQUIRES the name of the current project temporary folder.
+const removeOldTempFiles = async (projectFolderName) => {
+	// If no other Jotling instances open, clean out the temporary folder
+	const isOnlyJotlingInstance = app.requestSingleInstanceLock();
+	app.releaseSingleInstanceLock();
+	if (isOnlyJotlingInstance && projectFolderName) {
+		let jotlingTempFolderPath = path.join(app.getPath('temp'), 'JotlingProjectFiles');
+
+		let allFilesInTempFolder = fs.readdirSync(jotlingTempFolderPath);
+		// Loop through all files in the temp folder
+		for (let fileName of allFilesInTempFolder) {
+			// If they're a jotling- folder and not our current folder, delete them.
+			if (fileName !== projectFolderName && fileName.slice(0, 8) === 'jotling-') {
+				fs.rmdir(path.join(jotlingTempFolderPath, fileName), { recursive: true }, (err) => {
+					if (err) {
+						console.warn(err);
+					} else {
+						console.log(`Deleted ${fileName} from JotlingProjectFiles in temp folder.`);
+					}
+				});
+			}
+		}
+	}
+};
+
+// Adds the new project to the recent projects list in the persistent config store
+const updateRecentProjects = async (projectJotsPath) => {
+	// Retrieve the current recent projects
+	let recentProjects = store.get('recent-projects');
+	if (!recentProjects) {
+		recentProjects = [];
+	}
+
+	// Find and delete the projects current location in the array
+	let newProjectIndex = recentProjects.indexOf(projectJotsPath);
+	if (newProjectIndex !== -1) {
+		recentProjects.splice(newProjectIndex, 1);
+	}
+
+	// Push the project to the front
+	recentProjects.unshift(projectJotsPath);
+
+	// Update the permanent configuration
+	store.set('recent-projects', recentProjects);
+
+	// Update the menu after the recent projects list has been refreshed
+	const { registerMenu } = require('./menu');
+	registerMenu();
+};
+
+// Removes the projects from the recent projects list and refreshes the menu
+const removeFromRecentProjects = (projectJotsPath) => {
+	// Retrieve the current recent projects
+	let recentProjects = store.get('recent-projects');
+	if (!recentProjects) {
+		recentProjects = [];
+	}
+
+	// Find and delete the projects current location in the array
+	let newProjectIndex = recentProjects.indexOf(projectJotsPath);
+	if (newProjectIndex !== -1) {
+		recentProjects.splice(newProjectIndex, 1);
+	}
+
+	// Update the permanent configuration
+	store.set('recent-projects', recentProjects);
+
+	// Update the menu after the recent projects list has been refreshed
+	const { registerMenu } = require('./menu');
+	registerMenu();
+
+	// Return the name of the .jots file that was removed
+	let lastSlash = projectJotsPath.lastIndexOf('/');
+	return projectJotsPath.slice(lastSlash + 1);
+};
+
+const openProject = async (projectPath) => {
+	let mainWindow = getMainWindow();
+
 	if (!projectPath) {
 		// Asks the user what project to open
 		projectPath = dialog.showOpenDialogSync(mainWindow, {
@@ -62,17 +148,42 @@ const openProject = async (mainWindow, projectPath) => {
 		return;
 	}
 
-	// Extract the project to the temp working directory
-	let projectTempPath = await extractProjToTempFolder(projectPath);
-	console.log('Project extracted to: ', projectTempPath);
+	let projectExists = fs.existsSync(projectPath);
+	let projectFolderName, projectTempFolderDirectory;
+	if (projectExists) {
+		// Extract the project to the temp working directory
+		({ projectFolderName, projectTempFolderDirectory } = await extractProjToTempFolder(
+			projectPath
+		));
 
-	mainWindow.webContents.send('open-project', {
-		tempPath: projectTempPath,
-		jotsPath: projectPath,
-	});
+		// Send the new directories to React
+		mainWindow.webContents.send('open-project', {
+			tempPath: projectTempFolderDirectory,
+			jotsPath: projectPath,
+		});
+
+		// Updates the recent project list and refreshes the file menu
+		updateRecentProjects(projectPath);
+
+		// Removes old temp folders that aren't for the current project
+		console.log('projectFolderName in openProject: ', projectFolderName);
+		if (projectFolderName) {
+			removeOldTempFiles(projectFolderName);
+		}
+	} else {
+		// Remove the project from the recent projects in the menu
+		let projectRemoved = removeFromRecentProjects(projectPath);
+		dialog.showMessageBox({
+			title: 'Project Not Found',
+			type: 'warning',
+			message: `The project ${projectRemoved} could not be found.`,
+		});
+	}
 };
 
-const createNewProject = async (mainWindow) => {
+const createNewProject = async () => {
+	let mainWindow = getMainWindow();
+
 	let projectFolderName = 'jotling-' + uuidv4();
 	let projectTempDirectory = path.join(
 		app.getPath('temp'),
@@ -85,8 +196,6 @@ const createNewProject = async (mainWindow) => {
 	if (!fs.existsSync(path.join(app.getPath('temp'), 'JotlingProjectFiles'))) {
 		fs.mkdirSync(path.join(app.getPath('temp'), 'JotlingProjectFiles'));
 	}
-
-	// console.log(app.getPath('temp'));
 
 	// Copies the default files to the project's temporary folder
 	ncp(defaultProjectFiles, projectTempDirectory, function (err) {
@@ -131,8 +240,15 @@ const createNewProject = async (mainWindow) => {
 			// }
 		);
 
-		console.log('Copied the new folder!');
-		openProject(mainWindow, projectFilePath);
+		// Removes old temp folders that aren't for the current project
+		removeOldTempFiles(projectFolderName);
+
+		// openProject(projectFilePath);
+
+		mainWindow.webContents.send('open-project', {
+			tempPath: projectTempDirectory,
+			jotsPath: projectFilePath,
+		});
 	});
 
 	// Next, need to open the project that I just created
@@ -147,7 +263,8 @@ const createNewProject = async (mainWindow) => {
 
 // On startup, create a temporary project that we can start working in immediately.
 //     Also cleans out the temp folder if other files are still in there.
-const createTempProjectOnStartup = async (mainWindow) => {
+const createTempProjectOnStartup = async () => {
+	let mainWindow = getMainWindow();
 	let projectFolderName = 'jotling-' + uuidv4();
 	let projectTempDirectory = path.join(
 		app.getPath('temp'),
@@ -173,47 +290,44 @@ const createTempProjectOnStartup = async (mainWindow) => {
 			jotsPath: '',
 		});
 
-		// If no other Jotling instances open, clean out the temporary folder
-		const isOnlyJotlingInstance = app.requestSingleInstanceLock();
-		app.releaseSingleInstanceLock();
-		if (isOnlyJotlingInstance) {
-			let allFilesInTempFolder = fs.readdirSync(jotlingTempFolderPath);
-			// Loop through all files in the temp folder
-			for (let fileName of allFilesInTempFolder) {
-				// If they're a jotling- folder and not our current folder, delete them.
-				if (fileName !== projectFolderName && fileName.slice(0, 8) === 'jotling-') {
-					fs.rmdir(path.join(jotlingTempFolderPath, fileName), { recursive: true }, (err) => {
-						if (err) {
-							console.warn(err);
-						} else {
-							console.log(`Deleted ${fileName} from JotlingProjectFiles in temp folder.`);
-						}
-					});
-				}
-			}
-		}
+		// Removes old temp folders that aren't for the current project
+		removeOldTempFiles(projectFolderName);
 	});
 };
 
 // Requests the React app initiates a file save
-const requestSaveProject = async (mainWindow) => {
+const requestSaveProject = async () => {
+	let mainWindow = getMainWindow();
 	mainWindow.webContents.send('request-save-project', true);
 };
 
 // Requests the React app initiates a file save with a blank projectJotsPath
-const requestSaveAsProject = async (mainWindow) => {
+const requestSaveAsProject = async () => {
+	let mainWindow = getMainWindow();
 	mainWindow.webContents.send('request-save-as-project', true);
 };
 
-// When implementing the main Save function (in the menu), if no jotsPath, it's a saveas
+// Requests the react app initiates a save and quit, sending projectJotsPath and projectTempPath
+const requestSaveAndQuit = async () => {
+	let mainWindow = getMainWindow();
+	mainWindow.webContents.send('request-save-and-quit', true);
+};
 
-// const openFolder = async (mainWindow) => {
-// 	let directory = await dialog.showOpenDialog(mainWindow, {
-// 		properties: ['openDirectory'],
-// 	});
-// 	console.log('dir selected: ', directory);
-// 	mainWindow.webContents.send('open-project', directory);
-// };
+// Requests the react app initiates a save and close window, sending projectJotsPath and projectTempPath
+const requestSaveAndClose = async () => {
+	let mainWindow = getMainWindow();
+	mainWindow.webContents.send('request-save-and-close', true);
+};
+
+const requestSaveAndCreateNew = async () => {
+	let mainWindow = getMainWindow();
+	mainWindow.webContents.send('request-save-and-create-new', true);
+};
+
+const requestSaveAndOpen = async (openJotsPath) => {
+	let mainWindow = getMainWindow();
+	mainWindow.webContents.send('request-save-and-open', true, openJotsPath);
+};
 
 module.exports = {
 	createNewProject,
@@ -221,4 +335,8 @@ module.exports = {
 	createTempProjectOnStartup,
 	requestSaveProject,
 	requestSaveAsProject,
+	requestSaveAndQuit,
+	requestSaveAndClose,
+	requestSaveAndCreateNew,
+	requestSaveAndOpen,
 };

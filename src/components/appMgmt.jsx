@@ -11,6 +11,10 @@ import EditorContainer from './editor/EditorContainer';
 import { LeftNavContext } from '../contexts/leftNavContext';
 import LoadingOverlay from './loadingOverlay';
 
+import { findFirstDocInFolder } from '../utils/utils';
+import Store from 'electron-store';
+console.log(Store);
+
 // import ReactResizeDetector from 'react-resize-detector';
 
 // CONSTANTS
@@ -26,7 +30,8 @@ const AppMgmt = () => {
 		rightNav: DEFAULT_WIDTH,
 		rightIsPinned: true,
 	});
-	const [saveProject, setSaveProject] = useState('');
+	const [saveProject, setSaveProject] = useState({});
+	const [needCurrentDocReset, setNeedCurrentDocReset] = useState(false);
 
 	const {
 		docStructure,
@@ -38,16 +43,21 @@ const AppMgmt = () => {
 	} = useContext(LeftNavContext);
 
 	// Loads the document map (function)
-	const loadDocStructure = useCallback(async () => {
-		console.log('Loading the new document structure...');
-		const newDocStructure = await ipcRenderer.invoke(
-			'read-single-document',
-			project.tempPath,
-			'documentStructure.json'
-		);
-		setDocStructure(newDocStructure.fileContents);
-		setStructureLoaded(true);
-	}, [setDocStructure, setStructureLoaded, project.tempPath]);
+	const loadDocStructure = useCallback(
+		async ({ isNewProject = false }) => {
+			console.log('Loading the new document structure...');
+			console.log('isNewProject: ', isNewProject);
+			const newDocStructure = await ipcRenderer.invoke(
+				'read-single-document',
+				project.tempPath,
+				'documentStructure.json'
+			);
+			setDocStructure(newDocStructure.fileContents);
+			setStructureLoaded(true);
+			isNewProject && setNeedCurrentDocReset(true);
+		},
+		[setDocStructure, setStructureLoaded, project.tempPath]
+	);
 
 	// Resets the width of the side nav bars
 	const resetNavWidth = useCallback(
@@ -57,13 +67,69 @@ const AppMgmt = () => {
 		[editorWidth]
 	);
 
+	const resetCurrentDoc = useCallback(() => {
+		// Find the first document in the first tab with contents
+		const tabList = ['draft', 'pages', 'research'];
+		let response, currentTab;
+		for (let i = 0; i <= tabList.length && !response; i++) {
+			response = findFirstDocInFolder(docStructure[tabList[i]]);
+			if (response) {
+				currentTab = tabList[i];
+			}
+		}
+
+		// let response = findFirstDocInFolder(docStructure[currentTab]);
+		if (response) {
+			// Document was found. Mark the document as the currentDoc.
+			console.log('Top document was found!');
+			setNavData({
+				...navData,
+				currentTab: currentTab,
+				currentDoc: response.docName,
+				lastClicked: { type: 'doc', id: response.docId },
+				parentFolders: response.parentFolders,
+			});
+		} else {
+			// No documents found. Reset navData to default.
+			console.log('No document was found in the current tab!');
+			// Only set if currentDoc has contents. Otherwise, changing navData will trigger a recheck.
+			if (navData.currentDoc !== '') {
+				console.log('Resetting navData (currentDoc, currentTab, lastClicked, parentFolders)');
+				setNavData({
+					...navData,
+					currentDoc: '',
+					currentTab: 'draft',
+					lastClicked: { type: '', id: '' },
+					parentFolders: [],
+				});
+			}
+		}
+	}, [docStructure, navData, setNavData]);
+
+	// Once the docStructure has loaded for a new project, load the first document
+	useEffect(() => {
+		if (needCurrentDocReset) {
+			setNeedCurrentDocReset(false);
+			resetCurrentDoc();
+		}
+	}, [needCurrentDocReset, resetCurrentDoc]);
+
 	// Loads the document structure when the project changes
 	useEffect(() => {
 		if (prevProj !== project.tempPath && project.tempPath) {
-			loadDocStructure();
+			// Updates the program title with the updated file name
+			if (project.jotsPath) {
+				let lastSlash = project.jotsPath.lastIndexOf('/');
+				let projectName = project.jotsPath.slice(lastSlash + 1);
+				document.title = 'Jotling - ' + projectName;
+				console.log('new document.title: ', projectName);
+			}
+
+			// Loads the doc structure
+			loadDocStructure({ isNewProject: true });
 			setPrevProj(project.tempPath);
 		}
-	}, [loadDocStructure, prevProj, project.tempPath]);
+	}, [loadDocStructure, prevProj, project]);
 
 	// Saves the document map after every change
 	useEffect(() => {
@@ -85,7 +151,6 @@ const AppMgmt = () => {
 
 		// Open Project - sets the new project paths
 		ipcRenderer.on('open-project', (event, { tempPath, jotsPath }) => {
-			console.log('event: ', event);
 			if (tempPath && typeof tempPath === 'string' && typeof jotsPath === 'string') {
 				setProject({
 					tempPath: tempPath,
@@ -96,42 +161,49 @@ const AppMgmt = () => {
 
 		// Save Project - queues EditorContainer to request a save
 		ipcRenderer.on('request-save-project', (event, shouldSave) => {
-			setSaveProject('save');
+			setSaveProject({ command: 'save' });
 		});
 
 		// Save As Project - queues EditorContainer to request a save as
 		ipcRenderer.on('request-save-as-project', (event, shouldSave) => {
-			setSaveProject('save-as');
+			setSaveProject({ command: 'save-as' });
+		});
+
+		// Save Project and Quit - queues EditorContainer to request a save and quit
+		ipcRenderer.on('request-save-and-quit', (event, shouldSave) => {
+			setSaveProject({ command: 'save', options: { shouldQuit: true } });
+		});
+
+		// Save Project and Quit - queues EditorContainer to request a save and quit
+		ipcRenderer.on('request-save-and-close', (event, shouldSave) => {
+			setSaveProject({ command: 'save', options: { shouldClose: true } });
+		});
+
+		// Save Project and Create New - queues EditorContainer to request a save and create new
+		ipcRenderer.on('request-save-and-create-new', (event, shouldSave) => {
+			setSaveProject({ command: 'save', options: { shouldCreateNew: true } });
+		});
+
+		// Save Project and Open - queues EditorContainer to request a save and open another project
+		ipcRenderer.on('request-save-and-open', (event, shouldSave, openJotsPath) => {
+			setSaveProject({ command: 'save', options: { shouldOpen: true, openJotsPath } });
 		});
 	}, []);
 
-	// // SAVE the project with the tempPath and jotsPath
-	// useEffect(() => {
-	// 	if (shouldSaveProject) {
-	// 		ipcRenderer.invoke('save-project', project.tempPath, project.jotsPath);
-	// 		setShouldSaveProject(false);
-	// 	}
-	// }, [shouldSaveProject, project]);
-
-	// // SAVE AS the project with the tempPath and jotsPath
-	// useEffect(() => {
-	// 	if (shouldSaveAsProject) {
-	// 		// Leave the jotsPath argument blank to indicate a Save As
-	// 		ipcRenderer.invoke('save-project', project.tempPath, '');
-	// 		setShouldSaveAsProject(false);
-	// 	}
-	// }, [shouldSaveAsProject, project]);
+	// If no current doc, finds the first document
+	useEffect(() => {
+		if (!navData.currentDoc && Object.keys(docStructure).length) {
+			console.log('no current doc, reseting');
+			resetCurrentDoc();
+		}
+	}, [docStructure, navData.currentDoc, resetCurrentDoc]);
 
 	return (
 		<>
 			<TopNav />
 			<LeftNav {...{ editorWidth, setEditorWidth, resetNavWidth }} />
 			<RightNav {...{ editorWidth, setEditorWidth, resetNavWidth }} />
-			{/* <LeftNav editorWidth={editorWidth} setEditorWidth={setEditorWidth} />
-			<RightNav editorWidth={editorWidth} setEditorWidth={setEditorWidth} /> */}
-			{/* <ReactResizeDetector handleWidth> */}
 			<EditorContainer {...{ editorWidth, saveProject, setSaveProject }} />
-			{/* </ReactResizeDetector> */}
 			<LoadingOverlay {...{ structureLoaded }} />
 		</>
 	);
