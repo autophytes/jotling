@@ -51,6 +51,7 @@ const LeftNavContextProvider = (props) => {
 	const [project, setProject] = useState({ tempPath: '', jotsPath: '' });
 	const [navData, setNavData] = useState({
 		currentDoc: '',
+		currentTempPath: '',
 		currentTab: 'draft',
 		lastClicked: { type: '', id: '' },
 		editFile: '',

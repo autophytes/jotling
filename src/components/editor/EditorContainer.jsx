@@ -81,7 +81,7 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
 	const [currentAlignment, setCurrentAlignment] = useState('');
 
-	const [prevDoc, setPrevDoc] = useState('');
+	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
 
 	// REFS
 	// const editorContainerRef = useRef(null);
@@ -89,7 +89,7 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	const editorStateRef = useRef(null);
 
 	// CONTEXT
-	const { navData, project, setProject } = useContext(LeftNavContext);
+	const { navData, setNavData, project, setProject } = useContext(LeftNavContext);
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback(
@@ -291,15 +291,6 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 				'docs/' + docName, // Saved in the docs folder
 				rawContent
 			);
-			// const sendFileToSave = async () => {
-			// 	const newFileName = await ipcRenderer.invoke(
-			// 		'save-single-document',
-			// 		project.tempPath + '/docs',
-			// 		docName,
-			// 		rawContent
-			// 	);
-			// };
-			// sendFileToSave();
 		},
 		[project.tempPath]
 	);
@@ -380,14 +371,16 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 
 	// Loading the new current document
 	useEffect(() => {
-		if (navData.currentDoc !== prevDoc) {
-			if (prevDoc !== '') {
-				saveFile(prevDoc);
+		if (navData.currentDoc !== prev.doc || navData.currentTempPath !== prev.tempPath) {
+			// If the previous doc changed and we didn't open a new project, save.
+			if (prev.doc !== '' && navData.currentTempPath === prev.tempPath) {
+				saveFile(prev.doc); // PROBLEM: saving after we've loaded the new project
 			}
-			setPrevDoc(navData.currentDoc);
+			setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
+			setNavData({ ...navData, reloadCurrentDoc: false });
 			loadFile();
 		}
-	}, [navData.currentDoc, prevDoc, setPrevDoc, loadFile]);
+	}, [navData, setNavData, prev, setPrev, loadFile]);
 
 	// As we type, updates alignment/styles to pass down to the editorNav. We do it here
 	// instead of there to prevent unnecessary renders.

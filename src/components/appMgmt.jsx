@@ -78,7 +78,7 @@ const AppMgmt = () => {
 			}
 		}
 
-		// let response = findFirstDocInFolder(docStructure[currentTab]);
+		// let response = findFirstDocInFolder(newDocStructure[currentTab]);
 		if (response) {
 			// Document was found. Mark the document as the currentDoc.
 			console.log('Top document was found!');
@@ -86,6 +86,7 @@ const AppMgmt = () => {
 				...navData,
 				currentTab: currentTab,
 				currentDoc: response.docName,
+				currentTempPath: project.tempPath,
 				lastClicked: { type: 'doc', id: response.docId },
 				parentFolders: response.parentFolders,
 			});
@@ -99,12 +100,13 @@ const AppMgmt = () => {
 					...navData,
 					currentDoc: '',
 					currentTab: 'draft',
+					currentTempPath: project.tempPath,
 					lastClicked: { type: '', id: '' },
 					parentFolders: [],
 				});
 			}
 		}
-	}, [docStructure, navData, setNavData]);
+	}, [docStructure, navData, setNavData, project]);
 
 	// Once the docStructure has loaded for a new project, load the first document
 	useEffect(() => {
