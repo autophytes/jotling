@@ -13,7 +13,6 @@ import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import Store from 'electron-store';
-console.log(Store);
 
 // import ReactResizeDetector from 'react-resize-detector';
 
@@ -45,8 +44,6 @@ const AppMgmt = () => {
 	// Loads the document map (function)
 	const loadDocStructure = useCallback(
 		async ({ isNewProject = false }) => {
-			console.log('Loading the new document structure...');
-			console.log('isNewProject: ', isNewProject);
 			const newDocStructure = await ipcRenderer.invoke(
 				'read-single-document',
 				project.tempPath,
@@ -121,10 +118,12 @@ const AppMgmt = () => {
 		if (prevProj !== project.tempPath && project.tempPath) {
 			// Updates the program title with the updated file name
 			if (project.jotsPath) {
+				// Eventually use some sort of project name instead of the .jots file
 				let lastSlash = project.jotsPath.lastIndexOf('/');
 				let projectName = project.jotsPath.slice(lastSlash + 1);
 				document.title = 'Jotling - ' + projectName;
-				console.log('new document.title: ', projectName);
+			} else {
+				document.title = 'Jotling';
 			}
 
 			// Loads the doc structure
@@ -145,7 +144,7 @@ const AppMgmt = () => {
 			);
 			console.log('Saving document structure.');
 		}
-	}, [docStructure, structureLoaded, project.tempPath]);
+	}, [docStructure, structureLoaded, project]);
 
 	// Registers ipcRenderer listeners
 	useEffect(() => {
@@ -168,7 +167,7 @@ const AppMgmt = () => {
 
 		// Save As Project - queues EditorContainer to request a save as
 		ipcRenderer.on('request-save-as-project', (event, shouldSave) => {
-			setSaveProject({ command: 'save-as' });
+			setSaveProject({ command: 'save-as', options: { saveAs: true } });
 		});
 
 		// Save Project and Quit - queues EditorContainer to request a save and quit

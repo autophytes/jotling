@@ -168,14 +168,21 @@ const readSingleDocumentListener = () => {
 // Update the project .jots file. Quit the app after if requested.
 const saveProjectListener = () => {
 	ipcMain.handle('save-project', (e, projectTempPath, projectJotsPath, options = {}) => {
-		let { shouldQuit, shouldClose, shouldCreateNew, shouldOpen, openJotsPath } = options;
+		let {
+			shouldQuit,
+			shouldClose,
+			shouldCreateNew,
+			shouldOpen,
+			openJotsPath,
+			saveAs,
+		} = options;
 		let mainWindow = getMainWindow();
 
 		if (projectTempPath) {
 			console.log('projectJotsPath: ', projectJotsPath);
 
 			let saveBefore = 1; // 0 means save, 1 means don't save
-			if (!projectJotsPath) {
+			if (!projectJotsPath && !saveAs) {
 				// Tweak the dialog text based on the action we're performing
 				let saveBeforeText = 'quitting';
 				shouldCreateNew && (saveBeforeText = 'creating a new project');

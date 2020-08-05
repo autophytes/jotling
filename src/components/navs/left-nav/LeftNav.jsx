@@ -75,12 +75,9 @@ const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 			// Note the spread operator only performs a shallow copy (nested objects are still refs).
 			//   The JSON method performs a deep copy.
 
-			// Find the max ID for file types (so we can increment for the new one)
-			// let maxIds = findMaxFileTypeIds(folderStructure);
-
 			// Find out where we need to insert the new file
 			let filePath = '';
-			console.log(navData.lastClicked.type);
+			console.log('lastClicked.type: ', navData.lastClicked.type);
 			if (navData.lastClicked.type !== '') {
 				let tempPath = findFilePath(
 					folderStructure,
@@ -88,15 +85,20 @@ const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 					navData.lastClicked.type,
 					navData.lastClicked.id
 				);
-				console.log(tempPath);
+				console.log('tempPath: ', tempPath);
 				filePath =
 					tempPath +
 					(navData.lastClicked.type === 'folder'
-						? tempPath === ''
-							? ''
-							: '/' + `folders/${navData.lastClicked.id}`
+						? (tempPath === '' ? '' : '/') + `folders/${navData.lastClicked.id}`
 						: '');
-				console.log(filePath);
+				// filePath =
+				// 	tempPath +
+				// 	(navData.lastClicked.type === 'folder'
+				// 		? tempPath === ''
+				// 			? ''
+				// 			: '/' + `folders/${navData.lastClicked.id}`
+				// 		: '');
+				console.log('filePath: ', filePath);
 			}
 
 			// Build the object that will go in 'children' at the path
@@ -119,6 +121,7 @@ const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 					folderObject,
 					folderStructure
 				);
+				console.log(folderStructure);
 			}
 
 			// Inserts the new child into our folderStructure at the destination path
@@ -127,6 +130,7 @@ const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 				childObject,
 				folderStructure
 			);
+			console.log(folderStructure);
 
 			// Will put the file name into edit mode
 			let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);

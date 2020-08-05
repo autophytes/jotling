@@ -118,6 +118,24 @@ const NavFolder = ({
 		[docStructure, navData, currentlyDragging, child, path, moveFileToPath, dragOverTopBottom]
 	);
 
+	// If the folder name is being edited and is inside another folder, open that folder
+	useEffect(() => {
+		if (navData.editFile === 'folder-' + child.id) {
+			let noChildren =
+				path.lastIndexOf('/') !== -1 ? path.slice(0, path.lastIndexOf('/')) : '';
+
+			let containingFolderId =
+				noChildren.lastIndexOf('/') !== -1
+					? noChildren.slice(noChildren.lastIndexOf('/') + 1)
+					: '';
+
+			// If it's inside of a folder, open
+			if (containingFolderId) {
+				openCloseFolder(containingFolderId, true);
+			}
+		}
+	}, [navData.editFile, child.id, openCloseFolder]);
+
 	return (
 		<button
 			className={'file-nav folder title' + (isOpen ? ' open' : '')}

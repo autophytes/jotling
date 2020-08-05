@@ -12,16 +12,16 @@ const LeftNavContent = () => {
 	const [currentlyDragging, setCurrentlyDragging] = useState({ type: '', id: '', path: '' });
 
 	const { docStructure, navData, setNavData } = useContext(LeftNavContext);
-	let { parentFolders } = navData;
+	const { parentFolders } = navData;
 
 	// When opening a new document, open the parent folders of the first document
 	useEffect(() => {
-		if (parentFolders.length) {
-			let newOpenFolders = { ...openFolders };
+		if (parentFolders) {
+			let newOpenFolders = {};
 			for (let folderId of parentFolders) {
 				newOpenFolders[folderId] = true;
 			}
-			setNavData({ ...navData, parentFolders: [] });
+			setNavData({ ...navData, parentFolders: null });
 			setOpenFolders({ ...newOpenFolders });
 		}
 	}, [parentFolders, openFolders, navData]);
@@ -38,66 +38,73 @@ const LeftNavContent = () => {
 	// Toggles open/close on folders
 	const openCloseFolder = useCallback(
 		(folderId, isOpen) => {
-			setOpenFolders({ ...openFolders, [folderId]: isOpen });
+			if (openFolders[folderId] !== isOpen) {
+				setOpenFolders({ ...openFolders, [folderId]: isOpen });
+			}
 		},
 		[openFolders, setOpenFolders]
 	);
 
 	// Loops through the document structure and builds out the file/folder tree
-	const buildFileStructure = useCallback((doc, path) => {
-		return doc.children.map((child) => {
-			if (child.type === 'doc') {
-				return (
-					<NavDocument
-						child={child}
-						path={[path, 'children'].join('/')}
-						currentlyDragging={currentlyDragging}
-						setCurrentlyDragging={setCurrentlyDragging}
-						key={'doc-' + child.id}
-					/>
-				);
-			}
-			if (child.type === 'folder') {
-				const hasChildren = !!doc.folders[child.id]['children'].length;
-				let isOpen;
-				if (openFolders.hasOwnProperty(child.id)) {
-					isOpen = openFolders[child.id];
-				} else {
-					isOpen = false;
-					setOpenFolders({ ...openFolders, [child.id]: false });
-				}
-				return (
-					<div className='file-nav folder' key={'folder-' + child.id}>
-						<NavFolder
+	const buildFileStructure = useCallback(
+		(doc, path) => {
+			return doc.children.map((child) => {
+				if (child.type === 'doc') {
+					return (
+						<NavDocument
 							child={child}
 							path={[path, 'children'].join('/')}
-							handleFolderClick={handleFolderClick}
-							openCloseFolder={openCloseFolder}
-							currentlyDragging={currentlyDragging}
-							setCurrentlyDragging={setCurrentlyDragging}
-							isOpen={isOpen}
+							{...{ currentlyDragging, setCurrentlyDragging, openCloseFolder }}
+							key={'doc-' + child.id}
 						/>
-						<Collapse isOpen={isOpen}>
-							<div className='folder-contents'>
-								{hasChildren ? (
-									buildFileStructure(
-										doc.folders[child.id],
-										[path, 'folders', child.id].join('/')
-									)
-								) : (
-									<NavFolderEmpty
-										path={[path, 'folders', child.id, 'children'].join('/')}
-										currentlyDragging={currentlyDragging}
-									/>
-								)}
-							</div>
-						</Collapse>
-					</div>
-				);
-			}
-			// return <></>;
-		});
-	});
+					);
+				}
+				if (child.type === 'folder') {
+					console.log(`looking for children in ${child.id}: `, doc.folders);
+					const hasChildren = !!doc.folders[child.id]['children'].length;
+					let isOpen;
+					if (openFolders.hasOwnProperty(child.id)) {
+						isOpen = openFolders[child.id];
+					} else {
+						isOpen = false;
+						setOpenFolders({ ...openFolders, [child.id]: false });
+					}
+					return (
+						<div className='file-nav folder' key={'folder-' + child.id}>
+							<NavFolder
+								child={child}
+								path={[path, 'children'].join('/')}
+								{...{
+									handleFolderClick,
+									openCloseFolder,
+									currentlyDragging,
+									setCurrentlyDragging,
+									isOpen,
+								}}
+							/>
+							<Collapse isOpen={isOpen}>
+								<div className='folder-contents'>
+									{hasChildren ? (
+										buildFileStructure(
+											doc.folders[child.id],
+											[path, 'folders', child.id].join('/')
+										)
+									) : (
+										<NavFolderEmpty
+											path={[path, 'folders', child.id, 'children'].join('/')}
+											currentlyDragging={currentlyDragging}
+										/>
+									)}
+								</div>
+							</Collapse>
+						</div>
+					);
+				}
+				// return <></>;
+			});
+		},
+		[currentlyDragging, openFolders, handleFolderClick, openCloseFolder]
+	);
 
 	return (
 		<div className='left-nav-content'>

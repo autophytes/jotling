@@ -22,9 +22,10 @@ function createWindow(dev, callbackFunction) {
 	});
 
 	// Prevents the title bar flicker from 'Webpack App' to 'Jotling'
-	mainWindow.on('page-title-updated', function (e) {
-		e.preventDefault();
-	});
+	//   Update: also prevents me from updating the title bar with the document name
+	// mainWindow.on('page-title-updated', function (e) {
+	// 	e.preventDefault();
+	// });
 
 	// and load the index.html of the app.
 	let indexPath;

@@ -355,7 +355,6 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 			);
 
 			const fileContents = loadedFile.fileContents;
-			console.log(fileContents);
 
 			// If the file isn't empty (potentially meaning it)
 			if (!!fileContents && Object.keys(fileContents).length !== 0) {

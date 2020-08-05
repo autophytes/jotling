@@ -1,11 +1,17 @@
-import React, { useCallback, useState, useContext, useRef } from 'react';
+import React, { useCallback, useState, useContext, useRef, useEffect } from 'react';
 import DocumentSingleSVG from '../../../assets/svg/DocumentSingleSVG';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import { updateChildName, moveFileToPath } from '../../../utils/utils';
 
-const NavDocument = ({ path, child, currentlyDragging, setCurrentlyDragging }) => {
+const NavDocument = ({
+	path,
+	child,
+	currentlyDragging,
+	setCurrentlyDragging,
+	openCloseFolder,
+}) => {
 	const [fileName, setFileName] = useState(child.name);
 	const [fileStyles, setFileStyles] = useState({});
 	const [dragOverTopBottom, setDragOverTopBottom] = useState('');
@@ -78,6 +84,24 @@ const NavDocument = ({ path, child, currentlyDragging, setCurrentlyDragging }) =
 		},
 		[docStructure, navData, currentlyDragging, child, path, moveFileToPath, dragOverTopBottom]
 	);
+
+	// If the document is being edited and is inside a folder, open that folder
+	useEffect(() => {
+		if (navData.editFile === 'doc-' + child.id) {
+			let noChildren =
+				path.lastIndexOf('/') !== -1 ? path.slice(0, path.lastIndexOf('/')) : '';
+
+			let containingFolderId =
+				noChildren.lastIndexOf('/') !== -1
+					? noChildren.slice(noChildren.lastIndexOf('/') + 1)
+					: '';
+
+			// If it's inside of a folder, open
+			if (containingFolderId) {
+				openCloseFolder(containingFolderId, true);
+			}
+		}
+	}, [navData.editFile, child.id, openCloseFolder]);
 
 	return (
 		<button
