@@ -7,6 +7,21 @@ const tar = require('tar');
 const Store = require('electron-store');
 const store = new Store();
 
+const { docStructureTemplate } = require('./docStructureTemplate');
+
+// Create a new blank project
+const createNewProjectStructure = (projectTempDirectory) => {
+	if (!fs.existsSync(projectTempDirectory)) {
+		fs.mkdirSync(projectTempDirectory);
+	}
+
+	fs.mkdirSync(path.join(projectTempDirectory, 'docs'));
+	fs.mkdirSync(path.join(projectTempDirectory, 'media'));
+
+	let newDocStructure = JSON.stringify(docStructureTemplate);
+	fs.writeFileSync(path.join(projectTempDirectory, 'documentStructure.json'), newDocStructure);
+};
+
 // Creates a temp folder and extracts a project to that folder
 const extractProjToTempFolder = async (projectPath) => {
 	// Create the temp folder path
@@ -168,7 +183,7 @@ const openProject = async (projectPath) => {
 		// Removes old temp folders that aren't for the current project
 		console.log('projectFolderName in openProject: ', projectFolderName);
 		if (projectFolderName) {
-			removeOldTempFiles(projectFolderName);
+			// removeOldTempFiles(projectFolderName);
 		}
 	} else {
 		// Remove the project from the recent projects in the menu
@@ -197,59 +212,60 @@ const createNewProject = async () => {
 		fs.mkdirSync(path.join(app.getPath('temp'), 'JotlingProjectFiles'));
 	}
 
-	// Copies the default files to the project's temporary folder
-	ncp(defaultProjectFiles, projectTempDirectory, function (err) {
-		if (err) {
-			return console.error(err);
-		}
+	// // Copies the default files to the project's temporary folder
+	// ncp(defaultProjectFiles, projectTempDirectory, function (err) {
+	// 	if (err) {
+	// 		return console.error(err);
+	// 	}
+	createNewProjectStructure(projectTempDirectory);
 
-		// Asks the user where to save the file, what to name it
-		let projectFilePath = dialog.showSaveDialogSync(mainWindow, {
-			title: 'Create New Project',
-			defaultPath: app.getPath('documents'),
-			buttonLabel: 'Create',
-			nameFieldLabel: 'New Project Name',
-			properties: ['showOverwriteConfirmation'],
-			filters: [{ name: 'Jotling', extensions: ['jots'] }],
-		});
-
-		// If the user cancelled the dialog, exit
-		if (projectFilePath === undefined) {
-			return;
-		}
-
-		// Appends .jots to the file name if the user didn't
-		if (projectFilePath.slice(-5) !== '.jots') {
-			projectFilePath = projectFilePath.concat('.jots');
-		}
-
-		// An array of all project files to add to the tar
-		let projectFilesToAdd = fs.readdirSync(projectTempDirectory);
-
-		// Creates the bundled project from the temp files
-		tar.create(
-			{
-				gzip: { level: 1 }, // Disabled: 4096b, 1: 540b, 3: 524b, 9: 475b
-				file: projectFilePath, // output file path & name
-				cwd: projectTempDirectory, // Directory paths are relative from: inside our temp folder
-				sync: true,
-			},
-			[...projectFilesToAdd] // Relative to the cwd path
-			// () => { // sync, so no callback
-			// 	console.log('Finished creating the new tarball!');
-			// }
-		);
-
-		// Removes old temp folders that aren't for the current project
-		removeOldTempFiles(projectFolderName);
-
-		// openProject(projectFilePath);
-
-		mainWindow.webContents.send('open-project', {
-			tempPath: projectTempDirectory,
-			jotsPath: projectFilePath,
-		});
+	// Asks the user where to save the file, what to name it
+	let projectFilePath = dialog.showSaveDialogSync(mainWindow, {
+		title: 'Create New Project',
+		defaultPath: app.getPath('documents'),
+		buttonLabel: 'Create',
+		nameFieldLabel: 'New Project Name',
+		properties: ['showOverwriteConfirmation'],
+		filters: [{ name: 'Jotling', extensions: ['jots'] }],
 	});
+
+	// If the user cancelled the dialog, exit
+	if (projectFilePath === undefined) {
+		return;
+	}
+
+	// Appends .jots to the file name if the user didn't
+	if (projectFilePath.slice(-5) !== '.jots') {
+		projectFilePath = projectFilePath.concat('.jots');
+	}
+
+	// An array of all project files to add to the tar
+	let projectFilesToAdd = fs.readdirSync(projectTempDirectory);
+
+	// Creates the bundled project from the temp files
+	tar.create(
+		{
+			gzip: { level: 1 }, // Disabled: 4096b, 1: 540b, 3: 524b, 9: 475b
+			file: projectFilePath, // output file path & name
+			cwd: projectTempDirectory, // Directory paths are relative from: inside our temp folder
+			sync: true,
+		},
+		[...projectFilesToAdd] // Relative to the cwd path
+		// () => { // sync, so no callback
+		// 	console.log('Finished creating the new tarball!');
+		// }
+	);
+
+	// Removes old temp folders that aren't for the current project
+	// removeOldTempFiles(projectFolderName);
+
+	// openProject(projectFilePath);
+
+	mainWindow.webContents.send('open-project', {
+		tempPath: projectTempDirectory,
+		jotsPath: projectFilePath,
+	});
+	// });
 
 	// Next, need to open the project that I just created
 	// Then migrate all of our work to the temporary folder, and mirror saves in the .jots file
@@ -263,7 +279,7 @@ const createNewProject = async () => {
 
 // On startup, create a temporary project that we can start working in immediately.
 //     Also cleans out the temp folder if other files are still in there.
-const createTempProjectOnStartup = async () => {
+const createTempProjectOnStartup = () => {
 	let mainWindow = getMainWindow();
 	let projectFolderName = 'jotling-' + uuidv4();
 	let projectTempDirectory = path.join(
@@ -279,20 +295,21 @@ const createTempProjectOnStartup = async () => {
 		fs.mkdirSync(jotlingTempFolderPath);
 	}
 
-	// Copies the default files to the project's temporary folder
-	ncp(defaultProjectFiles, projectTempDirectory, function (err) {
-		if (err) {
-			return console.error(err);
-		}
+	// // Copies the default files to the project's temporary folder
+	// ncp(defaultProjectFiles, projectTempDirectory, function (err) {
+	// 	if (err) {
+	// 		return console.error(err);
+	// 	}
+	createNewProjectStructure(projectTempDirectory);
 
-		mainWindow.webContents.send('open-project', {
-			tempPath: projectTempDirectory,
-			jotsPath: '',
-		});
-
-		// Removes old temp folders that aren't for the current project
-		removeOldTempFiles(projectFolderName);
+	mainWindow.webContents.send('open-project', {
+		tempPath: projectTempDirectory,
+		jotsPath: '',
 	});
+
+	// Removes old temp folders that aren't for the current project
+	// removeOldTempFiles(projectFolderName);
+	// });
 };
 
 // Requests the React app initiates a file save

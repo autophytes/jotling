@@ -40,7 +40,7 @@ function createWindow(dev, callbackFunction) {
 	} else {
 		indexPath = url.format({
 			protocol: 'file:',
-			pathname: path.join(__dirname, 'dist', 'index.html'),
+			pathname: path.join(__dirname, '../build', 'index.html'),
 			slashes: true,
 		});
 	}
@@ -53,27 +53,26 @@ function createWindow(dev, callbackFunction) {
 		mainWindow.show();
 
 		// Open the DevTools automatically if developing
-		if (dev) {
-			const {
-				default: installExtension,
-				REACT_DEVELOPER_TOOLS,
-			} = require('electron-devtools-installer');
+		// if (dev) {
+		// const {
+		// 	default: installExtension,
+		// 	REACT_DEVELOPER_TOOLS,
+		// } = require('electron-devtools-installer');
 
-			installExtension(REACT_DEVELOPER_TOOLS).catch((err) =>
-				console.log('Error loading React DevTools: ', err)
-			);
+		// installExtension(REACT_DEVELOPER_TOOLS).catch((err) =>
+		// 	console.log('Error loading React DevTools: ', err)
+		// );
 
-			// RE-ENABLE to automatically open the devtools
-			// mainWindow.webContents.openDevTools();
-		}
+		// RE-ENABLE to automatically open the devtools
+		// mainWindow.webContents.openDevTools();
+		// }
 
+		// Load the default project files
+		const { createTempProjectOnStartup } = require('../backend_files/fileFunctions');
+		createTempProjectOnStartup();
 		if (callbackFunction) {
 			// Allows the menu to run functions (open, new project) after the new window has been created
 			callbackFunction();
-		} else {
-			// Load the default project files
-			const { createTempProjectOnStartup } = require('../backend_files/fileFunctions');
-			createTempProjectOnStartup();
 		}
 	});
 

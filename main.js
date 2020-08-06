@@ -2,19 +2,30 @@
 
 // Import parts of electron to use
 require('v8-compile-cache'); // Speeds up boot time
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 
 const {
 	registerHandlers,
 	checkShouldQuitApp,
 	setIsQuitting,
 } = require('./backend_files/ipcListeners');
-const { requestSaveAndQuit } = require('./backend_files/fileFunctions');
+const { requestSaveAndQuit, openProject } = require('./backend_files/fileFunctions');
 const { createWindow } = require('./backend_files/createWindow');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
+
+let afterOpenCallback = () => {
+	dialog.showMessageBoxSync({ type: 'info', message: `${process.argv}` });
+	// On windows, opens a .jots file if the user opened the app with one.
+	for (let arg of process.argv) {
+		if (arg.slice(-4) === '.jots') {
+			openProject(arg);
+			break;
+		}
+	}
+};
 
 // Keep a reference for dev mode
 let dev = false;
@@ -59,7 +70,32 @@ if (process.platform === 'win32') {
 const { registerMenu } = require('./backend_files/menu');
 
 // Open a file with Jotling (opening a .jots file)
-app.on('open-file', () => {
+app.on('open-file', (e, jotsPath) => {
+	console.log(`Opening a file with jotling: ${jotsPath}`);
+
+	if (jotsPath) {
+		// If the app is already running, open the file
+		if (app.isReady()) {
+			// Ensures we have a window created and opened to show the project in
+			let allBrowserWindows = BrowserWindow.getAllWindows();
+			let currentMainWindow = allBrowserWindows.length ? allBrowserWindows[0] : null;
+
+			if (currentMainWindow) {
+				// THIS WORKS
+				// Open the project we were given
+				currentMainWindow.show();
+				openProject(jotsPath);
+			} else {
+				// THIS WORKS
+				createWindow(dev, () => openProject(jotsPath));
+			}
+		} else {
+			// If it's not running yet, queue the file to be opened
+			// THIS WORK!
+			afterOpenCallback = () => openProject(jotsPath);
+		}
+	}
+
 	// The user is opening a file with Jotling.
 	// See https://www.electronjs.org/docs/api/app#event-open-file-macos
 	// Know I also need to handle if it's not a .jots file
@@ -72,15 +108,19 @@ app.on('open-file', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-	mainWindow = createWindow(dev);
+	mainWindow = createWindow(dev, afterOpenCallback);
 
-	console.log(app.getPath('userData'));
+	// Register Handlers
+	registerHandlers();
 
 	// Build the application Menu
 	registerMenu();
 
-	// Register Handlers
-	registerHandlers();
+	// // Opens the queued file
+	// if (initialJotsPathToOpen) {
+	// 	openProject(initialJotsPathToOpen);
+	// 	initialJotsPathToOpen = '';
+	// }
 });
 
 // Quit when all windows are closed.

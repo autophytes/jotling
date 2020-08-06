@@ -189,7 +189,7 @@ const saveProjectListener = () => {
 				shouldOpen && (saveBeforeText = 'opening a new project');
 
 				saveBefore = dialog.showMessageBoxSync({
-					type: 'warning',
+					type: 'question',
 					message: `Your current project isn't saved. Would you like to save before ${saveBeforeText}?`,
 					title: `Save before ${saveBeforeText}?`,
 					buttons: [`Don't Save`, `Save`],
@@ -223,7 +223,7 @@ const saveProjectListener = () => {
 
 					// Confirm quit without saving
 					let confirmQuit = dialog.showMessageBoxSync({
-						type: 'warning',
+						type: 'question',
 						message: `Are you sure you want to ${dialogText} without saving?`,
 						title: `${dialogText} without saving?`,
 						buttons: ['Save', `${dialogText} Without Saving`, `Don't ${dialogText}`],

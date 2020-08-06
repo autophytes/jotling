@@ -1,7 +1,8 @@
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { spawn } = require('child_process');
+const BabiliPlugin = require('babili-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 // Any directories you will be adding code/files into, need to be added to this array so webpack will pick them up
 const defaultInclude = path.resolve(__dirname, 'src');
@@ -11,7 +12,7 @@ module.exports = {
 		rules: [
 			{
 				test: /\.css$/,
-				use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
+				use: [MiniCssExtractPlugin.loader, 'css-loader'],
 				include: defaultInclude,
 			},
 			{
@@ -31,9 +32,6 @@ module.exports = {
 			},
 		],
 	},
-	output: {
-		path: path.resolve(__dirname, 'build'),
-	},
 	resolve: {
 		// Added to fix the .jsx entry point problem
 		extensions: ['*', '.js', '.jsx'],
@@ -41,22 +39,21 @@ module.exports = {
 	target: 'electron-renderer',
 	plugins: [
 		new HtmlWebpackPlugin(),
-		new webpack.DefinePlugin({
-			'process.env.NODE_ENV': JSON.stringify('development'),
+		new MiniCssExtractPlugin({
+			// Options similar to the same options in webpackOptions.output
+			// both options are optional
+			filename: 'bundle.css',
+			chunkFilename: '[id].css',
 		}),
+		new webpack.DefinePlugin({
+			'process.env.NODE_ENV': JSON.stringify('production'),
+		}),
+		new BabiliPlugin(),
 	],
-	devtool: 'cheap-source-map',
-	devServer: {
-		contentBase: path.resolve(__dirname, 'dist'),
-		stats: {
-			colors: true,
-			chunks: false,
-			children: false,
-		},
-		before() {
-			spawn('electron', ['.'], { shell: true, env: process.env, stdio: 'inherit' })
-				.on('close', (code) => process.exit(0))
-				.on('error', (spawnError) => console.error(spawnError));
-		},
+	stats: {
+		colors: true,
+		children: false,
+		chunks: false,
+		modules: false,
 	},
 };

@@ -9,7 +9,9 @@
 		"start": "cross-env NODE_ENV=development webpack-dev-server --hot --host 0.0.0.0 --config=./webpack.dev.config.js --mode development",
 		"build": "cross-env NODE_ENV=production webpack --config webpack.build.config.js --mode production",
 		"package": "npm run build",
-		"postpackage": "electron-packager ./ --out=./builds"
+		"postpackage": "electron-packager ./ --out=./builds --overwrite",
+		"pack": "electron-builder --dir",
+		"dist": "electron-builder"
 	},
 	"dependencies": {
 		"@babel/runtime": "^7.10.5",
@@ -18,6 +20,7 @@
 		"draft-js-inline-toolbar-plugin": "^3.0.1",
 		"draft-js-plugins-editor": "^3.0.0",
 		"draftjs-utils": "^0.10.2",
+		"electron-devtools-installer": "^3.1.0",
 		"electron-store": "^6.0.0",
 		"font-list": "^1.2.11",
 		"ncp": "^2.0.0",
@@ -38,7 +41,7 @@
 		"cross-env": "^7.0.2",
 		"css-loader": "^4.0.0",
 		"electron": "^9.1.2",
-		"electron-devtools-installer": "^3.1.0",
+		"electron-builder": "^22.8.0",
 		"electron-packager": "^15.0.0",
 		"eslint": "^7.5.0",
 		"eslint-plugin-flowtype": "^5.2.0",
@@ -53,5 +56,36 @@
 		"webpack": "^4.44.1",
 		"webpack-cli": "^3.3.12",
 		"webpack-dev-server": "^3.11.0"
+	},
+	"build": {
+		"productName": "Jotling",
+		"appId": "com.electron.Jotling",
+		"directories": {
+			"buildResources": "backend_files/defaultProjectFiles",
+			"output": "dist"
+		},
+		"fileAssociations": [
+			{
+				"ext": "jots",
+				"name": "Jotling Project",
+				"role": "Editor"
+			}
+		],
+		"asar": false,
+		"files": [
+			"build/main.js",
+			"build/",
+			"backend_files/defaultProjectFiles",
+			"backend_files/defaultProjectFiles/*",
+			"**/*",
+			"!backup-icons/*",
+			"!mockup/*",
+			"!node_modules/.cache/",
+			"!**/*.map"
+		],
+		"win": {
+			"target": "nsis",
+			"icon": "build/icon.png"
+		}
 	}
 }
