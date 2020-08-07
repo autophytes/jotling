@@ -61,6 +61,7 @@ const getMainWindow = () => {
 
 // Removes old temp folders that aren't our current project.
 // REQUIRES the name of the current project temporary folder.
+// Currently using removeOldTempFilesSync on close/quit in saveProjectListener
 const removeOldTempFiles = async (projectFolderName) => {
 	// If no other Jotling instances open, clean out the temporary folder
 	const isOnlyJotlingInstance = app.requestSingleInstanceLock();
@@ -73,13 +74,52 @@ const removeOldTempFiles = async (projectFolderName) => {
 		for (let fileName of allFilesInTempFolder) {
 			// If they're a jotling- folder and not our current folder, delete them.
 			if (fileName !== projectFolderName && fileName.slice(0, 8) === 'jotling-') {
-				fs.rmdir(path.join(jotlingTempFolderPath, fileName), { recursive: true }, (err) => {
-					if (err) {
-						console.warn(err);
-					} else {
-						console.log(`Deleted ${fileName} from JotlingProjectFiles in temp folder.`);
-					}
-				});
+				try {
+					fs.rmdir(path.join(jotlingTempFolderPath, fileName), { recursive: true }, (err) => {
+						if (err) {
+							console.warn(err);
+						} else {
+							console.log(`Deleted ${fileName} from JotlingProjectFiles in temp folder.`);
+						}
+					});
+				} catch (err) {
+					console.log(err);
+					console.log(`Error deleting ${fileName}.`);
+				}
+			}
+		}
+	}
+};
+
+// Removes old temp folders that aren't our current project.
+const removeOldTempFilesSync = (projectFolderName) => {
+	// If no other Jotling instances open, clean out the temporary folder
+	const isOnlyJotlingInstance = app.requestSingleInstanceLock();
+	app.releaseSingleInstanceLock();
+	if (isOnlyJotlingInstance) {
+		let jotlingTempFolderPath = path.join(app.getPath('temp'), 'JotlingProjectFiles');
+
+		let allFilesInTempFolder = fs.readdirSync(jotlingTempFolderPath);
+		// Loop through all files in the temp folder
+		for (let fileName of allFilesInTempFolder) {
+			// If they're a jotling- folder and not our current folder, delete them.
+			if (fileName !== projectFolderName && fileName.slice(0, 8) === 'jotling-') {
+				try {
+					fs.rmdirSync(
+						path.join(jotlingTempFolderPath, fileName),
+						{ recursive: true },
+						(err) => {
+							if (err) {
+								console.warn(err);
+							} else {
+								console.log(`Deleted ${fileName} from JotlingProjectFiles in temp folder.`);
+							}
+						}
+					);
+				} catch (err) {
+					console.log(err);
+					console.log(`Error deleting ${fileName}.`);
+				}
 			}
 		}
 	}
@@ -184,6 +224,7 @@ const openProject = async (projectPath) => {
 		console.log('projectFolderName in openProject: ', projectFolderName);
 		if (projectFolderName) {
 			// removeOldTempFiles(projectFolderName);
+			// ^^^ Currently removing temp files on quit instead
 		}
 	} else {
 		// Remove the project from the recent projects in the menu
@@ -258,6 +299,7 @@ const createNewProject = async () => {
 
 	// Removes old temp folders that aren't for the current project
 	// removeOldTempFiles(projectFolderName);
+	// ^^^ Currently removing temp files on quit instead
 
 	// openProject(projectFilePath);
 
@@ -291,6 +333,7 @@ const createTempProjectOnStartup = () => {
 
 	// Ensures the JotlingProjectFiles folder exists
 	let jotlingTempFolderPath = path.join(app.getPath('temp'), 'JotlingProjectFiles');
+	console.log(jotlingTempFolderPath);
 	if (!fs.existsSync(jotlingTempFolderPath)) {
 		fs.mkdirSync(jotlingTempFolderPath);
 	}
@@ -309,6 +352,7 @@ const createTempProjectOnStartup = () => {
 
 	// Removes old temp folders that aren't for the current project
 	// removeOldTempFiles(projectFolderName);
+	// ^^^ Currently removing temp files on quit instead
 	// });
 };
 
@@ -356,4 +400,5 @@ module.exports = {
 	requestSaveAndClose,
 	requestSaveAndCreateNew,
 	requestSaveAndOpen,
+	removeOldTempFilesSync,
 };

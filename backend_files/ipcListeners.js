@@ -3,7 +3,7 @@ const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
 const tar = require('tar');
-const { createNewProject, openProject } = require('./fileFunctions');
+const { createNewProject, openProject, removeOldTempFilesSync } = require('./fileFunctions');
 // const { getCurrentMainWindow } = require('../main');
 // const { setShouldCloseMainWindow, setShouldQuitApp } = require('../main');
 
@@ -239,6 +239,7 @@ const saveProjectListener = () => {
 					if (confirmQuit === 1 && shouldQuit) {
 						console.log('Quitting without saving.');
 						shouldQuitApp = true;
+						removeOldTempFilesSync();
 						app.quit();
 						return;
 					}
@@ -249,6 +250,7 @@ const saveProjectListener = () => {
 						if (lastSaveTimeout.timeout) {
 							clearTimeout(lastSaveTimeout.timeout);
 						}
+						removeOldTempFilesSync();
 						mainWindow.close();
 						return;
 					}
@@ -293,6 +295,7 @@ const saveProjectListener = () => {
 			if (shouldQuit) {
 				console.log('Quitting after saving.');
 				shouldQuitApp = true;
+				removeOldTempFilesSync();
 				app.quit();
 			}
 
@@ -304,6 +307,7 @@ const saveProjectListener = () => {
 				if (lastSaveTimeout.timeout) {
 					clearTimeout(lastSaveTimeout.timeout);
 				}
+				removeOldTempFilesSync();
 				mainWindow.close();
 			}
 

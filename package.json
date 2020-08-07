@@ -1,6 +1,8 @@
 {
 	"name": "jotling",
 	"productName": "Jotling",
+	"description": "Word processor for authors with a focus on builidng out a knowledge base around your writing.",
+	"author": "Josh",
 	"version": "1.0.0",
 	"homepage": "./",
 	"main": "main.js",
@@ -71,7 +73,7 @@
 				"role": "Editor"
 			}
 		],
-		"asar": false,
+		"asar": true,
 		"files": [
 			"build/main.js",
 			"build/",
@@ -83,9 +85,14 @@
 			"!node_modules/.cache/",
 			"!**/*.map"
 		],
-		"win": {
-			"target": "nsis",
-			"icon": "build/icon.png"
+		"nsis": {
+			"perMachine": true,
+			"oneClick": false,
+			"allowElevation": true
+		},
+		"mac": {
+			"target": "dmg",
+			"category": "public.app-category.productivity"
 		}
 	}
 }

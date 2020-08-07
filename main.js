@@ -17,7 +17,7 @@ const { createWindow } = require('./backend_files/createWindow');
 let mainWindow;
 
 let afterOpenCallback = () => {
-	dialog.showMessageBoxSync({ type: 'info', message: `${process.argv}` });
+	// dialog.showMessageBoxSync({ type: 'info', message: `${process.argv}` });
 	// On windows, opens a .jots file if the user opened the app with one.
 	for (let arg of process.argv) {
 		if (arg.slice(-4) === '.jots') {
