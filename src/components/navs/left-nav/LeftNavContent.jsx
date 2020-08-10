@@ -60,7 +60,6 @@ const LeftNavContent = () => {
 					);
 				}
 				if (child.type === 'folder') {
-					console.log(`looking for children in ${child.id}: `, doc.folders);
 					const hasChildren = !!doc.folders[child.id]['children'].length;
 					let isOpen;
 					if (openFolders.hasOwnProperty(child.id)) {
@@ -118,24 +117,3 @@ const LeftNavContent = () => {
 };
 
 export default LeftNavContent;
-
-{
-	/* <div className='file-nav folder'>
-				<p className='file-nav folder title'>Chapter 1</p>
-				<div className='folder-contents'>
-					<p className='file-nav document'>Sub 1</p>
-					<div className='file-nav folder'>
-						<p className='file-nav folder title'>Sub 2</p>
-						<div className='folder-contents'>
-							<p className='file-nav document'>Sub sub 1</p>
-							<p className='file-nav document'>Sub sub 2</p>
-							<p className='file-nav document'>Sub sub 3</p>
-						</div>
-					</div>
-				</div>
-			</div>
-			<p className='file-nav document'>Chapter 2</p>
-			<p className='file-nav document'>Chapter 3</p>
-			<p className='file-nav document'>Chapter 4</p>
-			<p className='file-nav document'>Chapter 5</p> */
-}

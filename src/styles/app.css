@@ -11,7 +11,7 @@ html,
 }
 
 :root {
-	font-size: 18px;
+	font-size: 16px;
 	--top-nav-height: 2.5rem;
 	--left-nav-width: 12rem;
 	--right-nav-width: 12rem;
@@ -384,6 +384,7 @@ li .public-DraftStyleDefault-block {
 .left-nav-content,
 .right-nav-content {
 	/* height: 100%; */
+	position: relative;
 	padding: 0.5rem 0 0.5rem 0.5rem;
 	flex-grow: 1;
 	overflow-y: scroll;
@@ -608,4 +609,32 @@ input[type='number']::-webkit-outer-spin-button {
 .public-DraftStyleDefault-block.public-DraftStyleDefault-ltr {
 	margin-bottom: 1rem;
 	/* text-indent: 1.5rem; */
+}
+
+.add-tag-button {
+	position: absolute;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	top: 0.5rem;
+	right: 0.25rem;
+	width: 1rem;
+	height: 1rem;
+	box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
+	border-radius: 50%;
+	background-color: var(--color-primary);
+	cursor: pointer;
+	transition: 150ms ease transform, 150ms ease box-shadow;
+	user-select: none;
+}
+
+.add-tag-button:hover:not(:active) {
+	transform: translateY(-2px);
+	box-shadow: 0px 4px 2px rgba(0, 0, 0, 0.1);
+}
+
+.add-tag-button svg {
+	width: 60%;
+	fill: white;
+	margin: auto;
 }

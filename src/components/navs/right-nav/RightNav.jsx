@@ -4,10 +4,12 @@ import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
 import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
 import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
+import RightNavContent from './RightNavContent';
 
 const RightNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 	const [pinNav, setPinNav] = useState(true);
 	const [isResizing, setIsResizing] = useState(false);
+	const [activeTab, setActiveTab] = useState('document');
 
 	const navRef = useRef(null);
 
@@ -75,31 +77,25 @@ const RightNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 					</button>
 				</div>
 				<div className='right-nav-sections'>
-					<div className='nav-section-tab first active'>
-						{/* <img src='icons/guide-book.svg' /> */}
+					<div
+						className={'nav-section-tab first' + (activeTab === 'document' ? ' active' : '')}
+						onClick={() => setActiveTab('document')}>
 						<DocumentInfoSVG />
 					</div>
-					<div className='nav-section-tab'>
-						{/* <img src='icons/price-tag.svg' /> */}
+					<div
+						className={'nav-section-tab' + (activeTab === 'tags' ? ' active' : '')}
+						onClick={() => setActiveTab('tags')}>
 						<TagSingleSVG />
 					</div>
-					<div className='nav-section-tab last'>
-						{/* <img src='icons/document-settings.svg' /> */}
+					<div
+						className={'nav-section-tab last' + (activeTab === 'settings' ? ' active' : '')}
+						onClick={() => setActiveTab('settings')}>
 						<SettingsDocSVG />
 					</div>
 				</div>
-				<div className='right-nav-content'>
-					<p className='file-nav folder'>Chapter 1</p>
-					<p className='file-nav document'>Sub 1</p>
-					<p className='file-nav folder'>Sub 2</p>
-					<p className='file-nav document'>Sub sub 1</p>
-					<p className='file-nav document'>Sub sub 2</p>
-					<p className='file-nav document'>Sub sub 3</p>
-					<p className='file-nav document'>Chapter 2</p>
-					<p className='file-nav document'>Chapter 3</p>
-					<p className='file-nav document'>Chapter 4</p>
-					<p className='file-nav document'>Chapter 5</p>
-				</div>
+
+				<RightNavContent {...{ activeTab }} />
+
 				<div className='right-nav-footer'>
 					<div>current version</div>
 				</div>

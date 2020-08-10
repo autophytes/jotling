@@ -69,13 +69,14 @@ const blockStyleFn = (block) => {
 const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	// STATE
 	const [editorState, setEditorState] = useState(() =>
-		EditorState.createWithContent(ContentState.createFromText(defaultText))
+		// EditorState.createWithContent(ContentState.createFromText(defaultText))
+		EditorState.createEmpty()
 	);
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
 
 	const [currentFont, setCurrentFont] = useState('PT Sans');
-	const [fontSize, setFontSize] = useState(24);
+	const [fontSize, setFontSize] = useState(20);
 	const [lineHeight, setLineHeight] = useState(1.15);
 	const [style, setStyle] = useState({});
 	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());

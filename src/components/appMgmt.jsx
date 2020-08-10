@@ -22,6 +22,7 @@ const DEFAULT_WIDTH = 12;
 // Create main App component
 const AppMgmt = () => {
 	const [structureLoaded, setStructureLoaded] = useState(false);
+	const [linkStructureLoaded, setLinkStructureLoaded] = useState(false);
 	const [prevProj, setPrevProj] = useState('');
 	const [editorWidth, setEditorWidth] = useState({
 		leftNav: DEFAULT_WIDTH,
@@ -35,6 +36,8 @@ const AppMgmt = () => {
 	const {
 		docStructure,
 		setDocStructure,
+		linkStructure,
+		setLinkStructure,
 		project,
 		setProject,
 		navData,
@@ -55,6 +58,17 @@ const AppMgmt = () => {
 		},
 		[setDocStructure, setStructureLoaded, project.tempPath]
 	);
+
+	// Loads the document link structure (function)
+	const loadLinkStructure = useCallback(async () => {
+		const newLinkStructure = await ipcRenderer.invoke(
+			'read-single-document',
+			project.tempPath,
+			'linkStructure.json'
+		);
+		setLinkStructure(newLinkStructure.fileContents);
+		setLinkStructureLoaded(true);
+	}, [setLinkStructure, project.tempPath]);
 
 	// Resets the width of the side nav bars
 	const resetNavWidth = useCallback(
@@ -78,7 +92,6 @@ const AppMgmt = () => {
 		// let response = findFirstDocInFolder(newDocStructure[currentTab]);
 		if (response) {
 			// Document was found. Mark the document as the currentDoc.
-			console.log('Top document was found!');
 			setNavData({
 				...navData,
 				currentTab: currentTab,
@@ -113,7 +126,7 @@ const AppMgmt = () => {
 		}
 	}, [needCurrentDocReset, resetCurrentDoc]);
 
-	// Loads the document structure when the project changes
+	// Loads the document / link structures when the project changes
 	useEffect(() => {
 		if (prevProj !== project.tempPath && project.tempPath) {
 			// Updates the program title with the updated file name
@@ -128,9 +141,10 @@ const AppMgmt = () => {
 
 			// Loads the doc structure
 			loadDocStructure({ isNewProject: true });
+			loadLinkStructure();
 			setPrevProj(project.tempPath);
 		}
-	}, [loadDocStructure, prevProj, project]);
+	}, [loadDocStructure, loadLinkStructure, prevProj, project]);
 
 	// Saves the document map after every change
 	useEffect(() => {
@@ -145,6 +159,20 @@ const AppMgmt = () => {
 			console.log('Saving document structure.');
 		}
 	}, [docStructure, structureLoaded, project]);
+
+	// Saves the link structure after every change
+	useEffect(() => {
+		if (linkStructureLoaded) {
+			ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath,
+				project.jotsPath,
+				'linkStructure.json',
+				linkStructure
+			);
+			console.log('Saving link structure.');
+		}
+	}, [linkStructure, linkStructureLoaded, project]);
 
 	// Registers ipcRenderer listeners
 	useEffect(() => {

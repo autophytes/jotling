@@ -37,4 +37,10 @@ const docStructureTemplate = {
 	},
 };
 
-module.exports = { docStructureTemplate };
+const linkStructureTemplate = {
+	docTags: {},
+	tagLinks: {},
+	links: {},
+};
+
+module.exports = { docStructureTemplate, linkStructureTemplate };

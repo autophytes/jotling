@@ -2,12 +2,12 @@ const { app, dialog, remote, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const ncp = require('ncp').ncp;
+// const ncp = require('ncp').ncp;
 const tar = require('tar');
 const Store = require('electron-store');
 const store = new Store();
 
-const { docStructureTemplate } = require('./docStructureTemplate');
+const { docStructureTemplate, linkStructureTemplate } = require('./structureTemplates');
 
 // Create a new blank project
 const createNewProjectStructure = (projectTempDirectory) => {
@@ -20,6 +20,9 @@ const createNewProjectStructure = (projectTempDirectory) => {
 
 	let newDocStructure = JSON.stringify(docStructureTemplate);
 	fs.writeFileSync(path.join(projectTempDirectory, 'documentStructure.json'), newDocStructure);
+
+	let newLinkStructure = JSON.stringify(linkStructureTemplate);
+	fs.writeFileSync(path.join(projectTempDirectory, 'linkStructure.json'), newLinkStructure);
 };
 
 // Creates a temp folder and extracts a project to that folder

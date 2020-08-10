@@ -48,6 +48,7 @@ const defaultDocStructure3 = {
 
 const LeftNavContextProvider = (props) => {
 	const [docStructure, setDocStructure] = useState({});
+	const [linkStructure, setLinkStructure] = useState({});
 	const [project, setProject] = useState({ tempPath: '', jotsPath: '' });
 	const [navData, setNavData] = useState({
 		currentDoc: '',
@@ -60,7 +61,16 @@ const LeftNavContextProvider = (props) => {
 
 	return (
 		<LeftNavContext.Provider
-			value={{ docStructure, setDocStructure, navData, setNavData, project, setProject }}>
+			value={{
+				docStructure,
+				setDocStructure,
+				navData,
+				setNavData,
+				project,
+				setProject,
+				linkStructure,
+				setLinkStructure,
+			}}>
 			{props.children}
 		</LeftNavContext.Provider>
 	);

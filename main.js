@@ -81,17 +81,14 @@ app.on('open-file', (e, jotsPath) => {
 			let currentMainWindow = allBrowserWindows.length ? allBrowserWindows[0] : null;
 
 			if (currentMainWindow) {
-				// THIS WORKS
 				// Open the project we were given
 				currentMainWindow.show();
 				openProject(jotsPath);
 			} else {
-				// THIS WORKS
-				createWindow(dev, () => openProject(jotsPath));
+				mainWindow = createWindow(dev, () => openProject(jotsPath));
 			}
 		} else {
 			// If it's not running yet, queue the file to be opened
-			// THIS WORK!
 			afterOpenCallback = () => openProject(jotsPath);
 		}
 	}
@@ -115,12 +112,6 @@ app.on('ready', () => {
 
 	// Build the application Menu
 	registerMenu();
-
-	// // Opens the queued file
-	// if (initialJotsPathToOpen) {
-	// 	openProject(initialJotsPathToOpen);
-	// 	initialJotsPathToOpen = '';
-	// }
 });
 
 // Quit when all windows are closed.
