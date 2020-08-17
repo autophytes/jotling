@@ -53,19 +53,19 @@ function createWindow(dev, callbackFunction) {
 		mainWindow.show();
 
 		// Open the DevTools automatically if developing
-		// if (dev) {
-		// const {
-		// 	default: installExtension,
-		// 	REACT_DEVELOPER_TOOLS,
-		// } = require('electron-devtools-installer');
+		if (dev) {
+			const {
+				default: installExtension,
+				REACT_DEVELOPER_TOOLS,
+			} = require('electron-devtools-installer');
 
-		// installExtension(REACT_DEVELOPER_TOOLS).catch((err) =>
-		// 	console.log('Error loading React DevTools: ', err)
-		// );
+			installExtension(REACT_DEVELOPER_TOOLS).catch((err) =>
+				console.log('Error loading React DevTools: ', err)
+			);
 
-		// RE-ENABLE to automatically open the devtools
-		// mainWindow.webContents.openDevTools();
-		// }
+			// RE-ENABLE to automatically open the devtools
+			mainWindow.webContents.openDevTools();
+		}
 
 		// Load the default project files
 		const { createTempProjectOnStartup } = require('../backend_files/fileFunctions');

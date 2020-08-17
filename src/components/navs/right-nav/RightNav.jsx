@@ -9,7 +9,7 @@ import RightNavContent from './RightNavContent';
 const RightNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 	const [pinNav, setPinNav] = useState(true);
 	const [isResizing, setIsResizing] = useState(false);
-	const [activeTab, setActiveTab] = useState('document');
+	const [activeTab, setActiveTab] = useState('tags');
 
 	const navRef = useRef(null);
 
@@ -61,7 +61,7 @@ const RightNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 				style={pinNav ? {} : { cursor: 'inherit' }}
 				{...(pinNav && {
 					onMouseDown: handleResizeMouseDown,
-					onDoubleClick: () => resetNavWidth('leftNav'),
+					onDoubleClick: () => resetNavWidth('rightNav'),
 				})}>
 				<div className={'vertical-rule vr-right-nav' + (isResizing ? ' primary-color' : '')} />
 			</div>

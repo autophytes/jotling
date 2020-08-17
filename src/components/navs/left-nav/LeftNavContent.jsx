@@ -66,7 +66,7 @@ const LeftNavContent = () => {
 						isOpen = openFolders[child.id];
 					} else {
 						isOpen = false;
-						setOpenFolders({ ...openFolders, [child.id]: false });
+						setOpenFolders({ ...openFolders, [child.id]: true });
 					}
 					return (
 						<div className='file-nav folder' key={'folder-' + child.id}>
