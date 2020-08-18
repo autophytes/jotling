@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useCallback, Fragment } from 'react';
 import PlusSVG from '../../../../assets/svg/PlusSVG';
 
 import { LeftNavContext } from '../../../../contexts/leftNavContext';
@@ -13,7 +13,7 @@ const RightNavTags = ({ activeTab }) => {
 	const [showNewTagInput, setShowNewTagInput] = useState(false);
 	const [isOpen, setIsOpen] = useState({});
 
-	const { linkStructure, navData } = useContext(LeftNavContext);
+	const { linkStructure, setLinkStructure, navData } = useContext(LeftNavContext);
 
 	// Keeps the currentDoc in state
 	useEffect(() => {
@@ -35,7 +35,6 @@ const RightNavTags = ({ activeTab }) => {
 
 	const deleteTag = useCallback(
 		(docName, tagName) => {
-			console.log('currentDoc: ', currentDoc);
 			let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
 
 			// Remove tag from docTags
@@ -65,17 +64,7 @@ const RightNavTags = ({ activeTab }) => {
 				delete newLinkStructure.tagLinks[tagName];
 			}
 
-			// NEED TO:
-			//   set the new link structure, make sure it deletes
-			//   fix the unique key error when deleting a key
-			//   make sure the delete works :)
-			//   then let's look at actually adding a link into the text
-			//      for now, let's just type the word and test the link
-			//      then, we'll need a way of choosing from available tags
-			//      ideally, it would suggest tags in the selected text first as well as recently used tags
-			//      need a way to search for tags too
-
-			console.log(newLinkStructure);
+			setLinkStructure(newLinkStructure);
 		},
 		[linkStructure, currentDoc]
 	);
@@ -86,9 +75,8 @@ const RightNavTags = ({ activeTab }) => {
 				<PlusSVG />
 			</div>
 			{showNewTagInput && <NewTag {...{ setShowNewTagInput }} />}
-			{console.log('isOpen: ', isOpen)}
 			{pageTags.map((item) => (
-				<>
+				<Fragment key={item}>
 					<p
 						className={'tag-item' + (isOpen[item] ? ' open' : '')}
 						key={item}
@@ -102,7 +90,7 @@ const RightNavTags = ({ activeTab }) => {
 							<span>Auto-tag</span>
 						</div>
 					</Collapse>
-				</>
+				</Fragment>
 			))}
 		</>
 	);

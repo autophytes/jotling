@@ -42,6 +42,8 @@ const NewTag = ({ setShowNewTagInput }) => {
 		let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
 		newLinkStructure.docTags[navData.currentDoc] = newDocTags;
 
+		newLinkStructure.tagLinks[newTag.toLowerCase()] = [];
+
 		setLinkStructure(newLinkStructure);
 		setShowNewTagInput(false);
 	};

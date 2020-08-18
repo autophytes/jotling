@@ -24,6 +24,7 @@ import LineSpacingSVG from '../../../assets/svg/editor/LineSpacingSVG';
 import SpellcheckSVG from '../../../assets/svg/editor/SpellcheckSVG';
 
 import InlineStyleButton from './InlineStyleButton';
+import ChainSVG from '../../../assets/svg/ChainSVG';
 
 // AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
 // unstyled
@@ -89,6 +90,7 @@ const EditorNav = React.memo(
 		editorWidth,
 		currentAlignment,
 		currentStyles,
+		createTagLink,
 	}) => {
 		// REQUIRES toggleInlineStyle & toggleBlockType
 
@@ -290,6 +292,10 @@ const EditorNav = React.memo(
 						removeStyle='SUBSCRIPT'>
 						<SuperscriptSVG />
 					</InlineStyleButton>
+
+					<button className='nav-button' onClick={() => createTagLink()}>
+						<ChainSVG />
+					</button>
 
 					<button className='nav-button' onClick={() => saveFile()}>
 						<HighlightSVG />

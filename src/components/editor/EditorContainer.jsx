@@ -90,7 +90,14 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	const editorStateRef = useRef(null);
 
 	// CONTEXT
-	const { navData, setNavData, project, setProject } = useContext(LeftNavContext);
+	const {
+		navData,
+		setNavData,
+		project,
+		setProject,
+		linkStructure,
+		setLinkStructure,
+	} = useContext(LeftNavContext);
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback(
@@ -259,6 +266,45 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 		}
 	}, []);
 
+	const createTagLink = useCallback(() => {
+		let arrayOfLinkIds = Object.keys(linkStructure.links).map((item) => Number(item));
+		let newLinkId = Math.max(...arrayOfLinkIds) + 1;
+
+		const contentState = editorState.getCurrentContent();
+		const selectionState = editorState.getSelection();
+
+		const contentStateWithEntity = contentState.createEntity('LINK', 'MUTABLE', {
+			linkId: newLinkId,
+		});
+		const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+		const contentStateWithLink = Modifier.applyEntity(
+			contentStateWithEntity,
+			selectionState,
+			entityKey
+		);
+		const newEditorState = EditorState.push(editorState, contentStateWithLink, 'apply-entity');
+
+		let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
+		newLinkStructure.tagLinks['kynan'].push(newLinkId);
+		newLinkStructure.links[newLinkId] = {
+			source: navData.currentDoc, // Source document
+			content: 'Dummy content', // Get text from selection state ***TO-DO***
+			alias: null,
+		};
+
+		// NEED TO:
+		//   Populate content property of link with text from the selection state
+		//      for now, let's just type the word and test the link
+		//   then, we'll need a way of choosing from available tags
+		//      ideally, it would suggest tags in the selected text first as well as recently used tags
+		//      need a way to search for tags too
+		//   Use a decorator(?) to visually modify the text that is linked
+		//   When changing linked text, update the linkStructure too
+
+		setLinkStructure(newLinkStructure);
+		setEditorState(newEditorState);
+	}, [editorState, linkStructure, navData.currentDoc]);
+
 	// Removes queued up styles to remove
 	useEffect(() => {
 		if (styleToRemove !== '') {
@@ -411,23 +457,26 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 			// ref={targetRef}
 		>
 			<EditorNav
-				editorWidth={editorWidth}
-				currentStyles={currentStyles}
-				currentAlignment={currentAlignment}
-				toggleBlockType={toggleBlockType}
-				toggleBlockStyle={toggleBlockStyle}
-				toggleInlineStyle={toggleInlineStyle}
-				toggleTextAlign={toggleTextAlign}
-				spellCheck={spellCheck}
-				toggleSpellCheck={toggleSpellCheck}
-				currentFont={currentFont}
-				setCurrentFont={setCurrentFont}
-				fontSize={fontSize}
-				setFontSize={setFontSize}
-				lineHeight={lineHeight}
-				setLineHeight={setLineHeight}
-				saveFile={saveFile}
-				loadFile={loadFile}
+				{...{
+					editorWidth,
+					currentStyles,
+					currentAlignment,
+					toggleBlockType,
+					toggleBlockStyle,
+					toggleInlineStyle,
+					toggleTextAlign,
+					spellCheck,
+					toggleSpellCheck,
+					currentFont,
+					setCurrentFont,
+					fontSize,
+					setFontSize,
+					lineHeight,
+					setLineHeight,
+					saveFile,
+					loadFile,
+					createTagLink,
+				}}
 			/>
 
 			<div className='editor' onClick={handleEditorWrapperClick} style={style}>
