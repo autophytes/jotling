@@ -39,30 +39,41 @@ const RightNavTags = ({ activeTab }) => {
 			let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
 
 			// Remove tag from docTags
-			console.log('newLinkStructure: ', newLinkStructure);
 			let currentDocTags = [
 				...(newLinkStructure.docTags[docName] ? newLinkStructure.docTags[docName] : []),
 			];
 			if (currentDocTags.length) {
 				let currentTagIndex = currentDocTags.findIndex((item) => item === tagName);
-				currentDocTags = currentDocTags.splice(currentTagIndex, 1);
+				currentDocTags.splice(currentTagIndex, 1);
 				newLinkStructure.docTags[docName] = currentDocTags;
 			}
 
 			// Delete any links to our keyword
-			let currentLinks = [...(newLinkStructure.links ? newLinkStructure.links : [])];
-			let currentTagLinks = [...(newLinkStructure.tagLinks ? newLinkStructure.tagLinks : [])];
+			let currentLinks = { ...(newLinkStructure.links ? newLinkStructure.links : {}) };
+			let currentTagLinks = {
+				...(newLinkStructure.tagLinks ? newLinkStructure.tagLinks : {}),
+			};
 			for (let linkNum of Object.keys(currentLinks)) {
 				if (currentTagLinks.includes(linkNum)) {
 					delete currentLinks.linkNum;
 				}
 			}
-			newLinkStrucutre.links = currentLinks;
+			newLinkStructure.links = currentLinks;
 
 			// Delete the tagLinks for our tag
 			if (newLinkStructure.tagLinks[tagName]) {
 				delete newLinkStructure.tagLinks[tagName];
 			}
+
+			// NEED TO:
+			//   set the new link structure, make sure it deletes
+			//   fix the unique key error when deleting a key
+			//   make sure the delete works :)
+			//   then let's look at actually adding a link into the text
+			//      for now, let's just type the word and test the link
+			//      then, we'll need a way of choosing from available tags
+			//      ideally, it would suggest tags in the selected text first as well as recently used tags
+			//      need a way to search for tags too
 
 			console.log(newLinkStructure);
 		},
