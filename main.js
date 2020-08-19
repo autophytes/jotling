@@ -2,7 +2,7 @@
 
 // Import parts of electron to use
 require('v8-compile-cache'); // Speeds up boot time
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow } = require('electron');
 
 const {
 	registerHandlers,

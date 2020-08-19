@@ -9,6 +9,20 @@ const {
 } = require('../backend_files/ipcListeners');
 const { requestSaveAndClose } = require('../backend_files/fileFunctions');
 
+// const installExtensions = async () => {
+// 	const installer = require('electron-devtools-installer');
+// 	const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
+// 	const extensions = [
+// 		'REACT_DEVELOPER_TOOLS',
+// 		// 'REDUX_DEVTOOLS',
+// 		'DEVTRON',
+// 	];
+
+// 	return Promise.all(
+// 		extensions.map((name) => installer.default(installer[name], forceDownload))
+// 	).catch(console.log);
+// };
+
 function createWindow(dev, callbackFunction) {
 	// Create the browser window.
 	let mainWindow = new BrowserWindow({
@@ -54,14 +68,17 @@ function createWindow(dev, callbackFunction) {
 
 		// Open the DevTools automatically if developing
 		if (dev) {
-			const {
-				default: installExtension,
-				REACT_DEVELOPER_TOOLS,
-			} = require('electron-devtools-installer');
+			// THERE IS AN ISSUE WITH THIS FOR NOW, and opening/closing doesn't fix it for me
+			//   https://github.com/electron/electron/issues/23662
+			//
+			// const {
+			// 	default: installExtension,
+			// 	REACT_DEVELOPER_TOOLS,
+			// } = require('electron-devtools-installer');
 
-			installExtension(REACT_DEVELOPER_TOOLS).catch((err) =>
-				console.log('Error loading React DevTools: ', err)
-			);
+			// installExtension(REACT_DEVELOPER_TOOLS).catch((err) =>
+			// 	console.log('Error loading React DevTools: ', err)
+			// );
 
 			// RE-ENABLE to automatically open the devtools
 			mainWindow.webContents.openDevTools();
