@@ -10,6 +10,7 @@ import Collapse from 'react-css-collapse';
 const RightNavTags = ({ activeTab }) => {
 	const [currentDoc, setCurrentDoc] = useState('');
 	const [pageTags, setPageTags] = useState([]);
+	const [pageLinkedTags, setPageLinkedTags] = useState([]);
 	const [showNewTagInput, setShowNewTagInput] = useState(false);
 	const [isOpen, setIsOpen] = useState({});
 
@@ -24,14 +25,25 @@ const RightNavTags = ({ activeTab }) => {
 
 	// Keeps the list of pageTags up to date
 	useEffect(() => {
+		console.log('calling the docTags useEffect');
 		if (linkStructure.docTags && linkStructure.docTags.hasOwnProperty(currentDoc)) {
 			setPageTags(linkStructure.docTags[currentDoc]);
 		} else {
-			if (pageTags.length !== 0) {
-				setPageTags([]);
-			}
+			setPageTags([]);
 		}
-	}, [linkStructure, pageTags, currentDoc]);
+	}, [linkStructure, currentDoc]);
+
+	// Maintain a list of all tags we link to from this page
+	useEffect(() => {
+		console.log('calling the docLinks useEffect');
+		if (linkStructure.docLinks && linkStructure.docLinks.hasOwnProperty(currentDoc)) {
+			let allPageLinkedTags = Object.values(linkStructure.docLinks[currentDoc]);
+			let uniquePageLinkedTags = [...new Set(allPageLinkedTags)];
+			setPageLinkedTags(uniquePageLinkedTags);
+		} else {
+			setPageLinkedTags([]);
+		}
+	}, [linkStructure.docLinks, currentDoc]);
 
 	const deleteTag = useCallback(
 		(docName, tagName) => {
@@ -91,6 +103,10 @@ const RightNavTags = ({ activeTab }) => {
 						</div>
 					</Collapse>
 				</Fragment>
+			))}
+
+			{pageLinkedTags.map((item) => (
+				<p key={item}>{item}</p>
 			))}
 		</>
 	);

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
-import { getSelectedBlocksMetadata } from 'draftjs-utils';
 import { ipcRenderer } from 'electron';
 import Immutable from 'immutable';
 
@@ -9,6 +8,7 @@ import {
 	Editor,
 	EditorState,
 	ContentState,
+	CompositeDecorator,
 	SelectionState,
 	RichUtils,
 	Modifier,
@@ -17,7 +17,7 @@ import {
 	convertToRaw,
 	convertFromRaw,
 } from 'draft-js';
-import { setBlockData } from 'draftjs-utils';
+import { setBlockData, getSelectedBlocksMetadata } from 'draftjs-utils';
 
 import EditorNav from '../navs/editor-nav/EditorNav';
 
@@ -27,6 +27,9 @@ import {
 	enterToUnindentList,
 	doubleDashToLongDash,
 } from './KeyBindFunctions';
+import { decorator } from './editorFunctions';
+import { getTextSelection } from '../../utils/draftUtils';
+
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
 
 // import Immutable from 'immutable';a
@@ -70,6 +73,7 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	// STATE
 	const [editorState, setEditorState] = useState(() =>
 		// EditorState.createWithContent(ContentState.createFromText(defaultText))
+		// EditorState.createEmpty(decorator)
 		EditorState.createEmpty()
 	);
 	const [styleToRemove, setStyleToRemove] = useState('');
@@ -267,12 +271,14 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	}, []);
 
 	const createTagLink = useCallback(() => {
+		// Increment the max id by 1, or start at 0
 		let arrayOfLinkIds = Object.keys(linkStructure.links).map((item) => Number(item));
-		let newLinkId = Math.max(...arrayOfLinkIds) + 1;
+		let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 0;
 
 		const contentState = editorState.getCurrentContent();
 		const selectionState = editorState.getSelection();
 
+		// Apply the linkId as an entity to the selection
 		const contentStateWithEntity = contentState.createEntity('LINK', 'MUTABLE', {
 			linkId: newLinkId,
 		});
@@ -284,20 +290,30 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 		);
 		const newEditorState = EditorState.push(editorState, contentStateWithLink, 'apply-entity');
 
+		// Get the selected text to include in the link
+		const selectedText = getTextSelection(contentStateWithLink, selectionState);
+
+		// Updating the linkStructure with the new link
 		let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
-		newLinkStructure.tagLinks['kynan'].push(newLinkId);
+		newLinkStructure.tagLinks['kynan'].push(newLinkId); // FIX EVENTUALLY
 		newLinkStructure.links[newLinkId] = {
 			source: navData.currentDoc, // Source document
-			content: 'Dummy content', // Get text from selection state ***TO-DO***
+			content: selectedText, // Selected text
 			alias: null,
 		};
 
+		// Updating the linkStructure with the keyword the link is using
+		if (!newLinkStructure.docLinks.hasOwnProperty(navData.currentDoc)) {
+			newLinkStructure.docLinks[navData.currentDoc] = {};
+		}
+		newLinkStructure.docLinks[navData.currentDoc][newLinkId] = 'kynan'; // FIX EVENTUALLY
+
 		// NEED TO:
-		//   Populate content property of link with text from the selection state
-		//      for now, let's just type the word and test the link
+		//   Build the component for the decorator, re-add the decorator to the editor
 		//   then, we'll need a way of choosing from available tags
 		//      ideally, it would suggest tags in the selected text first as well as recently used tags
 		//      need a way to search for tags too
+		//      https://codepen.io/FezVrasta/pen/vWXQdq
 		//   Use a decorator(?) to visually modify the text that is linked
 		//   When changing linked text, update the linkStructure too
 

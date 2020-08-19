@@ -40,10 +40,8 @@ const docStructureTemplate = {
 const linkStructureTemplate = {
 	docTags: {},
 	tagLinks: {},
-	links: {
-		43: {},
-		99: {},
-	},
+	links: {},
+	docLinks: {},
 };
 
 module.exports = { docStructureTemplate, linkStructureTemplate };
