@@ -32,11 +32,6 @@ import { getTextSelection } from '../../utils/draftUtils';
 
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
 
-// import Immutable from 'immutable';a
-// import Editor from 'draft-js-plugins-editor';
-// import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
-// const inlineToolbarPlugin = createInlineToolbarPlugin();
-// const { InlineToolbar } = inlineToolbarPlugin;
 const { hasCommandModifier } = KeyBindingUtil;
 
 // I can add custom inline styles. { Keyword: CSS property }
@@ -71,11 +66,7 @@ const blockStyleFn = (block) => {
 // COMPONENT
 const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 	// STATE
-	const [editorState, setEditorState] = useState(() =>
-		// EditorState.createWithContent(ContentState.createFromText(defaultText))
-		// EditorState.createEmpty(decorator)
-		EditorState.createEmpty()
-	);
+	const [editorState, setEditorState] = useState(EditorState.createEmpty(decorator));
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
 
@@ -310,12 +301,16 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 
 		// NEED TO:
 		//   Build the component for the decorator, re-add the decorator to the editor
+		//      * * * research this later
 		//   then, we'll need a way of choosing from available tags
 		//      ideally, it would suggest tags in the selected text first as well as recently used tags
 		//      need a way to search for tags too
 		//      https://codepen.io/FezVrasta/pen/vWXQdq
 		//   Use a decorator(?) to visually modify the text that is linked
 		//   When changing linked text, update the linkStructure too
+		//   When we delete a link, need to warn the user, then cascade the delete
+		//      Convert the link text on all pages (source and destination) to just text
+		//      On the destination pages,
 
 		setLinkStructure(newLinkStructure);
 		setEditorState(newEditorState);
@@ -422,10 +417,10 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 			// If the file isn't empty (potentially meaning it)
 			if (!!fileContents && Object.keys(fileContents).length !== 0) {
 				const newContentState = convertFromRaw(loadedFile.fileContents);
-				const newEditorState = EditorState.createWithContent(newContentState);
+				const newEditorState = EditorState.createWithContent(newContentState, decorator);
 				setEditorState(newEditorState);
 			} else {
-				setEditorState(EditorState.createEmpty());
+				setEditorState(EditorState.createEmpty(decorator));
 			}
 		};
 		loadFileFromSave();
@@ -458,10 +453,6 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 			setCurrentAlignment(newCurrentAlignment);
 		}
 	}, [editorState, currentStyles, currentAlignment]);
-
-	// useEffect(() => {
-	// 	console.log(editorContainerRef.current.offsetWidth);
-	// }, [editorContainerRef.current]);
 
 	return (
 		<main

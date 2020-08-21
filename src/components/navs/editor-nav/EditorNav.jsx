@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { getSelectedBlocksMetadata } from 'draftjs-utils';
+// import { getSelectedBlocksMetadata } from 'draftjs-utils';
 import { ipcRenderer } from 'electron';
+import { usePopper } from 'react-popper';
+
+import { LinkSelectionRangeRef } from './LinkSelectionRangeRef';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import IncreaseFontSizeSVG from '../../../assets/svg/editor/IncreaseFontSizeSVG';
@@ -13,7 +16,7 @@ import SubscriptSVG from '../../../assets/svg/editor/SubscriptSVG';
 import SuperscriptSVG from '../../../assets/svg/editor/SuperscriptSVG';
 import HighlightSVG from '../../../assets/svg/editor/HighlightSVG';
 import TextColorSVG from '../../../assets/svg/editor/TextColorSVG';
-import FillColorSVG from '../../../assets/svg/editor/FillColorSVG';
+// import FillColorSVG from '../../../assets/svg/editor/FillColorSVG';
 import ListBulletSVG from '../../../assets/svg/editor/ListBulletSVG';
 import ListNumberSVG from '../../../assets/svg/editor/ListNumberSVG';
 import AlignLeftSVG from '../../../assets/svg/editor/AlignLeftSVG';
@@ -92,20 +95,31 @@ const EditorNav = React.memo(
 		currentStyles,
 		createTagLink,
 	}) => {
-		// REQUIRES toggleInlineStyle & toggleBlockType
-
-		// NOTE:: need to calculate the width(?) of the editor nav based on the side navs
-
-		// const currentStyles = editorState.getCurrentInlineStyle();
-		// const currentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
-
-		// console.log(currentStyles);
-		// console.log(currentAlignment);
-
+		// STATE
 		const [pinNav, setPinNav] = useState(true);
 		const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);
 		const [fontList, setFontList] = useState([]);
-		// const [fontSize, setFontSize] = useState(null);
+
+		// POPPER STATE
+		const [popperElement, setPopperElement] = useState(null);
+		const [arrowElement, setArrowElement] = useState(null);
+		const [referenceElement, setReferenceElement] = useState(null);
+		const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
+
+		// POPPER
+		const { styles, attributes } = usePopper(referenceElement, popperElement, {
+			modifiers: [{ name: 'arrow', options: { element: arrowElement } }],
+		});
+
+		// Toggle display popper
+		useEffect(() => {
+			if (displayLinkPopper) {
+				console.log('setting the reference element');
+				setReferenceElement(new LinkSelectionRangeRef());
+			} else {
+				setReferenceElement(null);
+			}
+		}, [displayLinkPopper]);
 
 		const handleFontSelect = useCallback(
 			(font) => {
@@ -293,9 +307,27 @@ const EditorNav = React.memo(
 						<SuperscriptSVG />
 					</InlineStyleButton>
 
-					<button className='nav-button' onClick={() => createTagLink()}>
+					{/* <button className='nav-button' onClick={() => createTagLink()}>
+						<ChainSVG />
+					</button> */}
+					<button
+						className='nav-button'
+						onMouseDown={(e) => {
+							e.preventDefault();
+							setDisplayLinkPopper(true);
+							createTagLink();
+						}}>
 						<ChainSVG />
 					</button>
+					{/* Add Tag Popper */}
+					{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
+                to close the popper. This can later be used for confirmation messages and things like that. */}
+					{displayLinkPopper && (
+						<div ref={setPopperElement} style={styles.popper} {...attributes.popper}>
+							Popper element
+							<div ref={setArrowElement} style={styles.arrow} />
+						</div>
+					)}
 
 					<button className='nav-button' onClick={() => saveFile()}>
 						<HighlightSVG />
@@ -303,9 +335,6 @@ const EditorNav = React.memo(
 					<button className='nav-button' onClick={() => loadFile()}>
 						<TextColorSVG />
 					</button>
-					{/* <button className='nav-button'>
-				<FillColorSVG />
-			</button> */}
 
 					<button
 						className='nav-button'

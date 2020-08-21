@@ -25,7 +25,6 @@ const RightNavTags = ({ activeTab }) => {
 
 	// Keeps the list of pageTags up to date
 	useEffect(() => {
-		console.log('calling the docTags useEffect');
 		if (linkStructure.docTags && linkStructure.docTags.hasOwnProperty(currentDoc)) {
 			setPageTags(linkStructure.docTags[currentDoc]);
 		} else {
@@ -35,7 +34,6 @@ const RightNavTags = ({ activeTab }) => {
 
 	// Maintain a list of all tags we link to from this page
 	useEffect(() => {
-		console.log('calling the docLinks useEffect');
 		if (linkStructure.docLinks && linkStructure.docLinks.hasOwnProperty(currentDoc)) {
 			let allPageLinkedTags = Object.values(linkStructure.docLinks[currentDoc]);
 			let uniquePageLinkedTags = [...new Set(allPageLinkedTags)];

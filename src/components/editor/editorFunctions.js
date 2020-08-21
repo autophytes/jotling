@@ -1,5 +1,7 @@
 import { CompositeDecorator } from 'draft-js';
 
+import LinkToDecorator from './decorators/linkToDecorator';
+
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
 		contentBlock.findEntityRanges((character) => {
@@ -15,6 +17,6 @@ function getEntityStrategy(type) {
 export const decorator = new CompositeDecorator([
 	{
 		strategy: getEntityStrategy('LINK'),
-		// component: TokenSpan, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+		component: LinkToDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
 	},
 ]);
