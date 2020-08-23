@@ -676,3 +676,141 @@ input[type='number']::-webkit-outer-spin-button {
 	user-select: none;
 	cursor: pointer;
 }
+
+.link-popper {
+	/* Lets use a steel gray rather than the dark color */
+	/* Use similar color distance (#31_ to #26_ */
+	/* background-image: linear-gradient(to bottom, rgba(49, 49, 47, 0.99), #262625); */
+	/* background-image: linear-gradient(to bottom, #bbbbbb, #b9b9b9); */
+	background-image: linear-gradient(to bottom, #555555, #4e4e4e);
+	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+	/* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.12); */
+	background-repeat: repeat-x;
+	border-radius: 5px;
+	padding: 0;
+	color: white;
+	/* line-height: 44px; */
+	display: inline-block;
+	opacity: 0;
+	/* pointer-events: none; */
+	pointer-events: auto;
+	animation: pop-upwards 180ms forwards linear;
+	animation-delay: 0.2s;
+	animation-iteration-count: 1;
+	transition: opacity 0s linear 0.2s;
+
+	/* z-index: 2; */
+}
+
+.link-popper input {
+	/* margin-right: 0.5rem; */
+	border-radius: 5px;
+	width: 5rem;
+	height: 1.5rem;
+	padding: 0.5rem;
+	text-align: left;
+	font-size: 1rem;
+}
+
+.link-popper input:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(0, 149, 255, 0.7);
+}
+
+.link-popper p {
+	display: inline-block;
+	padding-top: 2px;
+	margin: 0 0.25rem 0 0.5rem;
+}
+
+.link-popper svg {
+	width: 1.25rem;
+	margin: 0 0.25rem 0 0.15rem;
+	align-self: flex-end;
+	fill: white;
+}
+
+/* NOTE TO SELF - use background gradients and opacity to hide the rest of the arrow*/
+
+.link-popper-arrow {
+	position: absolute;
+
+	width: 10px;
+	height: 10px;
+}
+
+.link-popper-arrow:after {
+	content: ' ';
+	position: absolute;
+	top: -5px;
+	/* bottom: 0; */
+	width: 10px;
+	height: 10px;
+	background-image: linear-gradient(-45deg, #4e4e4e, #4e4e4e 60%, rgba(85, 85, 85, 0) 60%);
+	transform: rotate(45deg);
+
+	/* background-color: white; */
+	/* box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1); */
+}
+
+#link-popper-element[data-popper-placement^='bottom'] .link-popper-arrow {
+	top: 0px;
+	bottom: -5px;
+}
+
+#link-popper-element[data-popper-placement^='bottom'] .link-popper-arrow:after {
+	background-image: linear-gradient(135deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%);
+	/* transform: rotate(-45deg); */
+}
+
+@keyframes pop-upwards {
+	0% {
+		transform: matrix(0.97, 0, 0, 1, 0, 12);
+		opacity: 0;
+	}
+
+	20% {
+		transform: matrix(0.99, 0, 0, 1, 0, 2);
+		opacity: 0.7;
+	}
+
+	40% {
+		transform: matrix(1, 0, 0, 1, 0, -1);
+		opacity: 1;
+	}
+
+	70% {
+		transform: matrix(1, 0, 0, 1, 0, 0);
+		opacity: 1;
+	}
+
+	100% {
+		transform: matrix(1, 0, 0, 1, 0, 0);
+		opacity: 1;
+	}
+}
+
+.link-popper-tag-button {
+	margin: 0 0.25rem;
+	padding: 0.2rem 0.5rem;
+	border-radius: 5px;
+	background-color: var(--color-primary);
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+	color: white;
+	font-weight: bold;
+	cursor: pointer;
+	transition: 150ms ease all;
+	/* transition: 150ms ease transform, 150ms ease box-shadow; */
+}
+
+.link-popper-tag-button:hover:not(:active) {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.12);
+}
+
+.link-popper-tag-button.first {
+	margin-left: 0.5rem;
+}
+.link-popper-tag-button.last {
+	margin-right: 0.5rem;
+}

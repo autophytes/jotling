@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 // import { getSelectedBlocksMetadata } from 'draftjs-utils';
 import { ipcRenderer } from 'electron';
-import { usePopper } from 'react-popper';
 
-import { LinkSelectionRangeRef } from './LinkSelectionRangeRef';
+import AddLinkPopper from './AddLinkPopper';
+import InlineStyleButton from './InlineStyleButton';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import IncreaseFontSizeSVG from '../../../assets/svg/editor/IncreaseFontSizeSVG';
@@ -25,8 +25,6 @@ import AlignRightSVG from '../../../assets/svg/editor/AlignRightSVG';
 import AlignJustifySVG from '../../../assets/svg/editor/AlignJustifySVG';
 import LineSpacingSVG from '../../../assets/svg/editor/LineSpacingSVG';
 import SpellcheckSVG from '../../../assets/svg/editor/SpellcheckSVG';
-
-import InlineStyleButton from './InlineStyleButton';
 import ChainSVG from '../../../assets/svg/ChainSVG';
 
 // AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
@@ -99,27 +97,7 @@ const EditorNav = React.memo(
 		const [pinNav, setPinNav] = useState(true);
 		const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);
 		const [fontList, setFontList] = useState([]);
-
-		// POPPER STATE
-		const [popperElement, setPopperElement] = useState(null);
-		const [arrowElement, setArrowElement] = useState(null);
-		const [referenceElement, setReferenceElement] = useState(null);
 		const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
-
-		// POPPER
-		const { styles, attributes } = usePopper(referenceElement, popperElement, {
-			modifiers: [{ name: 'arrow', options: { element: arrowElement } }],
-		});
-
-		// Toggle display popper
-		useEffect(() => {
-			if (displayLinkPopper) {
-				console.log('setting the reference element');
-				setReferenceElement(new LinkSelectionRangeRef());
-			} else {
-				setReferenceElement(null);
-			}
-		}, [displayLinkPopper]);
 
 		const handleFontSelect = useCallback(
 			(font) => {
@@ -312,22 +290,17 @@ const EditorNav = React.memo(
 					</button> */}
 					<button
 						className='nav-button'
-						onMouseDown={(e) => {
-							e.preventDefault();
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={(e) => {
+							e.stopPropagation();
 							setDisplayLinkPopper(true);
-							createTagLink();
 						}}>
 						<ChainSVG />
 					</button>
 					{/* Add Tag Popper */}
 					{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
                 to close the popper. This can later be used for confirmation messages and things like that. */}
-					{displayLinkPopper && (
-						<div ref={setPopperElement} style={styles.popper} {...attributes.popper}>
-							Popper element
-							<div ref={setArrowElement} style={styles.arrow} />
-						</div>
-					)}
+					{displayLinkPopper && <AddLinkPopper {...{ createTagLink, setDisplayLinkPopper }} />}
 
 					<button className='nav-button' onClick={() => saveFile()}>
 						<HighlightSVG />

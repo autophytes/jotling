@@ -91,13 +91,7 @@ const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 					(navData.lastClicked.type === 'folder'
 						? (tempPath === '' ? '' : '/') + `folders/${navData.lastClicked.id}`
 						: '');
-				// filePath =
-				// 	tempPath +
-				// 	(navData.lastClicked.type === 'folder'
-				// 		? tempPath === ''
-				// 			? ''
-				// 			: '/' + `folders/${navData.lastClicked.id}`
-				// 		: '');
+
 				console.log('filePath: ', filePath);
 			}
 
@@ -134,7 +128,16 @@ const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
 
 			// Will put the file name into edit mode
 			let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
-			setNavData({ ...navData, editFile: newEditFileId });
+			if (fileType === 'doc') {
+				setNavData({
+					...navData,
+					editFile: newEditFileId,
+					currentDoc: childObject.fileName,
+					lastClicked: { type: 'doc', id: childObject.id },
+				});
+			} else {
+				setNavData({ ...navData, editFile: newEditFileId });
+			}
 
 			// console.log(folderStructure);
 

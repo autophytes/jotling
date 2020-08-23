@@ -261,60 +261,67 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 		}
 	}, []);
 
-	const createTagLink = useCallback(() => {
-		// Increment the max id by 1, or start at 0
-		let arrayOfLinkIds = Object.keys(linkStructure.links).map((item) => Number(item));
-		let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 0;
+	const createTagLink = useCallback(
+		(tagName) => {
+			// Increment the max id by 1, or start at 0
+			let arrayOfLinkIds = Object.keys(linkStructure.links).map((item) => Number(item));
+			let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 0;
 
-		const contentState = editorState.getCurrentContent();
-		const selectionState = editorState.getSelection();
+			const contentState = editorState.getCurrentContent();
+			const selectionState = editorState.getSelection();
 
-		// Apply the linkId as an entity to the selection
-		const contentStateWithEntity = contentState.createEntity('LINK', 'MUTABLE', {
-			linkId: newLinkId,
-		});
-		const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-		const contentStateWithLink = Modifier.applyEntity(
-			contentStateWithEntity,
-			selectionState,
-			entityKey
-		);
-		const newEditorState = EditorState.push(editorState, contentStateWithLink, 'apply-entity');
+			// Apply the linkId as an entity to the selection
+			const contentStateWithEntity = contentState.createEntity('LINK', 'MUTABLE', {
+				linkId: newLinkId,
+			});
+			const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+			const contentStateWithLink = Modifier.applyEntity(
+				contentStateWithEntity,
+				selectionState,
+				entityKey
+			);
+			const newEditorState = EditorState.push(
+				editorState,
+				contentStateWithLink,
+				'apply-entity'
+			);
 
-		// Get the selected text to include in the link
-		const selectedText = getTextSelection(contentStateWithLink, selectionState);
+			// Get the selected text to include in the link
+			const selectedText = getTextSelection(contentStateWithLink, selectionState);
 
-		// Updating the linkStructure with the new link
-		let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
-		newLinkStructure.tagLinks['kynan'].push(newLinkId); // FIX EVENTUALLY
-		newLinkStructure.links[newLinkId] = {
-			source: navData.currentDoc, // Source document
-			content: selectedText, // Selected text
-			alias: null,
-		};
+			// Updating the linkStructure with the new link
+			let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
+			newLinkStructure.tagLinks[tagName].push(newLinkId); // FIX EVENTUALLY
+			newLinkStructure.links[newLinkId] = {
+				source: navData.currentDoc, // Source document
+				content: selectedText, // Selected text
+				alias: null,
+			};
 
-		// Updating the linkStructure with the keyword the link is using
-		if (!newLinkStructure.docLinks.hasOwnProperty(navData.currentDoc)) {
-			newLinkStructure.docLinks[navData.currentDoc] = {};
-		}
-		newLinkStructure.docLinks[navData.currentDoc][newLinkId] = 'kynan'; // FIX EVENTUALLY
+			// Updating the linkStructure with the keyword the link is using
+			if (!newLinkStructure.docLinks.hasOwnProperty(navData.currentDoc)) {
+				newLinkStructure.docLinks[navData.currentDoc] = {};
+			}
+			newLinkStructure.docLinks[navData.currentDoc][newLinkId] = tagName; // FIX EVENTUALLY
 
-		// NEED TO:
-		//   Build the component for the decorator, re-add the decorator to the editor
-		//      * * * research this later
-		//   then, we'll need a way of choosing from available tags
-		//      ideally, it would suggest tags in the selected text first as well as recently used tags
-		//      need a way to search for tags too
-		//      https://codepen.io/FezVrasta/pen/vWXQdq
-		//   Use a decorator(?) to visually modify the text that is linked
-		//   When changing linked text, update the linkStructure too
-		//   When we delete a link, need to warn the user, then cascade the delete
-		//      Convert the link text on all pages (source and destination) to just text
-		//      On the destination pages,
+			// NEED TO:
+			//   Build the component for the decorator, re-add the decorator to the editor
+			//      * * * research this later
+			//   then, we'll need a way of choosing from available tags
+			//      ideally, it would suggest tags in the selected text first as well as recently used tags
+			//      need a way to search for tags too
+			//      https://codepen.io/FezVrasta/pen/vWXQdq
+			//   Use a decorator(?) to visually modify the text that is linked
+			//   When changing linked text, update the linkStructure too
+			//   When we delete a link, need to warn the user, then cascade the delete
+			//      Convert the link text on all pages (source and destination) to just text
+			//      On the destination pages,
 
-		setLinkStructure(newLinkStructure);
-		setEditorState(newEditorState);
-	}, [editorState, linkStructure, navData.currentDoc]);
+			setLinkStructure(newLinkStructure);
+			setEditorState(newEditorState);
+		},
+		[editorState, linkStructure, navData.currentDoc]
+	);
 
 	// Removes queued up styles to remove
 	useEffect(() => {

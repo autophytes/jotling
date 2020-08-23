@@ -4,26 +4,34 @@ export class LinkSelectionRangeRef {
 
 		console.log('LinkSelection constructor running');
 
-		const update = (e) => {
-			console.log('updating the selection range');
-			let selection = document.getSelection();
-			console.log('selection: ', selection);
+		this.update = (e) => {
+			console.log('updating the referenceElement');
+			if (!this.selection) {
+				console.log('setting this.selection');
+				this.selection = document.getSelection();
+			}
 
-			this.range = selection && selection.rangeCount && selection.getRangeAt(0);
+			if (!this.range) {
+				this.range =
+					this.selection && this.selection.rangeCount && this.selection.getRangeAt(0);
+			}
 
 			this.updateRect();
 		};
 
-		update();
+		this.update();
 
 		// We need to reposition upon scroll
-		window.addEventListener('scroll', update);
-		document.scrollingElement.addEventListener('scroll', update);
+		// Managing scroll outside of this object so it removes on unmount.
+	}
+
+	update() {
+		this.update();
 	}
 
 	updateRect() {
 		if (this.range) {
-			console.log('setting properties via get bounding client rect');
+			// console.log('setting properties via get bounding client rect');
 			this.rect = this.range.getBoundingClientRect();
 		} else {
 			console.log('setting default properties');
@@ -38,6 +46,10 @@ export class LinkSelectionRangeRef {
 		}
 
 		this.rectChangedCallback(this.rect);
+	}
+
+	removeListener() {
+		window.removeEventListener('scroll', this.update);
 	}
 
 	rectChangedCallback() {
