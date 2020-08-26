@@ -1,9 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useContext } from 'react';
 // import { getSelectedBlocksMetadata } from 'draftjs-utils';
 import { ipcRenderer } from 'electron';
 
 import AddLinkPopper from './AddLinkPopper';
 import InlineStyleButton from './InlineStyleButton';
+
+import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import IncreaseFontSizeSVG from '../../../assets/svg/editor/IncreaseFontSizeSVG';
@@ -88,7 +90,6 @@ const EditorNav = React.memo(
 		setLineHeight,
 		saveFile,
 		loadFile,
-		editorWidth,
 		currentAlignment,
 		currentStyles,
 		createTagLink,
@@ -98,6 +99,9 @@ const EditorNav = React.memo(
 		const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);
 		const [fontList, setFontList] = useState([]);
 		const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
+
+		// CONTEXT
+		const { editorWidth } = useContext(LeftNavContext);
 
 		const handleFontSelect = useCallback(
 			(font) => {
@@ -293,7 +297,11 @@ const EditorNav = React.memo(
 						onMouseDown={(e) => e.preventDefault()}
 						onClick={(e) => {
 							e.stopPropagation();
-							setDisplayLinkPopper(true);
+							let selection = document.getSelection();
+
+							if (document.getSelection().toString().length) {
+								setDisplayLinkPopper(true);
+							}
 						}}>
 						<ChainSVG />
 					</button>

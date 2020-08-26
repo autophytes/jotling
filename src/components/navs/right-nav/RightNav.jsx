@@ -1,4 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
+
+import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
@@ -6,11 +8,16 @@ import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
 import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
 import RightNavContent from './RightNavContent';
 
-const RightNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
+const RightNav = () => {
+	// STATE
 	const [pinNav, setPinNav] = useState(true);
 	const [isResizing, setIsResizing] = useState(false);
 	const [activeTab, setActiveTab] = useState('tags');
 
+	// CONTEXT
+	const { editorWidth, setEditorWidth, resetNavWidth } = useContext(LeftNavContext);
+
+	// REFS
 	const navRef = useRef(null);
 
 	const handleResizeMouseDown = (e) => {

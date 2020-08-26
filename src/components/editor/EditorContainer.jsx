@@ -27,7 +27,7 @@ import {
 	enterToUnindentList,
 	doubleDashToLongDash,
 } from './KeyBindFunctions';
-import { decorator } from './editorFunctions';
+import { decorator, updateLinkEntities } from './editorFunctions';
 import { getTextSelection } from '../../utils/draftUtils';
 
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
@@ -64,7 +64,7 @@ const blockStyleFn = (block) => {
 //
 //
 // COMPONENT
-const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
+const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// STATE
 	const [editorState, setEditorState] = useState(EditorState.createEmpty(decorator));
 	const [styleToRemove, setStyleToRemove] = useState('');
@@ -92,6 +92,9 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 		setProject,
 		linkStructure,
 		setLinkStructure,
+		editorWidth,
+		editorArchives,
+		setEditorArchives,
 	} = useContext(LeftNavContext);
 
 	// Focuses the editor on click
@@ -336,6 +339,9 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 		let newStyles = {};
 		!!currentFont && (newStyles['fontFamily'] = currentFont.toString());
 		!!lineHeight && (newStyles['lineHeight'] = lineHeight + 'em');
+		!!editorWidth.editorMaxWidth &&
+			(newStyles['maxWidth'] = editorWidth.editorMaxWidth + 'rem');
+
 		if (!!fontSize) {
 			newStyles['fontSize'] = +fontSize;
 		}
@@ -425,13 +431,15 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 			if (!!fileContents && Object.keys(fileContents).length !== 0) {
 				const newContentState = convertFromRaw(loadedFile.fileContents);
 				const newEditorState = EditorState.createWithContent(newContentState, decorator);
+				// TO-DO: Check for new links to add before setting the editor state
 				setEditorState(newEditorState);
 			} else {
 				setEditorState(EditorState.createEmpty(decorator));
 			}
+			// editorRef.current.focus();
 		};
 		loadFileFromSave();
-	}, [navData, project.tempPath]);
+	}, [editorRef, navData, project.tempPath]);
 
 	// Loading the new current document
 	useEffect(() => {
@@ -439,12 +447,23 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 			// If the previous doc changed and we didn't open a new project, save.
 			if (prev.doc !== '' && navData.currentTempPath === prev.tempPath) {
 				saveFile(prev.doc); // PROBLEM: saving after we've loaded the new project
+				// Archive the editorState
+				setEditorArchives({ ...editorArchives, [prev.doc]: editorState });
 			}
 			setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
-			setNavData({ ...navData, reloadCurrentDoc: false });
-			loadFile();
+			// setNavData({ ...navData, reloadCurrentDoc: false });
+
+			// Check for existing editorState and load from that if available
+			if (editorArchives.hasOwnProperty(navData.currentDoc)) {
+				let newEditorState = editorArchives[navData.currentDoc];
+				// TO-DO: Check for new links to add before setting the editor state
+				updateLinkEntities(newEditorState, linkStructure, navData.currentDoc);
+				setEditorState(newEditorState);
+			} else {
+				loadFile();
+			}
 		}
-	}, [navData, setNavData, prev, setPrev, loadFile]);
+	}, [editorState, editorRef, navData, setNavData, prev, setPrev, loadFile]);
 
 	// As we type, updates alignment/styles to pass down to the editorNav. We do it here
 	// instead of there to prevent unnecessary renders.
@@ -472,7 +491,6 @@ const EditorContainer = ({ editorWidth, saveProject, setSaveProject }) => {
 		>
 			<EditorNav
 				{...{
-					editorWidth,
 					currentStyles,
 					currentAlignment,
 					toggleBlockType,

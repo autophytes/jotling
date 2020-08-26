@@ -19,8 +19,16 @@ import {
 	insertIntoArrayAtPropertyPath,
 } from '../../../utils/utils';
 
-const LeftNav = ({ editorWidth, setEditorWidth, resetNavWidth }) => {
-	const { docStructure, setDocStructure, navData, setNavData } = useContext(LeftNavContext);
+const LeftNav = () => {
+	const {
+		docStructure,
+		setDocStructure,
+		navData,
+		setNavData,
+		editorWidth,
+		setEditorWidth,
+		resetNavWidth,
+	} = useContext(LeftNavContext);
 	const [pinNav, setPinNav] = useState(true);
 	// const [rootFontSize, setRootFontSize] = useState(18);
 	// const [resizeWidth, setResizeWidth] = useState(null);

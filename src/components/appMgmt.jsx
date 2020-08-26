@@ -16,20 +16,11 @@ import Store from 'electron-store';
 
 // import ReactResizeDetector from 'react-resize-detector';
 
-// CONSTANTS
-const DEFAULT_WIDTH = 12;
-
 // Create main App component
 const AppMgmt = () => {
 	const [structureLoaded, setStructureLoaded] = useState(false);
 	const [linkStructureLoaded, setLinkStructureLoaded] = useState(false);
 	const [prevProj, setPrevProj] = useState('');
-	const [editorWidth, setEditorWidth] = useState({
-		leftNav: DEFAULT_WIDTH,
-		leftIsPinned: true,
-		rightNav: DEFAULT_WIDTH,
-		rightIsPinned: true,
-	});
 	const [saveProject, setSaveProject] = useState({});
 	const [needCurrentDocReset, setNeedCurrentDocReset] = useState(false);
 
@@ -42,6 +33,8 @@ const AppMgmt = () => {
 		setProject,
 		navData,
 		setNavData,
+		editorWidth,
+		setEditorWidth,
 	} = useContext(LeftNavContext);
 
 	// Loads the document map (function)
@@ -69,14 +62,6 @@ const AppMgmt = () => {
 		setLinkStructure(newLinkStructure.fileContents);
 		setLinkStructureLoaded(true);
 	}, [setLinkStructure, project.tempPath]);
-
-	// Resets the width of the side nav bars
-	const resetNavWidth = useCallback(
-		(whichNav) => {
-			setEditorWidth({ ...editorWidth, [whichNav]: DEFAULT_WIDTH });
-		},
-		[editorWidth]
-	);
 
 	const resetCurrentDoc = useCallback(() => {
 		// Find the first document in the first tab with contents
@@ -230,9 +215,9 @@ const AppMgmt = () => {
 	return (
 		<>
 			<TopNav />
-			<LeftNav {...{ editorWidth, setEditorWidth, resetNavWidth }} />
-			<RightNav {...{ editorWidth, setEditorWidth, resetNavWidth }} />
-			<EditorContainer {...{ editorWidth, saveProject, setSaveProject }} />
+			<LeftNav />
+			<RightNav />
+			<EditorContainer {...{ saveProject, setSaveProject }} />
 			<LoadingOverlay {...{ structureLoaded }} />
 		</>
 	);

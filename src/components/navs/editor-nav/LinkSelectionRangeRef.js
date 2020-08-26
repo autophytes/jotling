@@ -44,16 +44,6 @@ export class LinkSelectionRangeRef {
 				height: 0,
 			};
 		}
-
-		this.rectChangedCallback(this.rect);
-	}
-
-	removeListener() {
-		window.removeEventListener('scroll', this.update);
-	}
-
-	rectChangedCallback() {
-		// Abstract to be implemented
 	}
 
 	getBoundingClientRect() {

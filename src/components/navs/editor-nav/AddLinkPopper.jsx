@@ -13,13 +13,16 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 	// STATE
 	const popperElement = useRef(null);
 	const arrowElement = useRef(null);
+	const popperInputRef = useRef(null);
 	// const [popperElement, setPopperElement] = useState(null);
 	// const [arrowElement, setArrowElement] = useState(null);
 	// const [referenceElement] = useState(new LinkSelectionRangeRef());
 	const [allTags, setAllTags] = useState([]);
 	const [tagFilter, setTagFilter] = useState('');
+	const [leftOffset, setLeftOffset] = useState(0);
+	const [rightOffset, setRightOffset] = useState(0);
 
-	const { linkStructure, navData } = useContext(LeftNavContext);
+	const { linkStructure, navData, editorWidth } = useContext(LeftNavContext);
 
 	// POPPER
 	const { styles, attributes } = usePopper(referenceElement, popperElement.current, {
@@ -33,11 +36,18 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 				},
 			},
 			{ name: 'flip', options: { padding: 100 } },
+			{
+				name: 'preventOverflow',
+				options: {
+					padding: { left: leftOffset, right: rightOffset },
+				},
+			},
 		],
 	});
 
 	// Initial rebuild of referenceElement
 	useEffect(() => {
+		console.log('recreating the referenceElement');
 		referenceElement = new LinkSelectionRangeRef();
 	}, []);
 
@@ -45,9 +55,35 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 	// Managed here to remove on unmount
 	useEffect(() => {
 		referenceElement.update();
+		popperInputRef.current.focus();
 		window.addEventListener('scroll', referenceElement.update);
-		return () => window.removeEventListener('scroll', referenceElement.update);
+		return () => {
+			window.removeEventListener('scroll', referenceElement.update);
+		};
 	}, [referenceElement]);
+
+	// Calculates the left and right popper boundaries
+	useEffect(() => {
+		referenceElement.update();
+
+		let rootSize = Number(
+			window
+				.getComputedStyle(document.querySelector(':root'))
+				.getPropertyValue('font-size')
+				.replace('px', '')
+		);
+
+		let leftNav = editorWidth.leftIsPinned ? editorWidth.leftNav * rootSize : 0;
+		let rightNav = editorWidth.rightIsPinned ? editorWidth.rightNav * rootSize : 0;
+		let maxEditor = editorWidth.editorMaxWidth * rootSize;
+		let windowWidth = window.innerWidth;
+		let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
+		let newLeftOffset = leftNav + gutter / 2;
+		let newRightOffset = rightNav + gutter / 2;
+
+		setLeftOffset(newLeftOffset);
+		setRightOffset(newRightOffset);
+	}, [editorWidth, referenceElement]);
 
 	// Update the list of tags when the linkStructure changes
 	useEffect(() => {
@@ -68,8 +104,10 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 
 		document.addEventListener('mousedown', handleStopBlur);
 
-		return () => document.removeEventListener('mousedown', handleStopBlur);
-	});
+		return () => {
+			document.removeEventListener('mousedown', handleStopBlur);
+		};
+	}, []);
 
 	// Closes the popper if clicking outside the popper or hitting escape
 	useEffect(() => {
@@ -91,14 +129,21 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 	});
 
 	// TO-DO
-	// Takes 2 clicks on body to close the popup - why?
-	// Side overflow if it has too many tags?
-	// Hide behind the editorNav
+	// We need to check if the selection (in the editorNav) is contained by the .editor (or container?)
+	// Make sure text is selected for link button to work
 	// Need to add the text to the linked-to document
 	//   Will be text with the other side of the link associated with it so it's rendered in a special component.
 	//   When editing that text, edit the aliased text
 	// Need to be able to remove link
 	// Link text to more than one tag??
+
+	// Backlinking
+	// On document open, check for new link entitites to add
+	//   If new, find the last USED block and insert a new block with
+	//     the entity and content or alias
+	//   We'll need a new decorator for this too
+	// On document open, IF we aren't using an alias, make sure content is updated
+	// Eventually, check for link deletions too
 
 	return (
 		<div
@@ -116,7 +161,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 					{/* Text input for filter */}
 					<input
 						value={tagFilter}
-						// autoFocus
+						ref={popperInputRef}
 						// onFocus={(e) => e.preventDefault()}
 						onChange={(e) => setTagFilter(e.target.value)}
 						onClick={(e) => {
