@@ -118,7 +118,7 @@ export const enterToUnindentList = (editorState, setEditorState) => {
 export const doubleDashToLongDash = (editorState, setEditorState) => {
 	const currentSelection = editorState.getSelection();
 	const currentPosition = currentSelection.getStartOffset();
-	const blockKey = editorState.getSelection().getAnchorKey();
+	const blockKey = currentSelection.getAnchorKey();
 
 	// Ensure the previous 2 characters are '--'. If not, exit.
 	const block = editorState.getCurrentContent().getBlockForKey(blockKey);

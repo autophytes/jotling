@@ -1,6 +1,15 @@
-import { CompositeDecorator } from 'draft-js';
+import { List, Repeat } from 'immutable';
+import {
+	EditorState,
+	ContentState,
+	ContentBlock,
+	genKey,
+	CompositeDecorator,
+	CharacterMetadata,
+	Modifier,
+} from 'draft-js';
 
-import LinkToDecorator from './decorators/linkToDecorator';
+import { LinkSourceDecorator, LinkDestDecorator } from './decorators/LinkDecorators';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
@@ -16,8 +25,12 @@ function getEntityStrategy(type) {
 
 export const decorator = new CompositeDecorator([
 	{
-		strategy: getEntityStrategy('LINK'),
-		component: LinkToDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+		strategy: getEntityStrategy('LINK-SOURCE'),
+		component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+	},
+	{
+		strategy: getEntityStrategy('LINK-DEST'),
+		component: LinkDestDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
 	},
 ]);
 
@@ -37,7 +50,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	let contentState = editorState.getCurrentContent();
 	let blockArray = contentState.getBlocksAsArray();
 
-	let linkIdArray = [];
+	let usedLinkIdArray = [];
 	for (let block of blockArray) {
 		console.log(block.getData());
 
@@ -49,49 +62,121 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 				}
 
 				let entity = contentState.getEntity(entityKey);
-				if (entity.getType() === 'LINK') {
-					linkIdArray.push(entity.data.linkId);
+				if (entity.getType() === 'LINK-DEST') {
+					usedLinkIdArray.push(entity.data.linkId);
 				}
 
 				return false;
 			},
 			() => {}
 		);
-
-		// block.findEntityRanges(
-		// 	(value) => {
-		// 		let entityKey = value.getEntity();
-		// 		if (!entityKey) {
-		// 			return false;
-		// 		}
-		// 		console.log('entityKey: ', entityKey);
-		// 		let entity = contentState.getEntity(entityKey);
-		// 		console.log('entity: ', entity);
-		// 		return entity.getType() === 'LINK';
-		// 	},
-		// 	(start, end) => {
-		// 		let entityKey = block.getEntityAt(start);
-		// 		let entity = contentState.getEntity(entityKey);
-		// 		console.log('entity from block: ', entity);
-		// 		let type = entity.getType();
-		// 		if (type === 'LINK') {
-		// 			linkIdArray.push(entity.data.linkId);
-		// 		}
-		// 	}
-		// );
 	}
 
+	const tagList = linkStructure.docTags[currentDoc] ? linkStructure.docTags[currentDoc] : [];
+	let allLinkIdArray = [];
+	for (let tag of tagList) {
+		allLinkIdArray.push(linkStructure.tagLinks[tag]);
+	}
+
+	let unusedLinkIds = [];
+	for (let linkId of allLinkIdArray.flat()) {
+		if (!usedLinkIdArray.includes(linkId)) {
+			unusedLinkIds = [...unusedLinkIds, linkId];
+		}
+	}
+
+	let newEditorState = editorState;
+	// let newEditorState;
+	for (let linkId of unusedLinkIds) {
+		let newContentState = newEditorState.getCurrentContent();
+
+		const newBlock = new ContentBlock({
+			key: genKey(),
+			type: 'unstyled',
+			text: linkStructure.links[linkId].content,
+			characterList: List(
+				Repeat(CharacterMetadata.create(), linkStructure.links[linkId].content.length)
+			),
+		});
+
+		const newBlockMap = newContentState.getBlockMap().set(newBlock.key, newBlock);
+
+		newEditorState = EditorState.push(
+			newEditorState,
+			ContentState.createFromBlockArray(newBlockMap.toArray()),
+			'split-block'
+			// .set('selectionBefore', contentState.getSelectionBefore())
+			// .set('selectionAfter', contentState.getSelectionAfter())
+		);
+
+		// Apply the LINK-DEST entity to the new block
+		newEditorState = createTagDestLink(newEditorState, linkId, newBlock.key);
+	}
+
+	// X. Pull the relevant tags from docTags
+	// X. Pull all the link ids to those tags from tagLinks
+	// X. Compare that to our linkIdArray
+	// X. Insert any links that aren't already in the page
+	//   x. insert our entity for the link
+	//     https://jsfiddle.net/levsha/2op5cyxm/ - create block and add link
+	//   a. Insert before the last empty block our content from the link and the new entity
+	// 5. Update any links where there is no alias in the linkStructure and the content doesn't match
+	// 6. Eventually, any changes we make to content with entities, we need to sync back to linkStructure
+
 	// block.getData() might give us a map with the metadata we need
+	// There's the possibility we may have a duplicate issue eventually. If so, use Map to remove duplicates.
 
-	console.log(linkIdArray);
+	return newEditorState;
+};
 
-	// We've got a problem when switching to documents with no entities - the filter is still showing an array with a tuple in it
-	// let filteredEntityArray = entityArray.filter(
-	// 	(item) => item[1].getType && item[1].getType() === 'LINK'
-	// );
-	// console.log(filteredEntityArray);
+// Creating a new destination tag link
+const createTagDestLink = (editorState, linkId, blockKey) => {
+	const selectionState = editorState.getSelection();
+	const contentState = editorState.getCurrentContent();
+	const block = contentState.getBlockForKey(blockKey);
 
-	// // This works but is returning an array with our link id for every page, not just the one with that link metadata
-	// let linkIdArray = filteredEntityArray.map((item) => item[1].data.linkId);
-	// console.log(linkIdArray);
+	// Store these to restore the selection at the end
+	const anchorKey = selectionState.getAnchorKey();
+	const anchorOffset = selectionState.getAnchorOffset();
+	const focusKey = selectionState.getFocusKey();
+	const focusOffset = selectionState.getFocusOffset();
+
+	// Selecting the text to apply the entity(link) to
+	const selectionStateForEntity = selectionState.merge({
+		anchorKey: blockKey, // Starting position
+		anchorOffset: 0, // How much to adjust from the starting position
+		focusKey: blockKey, // Ending position
+		focusOffset: block.getText().length, // How much to adjust from the ending position.
+	});
+
+	// Apply the linkId as an entity to the selection
+	const contentStateWithEntity = contentState.createEntity('LINK-DEST', 'MUTABLE', {
+		linkId: linkId,
+	});
+	const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+	const contentStateWithLink = Modifier.applyEntity(
+		contentStateWithEntity,
+		selectionStateForEntity,
+		entityKey
+	);
+
+	// Restoring the selection to the original selection
+	const restoredSelectionState = selectionState.merge({
+		anchorKey: anchorKey, // Starting block (position is the start)
+		anchorOffset: anchorOffset, // How much to adjust from the starting position
+		focusKey: focusKey, // Ending position (position is the start)
+		focusOffset: focusOffset, // We added the space, so add 1 to this.
+	});
+	const reselectedEditorState = EditorState.forceSelection(
+		editorState,
+		restoredSelectionState
+	);
+
+	const newEditorState = EditorState.push(
+		reselectedEditorState,
+		contentStateWithLink,
+		'apply-entity'
+	);
+
+	return newEditorState;
 };

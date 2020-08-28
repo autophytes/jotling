@@ -264,6 +264,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 	}, []);
 
+	// Creating a new source tag link
 	const createTagLink = useCallback(
 		(tagName) => {
 			// Increment the max id by 1, or start at 0
@@ -274,7 +275,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			const selectionState = editorState.getSelection();
 
 			// Apply the linkId as an entity to the selection
-			const contentStateWithEntity = contentState.createEntity('LINK', 'MUTABLE', {
+			const contentStateWithEntity = contentState.createEntity('LINK-SOURCE', 'MUTABLE', {
 				linkId: newLinkId,
 			});
 			const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
@@ -306,19 +307,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				newLinkStructure.docLinks[navData.currentDoc] = {};
 			}
 			newLinkStructure.docLinks[navData.currentDoc][newLinkId] = tagName; // FIX EVENTUALLY
-
-			// NEED TO:
-			//   Build the component for the decorator, re-add the decorator to the editor
-			//      * * * research this later
-			//   then, we'll need a way of choosing from available tags
-			//      ideally, it would suggest tags in the selected text first as well as recently used tags
-			//      need a way to search for tags too
-			//      https://codepen.io/FezVrasta/pen/vWXQdq
-			//   Use a decorator(?) to visually modify the text that is linked
-			//   When changing linked text, update the linkStructure too
-			//   When we delete a link, need to warn the user, then cascade the delete
-			//      Convert the link text on all pages (source and destination) to just text
-			//      On the destination pages,
 
 			setLinkStructure(newLinkStructure);
 			setEditorState(newEditorState);
@@ -455,10 +443,18 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 			// Check for existing editorState and load from that if available
 			if (editorArchives.hasOwnProperty(navData.currentDoc)) {
-				let newEditorState = editorArchives[navData.currentDoc];
+				const newEditorState = editorArchives[navData.currentDoc];
 				// TO-DO: Check for new links to add before setting the editor state
-				updateLinkEntities(newEditorState, linkStructure, navData.currentDoc);
-				setEditorState(newEditorState);
+				const editorStateWithLinks = updateLinkEntities(
+					newEditorState,
+					linkStructure,
+					navData.currentDoc
+				);
+				console.log(
+					'editorStateWithLinks content: ',
+					editorStateWithLinks.getCurrentContent().getPlainText()
+				);
+				setEditorState(editorStateWithLinks);
 			} else {
 				loadFile();
 			}

@@ -33,8 +33,7 @@ const AppMgmt = () => {
 		setProject,
 		navData,
 		setNavData,
-		editorWidth,
-		setEditorWidth,
+		setEditorArchives,
 	} = useContext(LeftNavContext);
 
 	// Loads the document map (function)
@@ -125,6 +124,7 @@ const AppMgmt = () => {
 			}
 
 			// Loads the doc structure
+			setEditorArchives({});
 			loadDocStructure({ isNewProject: true });
 			loadLinkStructure();
 			setPrevProj(project.tempPath);
