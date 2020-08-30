@@ -52,8 +52,6 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 	let usedLinkIdArray = [];
 	for (let block of blockArray) {
-		console.log(block.getData());
-
 		block.findEntityRanges(
 			(value) => {
 				let entityKey = value.getEntity();
@@ -120,7 +118,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	//   x. insert our entity for the link
 	//     https://jsfiddle.net/levsha/2op5cyxm/ - create block and add link
 	//   a. Insert before the last empty block our content from the link and the new entity
-	// 5. Update any links where there is no alias in the linkStructure and the content doesn't match
+	// 5. NEXT  -  Update any links where there is no alias in the linkStructure and the content doesn't match
 	// 6. Eventually, any changes we make to content with entities, we need to sync back to linkStructure
 
 	// block.getData() might give us a map with the metadata we need

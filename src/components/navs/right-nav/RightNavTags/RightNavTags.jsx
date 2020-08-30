@@ -14,7 +14,9 @@ const RightNavTags = ({ activeTab }) => {
 	const [showNewTagInput, setShowNewTagInput] = useState(false);
 	const [isOpen, setIsOpen] = useState({});
 
-	const { linkStructure, setLinkStructure, navData } = useContext(LeftNavContext);
+	const { linkStructure, setLinkStructure, linkStructureRef, navData } = useContext(
+		LeftNavContext
+	);
 
 	// Keeps the currentDoc in state
 	useEffect(() => {
@@ -45,7 +47,7 @@ const RightNavTags = ({ activeTab }) => {
 
 	const deleteTag = useCallback(
 		(docName, tagName) => {
-			let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
+			let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
 
 			// Remove tag from docTags
 			let currentDocTags = [
@@ -76,7 +78,7 @@ const RightNavTags = ({ activeTab }) => {
 
 			setLinkStructure(newLinkStructure);
 		},
-		[linkStructure, currentDoc]
+		[linkStructureRef, currentDoc]
 	);
 
 	return (

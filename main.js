@@ -3,6 +3,9 @@
 // Import parts of electron to use
 require('v8-compile-cache'); // Speeds up boot time
 const { app, BrowserWindow } = require('electron');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
 
 const {
 	registerHandlers,
@@ -22,9 +25,11 @@ let afterOpenCallback = () => {
 	for (let arg of process.argv) {
 		if (arg.slice(-4) === '.jots') {
 			openProject(arg);
-			break;
+			return true;
+			// break;
 		}
 	}
+	return false;
 };
 
 // Keep a reference for dev mode
@@ -85,11 +90,17 @@ app.on('open-file', (e, jotsPath) => {
 				currentMainWindow.show();
 				openProject(jotsPath);
 			} else {
-				mainWindow = createWindow(dev, () => openProject(jotsPath));
+				mainWindow = createWindow(dev, () => {
+					openProject(jotsPath);
+					return true;
+				});
 			}
 		} else {
 			// If it's not running yet, queue the file to be opened
-			afterOpenCallback = () => openProject(jotsPath);
+			afterOpenCallback = () => {
+				openProject(jotsPath);
+				return true;
+			};
 		}
 	}
 
@@ -105,6 +116,24 @@ app.on('open-file', (e, jotsPath) => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
+	// TEMPORARY - Generates and opens a Between Worlds project
+	if (dev && process.platform === 'darwin') {
+		let docsPath = app.getPath('documents');
+		let origFilePath = path.join(docsPath, 'Between Worlds - Template.jots');
+		let destFilePath = path.join(docsPath, `Between Worlds - Development.jots`);
+		// let destFilePath = path.join(docsPath, `Between Worlds - ${uuidv4()}.jots`);
+
+		fs.copyFile(origFilePath, destFilePath, (err) => {
+			if (err) throw err;
+			console.log('Created a new Between Worlds test project.');
+		});
+
+		afterOpenCallback = () => {
+			openProject(destFilePath);
+			return true;
+		};
+	}
+
 	mainWindow = createWindow(dev, afterOpenCallback);
 
 	// Register Handlers

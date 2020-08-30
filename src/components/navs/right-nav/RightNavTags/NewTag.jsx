@@ -1,52 +1,55 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useCallback } from 'react';
 
 import { LeftNavContext } from '../../../../contexts/leftNavContext';
 
 const NewTag = ({ setShowNewTagInput }) => {
 	const [tagName, setTagName] = useState('');
 
-	const { linkStructure, setLinkStructure, navData } = useContext(LeftNavContext);
+	const { setLinkStructure, linkStructureRef, navData } = useContext(LeftNavContext);
 
 	// Save the new tag
-	const saveTag = (newTag) => {
-		// No blank tags
-		if (!newTag) {
-			console.log('Tags cannot be blank');
-			return;
-		}
-
-		// Prevents duplicate tags
-		{
-			let allDocTags = [];
-			for (let key of Object.keys(linkStructure.docTags)) {
-				allDocTags = [...allDocTags, ...linkStructure.docTags[key]];
-			}
-
-			if (allDocTags.includes(newTag.toLowerCase())) {
-				// NOTE: add warning to the user!
-				console.log("Can't use tags on more than one page");
+	const saveTag = useCallback(
+		(newTag) => {
+			// No blank tags
+			if (!newTag) {
+				console.log('Tags cannot be blank');
 				return;
 			}
-		}
 
-		let newDocTags = [];
+			// Prevents duplicate tags
+			{
+				let allDocTags = [];
+				for (let key of Object.keys(linkStructureRef.current.docTags)) {
+					allDocTags = [...allDocTags, ...linkStructureRef.current.docTags[key]];
+				}
 
-		// Loading in existing tags
-		if (linkStructure.docTags.hasOwnProperty(navData.currentDoc)) {
-			newDocTags = linkStructure.docTags[navData.currentDoc];
-		}
-		// Prepend the new tag
-		newDocTags.unshift(newTag.toLowerCase());
+				if (allDocTags.includes(newTag.toLowerCase())) {
+					// NOTE: add warning to the user!
+					console.log("Can't use tags on more than one page");
+					return;
+				}
+			}
 
-		// Duplicate linkStructure and update the tags
-		let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
-		newLinkStructure.docTags[navData.currentDoc] = newDocTags;
+			let newDocTags = [];
 
-		newLinkStructure.tagLinks[newTag.toLowerCase()] = [];
+			// Loading in existing tags
+			if (linkStructureRef.current.docTags.hasOwnProperty(navData.currentDoc)) {
+				newDocTags = linkStructureRef.current.docTags[navData.currentDoc];
+			}
+			// Prepend the new tag
+			newDocTags.unshift(newTag.toLowerCase());
 
-		setLinkStructure(newLinkStructure);
-		setShowNewTagInput(false);
-	};
+			// Duplicate linkStructure and update the tags
+			let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
+			newLinkStructure.docTags[navData.currentDoc] = newDocTags;
+
+			newLinkStructure.tagLinks[newTag.toLowerCase()] = [];
+
+			setLinkStructure(newLinkStructure);
+			setShowNewTagInput(false);
+		},
+		[linkStructureRef, navData]
+	);
 
 	// Handle key presses
 	const handleKeyUp = (e) => {

@@ -90,8 +90,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setNavData,
 		project,
 		setProject,
-		linkStructure,
 		setLinkStructure,
+		linkStructureRef,
 		editorWidth,
 		editorArchives,
 		setEditorArchives,
@@ -268,7 +268,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const createTagLink = useCallback(
 		(tagName) => {
 			// Increment the max id by 1, or start at 0
-			let arrayOfLinkIds = Object.keys(linkStructure.links).map((item) => Number(item));
+			let arrayOfLinkIds = Object.keys(linkStructureRef.current.links).map((item) =>
+				Number(item)
+			);
 			let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 0;
 
 			const contentState = editorState.getCurrentContent();
@@ -294,7 +296,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			const selectedText = getTextSelection(contentStateWithLink, selectionState);
 
 			// Updating the linkStructure with the new link
-			let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
+			let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
 			newLinkStructure.tagLinks[tagName].push(newLinkId); // FIX EVENTUALLY
 			newLinkStructure.links[newLinkId] = {
 				source: navData.currentDoc, // Source document
@@ -311,7 +313,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			setLinkStructure(newLinkStructure);
 			setEditorState(newEditorState);
 		},
-		[editorState, linkStructure, navData.currentDoc]
+		[editorState, linkStructureRef, navData.currentDoc]
 	);
 
 	// Removes queued up styles to remove
@@ -447,19 +449,16 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				// TO-DO: Check for new links to add before setting the editor state
 				const editorStateWithLinks = updateLinkEntities(
 					newEditorState,
-					linkStructure,
+					linkStructureRef.current,
 					navData.currentDoc
 				);
-				console.log(
-					'editorStateWithLinks content: ',
-					editorStateWithLinks.getCurrentContent().getPlainText()
-				);
+
 				setEditorState(editorStateWithLinks);
 			} else {
 				loadFile();
 			}
 		}
-	}, [editorState, editorRef, navData, setNavData, prev, setPrev, loadFile]);
+	}, [editorState, editorRef, navData, setNavData, prev, setPrev, loadFile, linkStructureRef]);
 
 	// As we type, updates alignment/styles to pass down to the editorNav. We do it here
 	// instead of there to prevent unnecessary renders.

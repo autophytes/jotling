@@ -70,12 +70,16 @@ function createWindow(dev, callbackFunction) {
 			mainWindow.webContents.openDevTools();
 		}
 
-		// Load the default project files
-		const { createTempProjectOnStartup } = require('../backend_files/fileFunctions');
-		createTempProjectOnStartup();
+		let projectAlreadyCreated = false;
 		if (callbackFunction) {
 			// Allows the menu to run functions (open, new project) after the new window has been created
-			callbackFunction();
+			projectAlreadyCreated = callbackFunction();
+		}
+		// If the callback returned true, it created a project and we don't need to here
+		if (!projectAlreadyCreated) {
+			// Load the default project files
+			const { createTempProjectOnStartup } = require('../backend_files/fileFunctions');
+			createTempProjectOnStartup();
 		}
 	});
 

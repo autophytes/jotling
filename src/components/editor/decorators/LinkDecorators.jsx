@@ -20,26 +20,100 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 // offsetKey: string,
 // start: number,
 
-const LinkSourceDecorator = (props) => {
+const LinkSourceDecorator = ({
+	children,
+	blockKey,
+	entityKey,
+	contentState,
+	start,
+	decoratedText,
+}) => {
 	// CONTEXT
-	const { linkStructure } = useContext(LeftNavContext);
-	const [entityKey] = useState(props.entityKey);
-	const [contentState] = useState(props.contentState);
-	const [blockKey] = useState(props.blockKey);
-	const [start] = useState(props.start);
-	const [linkId, setLinkId] = useState(null);
+	const { setLinkStructure, linkStructureRef } = useContext(LeftNavContext);
 
+	// STATE
+	const [linkId, setLinkId] = useState(null);
+	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
+	const [queuedTimeout, setQueuedTimeout] = useState(null);
+
+	// On load, grab the entity linkId
 	useEffect(() => {
 		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
-	}, [entityKey, contentState, blockKey, start]);
+	}, []);
 
-	console.log('linkStructure: ', linkStructure);
+	// Update our linkStructure with the changes in the link text
+	useEffect(() => {
+		syncLinkStructureOnDelay({
+			linkId,
+			linkPropName: 'content',
+			prevDecoratedText,
+			decoratedText,
+			queuedTimeout,
+			linkStructureRef,
+			setLinkStructure,
+			setQueuedTimeout,
+			setPrevDecoratedText,
+		});
+		// if (linkId !== null && prevDecoratedText !== decoratedText) {
+		// 	// Remove any queued updates to linkStructure
+		// 	if (queuedTimeout) {
+		// 		clearTimeout(queuedTimeout);
+		// 	}
 
-	return <span style={{ textDecoration: 'underline' }}>{props.children}</span>;
+		// 	// Queue an update to linkStructure with the updated text
+		// 	const newTimeout = setTimeout(() => {
+		// 		let newLinkStructure = { ...linkStructureRef.current };
+		// 		newLinkStructure.links[linkId].content = decoratedText;
+		// 		setLinkStructure({ ...newLinkStructure });
+		// 	}, 3000);
+
+		// 	// Save the timeout (for potential clearing on changes)
+		// 	setQueuedTimeout(newTimeout);
+		// 	// Update the text we've queued updates for
+		// 	setPrevDecoratedText(decoratedText);
+		// }
+	}, [decoratedText, setLinkStructure, linkId, queuedTimeout, linkStructureRef]);
+
+	return <span style={{ textDecoration: 'underline' }}>{children}</span>;
 };
 
-const LinkDestDecorator = (props) => {
-	return <span style={{ textDecoration: 'underline' }}>{props.children}</span>;
+const LinkDestDecorator = ({
+	children,
+	blockKey,
+	entityKey,
+	contentState,
+	start,
+	decoratedText,
+}) => {
+	// CONTEXT
+	const { setLinkStructure, linkStructureRef } = useContext(LeftNavContext);
+
+	// STATE
+	const [linkId, setLinkId] = useState(null);
+	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
+	const [queuedTimeout, setQueuedTimeout] = useState(null);
+
+	// On load, grab the entity linkId
+	useEffect(() => {
+		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
+	}, []);
+
+	// Update our linkStructure with the changes in the link text
+	useEffect(() => {
+		syncLinkStructureOnDelay({
+			linkId,
+			linkPropName: 'alias',
+			prevDecoratedText,
+			decoratedText,
+			queuedTimeout,
+			linkStructureRef,
+			setLinkStructure,
+			setQueuedTimeout,
+			setPrevDecoratedText,
+		});
+	}, [decoratedText, setLinkStructure, linkId, queuedTimeout, linkStructureRef]);
+
+	return <span style={{ textDecoration: 'underline' }}>{children}</span>;
 };
 
 const getLinkId = (entityKey, contentState, blockKey, start) => {
@@ -50,6 +124,37 @@ const getLinkId = (entityKey, contentState, blockKey, start) => {
 	const block = contentState.getBlockForKey(blockKey);
 	const retrievedEntityKey = block.getEntityAt(start);
 	return contentState.getEntity(retrievedEntityKey).data.linkId;
+};
+
+const syncLinkStructureOnDelay = ({
+	linkId,
+	linkPropName,
+	prevDecoratedText,
+	decoratedText,
+	queuedTimeout,
+	linkStructureRef,
+	setLinkStructure,
+	setQueuedTimeout,
+	setPrevDecoratedText,
+}) => {
+	if (linkId !== null && prevDecoratedText !== decoratedText) {
+		// Remove any queued updates to linkStructure
+		if (queuedTimeout) {
+			clearTimeout(queuedTimeout);
+		}
+
+		// Queue an update to linkStructure with the updated text
+		const newTimeout = setTimeout(() => {
+			let newLinkStructure = { ...linkStructureRef.current };
+			newLinkStructure.links[linkId][linkPropName] = decoratedText;
+			setLinkStructure({ ...newLinkStructure });
+		}, 3000);
+
+		// Save the timeout (for potential clearing on changes)
+		setQueuedTimeout(newTimeout);
+		// Update the text we've queued updates for
+		setPrevDecoratedText(decoratedText);
+	}
 };
 
 export { LinkSourceDecorator, LinkDestDecorator };
