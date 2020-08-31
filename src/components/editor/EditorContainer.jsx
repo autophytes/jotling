@@ -92,7 +92,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setProject,
 		setLinkStructure,
 		linkStructureRef,
-		editorWidth,
+		editorStyles,
 		editorArchives,
 		setEditorArchives,
 	} = useContext(LeftNavContext);
@@ -329,8 +329,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		let newStyles = {};
 		!!currentFont && (newStyles['fontFamily'] = currentFont.toString());
 		!!lineHeight && (newStyles['lineHeight'] = lineHeight + 'em');
-		!!editorWidth.editorMaxWidth &&
-			(newStyles['maxWidth'] = editorWidth.editorMaxWidth + 'rem');
+		!!editorStyles.editorMaxWidth &&
+			(newStyles['maxWidth'] = editorStyles.editorMaxWidth + 'rem');
 
 		if (!!fontSize) {
 			newStyles['fontSize'] = +fontSize;
@@ -479,8 +479,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		<main
 			className='editor-area'
 			style={{
-				paddingLeft: editorWidth.leftIsPinned ? editorWidth.leftNav + 'rem' : 0,
-				paddingRight: editorWidth.rightIsPinned ? editorWidth.rightNav + 'rem' : 0,
+				paddingLeft: editorStyles.leftIsPinned ? editorStyles.leftNav + 'rem' : 0,
+				paddingRight: editorStyles.rightIsPinned ? editorStyles.rightNav + 'rem' : 0,
 			}}
 			// ref={targetRef}
 		>

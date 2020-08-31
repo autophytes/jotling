@@ -383,11 +383,14 @@ li .public-DraftStyleDefault-block {
 
 .left-nav-content,
 .right-nav-content {
-	/* height: 100%; */
 	position: relative;
-	padding: 0.5rem 0 0.5rem 0.5rem;
+	padding: 0.5rem 0;
 	flex-grow: 1;
 	overflow-y: scroll;
+}
+
+.left-nav-content {
+	padding-right: 0.5rem;
 }
 
 p.file-nav,
@@ -611,15 +614,34 @@ input[type='number']::-webkit-outer-spin-button {
 	/* text-indent: 1.5rem; */
 }
 
+.show-hide-tags-button {
+	margin: 0 0.25rem;
+	padding: 0.1rem 0.4rem;
+	border-radius: 5px;
+	background-color: var(--color-primary);
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+	color: white;
+	font-weight: bold;
+	cursor: pointer;
+	transition: 150ms ease all;
+	outline: none;
+}
+
+.show-hide-tags-button:hover:not(:active) {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.12);
+}
+
 .add-tag-button {
-	position: absolute;
+	/* position: absolute; */
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	top: 0.9rem;
-	right: 0.5rem;
+	/* top: 0.9rem;
+	right: 0.5rem; */
 	width: 1.25rem;
 	height: 1.25rem;
+	margin-right: 0.25rem;
 	box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.2);
 	border-radius: 50%;
 	background-color: var(--color-primary);
@@ -761,6 +783,21 @@ input[type='number']::-webkit-outer-spin-button {
 #link-popper-element[data-popper-placement^='bottom'] .link-popper-arrow:after {
 	background-image: linear-gradient(135deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%);
 	/* transform: rotate(-45deg); */
+}
+
+.link-source-decorator:hover,
+.link-dest-decorator:hover,
+.link-source-decorator.active,
+.link-dest-decorator.active {
+	background-color: #cef2fe;
+	border-radius: 0.25rem;
+	transition: 0ms ease background-color;
+}
+
+.link-source-decorator:not(:hover):not(.active),
+.link-dest-decorator:not(:hover):not(.active) {
+	transition-duration: 2000ms;
+	transition-delay: 2000ms;
 }
 
 @keyframes pop-upwards {

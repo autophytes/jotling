@@ -20,6 +20,7 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 // offsetKey: string,
 // start: number,
 
+// SOURCE LINK
 const LinkSourceDecorator = ({
 	children,
 	blockKey,
@@ -29,7 +30,7 @@ const LinkSourceDecorator = ({
 	decoratedText,
 }) => {
 	// CONTEXT
-	const { setLinkStructure, linkStructureRef } = useContext(LeftNavContext);
+	const { setLinkStructure, linkStructureRef, editorStyles } = useContext(LeftNavContext);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
@@ -54,29 +55,16 @@ const LinkSourceDecorator = ({
 			setQueuedTimeout,
 			setPrevDecoratedText,
 		});
-		// if (linkId !== null && prevDecoratedText !== decoratedText) {
-		// 	// Remove any queued updates to linkStructure
-		// 	if (queuedTimeout) {
-		// 		clearTimeout(queuedTimeout);
-		// 	}
-
-		// 	// Queue an update to linkStructure with the updated text
-		// 	const newTimeout = setTimeout(() => {
-		// 		let newLinkStructure = { ...linkStructureRef.current };
-		// 		newLinkStructure.links[linkId].content = decoratedText;
-		// 		setLinkStructure({ ...newLinkStructure });
-		// 	}, 3000);
-
-		// 	// Save the timeout (for potential clearing on changes)
-		// 	setQueuedTimeout(newTimeout);
-		// 	// Update the text we've queued updates for
-		// 	setPrevDecoratedText(decoratedText);
-		// }
 	}, [decoratedText, setLinkStructure, linkId, queuedTimeout, linkStructureRef]);
 
-	return <span style={{ textDecoration: 'underline' }}>{children}</span>;
+	return (
+		<span className={'link-source-decorator' + (editorStyles.showTags ? ' active' : '')}>
+			{children}
+		</span>
+	);
 };
 
+// DESTINATION LINK
 const LinkDestDecorator = ({
 	children,
 	blockKey,
@@ -86,7 +74,7 @@ const LinkDestDecorator = ({
 	decoratedText,
 }) => {
 	// CONTEXT
-	const { setLinkStructure, linkStructureRef } = useContext(LeftNavContext);
+	const { setLinkStructure, linkStructureRef, editorStyles } = useContext(LeftNavContext);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
@@ -113,9 +101,14 @@ const LinkDestDecorator = ({
 		});
 	}, [decoratedText, setLinkStructure, linkId, queuedTimeout, linkStructureRef]);
 
-	return <span style={{ textDecoration: 'underline' }}>{children}</span>;
+	return (
+		<span className={'link-dest-decorator' + (editorStyles.showTags ? ' active' : '')}>
+			{children}
+		</span>
+	);
 };
 
+// Gets the Link ID for the entity
 const getLinkId = (entityKey, contentState, blockKey, start) => {
 	if (entityKey) {
 		return contentState.getEntity(entityKey).data.linkId;
@@ -126,6 +119,7 @@ const getLinkId = (entityKey, contentState, blockKey, start) => {
 	return contentState.getEntity(retrievedEntityKey).data.linkId;
 };
 
+// Queues a delayed update of the link 'alias' or 'content'
 const syncLinkStructureOnDelay = ({
 	linkId,
 	linkPropName,

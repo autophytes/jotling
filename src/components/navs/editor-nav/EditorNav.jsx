@@ -101,7 +101,7 @@ const EditorNav = React.memo(
 		const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
 
 		// CONTEXT
-		const { editorWidth } = useContext(LeftNavContext);
+		const { editorStyles } = useContext(LeftNavContext);
 
 		const handleFontSelect = useCallback(
 			(font) => {
@@ -176,8 +176,8 @@ const EditorNav = React.memo(
 				className={'editor-nav' + (pinNav ? '' : ' hidden')}
 				style={{
 					maxWidth: `calc(100% - ${
-						(editorWidth.leftIsPinned ? editorWidth.leftNav : 0) +
-						(editorWidth.rightIsPinned ? editorWidth.rightNav : 0)
+						(editorStyles.leftIsPinned ? editorStyles.leftNav : 0) +
+						(editorStyles.rightIsPinned ? editorStyles.rightNav : 0)
 					}rem)`,
 				}}>
 				{/* <!-- Should most of these be document-wide rather than selection specific? --> */}

@@ -1,6 +1,7 @@
 import { List, Repeat } from 'immutable';
 import {
 	EditorState,
+	SelectionState,
 	ContentState,
 	ContentBlock,
 	genKey,
@@ -50,8 +51,19 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	let contentState = editorState.getCurrentContent();
 	let blockArray = contentState.getBlocksAsArray();
 
+	// Grab all used Link IDs
 	let usedLinkIdArray = [];
+	let nonAliasedEntities = {
+		// enitityKey: {
+		//   linkId,
+		//   startBlockKey,
+		//   startOffset,
+		//   endBlockKey,
+		//   endOffset
+		// }
+	};
 	for (let block of blockArray) {
+		// Looping through all blocks' entities to grab the Link IDs
 		block.findEntityRanges(
 			(value) => {
 				let entityKey = value.getEntity();
@@ -62,20 +74,47 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 				let entity = contentState.getEntity(entityKey);
 				if (entity.getType() === 'LINK-DEST') {
 					usedLinkIdArray.push(entity.data.linkId);
+					// Only call the second function for links that are not aliased (which we need to synchronize)
+					if (linkStructure.links[entity.data.linkId].alias) {
+						return false;
+					}
+					return true;
 				}
 
 				return false;
 			},
-			() => {}
+			(start, end) => {
+				let blockKey = block.getKey();
+				let entityKey = block.getEntityAt(start);
+				let entity = contentState.getEntity(entityKey);
+				let linkId = entity.data.linkId;
+
+				if (!nonAliasedEntities.hasOwnProperty(entityKey)) {
+					nonAliasedEntities[entityKey] = {};
+				}
+				if (!nonAliasedEntities[entityKey].hasOwnProperty('startBlockKey')) {
+					nonAliasedEntities[entityKey].startBlockKey = blockKey;
+					nonAliasedEntities[entityKey].startOffset = start;
+				}
+
+				nonAliasedEntities[entityKey] = {
+					...nonAliasedEntities[entityKey],
+					linkId,
+					endBlockKey: blockKey,
+					endOffset: end,
+				};
+			}
 		);
 	}
 
+	// Grabbing all links that should be included on the page
 	const tagList = linkStructure.docTags[currentDoc] ? linkStructure.docTags[currentDoc] : [];
 	let allLinkIdArray = [];
 	for (let tag of tagList) {
 		allLinkIdArray.push(linkStructure.tagLinks[tag]);
 	}
 
+	// Comparing the total with the used to find the unused links
 	let unusedLinkIds = [];
 	for (let linkId of allLinkIdArray.flat()) {
 		if (!usedLinkIdArray.includes(linkId)) {
@@ -84,10 +123,14 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	}
 
 	let newEditorState = editorState;
-	// let newEditorState;
+	// Inserting the unsused links at the bottom of the page
 	for (let linkId of unusedLinkIds) {
 		let newContentState = newEditorState.getCurrentContent();
 
+		// If we have a new line character inside our content, we need to break it up into
+		// multiple blocks.
+
+		// Creating a new block with our link content
 		const newBlock = new ContentBlock({
 			key: genKey(),
 			type: 'unstyled',
@@ -99,17 +142,49 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 		const newBlockMap = newContentState.getBlockMap().set(newBlock.key, newBlock);
 
+		// Push the new content block into the editorState
 		newEditorState = EditorState.push(
 			newEditorState,
 			ContentState.createFromBlockArray(newBlockMap.toArray()),
 			'split-block'
-			// .set('selectionBefore', contentState.getSelectionBefore())
-			// .set('selectionAfter', contentState.getSelectionAfter())
 		);
 
 		// Apply the LINK-DEST entity to the new block
 		newEditorState = createTagDestLink(newEditorState, linkId, newBlock.key);
 	}
+
+	// filter usedLinkIds down to a list of non-aliased links
+	// loop through the non-aliased link ids
+	//    grab the linkStructure content for each
+	//    grab the editorState content
+	//    compare the two. If different, set the editorState content to linkStructure content
+
+	let linkContentState = newEditorState.getCurrentContent();
+
+	for (let entityKey of Object.keys(nonAliasedEntities)) {
+		console.log('updating for entityKey: ', entityKey);
+		let linkData = nonAliasedEntities[entityKey];
+		let structureContent = linkStructure.links[linkData.linkId].content;
+
+		const selectionState = SelectionState.createEmpty();
+		const linkSelectionState = selectionState.merge({
+			anchorKey: linkData.startBlockKey,
+			anchorOffset: linkData.startOffset,
+			focusKey: linkData.endBlockKey,
+			focusOffset: linkData.endOffset,
+		});
+
+		linkContentState = Modifier.replaceText(
+			linkContentState,
+			linkSelectionState,
+			structureContent,
+			null,
+			entityKey
+		);
+	}
+
+	// Push the new content block into the editorState
+	newEditorState = EditorState.push(newEditorState, linkContentState, 'insert-characters');
 
 	// X. Pull the relevant tags from docTags
 	// X. Pull all the link ids to those tags from tagLinks

@@ -18,12 +18,13 @@ const LeftNavContextProvider = (props) => {
 		editFile: '',
 		parentFolders: [],
 	});
-	const [editorWidth, setEditorWidth] = useState({
+	const [editorStyles, setEditorStyles] = useState({
 		leftNav: DEFAULT_WIDTH,
 		leftIsPinned: true,
 		rightNav: DEFAULT_WIDTH,
 		rightIsPinned: true,
 		editorMaxWidth: 60,
+		showTags: false,
 	});
 	const [editorArchives, setEditorArchives] = useState({});
 
@@ -37,9 +38,9 @@ const LeftNavContextProvider = (props) => {
 	// Resets the width of the side nav bars
 	const resetNavWidth = useCallback(
 		(whichNav) => {
-			setEditorWidth({ ...editorWidth, [whichNav]: DEFAULT_WIDTH });
+			setEditorStyles({ ...editorStyles, [whichNav]: DEFAULT_WIDTH });
 		},
-		[editorWidth]
+		[editorStyles]
 	);
 
 	return (
@@ -53,8 +54,8 @@ const LeftNavContextProvider = (props) => {
 				setProject,
 				linkStructure,
 				setLinkStructure,
-				editorWidth,
-				setEditorWidth,
+				editorStyles,
+				setEditorStyles,
 				resetNavWidth,
 				editorArchives,
 				setEditorArchives,

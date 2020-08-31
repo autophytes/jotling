@@ -15,7 +15,7 @@ const RightNav = () => {
 	const [activeTab, setActiveTab] = useState('tags');
 
 	// CONTEXT
-	const { editorWidth, setEditorWidth, resetNavWidth } = useContext(LeftNavContext);
+	const { editorStyles, setEditorStyles, resetNavWidth } = useContext(LeftNavContext);
 
 	// REFS
 	const navRef = useRef(null);
@@ -51,7 +51,7 @@ const RightNav = () => {
 			let newWidth =
 				Math.min(maxWidth, Math.max(minWidth, windowWidth - e.clientX)) + widthOffset;
 
-			setEditorWidth({ ...editorWidth, rightNav: newWidth / rootSize });
+			setEditorStyles({ ...editorStyles, rightNav: newWidth / rootSize });
 		};
 
 		window.addEventListener('mousemove', handleResizeMouseMove);
@@ -61,7 +61,7 @@ const RightNav = () => {
 	return (
 		<nav
 			className={'side-nav right-nav' + (pinNav ? '' : ' hidden')}
-			style={{ width: editorWidth.rightNav + 'rem' }}
+			style={{ width: editorStyles.rightNav + 'rem' }}
 			ref={navRef}>
 			<div
 				className='vertical-rule-side-nav-wrapper'
@@ -78,7 +78,7 @@ const RightNav = () => {
 						className={'nav-button' + (pinNav ? ' active' : '')}
 						onMouseUp={() => {
 							setPinNav(!pinNav);
-							setEditorWidth({ ...editorWidth, rightIsPinned: !pinNav });
+							setEditorStyles({ ...editorStyles, rightIsPinned: !pinNav });
 						}}>
 						<PushpinSVG />
 					</button>

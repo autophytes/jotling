@@ -22,7 +22,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 	const [leftOffset, setLeftOffset] = useState(0);
 	const [rightOffset, setRightOffset] = useState(0);
 
-	const { linkStructure, navData, editorWidth } = useContext(LeftNavContext);
+	const { linkStructure, navData, editorStyles } = useContext(LeftNavContext);
 
 	// POPPER
 	const { styles, attributes } = usePopper(referenceElement, popperElement.current, {
@@ -73,9 +73,9 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 				.replace('px', '')
 		);
 
-		let leftNav = editorWidth.leftIsPinned ? editorWidth.leftNav * rootSize : 0;
-		let rightNav = editorWidth.rightIsPinned ? editorWidth.rightNav * rootSize : 0;
-		let maxEditor = editorWidth.editorMaxWidth * rootSize;
+		let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
+		let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
+		let maxEditor = editorStyles.editorMaxWidth * rootSize;
 		let windowWidth = window.innerWidth;
 		let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
 		let newLeftOffset = leftNav + gutter / 2;
@@ -83,7 +83,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 
 		setLeftOffset(newLeftOffset);
 		setRightOffset(newRightOffset);
-	}, [editorWidth, referenceElement]);
+	}, [editorStyles, referenceElement]);
 
 	// Update the list of tags when the linkStructure changes
 	useEffect(() => {

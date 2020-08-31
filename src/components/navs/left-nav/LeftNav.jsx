@@ -25,8 +25,8 @@ const LeftNav = () => {
 		setDocStructure,
 		navData,
 		setNavData,
-		editorWidth,
-		setEditorWidth,
+		editorStyles,
+		setEditorStyles,
 		resetNavWidth,
 	} = useContext(LeftNavContext);
 	const [pinNav, setPinNav] = useState(true);
@@ -67,7 +67,7 @@ const LeftNav = () => {
 
 			let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX)) + widthOffset;
 
-			setEditorWidth({ ...editorWidth, leftNav: newWidth / rootSize });
+			setEditorStyles({ ...editorStyles, leftNav: newWidth / rootSize });
 		};
 
 		window.addEventListener('mousemove', handleResizeMouseMove);
@@ -160,7 +160,7 @@ const LeftNav = () => {
 	return (
 		<nav
 			className={'side-nav left-nav' + (pinNav ? '' : ' hidden')}
-			style={{ width: editorWidth.leftNav + 'rem' }}
+			style={{ width: editorStyles.leftNav + 'rem' }}
 			ref={navRef}>
 			<div className='side-nav-container'>
 				<div className='left-nav-top-buttons'>
@@ -182,7 +182,7 @@ const LeftNav = () => {
 						className={'nav-button' + (pinNav ? ' active' : '')}
 						onMouseUp={() => {
 							setPinNav(!pinNav);
-							setEditorWidth({ ...editorWidth, leftIsPinned: !pinNav });
+							setEditorStyles({ ...editorStyles, leftIsPinned: !pinNav });
 						}}>
 						<PushpinSVG />
 					</button>

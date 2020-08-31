@@ -14,9 +14,14 @@ const RightNavTags = ({ activeTab }) => {
 	const [showNewTagInput, setShowNewTagInput] = useState(false);
 	const [isOpen, setIsOpen] = useState({});
 
-	const { linkStructure, setLinkStructure, linkStructureRef, navData } = useContext(
-		LeftNavContext
-	);
+	const {
+		linkStructure,
+		setLinkStructure,
+		linkStructureRef,
+		navData,
+		editorStyles,
+		setEditorStyles,
+	} = useContext(LeftNavContext);
 
 	// Keeps the currentDoc in state
 	useEffect(() => {
@@ -81,10 +86,22 @@ const RightNavTags = ({ activeTab }) => {
 		[linkStructureRef, currentDoc]
 	);
 
+	const handleShowHideTags = useCallback(() => {
+		setEditorStyles({
+			...editorStyles,
+			showTags: !editorStyles.showTags,
+		});
+	}, [editorStyles]);
+
 	return (
 		<>
-			<div className='add-tag-button' onClick={() => setShowNewTagInput(true)}>
-				<PlusSVG />
+			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+				<button className='show-hide-tags-button' onClick={handleShowHideTags}>
+					{editorStyles.showTags ? 'Hide' : 'Show'}
+				</button>
+				<div className='add-tag-button' onClick={() => setShowNewTagInput(true)}>
+					<PlusSVG />
+				</div>
 			</div>
 			{showNewTagInput && <NewTag {...{ setShowNewTagInput }} />}
 			{pageTags.map((item) => (
