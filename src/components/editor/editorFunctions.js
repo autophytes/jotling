@@ -53,15 +53,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 	// Grab all used Link IDs
 	let usedLinkIdArray = [];
-	let nonAliasedEntities = {
-		// enitityKey: {
-		//   linkId,
-		//   startBlockKey,
-		//   startOffset,
-		//   endBlockKey,
-		//   endOffset
-		// }
-	};
+	let nonAliasedEntities = {};
 	for (let block of blockArray) {
 		// Looping through all blocks' entities to grab the Link IDs
 		block.findEntityRanges(
@@ -125,32 +117,39 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	let newEditorState = editorState;
 	// Inserting the unsused links at the bottom of the page
 	for (let linkId of unusedLinkIds) {
-		let newContentState = newEditorState.getCurrentContent();
-
 		// If we have a new line character inside our content, we need to break it up into
 		// multiple blocks.
 
-		// Creating a new block with our link content
-		const newBlock = new ContentBlock({
-			key: genKey(),
-			type: 'unstyled',
-			text: linkStructure.links[linkId].content,
-			characterList: List(
-				Repeat(CharacterMetadata.create(), linkStructure.links[linkId].content.length)
-			),
-		});
+		const linkContentArray = linkStructure.links[linkId].content.split('\n');
 
-		const newBlockMap = newContentState.getBlockMap().set(newBlock.key, newBlock);
+		for (let content of linkContentArray) {
+			let newContentState = newEditorState.getCurrentContent();
 
-		// Push the new content block into the editorState
-		newEditorState = EditorState.push(
-			newEditorState,
-			ContentState.createFromBlockArray(newBlockMap.toArray()),
-			'split-block'
-		);
+			// Creating a new block with our link content
+			const newBlock = new ContentBlock({
+				key: genKey(),
+				type: 'unstyled',
+				text: content,
+				characterList: List(Repeat(CharacterMetadata.create(), content.length)),
+			});
 
-		// Apply the LINK-DEST entity to the new block
-		newEditorState = createTagDestLink(newEditorState, linkId, newBlock.key);
+			const newBlockMap = newContentState.getBlockMap().set(newBlock.key, newBlock);
+
+			// Push the new content block into the editorState
+			newEditorState = EditorState.push(
+				newEditorState,
+				ContentState.createFromBlockArray(newBlockMap.toArray()),
+				'split-block'
+			);
+
+			// TO-DO
+			// This createTagDestLink needs to be outside the loop, and it needs to be selecting from the
+			//   start of the first block (and offset) to the ending offset of the final block.
+			//   This is the only place this function is used, so we can customize it.
+
+			// Apply the LINK-DEST entity to the new block
+			newEditorState = createTagDestLink(newEditorState, linkId, newBlock.key);
+		}
 	}
 
 	// filter usedLinkIds down to a list of non-aliased links
@@ -194,6 +193,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	//     https://jsfiddle.net/levsha/2op5cyxm/ - create block and add link
 	//   a. Insert before the last empty block our content from the link and the new entity
 	// 5. NEXT  -  Update any links where there is no alias in the linkStructure and the content doesn't match
+	//       TO-DO - see the notes on line 145. Need to add the entity to the entire selection, not each block individually.
 	// 6. Eventually, any changes we make to content with entities, we need to sync back to linkStructure
 
 	// block.getData() might give us a map with the metadata we need

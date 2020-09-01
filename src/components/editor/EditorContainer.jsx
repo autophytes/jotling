@@ -82,7 +82,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// REFS
 	// const editorContainerRef = useRef(null);
 	const editorRef = useRef(null);
-	const editorStateRef = useRef(null);
 
 	// CONTEXT
 	const {
@@ -92,6 +91,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setProject,
 		setLinkStructure,
 		linkStructureRef,
+		editorStateRef,
 		editorStyles,
 		editorArchives,
 		setEditorArchives,
@@ -421,15 +421,22 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			if (!!fileContents && Object.keys(fileContents).length !== 0) {
 				const newContentState = convertFromRaw(loadedFile.fileContents);
 				const newEditorState = EditorState.createWithContent(newContentState, decorator);
-				// TO-DO: Check for new links to add before setting the editor state
-				setEditorState(newEditorState);
+
+				// Synchronizing links to this page
+				const editorStateWithLinks = updateLinkEntities(
+					newEditorState,
+					linkStructureRef.current,
+					navData.currentDoc
+				);
+
+				setEditorState(editorStateWithLinks);
 			} else {
 				setEditorState(EditorState.createEmpty(decorator));
 			}
 			// editorRef.current.focus();
 		};
 		loadFileFromSave();
-	}, [editorRef, navData, project.tempPath]);
+	}, [editorRef, navData, project.tempPath, updateLinkEntities, linkStructureRef]);
 
 	// Loading the new current document
 	useEffect(() => {

@@ -30,6 +30,7 @@ const LeftNavContextProvider = (props) => {
 
 	// REFS
 	const linkStructureRef = useRef(linkStructure);
+	const editorStateRef = useRef(null);
 
 	useEffect(() => {
 		linkStructureRef.current = linkStructure;
@@ -60,6 +61,7 @@ const LeftNavContextProvider = (props) => {
 				editorArchives,
 				setEditorArchives,
 				linkStructureRef,
+				editorStateRef,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

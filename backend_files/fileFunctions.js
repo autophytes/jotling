@@ -214,6 +214,8 @@ const openProject = async (projectPath) => {
 			projectPath
 		));
 
+		console.log(projectTempFolderDirectory);
+
 		// Send the new directories to React
 		mainWindow.webContents.send('open-project', {
 			tempPath: projectTempFolderDirectory,

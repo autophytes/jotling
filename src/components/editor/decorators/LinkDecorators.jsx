@@ -20,6 +20,13 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 // offsetKey: string,
 // start: number,
 
+// Get the entity key from the block at "start"
+// Add {blockKey, start, end} to an array
+// From our starting block (decorator block), if end is length, check next block
+// If contains entity, add to the END of the array and check the next block. Repeat.
+// From starting block, if start is 0, check the block before to see if it has that key
+// If so, add {blockKey, start, end} to the START of the array as well
+
 // SOURCE LINK
 const LinkSourceDecorator = ({
 	children,
@@ -27,10 +34,13 @@ const LinkSourceDecorator = ({
 	entityKey,
 	contentState,
 	start,
+	end,
 	decoratedText,
 }) => {
 	// CONTEXT
-	const { setLinkStructure, linkStructureRef, editorStyles } = useContext(LeftNavContext);
+	const { setLinkStructure, linkStructureRef, editorStyles, editorStateRef } = useContext(
+		LeftNavContext
+	);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
@@ -54,8 +64,22 @@ const LinkSourceDecorator = ({
 			setLinkStructure,
 			setQueuedTimeout,
 			setPrevDecoratedText,
+			editorStateRef,
+			blockKey,
+			start,
+			end,
 		});
-	}, [decoratedText, setLinkStructure, linkId, queuedTimeout, linkStructureRef]);
+	}, [
+		decoratedText,
+		setLinkStructure,
+		linkId,
+		queuedTimeout,
+		linkStructureRef,
+		editorStateRef,
+		blockKey,
+		start,
+		end,
+	]);
 
 	return (
 		<span className={'link-source-decorator' + (editorStyles.showTags ? ' active' : '')}>
@@ -71,10 +95,13 @@ const LinkDestDecorator = ({
 	entityKey,
 	contentState,
 	start,
+	end,
 	decoratedText,
 }) => {
 	// CONTEXT
-	const { setLinkStructure, linkStructureRef, editorStyles } = useContext(LeftNavContext);
+	const { setLinkStructure, linkStructureRef, editorStyles, editorStateRef } = useContext(
+		LeftNavContext
+	);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
@@ -98,8 +125,22 @@ const LinkDestDecorator = ({
 			setLinkStructure,
 			setQueuedTimeout,
 			setPrevDecoratedText,
+			editorStateRef,
+			blockKey,
+			start,
+			end,
 		});
-	}, [decoratedText, setLinkStructure, linkId, queuedTimeout, linkStructureRef]);
+	}, [
+		decoratedText,
+		setLinkStructure,
+		linkId,
+		queuedTimeout,
+		linkStructureRef,
+		editorStateRef,
+		blockKey,
+		start,
+		end,
+	]);
 
 	return (
 		<span className={'link-dest-decorator' + (editorStyles.showTags ? ' active' : '')}>
@@ -130,6 +171,10 @@ const syncLinkStructureOnDelay = ({
 	setLinkStructure,
 	setQueuedTimeout,
 	setPrevDecoratedText,
+	editorStateRef,
+	blockKey,
+	start,
+	end,
 }) => {
 	if (linkId !== null && prevDecoratedText !== decoratedText) {
 		// Remove any queued updates to linkStructure
@@ -140,7 +185,13 @@ const syncLinkStructureOnDelay = ({
 		// Queue an update to linkStructure with the updated text
 		const newTimeout = setTimeout(() => {
 			let newLinkStructure = { ...linkStructureRef.current };
-			newLinkStructure.links[linkId][linkPropName] = decoratedText;
+			newLinkStructure.links[linkId][linkPropName] = getAllEntityContent(
+				editorStateRef,
+				blockKey,
+				start,
+				end
+			);
+			// getAllEntityContent(editorStateRef, blockKey, start, end);
 			setLinkStructure({ ...newLinkStructure });
 		}, 3000);
 
@@ -149,6 +200,81 @@ const syncLinkStructureOnDelay = ({
 		// Update the text we've queued updates for
 		setPrevDecoratedText(decoratedText);
 	}
+};
+
+const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, currentEnd) => {
+	const contentState = editorStateRef.current.getCurrentContent();
+	const startingBlock = contentState.getBlockForKey(currentBlockKey);
+	const entityKey = startingBlock.getEntityAt(currentStart);
+	// let blockPropArray = [
+	// 	{
+	// 		blockKey: currentBlockKey,
+	// 		start: currentStart,
+	// 		end: currentEnd,
+	// 	},
+	// ];
+	let contentArray = [startingBlock.getText().slice(currentStart, currentEnd)];
+
+	const checkBlocksBeforeAfter = (direction) => {
+		let continueForward = true;
+		let forwardKey = currentBlockKey;
+
+		while (continueForward) {
+			let forwardBlock =
+				direction === 'FORWARD'
+					? contentState.getBlockAfter(forwardKey)
+					: contentState.getBlockBefore(forwardKey);
+
+			if (!forwardBlock) {
+				continueForward = false;
+				continue;
+			}
+			forwardKey = forwardBlock.getKey();
+
+			forwardBlock.findEntityRanges(
+				(value) => {
+					let newEntityKey = value.getEntity();
+					if (newEntityKey === entityKey) {
+						return true;
+					}
+					return false;
+				},
+				(start, end) => {
+					let newBlockObj = { blockKey: forwardBlock.getKey(), start, end };
+					// console.log(newBlockObj);
+					if (direction === 'FORWARD') {
+						// blockPropArray.push(newBlockObj);
+						contentArray.push(forwardBlock.getText().slice(start, end));
+						if (end !== forwardBlock.getLength()) {
+							continueForward = false;
+						}
+					} else {
+						// blockPropArray.unshift(newBlockObj);
+						contentArray.unshift(forwardBlock.getText().slice(start, end));
+						if (start !== 0) {
+							continueForward = false;
+						}
+					}
+				}
+			);
+		}
+	};
+
+	checkBlocksBeforeAfter('FORWARD');
+	checkBlocksBeforeAfter('AFTER');
+
+	// console.log('blockPropArray: ', blockPropArray);
+	console.log('contentArray: ', contentArray);
+
+	console.log(contentArray.join('\n'));
+	return contentArray.join('\n');
+
+	// Get the entity key from the block at "start"
+	// Add {blockKey, start, end} to an array
+	// From our starting block (decorator block), if end is length, check next block
+	// If contains entity, add to the END of the array and check the next block. Repeat.
+	// From starting block, if start is 0, check the block before to see if it has that key
+	// If so, add {blockKey, start, end} to the START of the array as well
 };
 
 export { LinkSourceDecorator, LinkDestDecorator };
