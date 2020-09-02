@@ -445,14 +445,20 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			if (prev.doc !== '' && navData.currentTempPath === prev.tempPath) {
 				saveFile(prev.doc); // PROBLEM: saving after we've loaded the new project
 				// Archive the editorState
-				setEditorArchives({ ...editorArchives, [prev.doc]: editorState });
+				setEditorArchives({
+					...editorArchives,
+					[prev.doc]: {
+						editorState: editorState,
+						scrollY: window.scrollY,
+					},
+				});
 			}
 			setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
 			// setNavData({ ...navData, reloadCurrentDoc: false });
 
 			// Check for existing editorState and load from that if available
 			if (editorArchives.hasOwnProperty(navData.currentDoc)) {
-				const newEditorState = editorArchives[navData.currentDoc];
+				const newEditorState = editorArchives[navData.currentDoc].editorState;
 				// TO-DO: Check for new links to add before setting the editor state
 				const editorStateWithLinks = updateLinkEntities(
 					newEditorState,

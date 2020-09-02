@@ -82,7 +82,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 				let linkId = entity.data.linkId;
 
 				if (!nonAliasedEntities.hasOwnProperty(entityKey)) {
-					nonAliasedEntities[entityKey] = {};
+					nonAliasedEntities[entityKey] = { blockList: [] };
 				}
 				if (!nonAliasedEntities[entityKey].hasOwnProperty('startBlockKey')) {
 					nonAliasedEntities[entityKey].startBlockKey = blockKey;
@@ -92,6 +92,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 				nonAliasedEntities[entityKey] = {
 					...nonAliasedEntities[entityKey],
 					linkId,
+					blockList: [...nonAliasedEntities[entityKey].blockList, blockKey],
 					endBlockKey: blockKey,
 					endOffset: end,
 				};
@@ -121,19 +122,22 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		// multiple blocks.
 
 		const linkContentArray = linkStructure.links[linkId].content.split('\n');
+		const blockKeys = [];
 
 		for (let content of linkContentArray) {
 			let newContentState = newEditorState.getCurrentContent();
+			const newBlockKey = genKey();
+			blockKeys.push(newBlockKey);
 
 			// Creating a new block with our link content
 			const newBlock = new ContentBlock({
-				key: genKey(),
+				key: newBlockKey,
 				type: 'unstyled',
 				text: content,
 				characterList: List(Repeat(CharacterMetadata.create(), content.length)),
 			});
 
-			const newBlockMap = newContentState.getBlockMap().set(newBlock.key, newBlock);
+			const newBlockMap = newContentState.getBlockMap().set(newBlockKey, newBlock);
 
 			// Push the new content block into the editorState
 			newEditorState = EditorState.push(
@@ -146,10 +150,10 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			// This createTagDestLink needs to be outside the loop, and it needs to be selecting from the
 			//   start of the first block (and offset) to the ending offset of the final block.
 			//   This is the only place this function is used, so we can customize it.
-
-			// Apply the LINK-DEST entity to the new block
-			newEditorState = createTagDestLink(newEditorState, linkId, newBlock.key);
 		}
+
+		// Apply the LINK-DEST entity to the new block
+		newEditorState = createTagDestLink(newEditorState, linkId, blockKeys);
 	}
 
 	// filter usedLinkIds down to a list of non-aliased links
@@ -180,6 +184,33 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			null,
 			entityKey
 		);
+
+		const blockList = nonAliasedEntities[entityKey].blockList;
+		console.log('blockList: ', blockList);
+		// for (let blockKey of blockList) {
+		let blockKey = blockList[0];
+		console.log(linkContentState.getBlocksAsArray());
+		let block = linkContentState.getBlockForKey(blockKey);
+		let blockText = block.getText();
+		let newLineIndex = blockText.lastIndexOf('\n');
+
+		while (newLineIndex !== -1) {
+			const newLineSelectionState = selectionState.merge({
+				anchorKey: blockKey,
+				anchorOffset: newLineIndex,
+				focusKey: blockKey,
+				focusOffset: newLineIndex + 1,
+			});
+
+			linkContentState = Modifier.splitBlock(linkContentState, newLineSelectionState);
+			console.log(linkContentState.getBlocksAsArray());
+
+			block = linkContentState.getBlockForKey(blockKey);
+			blockText = block.getText();
+			console.log('blockText: ', blockText);
+			newLineIndex = blockText.lastIndexOf('\n');
+		}
+		// }
 	}
 
 	// Push the new content block into the editorState
@@ -203,10 +234,10 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 };
 
 // Creating a new destination tag link
-const createTagDestLink = (editorState, linkId, blockKey) => {
+const createTagDestLink = (editorState, linkId, blockKeys) => {
 	const selectionState = editorState.getSelection();
 	const contentState = editorState.getCurrentContent();
-	const block = contentState.getBlockForKey(blockKey);
+	const endingBlock = contentState.getBlockForKey(blockKeys[blockKeys.length - 1]);
 
 	// Store these to restore the selection at the end
 	const anchorKey = selectionState.getAnchorKey();
@@ -216,10 +247,10 @@ const createTagDestLink = (editorState, linkId, blockKey) => {
 
 	// Selecting the text to apply the entity(link) to
 	const selectionStateForEntity = selectionState.merge({
-		anchorKey: blockKey, // Starting position
+		anchorKey: blockKeys[0], // Starting position
 		anchorOffset: 0, // How much to adjust from the starting position
-		focusKey: blockKey, // Ending position
-		focusOffset: block.getText().length, // How much to adjust from the ending position.
+		focusKey: blockKeys[blockKeys.length - 1], // Ending position
+		focusOffset: endingBlock.getText().length, // How much to adjust from the ending position.
 	});
 
 	// Apply the linkId as an entity to the selection

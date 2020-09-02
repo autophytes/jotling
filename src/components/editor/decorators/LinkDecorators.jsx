@@ -264,9 +264,9 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 	checkBlocksBeforeAfter('AFTER');
 
 	// console.log('blockPropArray: ', blockPropArray);
-	console.log('contentArray: ', contentArray);
+	// console.log('contentArray: ', contentArray);
 
-	console.log(contentArray.join('\n'));
+	// console.log(contentArray.join('\n'));
 	return contentArray.join('\n');
 
 	// Get the entity key from the block at "start"
