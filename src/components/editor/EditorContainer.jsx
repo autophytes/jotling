@@ -1,4 +1,11 @@
-import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
+import React, {
+	useState,
+	useRef,
+	useCallback,
+	useEffect,
+	useContext,
+	useLayoutEffect,
+} from 'react';
 import { ipcRenderer } from 'electron';
 import Immutable from 'immutable';
 
@@ -77,7 +84,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
 	const [currentAlignment, setCurrentAlignment] = useState('');
 
+	// QUEUES
 	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
+	const [shouldResetScroll, setShouldResetScroll] = useState(false);
 
 	// REFS
 	// const editorContainerRef = useRef(null);
@@ -302,6 +311,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				source: navData.currentDoc, // Source document
 				content: selectedText, // Selected text
 				alias: null,
+				sourceEntityKey: entityKey,
 			};
 
 			// Updating the linkStructure with the keyword the link is using
@@ -430,8 +440,10 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				);
 
 				setEditorState(editorStateWithLinks);
+				setShouldResetScroll(true);
 			} else {
 				setEditorState(EditorState.createEmpty(decorator));
+				setShouldResetScroll(true);
 			}
 			// editorRef.current.focus();
 		};
@@ -467,6 +479,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				);
 
 				setEditorState(editorStateWithLinks);
+				setShouldResetScroll(true);
 			} else {
 				loadFile();
 			}
@@ -487,6 +500,19 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			setCurrentAlignment(newCurrentAlignment);
 		}
 	}, [editorState, currentStyles, currentAlignment]);
+
+	// Scroll to the previous position or to the top on document load
+	useLayoutEffect(() => {
+		if (shouldResetScroll) {
+			if (editorArchives[navData.currentDoc] && editorArchives[navData.currentDoc].scrollY) {
+				window.scrollTo(0, editorArchives[navData.currentDoc].scrollY);
+				setShouldResetScroll(false);
+			} else {
+				window.scrollTo(0, 0);
+				setShouldResetScroll(false);
+			}
+		}
+	}, [navData, editorArchives, shouldResetScroll]);
 
 	return (
 		<main

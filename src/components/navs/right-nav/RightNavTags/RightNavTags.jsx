@@ -12,7 +12,9 @@ const RightNavTags = ({ activeTab }) => {
 	const [pageTags, setPageTags] = useState([]);
 	const [pageLinkedTags, setPageLinkedTags] = useState([]);
 	const [showNewTagInput, setShowNewTagInput] = useState(false);
-	const [isOpen, setIsOpen] = useState({});
+	const [isOpenSource, setIsOpenSource] = useState({});
+	const [isOpenDest, setIsOpenDest] = useState({});
+	const [usedSourceTags, setUsedSourceTags] = useState({});
 
 	const {
 		linkStructure,
@@ -50,6 +52,30 @@ const RightNavTags = ({ activeTab }) => {
 		}
 	}, [linkStructure.docLinks, currentDoc]);
 
+	// Maintain a list of all links to each tag on this page
+	useEffect(() => {
+		if (pageLinkedTags.length) {
+			let newUsedSourceTags = {};
+			for (const tag of pageLinkedTags) {
+				let usedTagLinks = [];
+				let allLinksToTag = linkStructure.tagLinks[tag];
+				console.log('allLinksToTag: ', allLinksToTag);
+
+				for (const linkId of allLinksToTag) {
+					console.log('linkId: ', linkId);
+					if (linkStructure.links[linkId].source === navData.currentDoc) {
+						console.log('pushing a new link!');
+						usedTagLinks.push(linkId);
+					}
+				}
+
+				newUsedSourceTags[tag] = usedTagLinks;
+			}
+
+			setUsedSourceTags(newUsedSourceTags);
+		}
+	}, [linkStructure, pageLinkedTags, navData]);
+
 	const deleteTag = useCallback(
 		(docName, tagName) => {
 			let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
@@ -86,34 +112,68 @@ const RightNavTags = ({ activeTab }) => {
 		[linkStructureRef, currentDoc]
 	);
 
+	// Shows or hides ALL tags
 	const handleShowHideTags = useCallback(() => {
 		setEditorStyles({
 			...editorStyles,
-			showTags: !editorStyles.showTags,
+			showAllTags: !editorStyles.showAllTags,
 		});
 	}, [editorStyles]);
+
+	// Shows or hides individual tags
+	const handleShowHideIndTags = useCallback(
+		(e, tagName) => {
+			e.stopPropagation();
+			let newShowIndTags = [...editorStyles.showIndTags];
+			if (newShowIndTags.includes(tagName)) {
+				// If the tag was already included, remove it
+				let itemIndex = newShowIndTags.indexOf(tagName);
+				newShowIndTags.splice(itemIndex, 1);
+			} else {
+				// If it wasn't included, add it
+				newShowIndTags.push(tagName);
+			}
+
+			setEditorStyles({
+				...editorStyles,
+				showIndTags: newShowIndTags,
+			});
+		},
+		[editorStyles]
+	);
+
+	// TO click to jump to a link
+	// We need to queue a scrollTo event that the decorators monitor and if it is their linkId,
+	// they calculate the top offset of their block and scroll the page to that.
+	// This will have a multi-block issue. I think even if the first one removes the item from the queue,
+	// I suspect the others will still fire.
+	// ALTERNATIVE: simply find the block in the content state and calculate the position that way
+
+	// Also need render the content from the linkStructure for each of the tag links on the source page
 
 	return (
 		<>
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 				<button className='show-hide-tags-button' onClick={handleShowHideTags}>
-					{editorStyles.showTags ? 'Hide' : 'Show'}
+					{editorStyles.showAllTags ? 'Hide' : 'Show'}
 				</button>
 				<div className='add-tag-button' onClick={() => setShowNewTagInput(true)}>
 					<PlusSVG />
 				</div>
 			</div>
 			{showNewTagInput && <NewTag {...{ setShowNewTagInput }} />}
+
+			{/* DESTINATION LINKS */}
 			{pageTags.map((item) => (
 				<Fragment key={item}>
 					<p
-						className={'tag-item' + (isOpen[item] ? ' open' : '')}
+						className={'tag-item' + (isOpenSource[item] ? ' open' : '')}
 						key={item}
-						onClick={() => setIsOpen({ ...isOpen, [item]: !isOpen[item] })}>
+						onClick={() => setIsOpenSource({ ...isOpenSource, [item]: !isOpenSource[item] })}>
 						<CaratDownSVG />
 						{item}
 					</p>
-					<Collapse isOpen={!!isOpen[item]}>
+					<Collapse isOpen={!!isOpenSource[item]}>
 						<div className='tag-item-options'>
 							<span onClick={(e) => deleteTag(currentDoc, item)}>Delete</span>
 							<span>Auto-tag</span>
@@ -122,9 +182,35 @@ const RightNavTags = ({ activeTab }) => {
 				</Fragment>
 			))}
 
-			{pageLinkedTags.map((item) => (
-				<p key={item}>{item}</p>
-			))}
+			{/* SOURCE LINKS */}
+			<div style={{ marginTop: '1rem' }}>
+				{pageLinkedTags.map((item) => (
+					<Fragment key={item}>
+						<div
+							className={'tag-item source' + (isOpenDest[item] ? ' open' : '')}
+							key={item}
+							onClick={() => setIsOpenDest({ ...isOpenDest, [item]: !isOpenDest[item] })}>
+							<CaratDownSVG />
+							<p style={{ margin: '0' }}>
+								{item}
+								{usedSourceTags[item] ? ' - ' + usedSourceTags[item].length : ''}
+							</p>
+							<button
+								className='show-hide-tags-button'
+								style={{ marginLeft: 'auto' }}
+								onClick={(e) => handleShowHideIndTags(e, item)}>
+								{editorStyles.showIndTags.includes(item) ? 'Hide' : 'Show'}
+							</button>
+						</div>
+						<Collapse isOpen={!!isOpenDest[item]}>
+							<div className='tag-item-options'>
+								<span onClick={(e) => deleteTag(currentDoc, item)}>Delete</span>
+								<span>Auto-tag</span>
+							</div>
+						</Collapse>
+					</Fragment>
+				))}
+			</div>
 		</>
 	);
 };

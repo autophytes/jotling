@@ -24,7 +24,8 @@ const LeftNavContextProvider = (props) => {
 		rightNav: DEFAULT_WIDTH,
 		rightIsPinned: true,
 		editorMaxWidth: 60,
-		showTags: false,
+		showAllTags: false,
+		showIndTags: [],
 	});
 	const [editorArchives, setEditorArchives] = useState({});
 

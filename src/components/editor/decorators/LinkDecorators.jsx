@@ -38,19 +38,31 @@ const LinkSourceDecorator = ({
 	decoratedText,
 }) => {
 	// CONTEXT
-	const { setLinkStructure, linkStructureRef, editorStyles, editorStateRef } = useContext(
-		LeftNavContext
-	);
+	const {
+		setLinkStructure,
+		linkStructureRef,
+		editorStyles,
+		editorStateRef,
+		navData,
+	} = useContext(LeftNavContext);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
 	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
 	const [queuedTimeout, setQueuedTimeout] = useState(null);
+	const [tagName, setTagName] = useState('');
 
 	// On load, grab the entity linkId
 	useEffect(() => {
 		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
 	}, []);
+
+	useEffect(() => {
+		if (linkId || linkId === 0) {
+			let newTagName = linkStructureRef.current.docLinks[navData.currentDoc][linkId];
+			setTagName(newTagName);
+		}
+	}, [linkStructureRef, navData.currentDoc, linkId]);
 
 	// Update our linkStructure with the changes in the link text
 	useEffect(() => {
@@ -82,7 +94,13 @@ const LinkSourceDecorator = ({
 	]);
 
 	return (
-		<span className={'link-source-decorator' + (editorStyles.showTags ? ' active' : '')}>
+		<span
+			className={
+				'link-source-decorator' +
+				(editorStyles.showAllTags || editorStyles.showIndTags.includes(tagName)
+					? ' active'
+					: '')
+			}>
 			{children}
 		</span>
 	);
@@ -99,9 +117,13 @@ const LinkDestDecorator = ({
 	decoratedText,
 }) => {
 	// CONTEXT
-	const { setLinkStructure, linkStructureRef, editorStyles, editorStateRef } = useContext(
-		LeftNavContext
-	);
+	const {
+		setLinkStructure,
+		linkStructureRef,
+		editorStyles,
+		editorStateRef,
+		navData,
+	} = useContext(LeftNavContext);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
@@ -143,7 +165,7 @@ const LinkDestDecorator = ({
 	]);
 
 	return (
-		<span className={'link-dest-decorator' + (editorStyles.showTags ? ' active' : '')}>
+		<span className={'link-dest-decorator' + (editorStyles.showAllTags ? ' active' : '')}>
 			{children}
 		</span>
 	);
@@ -193,7 +215,7 @@ const syncLinkStructureOnDelay = ({
 			);
 			// getAllEntityContent(editorStateRef, blockKey, start, end);
 			setLinkStructure({ ...newLinkStructure });
-		}, 3000);
+		}, 500);
 
 		// Save the timeout (for potential clearing on changes)
 		setQueuedTimeout(newTimeout);
@@ -202,17 +224,12 @@ const syncLinkStructureOnDelay = ({
 	}
 };
 
+// Gets all content for the entity, including blocks before and after the decorated block
 const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, currentEnd) => {
 	const contentState = editorStateRef.current.getCurrentContent();
 	const startingBlock = contentState.getBlockForKey(currentBlockKey);
 	const entityKey = startingBlock.getEntityAt(currentStart);
-	// let blockPropArray = [
-	// 	{
-	// 		blockKey: currentBlockKey,
-	// 		start: currentStart,
-	// 		end: currentEnd,
-	// 	},
-	// ];
+
 	let contentArray = [startingBlock.getText().slice(currentStart, currentEnd)];
 
 	const checkBlocksBeforeAfter = (direction) => {
@@ -240,16 +257,12 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 					return false;
 				},
 				(start, end) => {
-					let newBlockObj = { blockKey: forwardBlock.getKey(), start, end };
-					// console.log(newBlockObj);
 					if (direction === 'FORWARD') {
-						// blockPropArray.push(newBlockObj);
 						contentArray.push(forwardBlock.getText().slice(start, end));
 						if (end !== forwardBlock.getLength()) {
 							continueForward = false;
 						}
 					} else {
-						// blockPropArray.unshift(newBlockObj);
 						contentArray.unshift(forwardBlock.getText().slice(start, end));
 						if (start !== 0) {
 							continueForward = false;
