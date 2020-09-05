@@ -11,6 +11,7 @@ import {
 } from 'draft-js';
 
 import { LinkSourceDecorator, LinkDestDecorator } from './decorators/LinkDecorators';
+import { HighlightTagDecorator } from './decorators/HighlightTagDecorator';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
@@ -24,7 +25,67 @@ function getEntityStrategy(type) {
 	};
 }
 
-export const decorator = new CompositeDecorator([
+function hashtagStrategy(contentBlock, callback, contentState) {
+	findWithRegex(HASHTAG_REGEX, contentBlock, callback);
+}
+
+function findWithRegex(regex, contentBlock, callback) {
+	const text = contentBlock.getText();
+	let matchArr, start;
+	while ((matchArr = regex.exec(text)) !== null) {
+		start = matchArr.index;
+		callback(start, start + matchArr[0].length);
+	}
+}
+
+const findTagsToHighlight = (linkStructure) => {
+	// Compiling a list of all tags
+	// TO-DO: remove any tags linked to the page that we're on
+	let tagList = [];
+	for (let tagArray of Object.values(linkStructure.docTags)) {
+		tagList = [...tagList, ...tagArray];
+	}
+	console.log('tagList: ', tagList);
+
+	console.log('generating our strategy');
+
+	// Build our regex with our tagList.
+	var regexMetachars = /[(){[*+?.\\^$|]/g;
+	// Escape regex metacharacters in the tags
+	for (var i = 0; i < tagList.length; i++) {
+		tagList[i] = tagList[i].replace(regexMetachars, '\\$&');
+	}
+	var regex = new RegExp('\\b(?:' + tagList.join('|') + ')\\b', 'gi');
+
+	return function (contentBlock, callback, contentState) {
+		const text = contentBlock.getText();
+		let matchArr, start;
+		while ((matchArr = regex.exec(text)) !== null) {
+			start = matchArr.index;
+			callback(start, start + matchArr[0].length);
+		}
+	};
+};
+
+export const generateDecoratorWithTagHighlights = (linkStructure) => {
+	console.log('inside our decorator generating function');
+	return new CompositeDecorator([
+		{
+			strategy: getEntityStrategy('LINK-SOURCE'),
+			component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+		},
+		{
+			strategy: getEntityStrategy('LINK-DEST'),
+			component: LinkDestDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+		},
+		{
+			strategy: findTagsToHighlight(linkStructure),
+			component: HighlightTagDecorator,
+		},
+	]);
+};
+
+export const defaultDecorator = new CompositeDecorator([
 	{
 		strategy: getEntityStrategy('LINK-SOURCE'),
 		component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too

@@ -54,6 +54,7 @@ body {
 	color: #212529;
 	/* font-weight: 300; */
 	margin: 0;
+	overflow-y: auto;
 }
 
 .editor-area {
@@ -386,7 +387,7 @@ li .public-DraftStyleDefault-block {
 	position: relative;
 	padding: 0.5rem 0;
 	flex-grow: 1;
-	overflow-y: scroll;
+	overflow-y: auto;
 }
 
 .left-nav-content {
@@ -699,6 +700,16 @@ input[type='number']::-webkit-outer-spin-button {
 	cursor: pointer;
 }
 
+.tag-item-source-content {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	cursor: pointer;
+	margin: 0;
+	padding-bottom: 0.25rem;
+}
+
 .link-popper {
 	/* Lets use a steel gray rather than the dark color */
 	/* Use similar color distance (#31_ to #26_ */
@@ -851,3 +862,34 @@ input[type='number']::-webkit-outer-spin-button {
 .link-popper-tag-button.last {
 	margin-right: 0.5rem;
 }
+
+/* ::-webkit-scrollbar-track {
+	box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+	border-radius: 10px;
+	background-color: #f5f5f5;
+}
+
+::-webkit-scrollbar {
+	width: 12px;
+	background-color: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+	border-radius: 10px;
+	-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+	background-color: #555;
+} */
+
+/* ::-webkit-scrollbar {
+	-webkit-appearance: none;
+	width: 10px;
+}
+::-webkit-scrollbar-thumb {
+	border-radius: 4px;
+	background-color: rgba(0, 0, 0, 0.5);
+	box-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+} */
+
+/* .highlight-keywords .keywords {
+  font-weight: bold;
+} */

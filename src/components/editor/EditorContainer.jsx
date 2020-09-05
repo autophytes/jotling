@@ -34,7 +34,11 @@ import {
 	enterToUnindentList,
 	doubleDashToLongDash,
 } from './KeyBindFunctions';
-import { decorator, updateLinkEntities } from './editorFunctions';
+import {
+	defaultDecorator,
+	generateDecoratorWithTagHighlights,
+	updateLinkEntities,
+} from './editorFunctions';
 import { getTextSelection } from '../../utils/draftUtils';
 
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
@@ -73,6 +77,7 @@ const blockStyleFn = (block) => {
 // COMPONENT
 const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// STATE
+	const [decorator, setDecorator] = useState(defaultDecorator);
 	const [editorState, setEditorState] = useState(EditorState.createEmpty(decorator));
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
@@ -83,6 +88,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const [style, setStyle] = useState({});
 	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
 	const [currentAlignment, setCurrentAlignment] = useState('');
+	const [showAllTags, setShowAllTags] = useState(false);
 
 	// QUEUES
 	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
@@ -91,6 +97,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// REFS
 	// const editorContainerRef = useRef(null);
 	const editorRef = useRef(null);
+	// const updateEditorTimeoutRef = useRef(null);
 
 	// CONTEXT
 	const {
@@ -131,6 +138,49 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	useEffect(() => {
 		editorStateRef.current = editorState;
 	}, [editorState]);
+
+	useEffect(() => {
+		if (editorStyles.showAllTags !== showAllTags) {
+			setShowAllTags(editorStyles.showAllTags);
+		}
+	}, [editorStyles, showAllTags]);
+
+	useEffect(() => {
+		console.log('updating decorator');
+		const updateDecorator = async () => {
+			let newDecorator;
+			if (showAllTags) {
+				newDecorator = generateDecoratorWithTagHighlights(linkStructureRef.current);
+			} else {
+				newDecorator = defaultDecorator;
+			}
+
+			let newEditorState = EditorState.createWithContent(
+				editorStateRef.current.getCurrentContent(),
+				newDecorator
+			);
+
+			setEditorState(newEditorState);
+			setDecorator(newDecorator);
+		};
+		updateDecorator();
+	}, [showAllTags]);
+
+	// // After period of no editorState changes, run group of functions
+	// useEffect(() => {
+	// 	// Remove any queued updates to linkStructure
+	// 	if (updateEditorTimeoutRef.current) {
+	// 		clearTimeout(updateEditorTimeoutRef.current);
+	// 	}
+
+	// 	// Queue an update to linkStructure with the updated text
+	// 	const newTimeout = setTimeout(() => {
+	// 		console.log('WE HAVE UPDATED OUR FUNCTIONS');
+	// 	}, 2000);
+
+	// 	// Save the timeout (for potential clearing on changes)
+	// 	updateEditorTimeoutRef.current = newTimeout;
+	// }, [editorState]);
 
 	// Handle shortcut keys. Using their default function right now.
 	const customKeyBindingFn = (e) => {
@@ -448,7 +498,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			// editorRef.current.focus();
 		};
 		loadFileFromSave();
-	}, [editorRef, navData, project.tempPath, updateLinkEntities, linkStructureRef]);
+	}, [editorRef, navData, project.tempPath, updateLinkEntities, linkStructureRef, decorator]);
 
 	// Loading the new current document
 	useEffect(() => {

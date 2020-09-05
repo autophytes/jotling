@@ -23,6 +23,8 @@ const RightNavTags = ({ activeTab }) => {
 		navData,
 		editorStyles,
 		setEditorStyles,
+		setScrollToLinkId,
+		scrollToLinkIdRef,
 	} = useContext(LeftNavContext);
 
 	// Keeps the currentDoc in state
@@ -204,8 +206,18 @@ const RightNavTags = ({ activeTab }) => {
 						</div>
 						<Collapse isOpen={!!isOpenDest[item]}>
 							<div className='tag-item-options'>
-								<span onClick={(e) => deleteTag(currentDoc, item)}>Delete</span>
-								<span>Auto-tag</span>
+								{usedSourceTags[item] &&
+									usedSourceTags[item].map((linkId) => (
+										<p
+											className='tag-item-source-content'
+											key={linkId}
+											onClick={() => {
+												setScrollToLinkId(linkId);
+												scrollToLinkIdRef.current = linkId;
+											}}>
+											{linkStructure.links[linkId].content}
+										</p>
+									))}
 							</div>
 						</Collapse>
 					</Fragment>

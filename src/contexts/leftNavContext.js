@@ -28,10 +28,12 @@ const LeftNavContextProvider = (props) => {
 		showIndTags: [],
 	});
 	const [editorArchives, setEditorArchives] = useState({});
+	const [scrollToLinkId, setScrollToLinkId] = useState(null);
 
 	// REFS
 	const linkStructureRef = useRef(linkStructure);
 	const editorStateRef = useRef(null);
+	const scrollToLinkIdRef = useRef(null);
 
 	useEffect(() => {
 		linkStructureRef.current = linkStructure;
@@ -63,6 +65,9 @@ const LeftNavContextProvider = (props) => {
 				setEditorArchives,
 				linkStructureRef,
 				editorStateRef,
+				scrollToLinkId,
+				setScrollToLinkId,
+				scrollToLinkIdRef,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

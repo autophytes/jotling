@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useContext, useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { usePopper } from 'react-popper';
 
 import { LinkSelectionRangeRef } from './LinkSelectionRangeRef';
@@ -10,18 +10,20 @@ import EllipsisSVG from '../../../assets/svg/EllipsisSVG';
 let referenceElement = new LinkSelectionRangeRef();
 
 const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
-	// STATE
+	// REFS
 	const popperElement = useRef(null);
 	const arrowElement = useRef(null);
 	const popperInputRef = useRef(null);
-	// const [popperElement, setPopperElement] = useState(null);
-	// const [arrowElement, setArrowElement] = useState(null);
-	// const [referenceElement] = useState(new LinkSelectionRangeRef());
+
+	// STATE
 	const [allTags, setAllTags] = useState([]);
 	const [tagFilter, setTagFilter] = useState('');
 	const [leftOffset, setLeftOffset] = useState(0);
 	const [rightOffset, setRightOffset] = useState(0);
+	const [minWidth, setMinWidth] = useState(0);
+	console.log('minWidth: ', minWidth);
 
+	// CONTEXT
 	const { linkStructure, navData, editorStyles } = useContext(LeftNavContext);
 
 	// POPPER
@@ -128,6 +130,14 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 		};
 	});
 
+	useLayoutEffect(() => {
+		if (minWidth === 0 && allTags.length) {
+			console.log('popper.current: ', popperElement.current);
+			console.log('clientWidth: ', popperElement.current.clientWidth);
+			setMinWidth(popperElement.current.clientWidth / 2 + 15);
+		}
+	}, [minWidth, allTags]);
+
 	// TO-DO
 	// We need to check if the selection (in the editorNav) is contained by the .editor (or container?)
 	// Make sure text is selected for link button to work
@@ -151,7 +161,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 			style={styles.popper}
 			{...attributes.popper}
 			id='link-popper-element'>
-			<div className='link-popper'>
+			<div className='link-popper' style={{ minWidth: minWidth }}>
 				<div
 					style={{
 						display: 'flex',

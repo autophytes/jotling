@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
@@ -44,6 +44,9 @@ const LinkSourceDecorator = ({
 		editorStyles,
 		editorStateRef,
 		navData,
+		scrollToLinkId,
+		setScrollToLinkId,
+		scrollToLinkIdRef,
 	} = useContext(LeftNavContext);
 
 	// STATE
@@ -51,18 +54,47 @@ const LinkSourceDecorator = ({
 	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
 	const [queuedTimeout, setQueuedTimeout] = useState(null);
 	const [tagName, setTagName] = useState('');
+	const [showActive, setShowActive] = useState(false);
+
+	// REF
+	const decoratorRef = useRef(null);
 
 	// On load, grab the entity linkId
 	useEffect(() => {
 		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
 	}, []);
 
+	// Scroll to the clicked-on link from the right nav
+	useEffect(() => {
+		if (linkId !== null && scrollToLinkId === linkId) {
+			if (scrollToLinkIdRef.current === linkId) {
+				scrollToLinkIdRef.current = null;
+				setScrollToLinkId(null);
+				let decoratorRect = decoratorRef.current.getBoundingClientRect();
+				window.scrollTo({
+					left: 0,
+					top: Math.floor(decoratorRect.top + window.pageYOffset - 200, 0),
+					behavior: 'smooth',
+				});
+			}
+			setShowActive(true);
+		}
+	}, [scrollToLinkId, linkId]);
+
+	// Turn off the hover state flicker for the decorator
+	useEffect(() => {
+		if (showActive) {
+			setShowActive(false);
+		}
+	}, [showActive]);
+
 	useEffect(() => {
 		if (linkId || linkId === 0) {
 			let newTagName = linkStructureRef.current.docLinks[navData.currentDoc][linkId];
 			setTagName(newTagName);
 		}
-	}, [linkStructureRef, navData.currentDoc, linkId]);
+		// Deliberately leaving navData.currentDoc out of the variables we're monitoring
+	}, [linkStructureRef, linkId]);
 
 	// Update our linkStructure with the changes in the link text
 	useEffect(() => {
@@ -95,9 +127,10 @@ const LinkSourceDecorator = ({
 
 	return (
 		<span
+			ref={decoratorRef}
 			className={
 				'link-source-decorator' +
-				(editorStyles.showAllTags || editorStyles.showIndTags.includes(tagName)
+				(editorStyles.showAllTags || editorStyles.showIndTags.includes(tagName) || showActive
 					? ' active'
 					: '')
 			}>
