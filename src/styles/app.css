@@ -73,6 +73,7 @@ body {
 }
 
 .editor {
+	position: relative;
 	height: 100%;
 	width: 100%;
 	max-width: 60rem;
@@ -711,13 +712,8 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .link-popper {
-	/* Lets use a steel gray rather than the dark color */
-	/* Use similar color distance (#31_ to #26_ */
-	/* background-image: linear-gradient(to bottom, rgba(49, 49, 47, 0.99), #262625); */
-	/* background-image: linear-gradient(to bottom, #bbbbbb, #b9b9b9); */
 	background-image: linear-gradient(to bottom, #555555, #4e4e4e);
 	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-	/* box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.12); */
 	background-repeat: repeat-x;
 	border-radius: 5px;
 	padding: 0;
@@ -861,6 +857,63 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .link-popper-tag-button.last {
 	margin-right: 0.5rem;
+}
+
+.editor-find-container {
+	position: absolute;
+	right: 0.5rem;
+	top: var(--top-nav-height);
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+
+	border: 1px solid #555;
+	border-radius: 5px;
+	padding: 3px 6px;
+	color: white;
+	background-image: linear-gradient(to bottom, #555555, #4e4e4e);
+	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.editor-find-container input {
+	border-radius: 5px;
+	width: 7rem;
+	margin: 0.1rem 0.5rem;
+	padding-left: 6px;
+	padding-top: 2px;
+	font-size: 1rem;
+	text-align: left;
+	border: none;
+}
+
+.editor-find-container input:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(0, 149, 255, 0.7);
+}
+
+.editor-find-container .find-containter-counter {
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 0.9rem;
+	padding-top: 3px;
+	width: 5rem;
+	align-self: center;
+}
+
+.editor-find-container .find-container-svg {
+	display: flex;
+	align-items: center;
+	padding: 0 3px;
+	cursor: pointer;
+}
+.editor-find-container .find-container-svg:hover {
+	background-color: #888;
+}
+
+.editor-find-container .find-container-svg svg {
+	width: 0.75rem;
+	height: 0.75rem;
+	fill: white;
 }
 
 /* ::-webkit-scrollbar-track {

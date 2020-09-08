@@ -39,7 +39,10 @@ import {
 	generateDecoratorWithTagHighlights,
 	updateLinkEntities,
 } from './editorFunctions';
+import { useDecorator } from './editorCustomHooks';
 import { getTextSelection } from '../../utils/draftUtils';
+
+import EditorFindReplace from './EditorFindReplace';
 
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
 
@@ -76,29 +79,6 @@ const blockStyleFn = (block) => {
 //
 // COMPONENT
 const EditorContainer = ({ saveProject, setSaveProject }) => {
-	// STATE
-	const [decorator, setDecorator] = useState(defaultDecorator);
-	const [editorState, setEditorState] = useState(EditorState.createEmpty(decorator));
-	const [styleToRemove, setStyleToRemove] = useState('');
-	const [spellCheck, setSpellCheck] = useState(false);
-
-	const [currentFont, setCurrentFont] = useState('PT Sans');
-	const [fontSize, setFontSize] = useState(20);
-	const [lineHeight, setLineHeight] = useState(1.15);
-	const [style, setStyle] = useState({});
-	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
-	const [currentAlignment, setCurrentAlignment] = useState('');
-	const [showAllTags, setShowAllTags] = useState(false);
-
-	// QUEUES
-	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
-	const [shouldResetScroll, setShouldResetScroll] = useState(false);
-
-	// REFS
-	// const editorContainerRef = useRef(null);
-	const editorRef = useRef(null);
-	// const updateEditorTimeoutRef = useRef(null);
-
 	// CONTEXT
 	const {
 		navData,
@@ -112,6 +92,37 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		editorArchives,
 		setEditorArchives,
 	} = useContext(LeftNavContext);
+
+	// EDITOR STATE
+	const [editorState, setEditorState] = useState(EditorState.createEmpty());
+	// Updates the editorStateRef with the updated editorState
+	useEffect(() => {
+		console.log('updating the editorStateRef with the new editorState');
+		editorStateRef.current = editorState;
+	}, [editorState]);
+
+	// STATE
+	const [styleToRemove, setStyleToRemove] = useState('');
+	const [spellCheck, setSpellCheck] = useState(false);
+	const [currentFont, setCurrentFont] = useState('PT Sans');
+	const [fontSize, setFontSize] = useState(20);
+	const [lineHeight, setLineHeight] = useState(1.15);
+	const [style, setStyle] = useState({});
+	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
+	const [currentAlignment, setCurrentAlignment] = useState('');
+	const [showAllTags, setShowAllTags] = useState(false);
+	// const [currentDoc, setCurrentDoc] = useState('');
+
+	// QUEUES
+	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
+	const [shouldResetScroll, setShouldResetScroll] = useState(false);
+
+	// CUSTOM HOOKS
+	const decorator = useDecorator(prev.doc);
+	// const decorator = useDecorator();
+
+	// REFS
+	const editorRef = useRef(null);
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback(
@@ -134,37 +145,16 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		editorRef.current.focus();
 	}, [editorRef]);
 
-	// Updates the editorStateRef with the updated editorState
+	// Monitor the decorator for changes to update the editorState
 	useEffect(() => {
-		editorStateRef.current = editorState;
-	}, [editorState]);
+		console.log('updating editor state with new decorator');
+		// Need to SET rather than createWithContent to maintain the undo/redo stack
+		let newEditorState = EditorState.set(editorStateRef.current, {
+			decorator: decorator,
+		});
 
-	useEffect(() => {
-		if (editorStyles.showAllTags !== showAllTags) {
-			setShowAllTags(editorStyles.showAllTags);
-		}
-	}, [editorStyles, showAllTags]);
-
-	useEffect(() => {
-		console.log('updating decorator');
-		const updateDecorator = async () => {
-			let newDecorator;
-			if (showAllTags) {
-				newDecorator = generateDecoratorWithTagHighlights(linkStructureRef.current);
-			} else {
-				newDecorator = defaultDecorator;
-			}
-
-			let newEditorState = EditorState.createWithContent(
-				editorStateRef.current.getCurrentContent(),
-				newDecorator
-			);
-
-			setEditorState(newEditorState);
-			setDecorator(newDecorator);
-		};
-		updateDecorator();
-	}, [showAllTags]);
+		setEditorState(newEditorState);
+	}, [decorator]);
 
 	// // After period of no editorState changes, run group of functions
 	// useEffect(() => {
@@ -172,15 +162,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// 	if (updateEditorTimeoutRef.current) {
 	// 		clearTimeout(updateEditorTimeoutRef.current);
 	// 	}
-
-	// 	// Queue an update to linkStructure with the updated text
-	// 	const newTimeout = setTimeout(() => {
-	// 		console.log('WE HAVE UPDATED OUR FUNCTIONS');
-	// 	}, 2000);
-
-	// 	// Save the timeout (for potential clearing on changes)
-	// 	updateEditorTimeoutRef.current = newTimeout;
-	// }, [editorState]);
 
 	// Handle shortcut keys. Using their default function right now.
 	const customKeyBindingFn = (e) => {
@@ -488,17 +469,23 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					linkStructureRef.current,
 					navData.currentDoc
 				);
-
+				console.log('about to set editorState inside LOADFILE');
 				setEditorState(editorStateWithLinks);
-				setShouldResetScroll(true);
 			} else {
 				setEditorState(EditorState.createEmpty(decorator));
-				setShouldResetScroll(true);
 			}
+			setShouldResetScroll(true);
+			setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
+			console.log('setting editorState inside LOADFILE');
 			// editorRef.current.focus();
 		};
 		loadFileFromSave();
 	}, [editorRef, navData, project.tempPath, updateLinkEntities, linkStructureRef, decorator]);
+
+	// ISSUE
+	// When switching between files, sometimes the original file gets overwritten with the new.
+	// I think this is an editorArchives thing?
+	// I should just totally disable the decorator for the time being and see if it still happens.
 
 	// Loading the new current document
 	useEffect(() => {
@@ -510,12 +497,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				setEditorArchives({
 					...editorArchives,
 					[prev.doc]: {
-						editorState: editorState,
+						editorState: editorStateRef.current,
 						scrollY: window.scrollY,
 					},
 				});
 			}
-			setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
 			// setNavData({ ...navData, reloadCurrentDoc: false });
 
 			// Check for existing editorState and load from that if available
@@ -530,11 +516,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 				setEditorState(editorStateWithLinks);
 				setShouldResetScroll(true);
+				setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
 			} else {
 				loadFile();
 			}
 		}
-	}, [editorState, editorRef, navData, setNavData, prev, setPrev, loadFile, linkStructureRef]);
+	}, [editorStateRef, editorRef, navData, setNavData, prev, loadFile, linkStructureRef]);
 
 	// As we type, updates alignment/styles to pass down to the editorNav. We do it here
 	// instead of there to prevent unnecessary renders.
@@ -612,6 +599,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				/>
 				<div className='editor-bottom-padding' />
 				{/* <InlineToolbar /> */}
+
+				<EditorFindReplace />
 			</div>
 		</main>
 	);

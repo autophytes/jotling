@@ -38,16 +38,14 @@ function findWithRegex(regex, contentBlock, callback) {
 	}
 }
 
-const findTagsToHighlight = (linkStructure) => {
+const findTagsToHighlight = (linkStructure, currentDoc) => {
 	// Compiling a list of all tags
-	// TO-DO: remove any tags linked to the page that we're on
 	let tagList = [];
-	for (let tagArray of Object.values(linkStructure.docTags)) {
-		tagList = [...tagList, ...tagArray];
+	for (let docName of Object.keys(linkStructure.docTags)) {
+		// if (docName !== currentDoc) {
+		tagList = [...tagList, ...linkStructure.docTags[docName]];
+		// }
 	}
-	console.log('tagList: ', tagList);
-
-	console.log('generating our strategy');
 
 	// Build our regex with our tagList.
 	var regexMetachars = /[(){[*+?.\\^$|]/g;
@@ -67,8 +65,8 @@ const findTagsToHighlight = (linkStructure) => {
 	};
 };
 
-export const generateDecoratorWithTagHighlights = (linkStructure) => {
-	console.log('inside our decorator generating function');
+export const generateDecoratorWithTagHighlights = (linkStructure, currentDoc) => {
+	// console.log('inside our decorator generating function');
 	return new CompositeDecorator([
 		{
 			strategy: getEntityStrategy('LINK-SOURCE'),
@@ -79,7 +77,7 @@ export const generateDecoratorWithTagHighlights = (linkStructure) => {
 			component: LinkDestDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
 		},
 		{
-			strategy: findTagsToHighlight(linkStructure),
+			strategy: findTagsToHighlight(linkStructure, currentDoc),
 			component: HighlightTagDecorator,
 		},
 	]);
