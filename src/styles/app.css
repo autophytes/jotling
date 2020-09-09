@@ -898,6 +898,7 @@ input[type='number']::-webkit-outer-spin-button {
 	padding-top: 3px;
 	width: 5rem;
 	align-self: center;
+	user-select: none;
 }
 
 .editor-find-container .find-container-svg {
@@ -905,6 +906,7 @@ input[type='number']::-webkit-outer-spin-button {
 	align-items: center;
 	padding: 0 3px;
 	cursor: pointer;
+	user-select: none;
 }
 .editor-find-container .find-container-svg:hover {
 	background-color: #888;
@@ -914,6 +916,30 @@ input[type='number']::-webkit-outer-spin-button {
 	width: 0.75rem;
 	height: 0.75rem;
 	fill: white;
+	transform: none;
+	transition: 250ms cubic-bezier(0.4, 0, 0.2, 1) transform;
+}
+
+.editor-find-container .find-container-svg.expanded svg {
+	transform: rotate(90deg);
+}
+
+.find-container-replace-button {
+	color: white;
+	border: 1px solid white;
+	border-radius: 3px;
+
+	padding: 2px 4px 0px 4px;
+	cursor: pointer;
+}
+
+.find-container-replace-button:hover {
+	box-shadow: 0 0 0 2px #ccc;
+	/* background-color: #777; */
+}
+.find-container-replace-button:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(0, 149, 255, 0.7);
 }
 
 /* ::-webkit-scrollbar-track {

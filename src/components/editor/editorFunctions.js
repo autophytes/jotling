@@ -12,6 +12,7 @@ import {
 
 import { LinkSourceDecorator, LinkDestDecorator } from './decorators/LinkDecorators';
 import { HighlightTagDecorator } from './decorators/HighlightTagDecorator';
+import { FindReplaceDecorator } from './decorators/FindReplaceDecorator';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
@@ -25,35 +26,26 @@ function getEntityStrategy(type) {
 	};
 }
 
-function hashtagStrategy(contentBlock, callback, contentState) {
-	findWithRegex(HASHTAG_REGEX, contentBlock, callback);
-}
+// function hashtagStrategy(contentBlock, callback, contentState) {
+// 	findWithRegex(HASHTAG_REGEX, contentBlock, callback);
+// }
 
-function findWithRegex(regex, contentBlock, callback) {
-	const text = contentBlock.getText();
-	let matchArr, start;
-	while ((matchArr = regex.exec(text)) !== null) {
-		start = matchArr.index;
-		callback(start, start + matchArr[0].length);
-	}
-}
+// function findWithRegex(regex, contentBlock, callback) {
+// 	const text = contentBlock.getText();
+// 	let matchArr, start;
+// 	while ((matchArr = regex.exec(text)) !== null) {
+// 		start = matchArr.index;
+// 		callback(start, start + matchArr[0].length);
+// 	}
+// }
 
-const findTagsToHighlight = (linkStructure, currentDoc) => {
-	// Compiling a list of all tags
-	let tagList = [];
-	for (let docName of Object.keys(linkStructure.docTags)) {
-		// if (docName !== currentDoc) {
-		tagList = [...tagList, ...linkStructure.docTags[docName]];
-		// }
-	}
-
-	// Build our regex with our tagList.
+const buildFindWithRegexFunction = (findTextArray) => {
 	var regexMetachars = /[(){[*+?.\\^$|]/g;
 	// Escape regex metacharacters in the tags
-	for (var i = 0; i < tagList.length; i++) {
-		tagList[i] = tagList[i].replace(regexMetachars, '\\$&');
+	for (var i = 0; i < findTextArray.length; i++) {
+		findTextArray[i] = findTextArray[i].replace(regexMetachars, '\\$&');
 	}
-	var regex = new RegExp('\\b(?:' + tagList.join('|') + ')\\b', 'gi');
+	var regex = new RegExp('(?:' + findTextArray.join('|') + ')', 'gi');
 
 	return function (contentBlock, callback, contentState) {
 		const text = contentBlock.getText();
@@ -65,9 +57,41 @@ const findTagsToHighlight = (linkStructure, currentDoc) => {
 	};
 };
 
-export const generateDecoratorWithTagHighlights = (linkStructure, currentDoc) => {
-	// console.log('inside our decorator generating function');
-	return new CompositeDecorator([
+const findTagsToHighlight = (linkStructure, currentDoc) => {
+	// Compiling a list of all tags
+	let tagList = [];
+	for (let docName of Object.keys(linkStructure.docTags)) {
+		if (docName !== currentDoc) {
+			tagList = [...tagList, ...linkStructure.docTags[docName]];
+		}
+	}
+
+	// // Build our regex with our tagList.
+	// var regexMetachars = /[(){[*+?.\\^$|]/g;
+	// // Escape regex metacharacters in the tags
+	// for (var i = 0; i < tagList.length; i++) {
+	// 	tagList[i] = tagList[i].replace(regexMetachars, '\\$&');
+	// }
+	// var regex = new RegExp('\\b(?:' + tagList.join('|') + ')\\b', 'gi');
+
+	// return function (contentBlock, callback, contentState) {
+	// 	const text = contentBlock.getText();
+	// 	let matchArr, start;
+	// 	while ((matchArr = regex.exec(text)) !== null) {
+	// 		start = matchArr.index;
+	// 		callback(start, start + matchArr[0].length);
+	// 	}
+	// };
+
+	return buildFindWithRegexFunction(tagList);
+};
+
+const findSearchKeyword = (findText) => {
+	return buildFindWithRegexFunction([findText]);
+};
+
+export const generateDecorators = (linkStructure, currentDoc, showAllTags, findText) => {
+	let decoratorArray = [
 		{
 			strategy: getEntityStrategy('LINK-SOURCE'),
 			component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
@@ -76,11 +100,23 @@ export const generateDecoratorWithTagHighlights = (linkStructure, currentDoc) =>
 			strategy: getEntityStrategy('LINK-DEST'),
 			component: LinkDestDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
 		},
-		{
+	];
+
+	if (showAllTags) {
+		decoratorArray.push({
 			strategy: findTagsToHighlight(linkStructure, currentDoc),
 			component: HighlightTagDecorator,
-		},
-	]);
+		});
+	}
+
+	if (findText) {
+		decoratorArray.push({
+			strategy: findSearchKeyword(findText),
+			component: FindReplaceDecorator,
+		});
+	}
+	// console.log('inside our decorator generating function');
+	return new CompositeDecorator(decoratorArray);
 };
 
 export const defaultDecorator = new CompositeDecorator([

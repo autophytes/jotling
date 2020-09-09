@@ -97,7 +97,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const [editorState, setEditorState] = useState(EditorState.createEmpty());
 	// Updates the editorStateRef with the updated editorState
 	useEffect(() => {
-		console.log('updating the editorStateRef with the new editorState');
 		editorStateRef.current = editorState;
 	}, [editorState]);
 
@@ -110,8 +109,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const [style, setStyle] = useState({});
 	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
 	const [currentAlignment, setCurrentAlignment] = useState('');
-	const [showAllTags, setShowAllTags] = useState(false);
-	// const [currentDoc, setCurrentDoc] = useState('');
+	const [showFindReplace, setShowFindReplace] = useState(true);
 
 	// QUEUES
 	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
@@ -600,7 +598,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				<div className='editor-bottom-padding' />
 				{/* <InlineToolbar /> */}
 
-				<EditorFindReplace />
+				{showFindReplace && <EditorFindReplace {...{ setShowFindReplace }} />}
 			</div>
 		</main>
 	);
