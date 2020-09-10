@@ -26,6 +26,7 @@
 		"electron-devtools-installer": "^3.1.0",
 		"electron-store": "^6.0.0",
 		"font-list": "^1.2.11",
+		"mousetrap": "^1.6.5",
 		"ncp": "^2.0.0",
 		"react": "^16.13.1",
 		"react-css-collapse": "^4.0.6",

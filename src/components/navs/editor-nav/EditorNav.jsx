@@ -289,16 +289,11 @@ const EditorNav = React.memo(
 						<SuperscriptSVG />
 					</InlineStyleButton>
 
-					{/* <button className='nav-button' onClick={() => createTagLink()}>
-						<ChainSVG />
-					</button> */}
 					<button
 						className='nav-button'
 						onMouseDown={(e) => e.preventDefault()}
 						onClick={(e) => {
 							e.stopPropagation();
-							let selection = document.getSelection();
-
 							if (document.getSelection().toString().length) {
 								setDisplayLinkPopper(true);
 							}

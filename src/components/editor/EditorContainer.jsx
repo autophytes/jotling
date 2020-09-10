@@ -10,6 +10,7 @@ import { ipcRenderer } from 'electron';
 import Immutable from 'immutable';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
+import { FindReplaceContext } from '../../contexts/findReplaceContext';
 
 import {
 	Editor,
@@ -92,6 +93,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		editorArchives,
 		setEditorArchives,
 	} = useContext(LeftNavContext);
+	const { showFindReplace } = useContext(FindReplaceContext);
 
 	// EDITOR STATE
 	const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -109,7 +111,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const [style, setStyle] = useState({});
 	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
 	const [currentAlignment, setCurrentAlignment] = useState('');
-	const [showFindReplace, setShowFindReplace] = useState(true);
 
 	// QUEUES
 	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
@@ -154,19 +155,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setEditorState(newEditorState);
 	}, [decorator]);
 
-	// // After period of no editorState changes, run group of functions
-	// useEffect(() => {
-	// 	// Remove any queued updates to linkStructure
-	// 	if (updateEditorTimeoutRef.current) {
-	// 		clearTimeout(updateEditorTimeoutRef.current);
-	// 	}
-
 	// Handle shortcut keys. Using their default function right now.
 	const customKeyBindingFn = (e) => {
-		// Example custom key handling. ALways return the default if mine don't catch it.
-		if (e.keyCode === 83 /* `S` key */ && hasCommandModifier(e)) {
-			return 'myeditor-save'; // This is a custom command, which I would handle in "handleKeyCommand"
-		}
 		if (e.keyCode === 9 /* TAB */) {
 			// NOTE: this just handles indenting list items, not indenting paragraphs.
 			const newEditorState = RichUtils.onTab(e, editorState, 8);
@@ -555,9 +545,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			style={{
 				paddingLeft: editorStyles.leftIsPinned ? editorStyles.leftNav + 'rem' : 0,
 				paddingRight: editorStyles.rightIsPinned ? editorStyles.rightNav + 'rem' : 0,
-			}}
-			// ref={targetRef}
-		>
+			}}>
 			<EditorNav
 				{...{
 					currentStyles,
@@ -598,7 +586,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				<div className='editor-bottom-padding' />
 				{/* <InlineToolbar /> */}
 
-				{showFindReplace && <EditorFindReplace {...{ setShowFindReplace }} />}
+				{showFindReplace && <EditorFindReplace />}
 			</div>
 		</main>
 	);

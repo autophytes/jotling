@@ -627,6 +627,7 @@ input[type='number']::-webkit-outer-spin-button {
 	cursor: pointer;
 	transition: 150ms ease all;
 	outline: none;
+	user-select: none;
 }
 
 .show-hide-tags-button:hover:not(:active) {
@@ -860,12 +861,13 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .editor-find-container {
-	position: absolute;
-	right: 0.5rem;
-	top: var(--top-nav-height);
+	position: fixed;
+	right: 13rem;
+	top: calc(var(--top-nav-height) * 2);
 	display: flex;
 	flex-direction: row;
 	align-items: stretch;
+	z-index: 1;
 
 	border: 1px solid #555;
 	border-radius: 5px;

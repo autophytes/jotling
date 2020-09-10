@@ -7,6 +7,7 @@ const {
 	requestSaveAsProject,
 	requestSaveAndCreateNew,
 	requestSaveAndOpen,
+	requestShowFindReplace,
 } = require('./fileFunctions');
 const { createWindow } = require('./createWindow');
 
@@ -98,9 +99,9 @@ const registerMenu = () => {
 				{ type: 'separator' },
 				{
 					label: 'Save',
-					accelerator: 'CommandOrControl+S',
+					accelerator: 'CmdOrCtrl+S',
 					registerAccelerator: true,
-					// acceleratorWorksWhenHidden: true,
+					acceleratorWorksWhenHidden: true,
 					click: async () => {
 						requestSaveProject();
 					},
@@ -108,9 +109,9 @@ const registerMenu = () => {
 				},
 				{
 					label: 'Save As',
-					accelerator: 'CommandOrControl+Shift+S',
+					accelerator: 'CmdOrCtrl+Shift+S',
 					registerAccelerator: true,
-					// acceleratorWorksWhenHidden: true,
+					acceleratorWorksWhenHidden: true,
 					click: async () => {
 						requestSaveAsProject();
 					},
@@ -130,18 +131,40 @@ const registerMenu = () => {
 				{ role: 'cut' },
 				{ role: 'copy' },
 				{ role: 'paste' },
+				{ role: 'pasteAndMatchStyle' },
+				{ type: 'separator' },
+				{ role: 'selectAll' },
+				{
+					label: 'Find',
+					accelerator: 'CmdOrCtrl+F',
+					registerAccelerator: true,
+					acceleratorWorksWhenHidden: true,
+					click: async () => {
+						requestShowFindReplace({ replace: false });
+					},
+					enabled: isWindowOpen,
+				},
+				{
+					label: 'Replace',
+					accelerator: 'CmdOrCtrl+Shift+F',
+					registerAccelerator: true,
+					acceleratorWorksWhenHidden: true,
+					click: async () => {
+						requestShowFindReplace({ replace: true });
+					},
+					enabled: isWindowOpen,
+				},
+				// FIND
+				// REPLACE
 				...(isMac
 					? [
-							{ role: 'pasteAndMatchStyle' },
-							{ role: 'delete' },
-							{ role: 'selectAll' },
 							{ type: 'separator' },
 							{
 								label: 'Speech',
 								submenu: [{ role: 'startspeaking' }, { role: 'stopspeaking' }],
 							},
 					  ]
-					: [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
+					: []),
 			],
 		},
 		// { role: 'viewMenu' }

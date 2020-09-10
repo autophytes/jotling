@@ -9,21 +9,26 @@ import EditorContainer from './editor/EditorContainer';
 
 // import LeftNavContextProvider from '../contexts/leftNavContext';
 import { LeftNavContext } from '../contexts/leftNavContext';
+import { FindReplaceContext } from '../contexts/findReplaceContext';
+
 import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import Store from 'electron-store';
+import Mousetrap from 'mousetrap';
 
 // import ReactResizeDetector from 'react-resize-detector';
 
 // Create main App component
 const AppMgmt = () => {
+	// STATE
 	const [structureLoaded, setStructureLoaded] = useState(false);
 	const [linkStructureLoaded, setLinkStructureLoaded] = useState(false);
 	const [prevProj, setPrevProj] = useState('');
 	const [saveProject, setSaveProject] = useState({});
 	const [needCurrentDocReset, setNeedCurrentDocReset] = useState(false);
 
+	// CONTEXT
 	const {
 		docStructure,
 		setDocStructure,
@@ -35,6 +40,7 @@ const AppMgmt = () => {
 		setNavData,
 		setEditorArchives,
 	} = useContext(LeftNavContext);
+	const { setShowFindReplace, setReplaceDefaultOn } = useContext(FindReplaceContext);
 
 	// Loads the document map (function)
 	const loadDocStructure = useCallback(
@@ -188,7 +194,7 @@ const AppMgmt = () => {
 			setSaveProject({ command: 'save', options: { shouldQuit: true } });
 		});
 
-		// Save Project and Quit - queues EditorContainer to request a save and quit
+		// Save Project and Close - queues EditorContainer to request a save and quit
 		ipcRenderer.on('request-save-and-close', (event, shouldSave) => {
 			setSaveProject({ command: 'save', options: { shouldClose: true } });
 		});
@@ -201,6 +207,14 @@ const AppMgmt = () => {
 		// Save Project and Open - queues EditorContainer to request a save and open another project
 		ipcRenderer.on('request-save-and-open', (event, shouldSave, openJotsPath) => {
 			setSaveProject({ command: 'save', options: { shouldOpen: true, openJotsPath } });
+		});
+
+		// Save Project and Open - queues EditorContainer to request a save and open another project
+		ipcRenderer.on('show-find-replace', (event, { replace }) => {
+			if (replace) {
+				setReplaceDefaultOn(true);
+			}
+			setShowFindReplace(true);
 		});
 	}, []);
 

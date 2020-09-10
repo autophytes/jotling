@@ -128,7 +128,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 			document.removeEventListener('click', handleEscapePopper);
 			document.removeEventListener('keyup', handleEscapePopper);
 		};
-	});
+	}, []);
 
 	useLayoutEffect(() => {
 		if (minWidth === 0 && allTags.length) {

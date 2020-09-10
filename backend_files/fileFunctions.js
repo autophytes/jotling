@@ -395,6 +395,11 @@ const requestSaveAndOpen = async (openJotsPath) => {
 	mainWindow.webContents.send('request-save-and-open', true, openJotsPath);
 };
 
+const requestShowFindReplace = async ({ replace }) => {
+	let mainWindow = getMainWindow();
+	mainWindow.webContents.send('show-find-replace', { replace });
+};
+
 module.exports = {
 	createNewProject,
 	openProject,
@@ -406,4 +411,5 @@ module.exports = {
 	requestSaveAndCreateNew,
 	requestSaveAndOpen,
 	removeOldTempFilesSync,
+	requestShowFindReplace,
 };

@@ -1,18 +1,71 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
+import { LeftNavContext } from '../../contexts/leftNavContext';
 
 import CaratDownSVG from '../../assets/svg/CaratDownSVG';
 import CloseSVG from '../../assets/svg/CloseSVG';
 
 import Collapse from 'react-css-collapse';
 
-const EditorFindReplace = ({ setShowFindReplace }) => {
+const repositionFindPopper = (editorStyles, setRightOffset) => {
+	let rootSize = Number(
+		window
+			.getComputedStyle(document.querySelector(':root'))
+			.getPropertyValue('font-size')
+			.replace('px', '')
+	);
+
+	let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
+	let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
+	let maxEditor = editorStyles.editorMaxWidth * rootSize;
+	let windowWidth = window.innerWidth;
+	let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
+	// let newLeftOffset = leftNav + gutter / 2;
+	let newRightOffset = rightNav + gutter / 2 + 0.5 * rootSize;
+
+	// setLeftOffset(newLeftOffset);
+	setRightOffset(newRightOffset);
+};
+
+const EditorFindReplace = () => {
+	// STATE
 	const [showReplace, setShowReplace] = useState(false);
 	const [findText, setFindText] = useState('');
 	const [replaceText, setReplaceText] = useState('');
+	const [rightOffset, setRightOffset] = useState(13);
 
-	const { setFindText: setContextFindText } = useContext(FindReplaceContext);
+	// CONTEXT
+	const {
+		setFindText: setContextFindText,
+		setShowFindReplace,
+		replaceDefaultOn,
+		setReplaceDefaultOn,
+	} = useContext(FindReplaceContext);
+	const { editorStyles } = useContext(LeftNavContext);
+
+	useEffect(() => {
+		setShowReplace(replaceDefaultOn);
+		setReplaceDefaultOn(false);
+	}, []);
+
+	// Reregister window resize listener to reposition the popper
+	useEffect(() => {
+		const reposition = () => {
+			repositionFindPopper(editorStyles, setRightOffset);
+		};
+
+		window.addEventListener('resize', reposition);
+
+		return () => {
+			window.removeEventListener('resize', reposition);
+		};
+	}, [editorStyles]);
+
+	// Recalculate the position of the popper
+	useEffect(() => {
+		repositionFindPopper(editorStyles, setRightOffset);
+	}, [editorStyles]);
 
 	useEffect(() => {
 		const closeEventListener = (e) => {
@@ -25,17 +78,14 @@ const EditorFindReplace = ({ setShowFindReplace }) => {
 		document.addEventListener('keyup', closeEventListener);
 
 		return () => document.removeEventListener('keyup', closeEventListener);
-	});
+	}, []);
 	// NEXT
-	// When expanding, transition down to display the replace below
-	// Hook up ctrl + f to Electron
-	// Iterate through the text looking for matches, highlight the ranges
-	// Escape / X closes
+	// Implement the replace
 	// https://reactrocket.com/post/draft-js-search-and-replace/
 	// https://jsfiddle.net/levsha/o3xyvkw7/
 
 	return (
-		<div className='editor-find-container'>
+		<div className='editor-find-container' style={{ right: rightOffset }}>
 			<div
 				className={'find-container-svg' + (showReplace ? ' expanded' : '')}
 				onClick={() => setShowReplace(!showReplace)}>
@@ -63,17 +113,18 @@ const EditorFindReplace = ({ setShowFindReplace }) => {
 						<CloseSVG />
 					</div>
 				</div>
-				<Collapse
-					isOpen={showReplace}
-					style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-					<input
-						type='text'
-						placeholder='Replace'
-						value={replaceText}
-						onChange={(e) => setReplaceText(e.target.value)}
-					/>
-					<button className='find-container-replace-button'>Replace</button>
-					<button className='find-container-replace-button'>Replace All</button>
+				<Collapse isOpen={showReplace}>
+					<div
+						style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+						<input
+							type='text'
+							placeholder='Replace'
+							value={replaceText}
+							onChange={(e) => setReplaceText(e.target.value)}
+						/>
+						<button className='find-container-replace-button'>Replace</button>
+						<button className='find-container-replace-button'>Replace All</button>
+					</div>
 				</Collapse>
 			</div>
 		</div>
