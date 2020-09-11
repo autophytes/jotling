@@ -116,12 +116,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
 	const [shouldResetScroll, setShouldResetScroll] = useState(false);
 
-	// CUSTOM HOOKS
-	const decorator = useDecorator(prev.doc);
-	// const decorator = useDecorator();
-
 	// REFS
 	const editorRef = useRef(null);
+
+	// CUSTOM HOOKS
+	const decorator = useDecorator(prev.doc, editorRef);
+	// const decorator = useDecorator();
 
 	// Focuses the editor on click
 	const handleEditorWrapperClick = useCallback(
@@ -146,7 +146,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// Monitor the decorator for changes to update the editorState
 	useEffect(() => {
-		console.log('updating editor state with new decorator');
 		// Need to SET rather than createWithContent to maintain the undo/redo stack
 		let newEditorState = EditorState.set(editorStateRef.current, {
 			decorator: decorator,
@@ -583,9 +582,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					spellCheck={spellCheck}
 					key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
 				/>
+
 				<div className='editor-bottom-padding' />
 				{/* <InlineToolbar /> */}
-
 				{showFindReplace && <EditorFindReplace />}
 			</div>
 		</main>

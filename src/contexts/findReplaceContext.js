@@ -7,6 +7,8 @@ const FindReplaceContextProvider = (props) => {
 	const [findText, setFindText] = useState('');
 	const [showFindReplace, setShowFindReplace] = useState(true);
 	const [replaceDefaultOn, setReplaceDefaultOn] = useState(false);
+	const [refocusFind, setRefocusFind] = useState(false);
+	const [refocusReplace, setRefocusReplace] = useState(false);
 
 	return (
 		<FindReplaceContext.Provider
@@ -17,6 +19,10 @@ const FindReplaceContextProvider = (props) => {
 				setShowFindReplace,
 				replaceDefaultOn,
 				setReplaceDefaultOn,
+				refocusFind,
+				setRefocusFind,
+				refocusReplace,
+				setRefocusReplace,
 			}}>
 			{props.children}
 		</FindReplaceContext.Provider>

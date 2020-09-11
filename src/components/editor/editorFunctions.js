@@ -39,7 +39,7 @@ function getEntityStrategy(type) {
 // 	}
 // }
 
-const buildFindWithRegexFunction = (findTextArray) => {
+const buildFindWithRegexFunction = (findTextArray, visibleBlockKeys) => {
 	var regexMetachars = /[(){[*+?.\\^$|]/g;
 	// Escape regex metacharacters in the tags
 	for (var i = 0; i < findTextArray.length; i++) {
@@ -48,6 +48,11 @@ const buildFindWithRegexFunction = (findTextArray) => {
 	var regex = new RegExp('(?:' + findTextArray.join('|') + ')', 'gi');
 
 	return function (contentBlock, callback, contentState) {
+		// If we have a list of block keys, make sure this block is in it
+		if (visibleBlockKeys && !visibleBlockKeys.includes(contentBlock.getKey())) {
+			return;
+		}
+
 		const text = contentBlock.getText();
 		let matchArr, start;
 		while ((matchArr = regex.exec(text)) !== null) {
@@ -66,31 +71,20 @@ const findTagsToHighlight = (linkStructure, currentDoc) => {
 		}
 	}
 
-	// // Build our regex with our tagList.
-	// var regexMetachars = /[(){[*+?.\\^$|]/g;
-	// // Escape regex metacharacters in the tags
-	// for (var i = 0; i < tagList.length; i++) {
-	// 	tagList[i] = tagList[i].replace(regexMetachars, '\\$&');
-	// }
-	// var regex = new RegExp('\\b(?:' + tagList.join('|') + ')\\b', 'gi');
-
-	// return function (contentBlock, callback, contentState) {
-	// 	const text = contentBlock.getText();
-	// 	let matchArr, start;
-	// 	while ((matchArr = regex.exec(text)) !== null) {
-	// 		start = matchArr.index;
-	// 		callback(start, start + matchArr[0].length);
-	// 	}
-	// };
-
 	return buildFindWithRegexFunction(tagList);
 };
 
-const findSearchKeyword = (findText) => {
-	return buildFindWithRegexFunction([findText]);
+const findSearchKeyword = (findText, visibleBlockKeys) => {
+	return buildFindWithRegexFunction([findText], visibleBlockKeys);
 };
 
-export const generateDecorators = (linkStructure, currentDoc, showAllTags, findText) => {
+export const generateDecorators = (
+	linkStructure,
+	currentDoc,
+	showAllTags,
+	findText,
+	visibleBlockKeys
+) => {
 	let decoratorArray = [
 		{
 			strategy: getEntityStrategy('LINK-SOURCE'),
@@ -111,7 +105,7 @@ export const generateDecorators = (linkStructure, currentDoc, showAllTags, findT
 
 	if (findText) {
 		decoratorArray.push({
-			strategy: findSearchKeyword(findText),
+			strategy: findSearchKeyword(findText, visibleBlockKeys),
 			component: FindReplaceDecorator,
 		});
 	}

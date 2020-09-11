@@ -40,7 +40,12 @@ const AppMgmt = () => {
 		setNavData,
 		setEditorArchives,
 	} = useContext(LeftNavContext);
-	const { setShowFindReplace, setReplaceDefaultOn } = useContext(FindReplaceContext);
+	const {
+		setShowFindReplace,
+		setReplaceDefaultOn,
+		setRefocusFind,
+		setRefocusReplace,
+	} = useContext(FindReplaceContext);
 
 	// Loads the document map (function)
 	const loadDocStructure = useCallback(
@@ -212,7 +217,10 @@ const AppMgmt = () => {
 		// Save Project and Open - queues EditorContainer to request a save and open another project
 		ipcRenderer.on('show-find-replace', (event, { replace }) => {
 			if (replace) {
-				setReplaceDefaultOn(true);
+				// setReplaceDefaultOn(true);
+				setRefocusReplace(true);
+			} else {
+				setRefocusFind(true);
 			}
 			setShowFindReplace(true);
 		});

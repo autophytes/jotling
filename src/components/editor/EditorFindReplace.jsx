@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
 import { LeftNavContext } from '../../contexts/leftNavContext';
@@ -41,13 +41,40 @@ const EditorFindReplace = () => {
 		setShowFindReplace,
 		replaceDefaultOn,
 		setReplaceDefaultOn,
+		refocusFind,
+		setRefocusFind,
+		refocusReplace,
+		setRefocusReplace,
 	} = useContext(FindReplaceContext);
 	const { editorStyles } = useContext(LeftNavContext);
 
+	// REFS
+	const findInputRef = useRef(null);
+	const replaceInputRef = useRef(null);
+
+	// useEffect(() => {
+	// 	setShowReplace(replaceDefaultOn);
+	// 	setReplaceDefaultOn(false);
+	// }, []);
+
 	useEffect(() => {
-		setShowReplace(replaceDefaultOn);
-		setReplaceDefaultOn(false);
-	}, []);
+		if (refocusFind) {
+			// Focus on the find input
+			findInputRef.current.focus();
+			setRefocusFind(false);
+		}
+	}, [refocusFind]);
+
+	useEffect(() => {
+		if (refocusReplace) {
+			// Focus on the replace input
+			setShowReplace(true);
+			setRefocusReplace(false);
+			setTimeout(() => {
+				replaceInputRef.current.focus();
+			}, 0);
+		}
+	}, [refocusReplace]);
 
 	// Reregister window resize listener to reposition the popper
 	useEffect(() => {
@@ -96,6 +123,7 @@ const EditorFindReplace = () => {
 					<input
 						type='text'
 						placeholder='Find'
+						ref={findInputRef}
 						value={findText}
 						onChange={(e) => {
 							setFindText(e.target.value);
@@ -119,6 +147,7 @@ const EditorFindReplace = () => {
 						<input
 							type='text'
 							placeholder='Replace'
+							ref={replaceInputRef}
 							value={replaceText}
 							onChange={(e) => setReplaceText(e.target.value)}
 						/>
