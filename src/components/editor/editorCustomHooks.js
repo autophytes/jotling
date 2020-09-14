@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext, useCallback, useRef } from 'react';
-import { defaultDecorator, generateDecorators } from './editorFunctions';
+import { defaultDecorator, generateDecorators, findVisibleBlocks } from './editorFunctions';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
@@ -14,32 +14,10 @@ import { FindReplaceContext } from '../../contexts/findReplaceContext';
 // Immediately only searching the on-screen text, then searching the rest?
 // Debounce the decorator updates - make sure the user has paused typing
 
-const findVisibleBlocks = (editorRef) => {
-	const bottom = window.innerHeight;
-	const blockElementList = editorRef.current.editor.children[0].children;
-
-	let blockKeyList = [];
-	// Iterate through each of our blocks
-	for (let element of blockElementList) {
-		let rect = element.getBoundingClientRect();
-		// If the block is visible on screen
-		if (rect.top < bottom && rect.bottom > 0) {
-			// Extract the block key and add it to the list to return
-			let offsetKey = element.dataset.offsetKey;
-			let blockKey = offsetKey.slice(0, offsetKey.indexOf('-'));
-			blockKeyList.push(blockKey);
-		} else if (blockKeyList.length) {
-			// If we had previous matches and are now off screen, return the list.
-			// return blockKeyList;
-			break;
-		}
-	}
-	return blockKeyList;
-};
-
 export const useDecorator = (currentDoc, editorRef) => {
 	const [showAllTags, setShowAllTags] = useState(false);
 	const [decorator, setDecorator] = useState(defaultDecorator);
+	const [needToClearFind, setNeedToClearFind] = useState(false);
 
 	const queuedUpdate = useRef(null);
 	const visibleBlockKeys = useRef([]);
@@ -62,10 +40,11 @@ export const useDecorator = (currentDoc, editorRef) => {
 		// Queue an update to linkStructure with the updated text
 		queuedUpdate.current = setTimeout(() => {
 			visibleBlockKeys.current = [];
+			console.log('DELAYED UPDATE is firing!: ', findText);
 			setDecorator(
 				generateDecorators(linkStructureRef.current, currentDoc, showAllTags, findText)
 			);
-			console.log('DELAYED UPDATE is firing!');
+			console.log('DELAYED UPDATE resolved!: ', findText);
 		}, 500);
 
 		// Save the timeout (for potential clearing on changes)
@@ -75,14 +54,20 @@ export const useDecorator = (currentDoc, editorRef) => {
 	useEffect(() => {
 		console.log('updating decorator');
 
-		if (!findText && showAllTags) {
+		if (!findText && showAllTags && !needToClearFind) {
 			setDecorator(
 				generateDecorators(linkStructureRef.current, currentDoc, showAllTags, findText)
 			);
-		} else if (showAllTags || findText) {
+		} else if (showAllTags || findText || needToClearFind) {
 			// On the first iteration, find the visible blocks
 			if (!visibleBlockKeys.current.length) {
 				visibleBlockKeys.current = findVisibleBlocks(editorRef);
+			}
+
+			if (!findText && needToClearFind) {
+				setNeedToClearFind(false);
+			} else if (!needToClearFind) {
+				setNeedToClearFind(true);
 			}
 
 			// Immediately update the search results on the visible screen
@@ -100,7 +85,7 @@ export const useDecorator = (currentDoc, editorRef) => {
 		} else {
 			setDecorator(defaultDecorator);
 		}
-	}, [showAllTags, currentDoc, findText, queueDecoratorUpdate]);
+	}, [showAllTags, currentDoc, findText, queueDecoratorUpdate, needToClearFind]);
 
 	return decorator;
 };

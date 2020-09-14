@@ -585,7 +585,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 				<div className='editor-bottom-padding' />
 				{/* <InlineToolbar /> */}
-				{showFindReplace && <EditorFindReplace />}
+				{showFindReplace && <EditorFindReplace {...{ editorRef }} />}
 			</div>
 		</main>
 	);

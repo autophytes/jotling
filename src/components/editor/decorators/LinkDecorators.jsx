@@ -71,6 +71,7 @@ const LinkSourceDecorator = ({
 				scrollToLinkIdRef.current = null;
 				setScrollToLinkId(null);
 				let decoratorRect = decoratorRef.current.getBoundingClientRect();
+
 				window.scrollTo({
 					left: 0,
 					top: Math.floor(decoratorRect.top + window.pageYOffset - 200, 0),

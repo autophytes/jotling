@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
 import { LeftNavContext } from '../../contexts/leftNavContext';
+
+import { findVisibleBlocks } from './editorFunctions';
 
 import CaratDownSVG from '../../assets/svg/CaratDownSVG';
 import CloseSVG from '../../assets/svg/CloseSVG';
@@ -28,7 +30,7 @@ const repositionFindPopper = (editorStyles, setRightOffset) => {
 	setRightOffset(newRightOffset);
 };
 
-const EditorFindReplace = () => {
+const EditorFindReplace = ({ editorRef }) => {
 	// STATE
 	const [showReplace, setShowReplace] = useState(false);
 	const [findText, setFindText] = useState('');
@@ -45,17 +47,15 @@ const EditorFindReplace = () => {
 		setRefocusFind,
 		refocusReplace,
 		setRefocusReplace,
+		findRegisterRef,
+		findIndex,
+		setFindIndex,
 	} = useContext(FindReplaceContext);
-	const { editorStyles } = useContext(LeftNavContext);
+	const { editorStyles, editorStateRef } = useContext(LeftNavContext);
 
 	// REFS
 	const findInputRef = useRef(null);
 	const replaceInputRef = useRef(null);
-
-	// useEffect(() => {
-	// 	setShowReplace(replaceDefaultOn);
-	// 	setReplaceDefaultOn(false);
-	// }, []);
 
 	useEffect(() => {
 		if (refocusFind) {
@@ -106,6 +106,88 @@ const EditorFindReplace = () => {
 
 		return () => document.removeEventListener('keyup', closeEventListener);
 	}, []);
+
+	const updateFindIndex = useCallback(
+		(direction) => {
+			if (
+				!findRegisterRef.current[findText.toLowerCase()] ||
+				!findRegisterRef.current[findText.toLowerCase()].array.length
+			) {
+				return;
+			}
+
+			// For the first search, find the match on screen (or the next off screen)
+			if (findIndex === null) {
+				let visibleBlocks = findVisibleBlocks(editorRef);
+
+				// Check the visible blocks for the first match
+				// let matchFound = false;
+				// findRegisterRef.current[findText.toLowerCase()].array.forEach((match, i) => {
+				// 	if (visibleBlocks.includes(match.blockKey)) {
+				// 		setFindIndex(i);
+				// 		return;
+				// 	}
+				// });
+
+				// Check the visible blocks for the first match
+				for (const [i, match] of findRegisterRef.current[
+					findText.toLowerCase()
+				].array.entries()) {
+					if (visibleBlocks.includes(match.blockKey)) {
+						setFindIndex(i);
+						return;
+					}
+				}
+
+				// If not on screen, iterate through the off-screen blocks to find the first mach
+				let contentState = editorStateRef.current.getCurrentContent();
+				let blockKey = visibleBlocks[visibleBlocks.length - 1].blockKey;
+				while (!visibleMatch) {
+					let block = contentState.getBlockAfter(blockKey);
+					if (!block) {
+						block = contentState.getFirstBlock();
+					}
+					blockKey = block.getKey();
+
+					if (findRegisterRef.current[findText.toLowerCase()].blockList[blockKey]) {
+						let matchIndex = findRegisterRef.current[findText.toLowerCase()].array.findIndex(
+							(item) => item.blockKey === blockKey
+						);
+						setFindIndex(matchIndex);
+						return;
+					}
+				}
+			}
+
+			if (direction === 'INCREMENT') {
+				if (findIndex === findRegisterRef.current[findText.toLowerCase()].array.length - 1) {
+					setFindIndex(0);
+				} else {
+					setFindIndex(findIndex + 1);
+				}
+			}
+
+			if (direction === 'DECREMENT') {
+				if (findIndex === 0) {
+					setFindIndex(findRegisterRef.current[findText.toLowerCase()].array.length - 1);
+				} else {
+					setFindIndex(findIndex - 1);
+				}
+			}
+		},
+		[findIndex, setFindIndex, findText]
+	);
+
+	const handleInputEnter = useCallback(
+		(e) => {
+			// If enter was pressed
+			if (e.key === 'Enter') {
+				updateFindIndex('INCREMENT');
+			}
+		},
+		[updateFindIndex]
+	);
+
 	// NEXT
 	// Implement the replace
 	// https://reactrocket.com/post/draft-js-search-and-replace/
@@ -126,15 +208,23 @@ const EditorFindReplace = () => {
 						ref={findInputRef}
 						value={findText}
 						onChange={(e) => {
+							console.log('on change fired');
 							setFindText(e.target.value);
 							setContextFindText(e.target.value);
 						}}
+						onKeyDown={handleInputEnter}
 					/>
-					<p className='find-containter-counter'>999 of 999</p>
-					<div className='find-container-svg'>
+					<p className='find-containter-counter'>
+						{findText && findRegisterRef.current[findText.toLowerCase()]
+							? `${findIndex === null ? 1 : findIndex + 1} of ${
+									findRegisterRef.current[findText.toLowerCase()].array.length
+							  }`
+							: ''}
+					</p>
+					<div className='find-container-svg' onClick={() => updateFindIndex('DECREMENT')}>
 						<CaratDownSVG rotate='90' />
 					</div>
-					<div className='find-container-svg'>
+					<div className='find-container-svg' onClick={() => updateFindIndex('INCREMENT')}>
 						<CaratDownSVG rotate='-90' />
 					</div>
 					<div className='find-container-svg' onClick={() => setShowFindReplace(false)}>

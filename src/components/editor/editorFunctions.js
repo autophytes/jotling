@@ -47,6 +47,8 @@ const buildFindWithRegexFunction = (findTextArray, visibleBlockKeys) => {
 	}
 	var regex = new RegExp('(?:' + findTextArray.join('|') + ')', 'gi');
 
+	console.log(visibleBlockKeys);
+
 	return function (contentBlock, callback, contentState) {
 		// If we have a list of block keys, make sure this block is in it
 		if (visibleBlockKeys && !visibleBlockKeys.includes(contentBlock.getKey())) {
@@ -102,7 +104,7 @@ export const generateDecorators = (
 			component: HighlightTagDecorator,
 		});
 	}
-
+	console.log('find text inside the decorator: ', findText);
 	if (findText) {
 		decoratorArray.push({
 			strategy: findSearchKeyword(findText, visibleBlockKeys),
@@ -372,4 +374,27 @@ const createTagDestLink = (editorState, linkId, blockKeys) => {
 	);
 
 	return newEditorState;
+};
+
+export const findVisibleBlocks = (editorRef) => {
+	const bottom = window.innerHeight;
+	const blockElementList = editorRef.current.editor.children[0].children;
+
+	let blockKeyList = [];
+	// Iterate through each of our blocks
+	for (let element of blockElementList) {
+		let rect = element.getBoundingClientRect();
+		// If the block is visible on screen
+		if (rect.top < bottom && rect.bottom > 0) {
+			// Extract the block key and add it to the list to return
+			let offsetKey = element.dataset.offsetKey;
+			let blockKey = offsetKey.slice(0, offsetKey.indexOf('-'));
+			blockKeyList.push(blockKey);
+		} else if (blockKeyList.length) {
+			// If we had previous matches and are now off screen, return the list.
+			// return blockKeyList;
+			break;
+		}
+	}
+	return blockKeyList;
 };

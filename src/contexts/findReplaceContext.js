@@ -1,4 +1,6 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useRef, useEffect, useContext } from 'react';
+
+import { LeftNavContext } from './leftNavContext';
 
 export const FindReplaceContext = createContext();
 
@@ -9,6 +11,30 @@ const FindReplaceContextProvider = (props) => {
 	const [replaceDefaultOn, setReplaceDefaultOn] = useState(false);
 	const [refocusFind, setRefocusFind] = useState(false);
 	const [refocusReplace, setRefocusReplace] = useState(false);
+	const [findIndex, setFindIndex] = useState(null);
+
+	// REF
+	const findRegisterRef = useRef({});
+
+	// CONTEXT
+	const { currentDoc } = useContext(LeftNavContext).navData;
+
+	useEffect(() => {
+		setFindIndex(null);
+		findRegisterRef.current[findText.toLowerCase()] = {
+			array: [],
+			register: {},
+			blockList: {},
+		};
+
+		for (let key of Object.keys(findRegisterRef.current)) {
+			if (key !== findText.toLowerCase()) {
+				delete findRegisterRef.current[key];
+			}
+		}
+	}, [findText, currentDoc]);
+
+	// console.log(findText);
 
 	return (
 		<FindReplaceContext.Provider
@@ -23,6 +49,9 @@ const FindReplaceContextProvider = (props) => {
 				setRefocusFind,
 				refocusReplace,
 				setRefocusReplace,
+				findRegisterRef,
+				findIndex,
+				setFindIndex,
 			}}>
 			{props.children}
 		</FindReplaceContext.Provider>
