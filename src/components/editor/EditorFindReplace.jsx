@@ -40,9 +40,8 @@ const EditorFindReplace = ({ editorRef }) => {
 	// CONTEXT
 	const {
 		setFindText: setContextFindText,
+		setReplaceText: setContextReplaceText,
 		setShowFindReplace,
-		replaceDefaultOn,
-		setReplaceDefaultOn,
 		refocusFind,
 		setRefocusFind,
 		refocusReplace,
@@ -50,6 +49,9 @@ const EditorFindReplace = ({ editorRef }) => {
 		findRegisterRef,
 		findIndex,
 		setFindIndex,
+		totalMatches,
+		setReplaceSingleQueue,
+		queueDecoratorUpdate,
 	} = useContext(FindReplaceContext);
 	const { editorStyles, editorStateRef } = useContext(LeftNavContext);
 
@@ -57,6 +59,7 @@ const EditorFindReplace = ({ editorRef }) => {
 	const findInputRef = useRef(null);
 	const replaceInputRef = useRef(null);
 
+	// Focus the find input
 	useEffect(() => {
 		if (refocusFind) {
 			// Focus on the find input
@@ -65,6 +68,7 @@ const EditorFindReplace = ({ editorRef }) => {
 		}
 	}, [refocusFind]);
 
+	// Focus the replace input
 	useEffect(() => {
 		if (refocusReplace) {
 			// Focus on the replace input
@@ -94,6 +98,7 @@ const EditorFindReplace = ({ editorRef }) => {
 		repositionFindPopper(editorStyles, setRightOffset);
 	}, [editorStyles]);
 
+	// Close the find popper on ESCAPE
 	useEffect(() => {
 		const closeEventListener = (e) => {
 			if (e.keyCode === 27) {
@@ -119,15 +124,6 @@ const EditorFindReplace = ({ editorRef }) => {
 			// For the first search, find the match on screen (or the next off screen)
 			if (findIndex === null) {
 				let visibleBlocks = findVisibleBlocks(editorRef);
-
-				// Check the visible blocks for the first match
-				// let matchFound = false;
-				// findRegisterRef.current[findText.toLowerCase()].array.forEach((match, i) => {
-				// 	if (visibleBlocks.includes(match.blockKey)) {
-				// 		setFindIndex(i);
-				// 		return;
-				// 	}
-				// });
 
 				// Check the visible blocks for the first match
 				for (const [i, match] of findRegisterRef.current[
@@ -178,18 +174,50 @@ const EditorFindReplace = ({ editorRef }) => {
 		[findIndex, setFindIndex, findText]
 	);
 
+	// Move the find selection forwards/backwards
 	const handleInputEnter = useCallback(
 		(e) => {
 			// If enter was pressed
 			if (e.key === 'Enter') {
-				updateFindIndex('INCREMENT');
+				console.log('handle input enter');
+				if (e.shiftKey) {
+					updateFindIndex('DECREMENT');
+				} else {
+					updateFindIndex('INCREMENT');
+				}
 			}
 		},
 		[updateFindIndex]
 	);
 
+	// Replace a single find match
+	const handleReplaceSingle = useCallback(() => {
+		if (
+			findRegisterRef.current[findText.toLowerCase()] &&
+			findRegisterRef.current[findText.toLowerCase()].array.length &&
+			findIndex !== null
+		) {
+			// Finds the object to replace
+			let findObject = findRegisterRef.current[findText.toLowerCase()].array[findIndex];
+
+			// Queues the replacement of that match
+			setReplaceSingleQueue({
+				[`${findObject.blockKey}-${findObject.start}`]: true,
+			});
+
+			// If the replacement still matches our find, increment to the next index.
+			if (findText.toLowerCase() === replaceText.toLowerCase()) {
+				console.log('incremented because replaceText === findText');
+				updateFindIndex('INCREMENT');
+			}
+
+			queueDecoratorUpdate(findText);
+		}
+	}, [findIndex, queueDecoratorUpdate]);
+
 	// NEXT
-	// Implement the replace
+	// DONE - Implement the replace
+	// Implement replace all
 	// https://reactrocket.com/post/draft-js-search-and-replace/
 	// https://jsfiddle.net/levsha/o3xyvkw7/
 
@@ -216,9 +244,7 @@ const EditorFindReplace = ({ editorRef }) => {
 					/>
 					<p className='find-containter-counter'>
 						{findText && findRegisterRef.current[findText.toLowerCase()]
-							? `${findIndex === null ? 1 : findIndex + 1} of ${
-									findRegisterRef.current[findText.toLowerCase()].array.length
-							  }`
+							? `${findIndex === null ? 1 : findIndex + 1} of ${totalMatches}`
 							: ''}
 					</p>
 					<div className='find-container-svg' onClick={() => updateFindIndex('DECREMENT')}>
@@ -239,9 +265,14 @@ const EditorFindReplace = ({ editorRef }) => {
 							placeholder='Replace'
 							ref={replaceInputRef}
 							value={replaceText}
-							onChange={(e) => setReplaceText(e.target.value)}
+							onChange={(e) => {
+								setReplaceText(e.target.value);
+								setContextReplaceText(e.target.value);
+							}}
 						/>
-						<button className='find-container-replace-button'>Replace</button>
+						<button className='find-container-replace-button' onClick={handleReplaceSingle}>
+							Replace
+						</button>
 						<button className='find-container-replace-button'>Replace All</button>
 					</div>
 				</Collapse>

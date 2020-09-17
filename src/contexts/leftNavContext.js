@@ -33,6 +33,7 @@ const LeftNavContextProvider = (props) => {
 	// REFS
 	const linkStructureRef = useRef(linkStructure);
 	const editorStateRef = useRef(null);
+	const setEditorStateRef = useRef(null);
 	const scrollToLinkIdRef = useRef(null);
 
 	useEffect(() => {
@@ -68,6 +69,7 @@ const LeftNavContextProvider = (props) => {
 				scrollToLinkId,
 				setScrollToLinkId,
 				scrollToLinkIdRef,
+				setEditorStateRef,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

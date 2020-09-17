@@ -60,9 +60,9 @@ export const useDecorator = (currentDoc, editorRef) => {
 			);
 		} else if (showAllTags || findText || needToClearFind) {
 			// On the first iteration, find the visible blocks
-			if (!visibleBlockKeys.current.length) {
-				visibleBlockKeys.current = findVisibleBlocks(editorRef);
-			}
+			// if (!visibleBlockKeys.current.length) {
+			// 	visibleBlockKeys.current = findVisibleBlocks(editorRef);
+			// }
 
 			if (!findText && needToClearFind) {
 				setNeedToClearFind(false);
@@ -76,12 +76,12 @@ export const useDecorator = (currentDoc, editorRef) => {
 					linkStructureRef.current,
 					currentDoc,
 					showAllTags,
-					findText,
-					visibleBlockKeys.current
+					findText
+					// visibleBlockKeys.current
 				)
 			);
 			// Delay the update of the rest of the search results
-			queueDecoratorUpdate(currentDoc, showAllTags, findText);
+			// queueDecoratorUpdate(currentDoc, showAllTags, findText);
 		} else {
 			setDecorator(defaultDecorator);
 		}

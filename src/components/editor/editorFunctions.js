@@ -47,8 +47,6 @@ const buildFindWithRegexFunction = (findTextArray, visibleBlockKeys) => {
 	}
 	var regex = new RegExp('(?:' + findTextArray.join('|') + ')', 'gi');
 
-	console.log(visibleBlockKeys);
-
 	return function (contentBlock, callback, contentState) {
 		// If we have a list of block keys, make sure this block is in it
 		if (visibleBlockKeys && !visibleBlockKeys.includes(contentBlock.getKey())) {
@@ -385,7 +383,7 @@ export const findVisibleBlocks = (editorRef) => {
 	for (let element of blockElementList) {
 		let rect = element.getBoundingClientRect();
 		// If the block is visible on screen
-		if (rect.top < bottom && rect.bottom > 0) {
+		if (rect.top < bottom - 20 && rect.bottom > 80) {
 			// Extract the block key and add it to the list to return
 			let offsetKey = element.dataset.offsetKey;
 			let blockKey = offsetKey.slice(0, offsetKey.indexOf('-'));

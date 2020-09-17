@@ -92,6 +92,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		editorStyles,
 		editorArchives,
 		setEditorArchives,
+		setEditorStateRef,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
 
@@ -137,6 +138,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		},
 		[editorRef, editorState]
 	);
+
+	// Make setEditorState available in the context
+	useEffect(() => {
+		setEditorStateRef.current = setEditorState;
+	}, [setEditorState]);
 
 	// Focus on load
 	useEffect(() => {
