@@ -3,12 +3,13 @@ import React, { useState, useEffect, useContext, useRef, useCallback } from 'rea
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
 import { LeftNavContext } from '../../contexts/leftNavContext';
 
-import { findVisibleBlocks } from './editorFunctions';
+// import { findVisibleBlocks } from './editorFunctions';
 
 import CaratDownSVG from '../../assets/svg/CaratDownSVG';
 import CloseSVG from '../../assets/svg/CloseSVG';
 
 import Collapse from 'react-css-collapse';
+// import { replace } from 'tar';
 
 const repositionFindPopper = (editorStyles, setRightOffset) => {
 	let rootSize = Number(
@@ -48,16 +49,24 @@ const EditorFindReplace = ({ editorRef }) => {
 		setRefocusReplace,
 		findRegisterRef,
 		findIndex,
-		setFindIndex,
+		// setFindIndex,
 		totalMatches,
 		setReplaceSingleQueue,
 		queueDecoratorUpdate,
+		setReplaceAll,
+		updateFindIndex,
+		contextEditorRef,
 	} = useContext(FindReplaceContext);
 	const { editorStyles, editorStateRef } = useContext(LeftNavContext);
 
 	// REFS
 	const findInputRef = useRef(null);
 	const replaceInputRef = useRef(null);
+
+	// Synchronize the editorRef
+	useEffect(() => {
+		contextEditorRef.current = editorRef;
+	}, []);
 
 	// Focus the find input
 	useEffect(() => {
@@ -112,68 +121,6 @@ const EditorFindReplace = ({ editorRef }) => {
 		return () => document.removeEventListener('keyup', closeEventListener);
 	}, []);
 
-	const updateFindIndex = useCallback(
-		(direction) => {
-			if (
-				!findRegisterRef.current[findText.toLowerCase()] ||
-				!findRegisterRef.current[findText.toLowerCase()].array.length
-			) {
-				return;
-			}
-
-			// For the first search, find the match on screen (or the next off screen)
-			if (findIndex === null) {
-				let visibleBlocks = findVisibleBlocks(editorRef);
-
-				// Check the visible blocks for the first match
-				for (const [i, match] of findRegisterRef.current[
-					findText.toLowerCase()
-				].array.entries()) {
-					if (visibleBlocks.includes(match.blockKey)) {
-						setFindIndex(i);
-						return;
-					}
-				}
-
-				// If not on screen, iterate through the off-screen blocks to find the first mach
-				let contentState = editorStateRef.current.getCurrentContent();
-				let blockKey = visibleBlocks[visibleBlocks.length - 1].blockKey;
-				while (!visibleMatch) {
-					let block = contentState.getBlockAfter(blockKey);
-					if (!block) {
-						block = contentState.getFirstBlock();
-					}
-					blockKey = block.getKey();
-
-					if (findRegisterRef.current[findText.toLowerCase()].blockList[blockKey]) {
-						let matchIndex = findRegisterRef.current[findText.toLowerCase()].array.findIndex(
-							(item) => item.blockKey === blockKey
-						);
-						setFindIndex(matchIndex);
-						return;
-					}
-				}
-			}
-
-			if (direction === 'INCREMENT') {
-				if (findIndex === findRegisterRef.current[findText.toLowerCase()].array.length - 1) {
-					setFindIndex(0);
-				} else {
-					setFindIndex(findIndex + 1);
-				}
-			}
-
-			if (direction === 'DECREMENT') {
-				if (findIndex === 0) {
-					setFindIndex(findRegisterRef.current[findText.toLowerCase()].array.length - 1);
-				} else {
-					setFindIndex(findIndex - 1);
-				}
-			}
-		},
-		[findIndex, setFindIndex, findText]
-	);
-
 	// Move the find selection forwards/backwards
 	const handleInputEnter = useCallback(
 		(e) => {
@@ -207,13 +154,17 @@ const EditorFindReplace = ({ editorRef }) => {
 
 			// If the replacement still matches our find, increment to the next index.
 			if (findText.toLowerCase() === replaceText.toLowerCase()) {
-				console.log('incremented because replaceText === findText');
 				updateFindIndex('INCREMENT');
 			}
 
 			queueDecoratorUpdate(findText);
 		}
 	}, [findIndex, queueDecoratorUpdate]);
+
+	const handleReplaceAll = useCallback(() => {
+		console.log('firing replace all');
+		setReplaceAll(replaceText);
+	}, [replaceText]);
 
 	// NEXT
 	// DONE - Implement the replace
@@ -243,9 +194,9 @@ const EditorFindReplace = ({ editorRef }) => {
 						onKeyDown={handleInputEnter}
 					/>
 					<p className='find-containter-counter'>
-						{findText && findRegisterRef.current[findText.toLowerCase()]
+						{findText && findRegisterRef.current[findText.toLowerCase()] && totalMatches
 							? `${findIndex === null ? 1 : findIndex + 1} of ${totalMatches}`
-							: ''}
+							: '0 matches'}
 					</p>
 					<div className='find-container-svg' onClick={() => updateFindIndex('DECREMENT')}>
 						<CaratDownSVG rotate='90' />
@@ -253,7 +204,12 @@ const EditorFindReplace = ({ editorRef }) => {
 					<div className='find-container-svg' onClick={() => updateFindIndex('INCREMENT')}>
 						<CaratDownSVG rotate='-90' />
 					</div>
-					<div className='find-container-svg' onClick={() => setShowFindReplace(false)}>
+					<div
+						className='find-container-svg'
+						onClick={() => {
+							setContextFindText('');
+							setShowFindReplace(false);
+						}}>
 						<CloseSVG />
 					</div>
 				</div>
@@ -273,7 +229,9 @@ const EditorFindReplace = ({ editorRef }) => {
 						<button className='find-container-replace-button' onClick={handleReplaceSingle}>
 							Replace
 						</button>
-						<button className='find-container-replace-button'>Replace All</button>
+						<button className='find-container-replace-button' onClick={handleReplaceAll}>
+							Replace All
+						</button>
 					</div>
 				</Collapse>
 			</div>
