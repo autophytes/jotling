@@ -974,3 +974,52 @@ input[type='number']::-webkit-outer-spin-button {
 /* .highlight-keywords .keywords {
   font-weight: bold;
 } */
+
+.peek-wrapper {
+	position: absolute;
+	left: -3.5rem;
+	width: 3.5rem;
+}
+
+.peek-destination-decorator {
+	/* display: hidden; */
+	visibility: hidden;
+	padding: 0.1rem 0.4rem;
+	border-radius: 5px;
+	background-color: var(--color-primary);
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+	color: white;
+	font-weight: bold;
+	cursor: pointer;
+	transition: 150ms ease transform;
+	outline: none;
+	user-select: none;
+}
+
+.link-dest-decorator:hover .peek-destination-decorator,
+.peek-wrapper:hover .peek-destination-decorator {
+	visibility: visible;
+}
+
+.peek-destination-decorator:active {
+	transform: translateY(2px);
+	box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.2), 0 0px 4px -1px rgba(0, 0, 0, 0.12);
+}
+
+.peek-window {
+	position: fixed;
+	width: 600px;
+	height: 600px;
+	top: 200px;
+	left: 200px;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	border: 2px solid var(--color-primary);
+	background-color: white;
+	z-index: 9;
+	overflow-y: scroll;
+}
+
+.peek-window-highlight-decorator {
+	background-color: #ffff00;
+}

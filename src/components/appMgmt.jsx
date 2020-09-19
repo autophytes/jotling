@@ -16,6 +16,7 @@ import LoadingOverlay from './loadingOverlay';
 import { findFirstDocInFolder } from '../utils/utils';
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
+import PeekWindow from './editor/decorators/PeekDocument';
 
 // import ReactResizeDetector from 'react-resize-detector';
 
@@ -39,6 +40,7 @@ const AppMgmt = () => {
 		navData,
 		setNavData,
 		setEditorArchives,
+		peekWindowLinkId,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -241,6 +243,7 @@ const AppMgmt = () => {
 			<RightNav />
 			<EditorContainer {...{ saveProject, setSaveProject }} />
 			<LoadingOverlay {...{ structureLoaded }} />
+			{peekWindowLinkId !== null && <PeekWindow />}
 		</>
 	);
 };

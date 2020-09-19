@@ -1,5 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 
+import PeekDocument from './PeekDocument';
+
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 // PROPS INCLUDE
@@ -157,6 +159,7 @@ const LinkDestDecorator = ({
 		editorStyles,
 		editorStateRef,
 		navData,
+		setPeekWindowLinkId,
 	} = useContext(LeftNavContext);
 
 	// STATE
@@ -200,6 +203,14 @@ const LinkDestDecorator = ({
 
 	return (
 		<span className={'link-dest-decorator' + (editorStyles.showAllTags ? ' active' : '')}>
+			<div className='peek-wrapper'>
+				<button
+					className='peek-destination-decorator'
+					onClick={() => setPeekWindowLinkId(linkId)}>
+					Peek
+				</button>
+			</div>
+			{/* {showPeekWindow && <PeekDocument {...{ linkId, linkStructureRef }} />} */}
 			{children}
 		</span>
 	);
