@@ -112,6 +112,7 @@ const EditorFindReplace = ({ editorRef }) => {
 		const closeEventListener = (e) => {
 			if (e.keyCode === 27) {
 				// Clear our search variable
+				// e.stopImmediatePropagation();
 				setContextFindText('');
 				setShowFindReplace(false);
 			}
