@@ -3,6 +3,7 @@ import React, { useEffect, useState, useContext, useLayoutEffect, useRef } from 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import { generatePeekDecorator } from './PeekDocumentDecorators';
+import { findTitleForGivenDocFileName } from '../../../utils/utils';
 
 import CloseSVG from '../../../assets/svg/CloseSVG';
 
@@ -13,10 +14,11 @@ const minWidth = 300;
 const PeekWindow = () => {
 	// STATE
 	const [documentName, setDocumentName] = useState('');
+	const [documentTitle, setDocumentTitle] = useState('');
 	const [editorState, setEditorState] = useState(EditorState.createEmpty());
 	const [containerTop, setContainerTop] = useState(200);
 	const [containerLeft, setContainerLeft] = useState(200);
-	const [containerWidth, setContainerWidth] = useState(600);
+	const [containerWidth, setContainerWidth] = useState(400);
 	const [containerHeight, setContainerHeight] = useState(600);
 	const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -32,6 +34,9 @@ const PeekWindow = () => {
 		setPeekWindowLinkId,
 		navData,
 		setNavData,
+		setScrollToLinkId,
+		scrollToLinkIdRef,
+		docStructure,
 	} = useContext(LeftNavContext);
 
 	// REPOSITION
@@ -66,6 +71,8 @@ const PeekWindow = () => {
 
 		// When finshed resizing, set the width in REMs so it responds to root size changes
 		const handleRepositionMouseUp = (e) => {
+			console.log('REPOSITION MOUSEUP EVENT FIRED');
+
 			window.removeEventListener('mousemove', handleRepositionMouseMove);
 			window.removeEventListener('mouseup', handleRepositionMouseUp);
 
@@ -173,6 +180,8 @@ const PeekWindow = () => {
 			if (e.keyCode === 27) {
 				// Clear our peek link ID
 				// e.stopImmediatePropagation();
+				setScrollToLinkId(peekWindowLinkId);
+				scrollToLinkIdRef.current = peekWindowLinkId;
 				setPeekWindowLinkId(null);
 			}
 		};
@@ -181,10 +190,27 @@ const PeekWindow = () => {
 		return () => document.removeEventListener('keyup', closeEventListener);
 	}, []);
 
+	// Setting the document name
 	useEffect(() => {
 		setDocumentName(linkStructureRef.current.links[peekWindowLinkId].source);
 	}, [peekWindowLinkId, linkStructureRef]);
 
+	// Retrieve the document title
+	useEffect(() => {
+		const docCategories = ['draft', 'research', 'pages'];
+
+		for (let category of docCategories) {
+			let potentialTitle = findTitleForGivenDocFileName(docStructure[category], documentName);
+			if (potentialTitle) {
+				setDocumentTitle(potentialTitle);
+				return;
+			}
+		}
+
+		setDocumentTitle('');
+	}, [documentName, docStructure]);
+
+	// Generate our editorState to view in the peek window
 	useEffect(() => {
 		if (documentName && editorArchives[documentName]) {
 			console.log(editorArchives[documentName]);
@@ -200,6 +226,33 @@ const PeekWindow = () => {
 		}
 	}, [documentName, editorArchives, peekWindowLinkId]);
 
+	useEffect(() => {
+		const rootSize = Number(
+			window
+				.getComputedStyle(document.querySelector(':root'))
+				.getPropertyValue('font-size')
+				.replace('px', '')
+		);
+
+		const windowHeight = window.innerHeight;
+		const windowWidth = window.innerWidth;
+
+		const defaultHeight = Math.min(500, windowHeight - 2.5 * rootSize - 1.25 * rootSize);
+		const defaultWidth = Math.min(450, (windowWidth - 100) / 2);
+
+		console.log('2.5 * rootSize: ', 2.5 * rootSize);
+
+		const defaultTop =
+			windowHeight / 2 - defaultHeight / 2 + (1.25 * rootSize) / 2 + (2.5 * rootSize) / 2;
+		const defaultLeft = windowWidth - defaultWidth - 50;
+
+		setContainerTop(defaultTop);
+		setContainerLeft(defaultLeft);
+		setContainerWidth(defaultWidth);
+		setContainerHeight(defaultHeight);
+	}, []);
+
+	// Scroll to our matching link
 	useLayoutEffect(() => {
 		const firstPeekHighlightElement = document.querySelector(
 			'.peek-window-highlight-decorator'
@@ -233,11 +286,13 @@ const PeekWindow = () => {
 						className='peek-window-open'
 						onClick={() => {
 							setNavData({ ...navData, currentDoc: documentName });
+							setScrollToLinkId(peekWindowLinkId);
+							scrollToLinkIdRef.current = peekWindowLinkId;
 							setPeekWindowLinkId(null);
 						}}>
 						Open Document
 					</button>
-					<p className='peek-window-title'>{documentName}</p>
+					<p className='peek-window-title'>{documentTitle ? documentTitle : documentName}</p>
 					<button className='peek-window-close' onClick={() => setPeekWindowLinkId(null)}>
 						<CloseSVG />
 					</button>

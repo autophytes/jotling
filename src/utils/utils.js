@@ -255,3 +255,27 @@ export const findFirstDocInFolder = (currentFolder, parentFolders = []) => {
 	// No documents were found
 	return false;
 };
+
+// Return the "name" of the matching document in the folder structure or false if not found.
+export const findTitleForGivenDocFileName = (currentFolder, fileName) => {
+	// Loop through each of the cildren
+	for (let child of currentFolder.children) {
+		// Check if child is our matching document
+		if (child.fileName === fileName) {
+			return child.name;
+		}
+
+		// Check if the folder contains our matching document
+		if (child.type === 'folder') {
+			let potentialMatch = findTitleForGivenDocFileName(
+				currentFolder.folders[child.id],
+				fileName
+			);
+			if (potentialMatch) {
+				return potentialMatch;
+			}
+		}
+	}
+	// If no match in any of the children, return false
+	return false;
+};
