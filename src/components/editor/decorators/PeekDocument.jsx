@@ -18,8 +18,8 @@ const PeekWindow = () => {
 	const [editorState, setEditorState] = useState(EditorState.createEmpty());
 	const [containerTop, setContainerTop] = useState(200);
 	const [containerLeft, setContainerLeft] = useState(200);
-	const [containerWidth, setContainerWidth] = useState(400);
-	const [containerHeight, setContainerHeight] = useState(600);
+	const [containerWidth, setContainerWidth] = useState(0);
+	const [containerHeight, setContainerHeight] = useState(0);
 	const [hasScrolled, setHasScrolled] = useState(false);
 
 	// REFS
@@ -280,6 +280,7 @@ const PeekWindow = () => {
 					left: `${containerLeft}px`,
 					width: `${containerWidth}px`,
 					height: `${containerHeight}px`,
+					opacity: containerWidth ? 1 : 0,
 				}}>
 				<div className='peek-window-top-handle' onMouseDown={handleRepositionMouseDown}>
 					<button

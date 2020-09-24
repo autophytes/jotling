@@ -33,7 +33,7 @@ const RightNav = () => {
 		let windowWidth = window.innerWidth;
 		let minWidth = 7 * rootSize;
 		let maxWidth = 25 * rootSize;
-		let widthOffset = rootSize / 4;
+		let widthOffset = 1;
 
 		const handleResizeMouseMove = (e) => {
 			if (e.clientX !== 0) {
@@ -59,55 +59,58 @@ const RightNav = () => {
 	};
 
 	return (
-		<nav
-			className={'side-nav right-nav' + (pinNav ? '' : ' hidden')}
-			style={{ width: editorStyles.rightNav + 'rem' }}
-			ref={navRef}>
-			<div
-				className='vertical-rule-side-nav-wrapper'
-				style={pinNav ? {} : { cursor: 'inherit' }}
-				{...(pinNav && {
-					onMouseDown: handleResizeMouseDown,
-					onDoubleClick: () => resetNavWidth('rightNav'),
-				})}>
+		<>
+			<div className='side-nav-hover-region right' />
+			<nav
+				className={'side-nav right-nav' + (pinNav ? '' : ' hidden')}
+				style={{ width: editorStyles.rightNav + 'rem' }}
+				ref={navRef}>
 				<div className={'vertical-rule vr-right-nav' + (isResizing ? ' primary-color' : '')} />
-			</div>
-			<div className='side-nav-container'>
-				<div className='right-nav-top-buttons'>
-					<button
-						className={'nav-button' + (pinNav ? ' active' : '')}
-						onMouseUp={() => {
-							setPinNav(!pinNav);
-							setEditorStyles({ ...editorStyles, rightIsPinned: !pinNav });
-						}}>
-						<PushpinSVG />
-					</button>
-				</div>
-				<div className='right-nav-sections'>
-					<div
-						className={'nav-section-tab first' + (activeTab === 'document' ? ' active' : '')}
-						onClick={() => setActiveTab('document')}>
-						<DocumentInfoSVG />
+				<div
+					className='vertical-rule-drag-region right'
+					style={pinNav ? {} : { cursor: 'inherit' }}
+					{...(pinNav && {
+						onMouseDown: handleResizeMouseDown,
+						onDoubleClick: () => resetNavWidth('rightNav'),
+					})}
+				/>
+				<div className='side-nav-container'>
+					<div className='right-nav-top-buttons'>
+						<button
+							className={'nav-button' + (pinNav ? ' active' : '')}
+							onMouseUp={() => {
+								setPinNav(!pinNav);
+								setEditorStyles({ ...editorStyles, rightIsPinned: !pinNav });
+							}}>
+							<PushpinSVG />
+						</button>
 					</div>
-					<div
-						className={'nav-section-tab' + (activeTab === 'tags' ? ' active' : '')}
-						onClick={() => setActiveTab('tags')}>
-						<TagSingleSVG />
+					<div className='right-nav-sections'>
+						<div
+							className={'nav-section-tab first' + (activeTab === 'document' ? ' active' : '')}
+							onClick={() => setActiveTab('document')}>
+							<DocumentInfoSVG />
+						</div>
+						<div
+							className={'nav-section-tab' + (activeTab === 'tags' ? ' active' : '')}
+							onClick={() => setActiveTab('tags')}>
+							<TagSingleSVG />
+						</div>
+						<div
+							className={'nav-section-tab last' + (activeTab === 'settings' ? ' active' : '')}
+							onClick={() => setActiveTab('settings')}>
+							<SettingsDocSVG />
+						</div>
 					</div>
-					<div
-						className={'nav-section-tab last' + (activeTab === 'settings' ? ' active' : '')}
-						onClick={() => setActiveTab('settings')}>
-						<SettingsDocSVG />
-					</div>
-				</div>
 
-				<RightNavContent {...{ activeTab }} />
+					<RightNavContent {...{ activeTab }} />
 
-				<div className='right-nav-footer'>
-					<div>current version</div>
+					<div className='right-nav-footer'>
+						<div>current version</div>
+					</div>
 				</div>
-			</div>
-		</nav>
+			</nav>
+		</>
 	);
 };
 

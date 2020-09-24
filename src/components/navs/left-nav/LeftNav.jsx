@@ -49,7 +49,7 @@ const LeftNav = () => {
 
 		let minWidth = 7 * rootSize;
 		let maxWidth = 25 * rootSize;
-		let widthOffset = rootSize / 4;
+		let widthOffset = 2;
 
 		// When the mouse moves, update the width to reflext the mouse's X coordinate
 		const handleResizeMouseMove = (e) => {
@@ -65,9 +65,9 @@ const LeftNav = () => {
 			window.removeEventListener('mousemove', handleResizeMouseMove);
 			window.removeEventListener('mouseup', handleResizeMouseUp);
 
-			let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX)) + widthOffset;
+			let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX));
 
-			setEditorStyles({ ...editorStyles, leftNav: newWidth / rootSize });
+			setEditorStyles({ ...editorStyles, leftNav: newWidth / rootSize }) + widthOffset;
 		};
 
 		window.addEventListener('mousemove', handleResizeMouseMove);
@@ -158,95 +158,98 @@ const LeftNav = () => {
 	);
 
 	return (
-		<nav
-			className={'side-nav left-nav' + (pinNav ? '' : ' hidden')}
-			style={{ width: editorStyles.leftNav + 'rem' }}
-			ref={navRef}>
-			<div className='side-nav-container'>
-				<div className='left-nav-top-buttons'>
-					<div className='add-file-folder-wrapper'>
-						<button className='nav-button add-file-button' onClick={() => addFile('doc')}>
-							<span className='plus-sign'>
-								<PlusSVG />
-							</span>
-							<DocumentSingleSVG />
+		<>
+			<div className='side-nav-hover-region left' />
+			<nav
+				className={'side-nav left-nav animation' + (pinNav ? '' : ' hidden')}
+				style={{ width: editorStyles.leftNav + 'rem' }}
+				ref={navRef}>
+				<div className='side-nav-container'>
+					<div className='left-nav-top-buttons'>
+						<div className='add-file-folder-wrapper'>
+							<button className='nav-button add-file-button' onClick={() => addFile('doc')}>
+								<span className='plus-sign'>
+									<PlusSVG />
+								</span>
+								<DocumentSingleSVG />
+							</button>
+							<button className='nav-button add-file-button' onClick={() => addFile('folder')}>
+								<span className='plus-sign'>
+									<PlusSVG />
+								</span>
+								<FolderOpenSVG />
+							</button>
+						</div>
+						<button
+							className={'nav-button' + (pinNav ? ' active' : '')}
+							onMouseUp={() => {
+								setPinNav(!pinNav);
+								setEditorStyles({ ...editorStyles, leftIsPinned: !pinNav });
+							}}>
+							<PushpinSVG />
 						</button>
-						<button className='nav-button add-file-button' onClick={() => addFile('folder')}>
-							<span className='plus-sign'>
-								<PlusSVG />
-							</span>
-							<FolderOpenSVG />
-						</button>
 					</div>
-					<button
-						className={'nav-button' + (pinNav ? ' active' : '')}
-						onMouseUp={() => {
-							setPinNav(!pinNav);
-							setEditorStyles({ ...editorStyles, leftIsPinned: !pinNav });
-						}}>
-						<PushpinSVG />
-					</button>
-				</div>
 
-				<div className='left-nav-sections'>
-					<div
-						className={
-							'nav-section-tab first' + (navData.currentTab === 'pages' ? ' active' : '')
-						}
-						onClick={() =>
-							setNavData({
-								...navData,
-								currentTab: 'pages',
-								lastClicked: { type: '', id: '' },
-							})
-						}>
-						<DocumentPagesSVG />
+					<div className='left-nav-sections'>
+						<div
+							className={
+								'nav-section-tab first' + (navData.currentTab === 'pages' ? ' active' : '')
+							}
+							onClick={() =>
+								setNavData({
+									...navData,
+									currentTab: 'pages',
+									lastClicked: { type: '', id: '' },
+								})
+							}>
+							<DocumentPagesSVG />
+						</div>
+						<div
+							className={
+								'nav-section-tab' + (navData.currentTab === 'research' ? ' active' : '')
+							}
+							onClick={() =>
+								setNavData({
+									...navData,
+									currentTab: 'research',
+									lastClicked: { type: '', id: '' },
+								})
+							}>
+							<LightbulbSVG />
+						</div>
+						<div
+							className={
+								'nav-section-tab last' + (navData.currentTab === 'draft' ? ' active' : '')
+							}
+							onClick={() =>
+								setNavData({
+									...navData,
+									currentTab: 'draft',
+									lastClicked: { type: '', id: '' },
+								})
+							}>
+							<BookDraftSVG />
+						</div>
 					</div>
-					<div
-						className={
-							'nav-section-tab' + (navData.currentTab === 'research' ? ' active' : '')
-						}
-						onClick={() =>
-							setNavData({
-								...navData,
-								currentTab: 'research',
-								lastClicked: { type: '', id: '' },
-							})
-						}>
-						<LightbulbSVG />
-					</div>
-					<div
-						className={
-							'nav-section-tab last' + (navData.currentTab === 'draft' ? ' active' : '')
-						}
-						onClick={() =>
-							setNavData({
-								...navData,
-								currentTab: 'draft',
-								lastClicked: { type: '', id: '' },
-							})
-						}>
-						<BookDraftSVG />
+
+					<LeftNavContent />
+
+					<div className='left-nav-footer'>
+						<p>497 words</p>
+						<p>49% today's goal</p>
 					</div>
 				</div>
-
-				<LeftNavContent />
-
-				<div className='left-nav-footer'>
-					<p>497 words</p>
-					<p>49% today's goal</p>
-				</div>
-			</div>
-			<div
-				className='vertical-rule-side-nav-wrapper'
-				style={pinNav ? {} : { cursor: 'inherit' }}
-				{...(pinNav && {
-					onMouseDown: handleResizeMouseDown,
-					onDoubleClick: () => resetNavWidth('leftNav'),
-				})}>
 				<div className={'vertical-rule vr-left-nav' + (isResizing ? ' primary-color' : '')} />
-			</div>
-		</nav>
+				<div
+					className='vertical-rule-drag-region left'
+					style={pinNav ? {} : { cursor: 'inherit' }}
+					{...(pinNav && {
+						onMouseDown: handleResizeMouseDown,
+						onDoubleClick: () => resetNavWidth('leftNav'),
+					})}
+				/>
+			</nav>
+		</>
 	);
 };
 
