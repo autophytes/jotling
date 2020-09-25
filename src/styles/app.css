@@ -144,7 +144,10 @@ li .public-DraftStyleDefault-block {
 }
 
 .editor-nav {
-	position: absolute;
+	position: sticky;
+	top: calc(var(--top-nav-height) + 20px);
+	transform: translateY(-20px);
+	/* We transform -20px to cover the hover region */
 	min-height: var(--top-nav-height);
 	width: 100%;
 	padding-top: 0.25rem;
@@ -338,17 +341,21 @@ li .public-DraftStyleDefault-block {
 
 .editor-nav.hidden {
 	/* transform: translateY(calc(var(--top-nav-height) / -2)); */
-	transform: translateY(-105%);
+	transform: translateY(calc(-105% - 20px));
 	opacity: 0;
 }
 
-.editor-nav-hover-region:hover + .editor-nav.hidden,
 .side-nav-hover-region.left:hover + .side-nav.left-nav.hidden,
 .side-nav-hover-region.right:hover + .side-nav.right-nav.hidden,
 .side-nav.left-nav.hidden:hover,
-.side-nav.right-nav.hidden:hover,
-.editor-nav.hidden:hover {
+.side-nav.right-nav.hidden:hover {
 	transform: none;
+	opacity: 1;
+}
+
+.editor-nav-hover-region:hover + .editor-nav.hidden,
+.editor-nav.hidden:hover {
+	transform: translateY(-20px);
 	opacity: 1;
 }
 /* .side-nav.left-nav.hidden:hover,
