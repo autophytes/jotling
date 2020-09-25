@@ -74,6 +74,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 				.getPropertyValue('font-size')
 				.replace('px', '')
 		);
+		console.log('popper root size: ', rootSize);
 
 		let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
 		let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
@@ -82,6 +83,17 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 		let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
 		let newLeftOffset = leftNav + gutter / 2;
 		let newRightOffset = rightNav + gutter / 2;
+
+		console.log('leftNav', leftNav);
+		console.log('rightNav', rightNav);
+		console.log('maxEditor', maxEditor);
+		console.log('windowWidth', windowWidth);
+		console.log('gutter', gutter);
+		console.log('newLeftOffset', newLeftOffset);
+		console.log('newRightOffset', newRightOffset);
+
+		console.log(newLeftOffset);
+		console.log(newRightOffset);
 
 		setLeftOffset(newLeftOffset);
 		setRightOffset(newRightOffset);

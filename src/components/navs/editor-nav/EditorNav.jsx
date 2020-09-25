@@ -93,12 +93,15 @@ const EditorNav = React.memo(
 		currentAlignment,
 		currentStyles,
 		createTagLink,
+		editorContainerRef,
 	}) => {
 		// STATE
 		const [pinNav, setPinNav] = useState(true);
 		const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);
 		const [fontList, setFontList] = useState([]);
 		const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
+		const [hoverRegionLeft, setHoverRegionLeft] = useState(0);
+		const [hoverRegionRight, setHoverRegionRight] = useState(0);
 
 		// CONTEXT
 		const { editorStyles } = useContext(LeftNavContext);
@@ -171,198 +174,237 @@ const EditorNav = React.memo(
 			console.log('ipcRenderer useEffect triggered');
 		}, [ipcRenderer, setFontList]);
 
+		// Calculates the left and right hover region boundaries
+		useEffect(() => {
+			let rootSize = Number(
+				window
+					.getComputedStyle(document.querySelector(':root'))
+					.getPropertyValue('font-size')
+					.replace('px', '')
+			);
+			console.log('editor root size: ', rootSize);
+
+			let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
+			let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
+			let maxEditor = editorStyles.editorMaxWidth * rootSize;
+			let windowWidth = window.innerWidth;
+			let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
+			let newLeftOffset = leftNav + gutter / 2;
+			let newRightOffset = rightNav + gutter / 2;
+
+			console.log('leftNav', leftNav);
+			console.log('rightNav', rightNav);
+			console.log('maxEditor', maxEditor);
+			console.log('windowWidth', windowWidth);
+			console.log('gutter', gutter);
+			console.log('newLeftOffset', newLeftOffset);
+			console.log('newRightOffset', newRightOffset);
+
+			console.log(newLeftOffset);
+			console.log(newRightOffset);
+
+			setHoverRegionLeft(newLeftOffset);
+			setHoverRegionRight(newRightOffset);
+		}, [editorStyles]);
+
 		return (
-			<nav
-				className={'editor-nav' + (pinNav ? '' : ' hidden')}
-				style={{
-					maxWidth: `calc(100% - ${
-						(editorStyles.leftIsPinned ? editorStyles.leftNav : 0) +
-						(editorStyles.rightIsPinned ? editorStyles.rightNav : 0)
-					}rem)`,
-				}}>
-				{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
-				<span className='editor-nav-subsection'>
-					<button
-						className={'nav-button' + (pinNav ? ' active' : '')}
-						style={{ marginRight: '0.5rem' }}
-						onMouseUp={() => setPinNav(!pinNav)}>
-						<PushpinSVG />
-					</button>
+			<>
+				<div className='editor-nav-hover-region' />
+				{/* <div className='editor-nav-hover-region' /> */}
+				<nav
+					className={'editor-nav' + (pinNav ? '' : ' hidden')}
+					style={{
+						maxWidth: `calc(100% - ${
+							(editorStyles.leftIsPinned ? editorStyles.leftNav : 0) +
+							(editorStyles.rightIsPinned ? editorStyles.rightNav : 0)
+						}rem)`,
+					}}>
+					{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
+					<span className='editor-nav-subsection'>
+						<button
+							className={'nav-button' + (pinNav ? ' active' : '')}
+							style={{ marginRight: '0.5rem' }}
+							onMouseUp={() => setPinNav(!pinNav)}>
+							<PushpinSVG />
+						</button>
 
-					<select value={currentFont} onChange={(e) => handleFontSelect(e.target.value)}>
-						{recentlyUsedFonts.map((font, i) => (
-							<option key={i} value={font}>
-								{font}
-							</option>
-						))}
-						<option disabled>- - - - -</option>
-
-						{fontList.map((font, i) => {
-							const trimFont = font.replace(/["]+/g, '');
-							return (
-								<option key={i} value={trimFont}>
-									{trimFont}
+						<select value={currentFont} onChange={(e) => handleFontSelect(e.target.value)}>
+							{recentlyUsedFonts.map((font, i) => (
+								<option key={i} value={font}>
+									{font}
 								</option>
-							);
-						})}
-					</select>
+							))}
+							<option disabled>- - - - -</option>
 
-					<input
-						type='number'
-						min='0'
-						max='999'
-						value={fontSize}
-						onChange={(e) => setFontSize(e.target.value)}
-						style={{ marginLeft: '0.5rem' }}
-					/>
-					<button
-						className='nav-button'
-						onClick={() => increaseDecreaseFontSize('decrease')}
-						style={{ marginRight: '0' }}>
-						<DecreaseFontSizeSVG />
-					</button>
-					<button
-						className='nav-button'
-						onClick={() => increaseDecreaseFontSize('increase')}
-						style={{ marginLeft: '0' }}>
-						<IncreaseFontSizeSVG />
-					</button>
+							{fontList.map((font, i) => {
+								const trimFont = font.replace(/["]+/g, '');
+								return (
+									<option key={i} value={trimFont}>
+										{trimFont}
+									</option>
+								);
+							})}
+						</select>
 
-					<input
-						type='number'
-						min='0'
-						max='10'
-						step='0.1'
-						value={lineHeight}
-						onChange={(e) => setLineHeight(e.target.value)}
-						style={{ marginLeft: '0.5rem' }}
-					/>
-					<button className='nav-button' disabled>
-						<LineSpacingSVG />
-					</button>
-				</span>
+						<input
+							type='number'
+							min='0'
+							max='999'
+							value={fontSize}
+							onChange={(e) => setFontSize(e.target.value)}
+							style={{ marginLeft: '0.5rem' }}
+						/>
+						<button
+							className='nav-button'
+							onClick={() => increaseDecreaseFontSize('decrease')}
+							style={{ marginRight: '0' }}>
+							<DecreaseFontSizeSVG />
+						</button>
+						<button
+							className='nav-button'
+							onClick={() => increaseDecreaseFontSize('increase')}
+							style={{ marginLeft: '0' }}>
+							<IncreaseFontSizeSVG />
+						</button>
 
-				{/* <div className='editor-nav-vertical-rule' /> */}
+						<input
+							type='number'
+							min='0'
+							max='10'
+							step='0.1'
+							value={lineHeight}
+							onChange={(e) => setLineHeight(e.target.value)}
+							style={{ marginLeft: '0.5rem' }}
+						/>
+						<button className='nav-button' disabled>
+							<LineSpacingSVG />
+						</button>
+					</span>
 
-				<span className='editor-nav-subsection'>
-					<InlineStyleButton
-						currentStyles={currentStyles}
-						toggleFn={toggleInlineStyle}
-						style='BOLD'>
-						<BoldSVG />
-					</InlineStyleButton>
+					{/* <div className='editor-nav-vertical-rule' /> */}
 
-					<InlineStyleButton
-						currentStyles={currentStyles}
-						toggleFn={toggleInlineStyle}
-						style='ITALIC'>
-						<ItalicSVG />
-					</InlineStyleButton>
+					<span className='editor-nav-subsection'>
+						<InlineStyleButton
+							currentStyles={currentStyles}
+							toggleFn={toggleInlineStyle}
+							style='BOLD'>
+							<BoldSVG />
+						</InlineStyleButton>
 
-					<InlineStyleButton
-						currentStyles={currentStyles}
-						toggleFn={toggleInlineStyle}
-						style='UNDERLINE'>
-						<UnderlineSVG />
-					</InlineStyleButton>
+						<InlineStyleButton
+							currentStyles={currentStyles}
+							toggleFn={toggleInlineStyle}
+							style='ITALIC'>
+							<ItalicSVG />
+						</InlineStyleButton>
 
-					<InlineStyleButton
-						currentStyles={currentStyles}
-						toggleFn={toggleInlineStyle}
-						style='STRIKETHROUGH'>
-						<StrikethroughSVG />
-					</InlineStyleButton>
+						<InlineStyleButton
+							currentStyles={currentStyles}
+							toggleFn={toggleInlineStyle}
+							style='UNDERLINE'>
+							<UnderlineSVG />
+						</InlineStyleButton>
 
-					<InlineStyleButton
-						currentStyles={currentStyles}
-						toggleFn={toggleInlineStyle}
-						style='SUBSCRIPT'
-						removeStyle='SUPERSCRIPT'>
-						<SubscriptSVG />
-					</InlineStyleButton>
+						<InlineStyleButton
+							currentStyles={currentStyles}
+							toggleFn={toggleInlineStyle}
+							style='STRIKETHROUGH'>
+							<StrikethroughSVG />
+						</InlineStyleButton>
 
-					<InlineStyleButton
-						currentStyles={currentStyles}
-						toggleFn={toggleInlineStyle}
-						style='SUPERSCRIPT'
-						removeStyle='SUBSCRIPT'>
-						<SuperscriptSVG />
-					</InlineStyleButton>
+						<InlineStyleButton
+							currentStyles={currentStyles}
+							toggleFn={toggleInlineStyle}
+							style='SUBSCRIPT'
+							removeStyle='SUPERSCRIPT'>
+							<SubscriptSVG />
+						</InlineStyleButton>
 
-					<button
-						className='nav-button'
-						onMouseDown={(e) => e.preventDefault()}
-						onClick={(e) => {
-							e.stopPropagation();
-							if (document.getSelection().toString().length) {
-								setDisplayLinkPopper(true);
-							}
-						}}>
-						<ChainSVG />
-					</button>
-					{/* Add Tag Popper */}
-					{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
+						<InlineStyleButton
+							currentStyles={currentStyles}
+							toggleFn={toggleInlineStyle}
+							style='SUPERSCRIPT'
+							removeStyle='SUBSCRIPT'>
+							<SuperscriptSVG />
+						</InlineStyleButton>
+
+						<button
+							className='nav-button'
+							onMouseDown={(e) => e.preventDefault()}
+							onClick={(e) => {
+								e.stopPropagation();
+								if (document.getSelection().toString().length) {
+									setDisplayLinkPopper(true);
+								}
+							}}>
+							<ChainSVG />
+						</button>
+						{/* Add Tag Popper */}
+						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
                 to close the popper. This can later be used for confirmation messages and things like that. */}
-					{displayLinkPopper && <AddLinkPopper {...{ createTagLink, setDisplayLinkPopper }} />}
+						{displayLinkPopper && (
+							<AddLinkPopper {...{ createTagLink, setDisplayLinkPopper }} />
+						)}
 
-					<button className='nav-button' onClick={() => saveFile()}>
-						<HighlightSVG />
-					</button>
-					<button className='nav-button' onClick={() => loadFile()}>
-						<TextColorSVG />
-					</button>
+						<button className='nav-button' onClick={() => saveFile()}>
+							<HighlightSVG />
+						</button>
+						<button className='nav-button' onClick={() => loadFile()}>
+							<TextColorSVG />
+						</button>
 
-					<button
-						className='nav-button'
-						onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
-						<ListBulletSVG />
-					</button>
+						<button
+							className='nav-button'
+							onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
+							<ListBulletSVG />
+						</button>
 
-					<button
-						className='nav-button'
-						onMouseDown={(e) => toggleBlockType(e, 'ordered-list-item')}>
-						<ListNumberSVG />
-					</button>
+						<button
+							className='nav-button'
+							onMouseDown={(e) => toggleBlockType(e, 'ordered-list-item')}>
+							<ListNumberSVG />
+						</button>
 
-					<button
-						className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
-						onMouseDown={(e) => {
-							toggleTextAlign(e, 'left', currentAlignment);
-						}}>
-						<AlignLeftSVG />
-					</button>
+						<button
+							className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
+							onMouseDown={(e) => {
+								toggleTextAlign(e, 'left', currentAlignment);
+							}}>
+							<AlignLeftSVG />
+						</button>
 
-					<button
-						className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
-						onMouseDown={(e) => {
-							toggleTextAlign(e, 'center', currentAlignment);
-						}}>
-						<AlignCenterSVG />
-					</button>
+						<button
+							className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
+							onMouseDown={(e) => {
+								toggleTextAlign(e, 'center', currentAlignment);
+							}}>
+							<AlignCenterSVG />
+						</button>
 
-					<button
-						className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
-						onMouseDown={(e) => {
-							toggleTextAlign(e, 'right', currentAlignment);
-						}}>
-						<AlignRightSVG />
-					</button>
+						<button
+							className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
+							onMouseDown={(e) => {
+								toggleTextAlign(e, 'right', currentAlignment);
+							}}>
+							<AlignRightSVG />
+						</button>
 
-					<button
-						className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
-						onMouseDown={(e) => {
-							toggleTextAlign(e, 'justify', currentAlignment);
-						}}>
-						<AlignJustifySVG />
-					</button>
+						<button
+							className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
+							onMouseDown={(e) => {
+								toggleTextAlign(e, 'justify', currentAlignment);
+							}}>
+							<AlignJustifySVG />
+						</button>
 
-					<button
-						className={'nav-button' + (spellCheck ? ' active' : '')}
-						onMouseDown={(e) => toggleSpellCheck(e)}>
-						<SpellcheckSVG />
-					</button>
-				</span>
-			</nav>
+						<button
+							className={'nav-button' + (spellCheck ? ' active' : '')}
+							onMouseDown={(e) => toggleSpellCheck(e)}>
+							<SpellcheckSVG />
+						</button>
+					</span>
+				</nav>
+			</>
 		);
 	}
 );

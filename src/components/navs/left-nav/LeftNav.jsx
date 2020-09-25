@@ -242,11 +242,13 @@ const LeftNav = () => {
 				<div className={'vertical-rule vr-left-nav' + (isResizing ? ' primary-color' : '')} />
 				<div
 					className='vertical-rule-drag-region left'
-					style={pinNav ? {} : { cursor: 'inherit' }}
-					{...(pinNav && {
-						onMouseDown: handleResizeMouseDown,
-						onDoubleClick: () => resetNavWidth('leftNav'),
-					})}
+					// style={pinNav ? {} : { cursor: 'inherit' }}
+					onMouseDown={handleResizeMouseDown}
+					onDoubleClick={() => resetNavWidth('leftNav')}
+					// {...(pinNav && {
+					// 	onMouseDown: handleResizeMouseDown,
+					// 	onDoubleClick: () => resetNavWidth('leftNav'),
+					// })}
 				/>
 			</nav>
 		</>

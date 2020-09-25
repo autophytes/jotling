@@ -68,11 +68,13 @@ const RightNav = () => {
 				<div className={'vertical-rule vr-right-nav' + (isResizing ? ' primary-color' : '')} />
 				<div
 					className='vertical-rule-drag-region right'
-					style={pinNav ? {} : { cursor: 'inherit' }}
-					{...(pinNav && {
-						onMouseDown: handleResizeMouseDown,
-						onDoubleClick: () => resetNavWidth('rightNav'),
-					})}
+					onMouseDown={handleResizeMouseDown}
+					onDoubleClick={() => resetNavWidth('rightNav')}
+					// style={pinNav ? {} : { cursor: 'inherit' }}
+					// {...(pinNav && {
+					// 	onMouseDown: handleResizeMouseDown,
+					// 	onDoubleClick: () => resetNavWidth('rightNav'),
+					// })}
 				/>
 				<div className='side-nav-container'>
 					<div className='right-nav-top-buttons'>

@@ -119,6 +119,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// REFS
 	const editorRef = useRef(null);
+	const editorContainerRef = useRef(null);
 
 	// CUSTOM HOOKS
 	const decorator = useDecorator(prev.doc, editorRef);
@@ -551,29 +552,34 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				paddingLeft: editorStyles.leftIsPinned ? editorStyles.leftNav + 'rem' : 0,
 				paddingRight: editorStyles.rightIsPinned ? editorStyles.rightNav + 'rem' : 0,
 			}}>
-			<EditorNav
-				{...{
-					currentStyles,
-					currentAlignment,
-					toggleBlockType,
-					toggleBlockStyle,
-					toggleInlineStyle,
-					toggleTextAlign,
-					spellCheck,
-					toggleSpellCheck,
-					currentFont,
-					setCurrentFont,
-					fontSize,
-					setFontSize,
-					lineHeight,
-					setLineHeight,
-					saveFile,
-					loadFile,
-					createTagLink,
-				}}
-			/>
-
-			<div className='editor' onClick={handleEditorWrapperClick} style={style}>
+			<div
+				className='editor'
+				onClick={handleEditorWrapperClick}
+				style={style}
+				ref={editorContainerRef}>
+				{/* // HOVER HERE */}
+				<EditorNav
+					{...{
+						currentStyles,
+						currentAlignment,
+						toggleBlockType,
+						toggleBlockStyle,
+						toggleInlineStyle,
+						toggleTextAlign,
+						spellCheck,
+						toggleSpellCheck,
+						currentFont,
+						setCurrentFont,
+						fontSize,
+						setFontSize,
+						lineHeight,
+						setLineHeight,
+						saveFile,
+						loadFile,
+						createTagLink,
+						editorContainerRef,
+					}}
+				/>
 				<div className='editor-top-padding' />
 				<Editor
 					editorState={editorState}
