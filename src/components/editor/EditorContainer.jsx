@@ -581,19 +581,21 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					}}
 				/>
 				<div className='editor-top-padding' />
-				<Editor
-					editorState={editorState}
-					onChange={setEditorState}
-					ref={editorRef}
-					keyBindingFn={customKeyBindingFn}
-					handleKeyCommand={handleKeyCommand}
-					customStyleMap={customStyleMap}
-					blockStyleFn={blockStyleFn}
-					// blockRenderMap={blockRenderMap}
-					// plugins={[inlineToolbarPlugin]}
-					spellCheck={spellCheck}
-					key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
-				/>
+				<div style={{ padding: '0 5rem' }}>
+					<Editor
+						editorState={editorState}
+						onChange={setEditorState}
+						ref={editorRef}
+						keyBindingFn={customKeyBindingFn}
+						handleKeyCommand={handleKeyCommand}
+						customStyleMap={customStyleMap}
+						blockStyleFn={blockStyleFn}
+						// blockRenderMap={blockRenderMap}
+						// plugins={[inlineToolbarPlugin]}
+						spellCheck={spellCheck}
+						key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
+					/>
+				</div>
 
 				<div className='editor-bottom-padding' />
 				{/* <InlineToolbar /> */}

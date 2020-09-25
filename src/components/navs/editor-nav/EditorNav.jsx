@@ -210,15 +210,15 @@ const EditorNav = React.memo(
 		return (
 			<>
 				<div className='editor-nav-hover-region' />
-				{/* <div className='editor-nav-hover-region' /> */}
 				<nav
 					className={'editor-nav' + (pinNav ? '' : ' hidden')}
-					style={{
-						maxWidth: `calc(100% - ${
-							(editorStyles.leftIsPinned ? editorStyles.leftNav : 0) +
-							(editorStyles.rightIsPinned ? editorStyles.rightNav : 0)
-						}rem)`,
-					}}>
+					// style={{
+					// 	maxWidth: `calc(100% - ${
+					// 		(editorStyles.leftIsPinned ? editorStyles.leftNav : 0) +
+					// 		(editorStyles.rightIsPinned ? editorStyles.rightNav : 0)
+					// 	}rem)`,
+					// }}
+				>
 					{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
 					<span className='editor-nav-subsection'>
 						<button
