@@ -3,6 +3,7 @@ import React from 'react';
 
 import LeftNavContextProvider from '../contexts/leftNavContext';
 import FindReplaceContextProvider from '../contexts/findReplaceContext';
+import SettingsContextProvider from '../contexts/settingsContext';
 import AppMgmt from './appMgmt';
 
 // Create main App component, context providers
@@ -11,7 +12,9 @@ const App = () => {
 		<>
 			<LeftNavContextProvider>
 				<FindReplaceContextProvider>
-					<AppMgmt />
+					<SettingsContextProvider>
+						<AppMgmt />
+					</SettingsContextProvider>
 				</FindReplaceContextProvider>
 			</LeftNavContextProvider>
 		</>

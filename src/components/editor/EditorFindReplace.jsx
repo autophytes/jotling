@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef, useCallback } from 'rea
 
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
 import { LeftNavContext } from '../../contexts/leftNavContext';
+import { SettingsContext } from '../../contexts/settingsContext';
 
 // import { findVisibleBlocks } from './editorFunctions';
 
@@ -11,7 +12,7 @@ import CloseSVG from '../../assets/svg/CloseSVG';
 import Collapse from 'react-css-collapse';
 // import { replace } from 'tar';
 
-const repositionFindPopper = (editorStyles, setRightOffset) => {
+const repositionFindPopper = (editorStyles, editorSettings, setRightOffset) => {
 	let rootSize = Number(
 		window
 			.getComputedStyle(document.querySelector(':root'))
@@ -21,7 +22,7 @@ const repositionFindPopper = (editorStyles, setRightOffset) => {
 
 	let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
 	let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
-	let maxEditor = editorStyles.editorMaxWidth * rootSize;
+	let maxEditor = editorSettings.editorMaxWidth * rootSize;
 	let windowWidth = window.innerWidth;
 	let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
 	// let newLeftOffset = leftNav + gutter / 2;
@@ -57,7 +58,8 @@ const EditorFindReplace = ({ editorRef }) => {
 		updateFindIndex,
 		contextEditorRef,
 	} = useContext(FindReplaceContext);
-	const { editorStyles, editorStateRef } = useContext(LeftNavContext);
+	const { editorStyles } = useContext(LeftNavContext);
+	const { editorSettings } = useContext(SettingsContext);
 
 	// REFS
 	const findInputRef = useRef(null);
@@ -92,7 +94,7 @@ const EditorFindReplace = ({ editorRef }) => {
 	// Reregister window resize listener to reposition the popper
 	useEffect(() => {
 		const reposition = () => {
-			repositionFindPopper(editorStyles, setRightOffset);
+			repositionFindPopper(editorStyles, editorSettings, setRightOffset);
 		};
 
 		window.addEventListener('resize', reposition);
@@ -100,12 +102,12 @@ const EditorFindReplace = ({ editorRef }) => {
 		return () => {
 			window.removeEventListener('resize', reposition);
 		};
-	}, [editorStyles]);
+	}, [editorStyles, editorSettings]);
 
 	// Recalculate the position of the popper
 	useEffect(() => {
-		repositionFindPopper(editorStyles, setRightOffset);
-	}, [editorStyles]);
+		repositionFindPopper(editorStyles, editorSettings, setRightOffset);
+	}, [editorStyles, editorSettings]);
 
 	// Close the find popper on ESCAPE
 	useEffect(() => {

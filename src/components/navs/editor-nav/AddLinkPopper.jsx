@@ -4,6 +4,8 @@ import { usePopper } from 'react-popper';
 import { LinkSelectionRangeRef } from './LinkSelectionRangeRef';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
+import { SettingsContext } from '../../../contexts/settingsContext';
+
 import EllipsisSVG from '../../../assets/svg/EllipsisSVG';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
@@ -25,6 +27,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 
 	// CONTEXT
 	const { linkStructure, navData, editorStyles } = useContext(LeftNavContext);
+	const { editorSettings } = useContext(SettingsContext);
 
 	// POPPER
 	const { styles, attributes } = usePopper(referenceElement, popperElement.current, {
@@ -78,7 +81,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 
 		let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
 		let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
-		let maxEditor = editorStyles.editorMaxWidth * rootSize;
+		let maxEditor = editorSettings.editorMaxWidth * rootSize;
 		let windowWidth = window.innerWidth;
 		let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
 		let newLeftOffset = leftNav + gutter / 2;
@@ -97,7 +100,7 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 
 		setLeftOffset(newLeftOffset);
 		setRightOffset(newRightOffset);
-	}, [editorStyles, referenceElement]);
+	}, [editorStyles, editorSettings, referenceElement]);
 
 	// Update the list of tags when the linkStructure changes
 	useEffect(() => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import FullScreenSVG from '../../../assets/svg/FullScreenSVG';
 import TableGridSVG from '../../../assets/svg/TableGridSVG';
 import OutlineBulletsSVG from '../../../assets/svg/OutlineBulletsSVG';
@@ -8,7 +8,12 @@ import SettingsUserSVG from '../../../assets/svg/SettingsUserSVG';
 import TypewriterSVG from '../../../assets/svg/TypewriterSVG';
 import TagMultipleSVG from '../../../assets/svg/TagMultipleSVG';
 
+import { SettingsContext } from '../../../contexts/settingsContext';
+
 const TopNav = () => {
+	// CONTEXT
+	const { showEditorSettings, setShowEditorSettings } = useContext(SettingsContext);
+
 	return (
 		<nav className='top-nav'>
 			<button className='nav-button with-text'>
@@ -39,7 +44,11 @@ const TopNav = () => {
 			<button className='nav-button with-text'>
 				{/* <img src='icons/user-settings.svg' /> */}
 				<SettingsUserSVG />
-				<span className='nav-button-text'>User Settings</span>
+				<span
+					className='nav-button-text'
+					onClick={() => setShowEditorSettings(!showEditorSettings)}>
+					User Settings
+				</span>
 			</button>
 			<button className='nav-button with-text'>
 				{/* <img src='icons/typewriter.svg' /> */}

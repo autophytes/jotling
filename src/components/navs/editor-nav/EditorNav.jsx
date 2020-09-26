@@ -6,6 +6,7 @@ import AddLinkPopper from './AddLinkPopper';
 import InlineStyleButton from './InlineStyleButton';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
+import { SettingsContext } from '../../../contexts/settingsContext';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import IncreaseFontSizeSVG from '../../../assets/svg/editor/IncreaseFontSizeSVG';
@@ -105,6 +106,7 @@ const EditorNav = React.memo(
 
 		// CONTEXT
 		const { editorStyles } = useContext(LeftNavContext);
+		const { editorSettings } = useContext(SettingsContext);
 
 		const handleFontSelect = useCallback(
 			(font) => {
@@ -186,7 +188,7 @@ const EditorNav = React.memo(
 
 			let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
 			let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
-			let maxEditor = editorStyles.editorMaxWidth * rootSize;
+			let maxEditor = editorSettings.editorMaxWidth * rootSize;
 			let windowWidth = window.innerWidth;
 			let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
 			let newLeftOffset = leftNav + gutter / 2;
@@ -205,7 +207,7 @@ const EditorNav = React.memo(
 
 			setHoverRegionLeft(newLeftOffset);
 			setHoverRegionRight(newRightOffset);
-		}, [editorStyles]);
+		}, [editorStyles, editorSettings]);
 
 		return (
 			<>

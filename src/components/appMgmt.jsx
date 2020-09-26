@@ -10,13 +10,15 @@ import EditorContainer from './editor/EditorContainer';
 // import LeftNavContextProvider from '../contexts/leftNavContext';
 import { LeftNavContext } from '../contexts/leftNavContext';
 import { FindReplaceContext } from '../contexts/findReplaceContext';
+import { SettingsContext } from '../contexts/settingsContext';
 
 import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
-import PeekWindow from './editor/decorators/PeekDocument';
+import PeekDocument from './editor/PeekDocument';
+import EditorSettings from './navs/top-nav/EditorSettings';
 
 // import ReactResizeDetector from 'react-resize-detector';
 
@@ -48,6 +50,7 @@ const AppMgmt = () => {
 		setRefocusFind,
 		setRefocusReplace,
 	} = useContext(FindReplaceContext);
+	const { showEditorSettings } = useContext(SettingsContext);
 
 	// Loads the document map (function)
 	const loadDocStructure = useCallback(
@@ -243,7 +246,8 @@ const AppMgmt = () => {
 			<RightNav />
 			<EditorContainer {...{ saveProject, setSaveProject }} />
 			<LoadingOverlay {...{ structureLoaded }} />
-			{peekWindowLinkId !== null && <PeekWindow />}
+			{peekWindowLinkId !== null && <PeekDocument />}
+			{showEditorSettings && <EditorSettings />}
 		</>
 	);
 };

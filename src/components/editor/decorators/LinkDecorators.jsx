@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 
-import PeekDocument from './PeekDocument';
+import PeekDocument from '../PeekDocument';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 

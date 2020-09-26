@@ -11,6 +11,7 @@ import Immutable from 'immutable';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
+import { SettingsContext } from '../../contexts/settingsContext';
 
 import {
 	Editor,
@@ -95,6 +96,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setEditorStateRef,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
+	const { editorPaddingWrapperRef, editorContainerRef, editorSettings } = useContext(
+		SettingsContext
+	);
 
 	// EDITOR STATE
 	const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -119,7 +123,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// REFS
 	const editorRef = useRef(null);
-	const editorContainerRef = useRef(null);
 
 	// CUSTOM HOOKS
 	const decorator = useDecorator(prev.doc, editorRef);
@@ -364,15 +367,15 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		let newStyles = {};
 		!!currentFont && (newStyles['fontFamily'] = currentFont.toString());
 		!!lineHeight && (newStyles['lineHeight'] = lineHeight + 'em');
-		!!editorStyles.editorMaxWidth &&
-			(newStyles['maxWidth'] = editorStyles.editorMaxWidth + 'rem');
+		!!editorSettings.editorMaxWidth &&
+			(newStyles['maxWidth'] = editorSettings.editorMaxWidth + 'rem');
 
 		if (!!fontSize) {
 			newStyles['fontSize'] = +fontSize;
 		}
 
 		setStyle(newStyles);
-	}, [currentFont, fontSize, lineHeight]);
+	}, [currentFont, fontSize, lineHeight, editorSettings]);
 
 	// Saves current document file
 	const saveFile = useCallback(
@@ -581,7 +584,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					}}
 				/>
 				<div className='editor-top-padding' />
-				<div style={{ padding: '0 5rem' }}>
+				<div
+					ref={editorPaddingWrapperRef}
+					style={{ padding: `0 ${editorSettings.editorPadding}rem` }}>
 					<Editor
 						editorState={editorState}
 						onChange={setEditorState}

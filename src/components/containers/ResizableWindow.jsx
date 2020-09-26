@@ -1,43 +1,25 @@
-import React, { useEffect, useState, useContext, useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
-import { LeftNavContext } from '../../../contexts/leftNavContext';
-
-import { generatePeekDecorator } from './PeekDocumentDecorators';
-import { findTitleForGivenDocFileName } from '../../../utils/utils';
-
-import CloseSVG from '../../../assets/svg/CloseSVG';
-
-import { Editor, EditorState } from 'draft-js';
+import CloseSVG from '../../assets/svg/CloseSVG';
 
 const minWidth = 300;
 
-const PeekWindow = () => {
+const ResizableWindow = ({
+	windowTitle,
+	children,
+	peekWindowContentRef,
+	leftTopButtonTitle,
+	leftTopButtonFn,
+	closeFn,
+}) => {
 	// STATE
-	const [documentName, setDocumentName] = useState('');
-	const [documentTitle, setDocumentTitle] = useState('');
-	const [editorState, setEditorState] = useState(EditorState.createEmpty());
 	const [containerTop, setContainerTop] = useState(200);
 	const [containerLeft, setContainerLeft] = useState(200);
 	const [containerWidth, setContainerWidth] = useState(0);
 	const [containerHeight, setContainerHeight] = useState(0);
-	const [hasScrolled, setHasScrolled] = useState(false);
 
 	// REFS
-	const peekWindowContentRef = useRef(null);
 	const peekWindowRef = useRef(null);
-
-	// CONTEXT
-	const {
-		editorArchives,
-		linkStructureRef,
-		peekWindowLinkId,
-		setPeekWindowLinkId,
-		navData,
-		setNavData,
-		setScrollToLinkId,
-		scrollToLinkIdRef,
-		docStructure,
-	} = useContext(LeftNavContext);
 
 	// REPOSITION
 	const handleRepositionMouseDown = (e) => {
@@ -178,54 +160,16 @@ const PeekWindow = () => {
 	useEffect(() => {
 		const closeEventListener = (e) => {
 			if (e.keyCode === 27) {
-				// Clear our peek link ID
-				// e.stopImmediatePropagation();
-				setScrollToLinkId(peekWindowLinkId);
-				scrollToLinkIdRef.current = peekWindowLinkId;
-				setPeekWindowLinkId(null);
+				// Running the close fn from the parent
+				closeFn();
 			}
 		};
 		document.addEventListener('keyup', closeEventListener);
 
 		return () => document.removeEventListener('keyup', closeEventListener);
-	}, []);
+	}, [closeFn]);
 
-	// Setting the document name
-	useEffect(() => {
-		setDocumentName(linkStructureRef.current.links[peekWindowLinkId].source);
-	}, [peekWindowLinkId, linkStructureRef]);
-
-	// Retrieve the document title
-	useEffect(() => {
-		const docCategories = ['draft', 'research', 'pages'];
-
-		for (let category of docCategories) {
-			let potentialTitle = findTitleForGivenDocFileName(docStructure[category], documentName);
-			if (potentialTitle) {
-				setDocumentTitle(potentialTitle);
-				return;
-			}
-		}
-
-		setDocumentTitle('');
-	}, [documentName, docStructure]);
-
-	// Generate our editorState to view in the peek window
-	useEffect(() => {
-		if (documentName && editorArchives[documentName]) {
-			console.log(editorArchives[documentName]);
-
-			const sourceEntityKey = linkStructureRef.current.links[peekWindowLinkId].sourceEntityKey;
-			const decorator = generatePeekDecorator(sourceEntityKey);
-
-			let newEditorState = EditorState.createWithContent(
-				editorArchives[documentName].editorState.getCurrentContent(),
-				decorator
-			);
-			setEditorState(newEditorState);
-		}
-	}, [documentName, editorArchives, peekWindowLinkId]);
-
+	// INITIAL POSITION
 	useEffect(() => {
 		const rootSize = Number(
 			window
@@ -252,24 +196,6 @@ const PeekWindow = () => {
 		setContainerHeight(defaultHeight);
 	}, []);
 
-	// Scroll to our matching link
-	useLayoutEffect(() => {
-		const firstPeekHighlightElement = document.querySelector(
-			'.peek-window-highlight-decorator'
-		);
-		if (!hasScrolled && firstPeekHighlightElement) {
-			const highlightRect = firstPeekHighlightElement.getBoundingClientRect();
-
-			const windowRect = peekWindowContentRef.current.getBoundingClientRect();
-
-			peekWindowContentRef.current.scrollTo({
-				top: highlightRect.top - windowRect.top - 100,
-				behavior: 'smooth',
-			});
-			setHasScrolled(true);
-		}
-	}, [editorState, hasScrolled]);
-
 	return (
 		<>
 			<div
@@ -283,23 +209,23 @@ const PeekWindow = () => {
 					opacity: containerWidth ? 1 : 0,
 				}}>
 				<div className='peek-window-top-handle' onMouseDown={handleRepositionMouseDown}>
-					<button
-						className='peek-window-open'
-						onClick={() => {
-							setNavData({ ...navData, currentDoc: documentName });
-							setScrollToLinkId(peekWindowLinkId);
-							scrollToLinkIdRef.current = peekWindowLinkId;
-							setPeekWindowLinkId(null);
-						}}>
-						Open Document
-					</button>
-					<p className='peek-window-title'>{documentTitle ? documentTitle : documentName}</p>
-					<button className='peek-window-close' onClick={() => setPeekWindowLinkId(null)}>
+					{leftTopButtonTitle ? (
+						<button className='peek-window-open' onClick={leftTopButtonFn}>
+							{leftTopButtonTitle}
+						</button>
+					) : (
+						<span />
+					)}
+					<p className='peek-window-title'>{windowTitle}</p>
+					<button className='peek-window-close' onClick={closeFn}>
 						<CloseSVG />
 					</button>
 				</div>
-				<div className='peek-window-contents' ref={peekWindowContentRef}>
-					<Editor editorState={editorState} readOnly />
+				<div
+					className='peek-window-contents'
+					{...(peekWindowContentRef ? { ref: peekWindowContentRef } : {})}>
+					{/* PASS THROUGH CONTENT */}
+					{children}
 					<div className='peek-window-resize left' onMouseDown={handleResizeLeftMouseDown} />
 					<div className='peek-window-resize right' onMouseDown={handleResizeRightMouseDown} />
 					<div
@@ -326,4 +252,4 @@ const PeekWindow = () => {
 	);
 };
 
-export default PeekWindow;
+export default ResizableWindow;

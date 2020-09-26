@@ -1,5 +1,8 @@
 import React, { createContext, useState, useCallback, useRef, useEffect } from 'react';
 
+const Store = require('electron-store');
+const store = new Store();
+
 export const LeftNavContext = createContext();
 
 // CONSTANTS
@@ -23,7 +26,6 @@ const LeftNavContextProvider = (props) => {
 		leftIsPinned: true,
 		rightNav: DEFAULT_WIDTH,
 		rightIsPinned: true,
-		editorMaxWidth: 60,
 		showAllTags: false,
 		showIndTags: [],
 	});
@@ -40,6 +42,34 @@ const LeftNavContextProvider = (props) => {
 	useEffect(() => {
 		linkStructureRef.current = linkStructure;
 	}, [linkStructure]);
+
+	// Initialize the left and right nav width from electron-store
+	useEffect(() => {
+		let newEditorStyles = { ...editorStyles };
+
+		let newLeftNav = store.get(`editorStyles.leftNav`, null);
+		let newRightNav = store.get(`editorStyles.rightNav`, null);
+
+		if (newLeftNav !== null) {
+			newEditorStyles.leftNav = newLeftNav;
+		} else {
+			newEditorStyles.leftNav = DEFAULT_WIDTH;
+		}
+
+		if (newRightNav !== null) {
+			newEditorStyles.rightNav = newRightNav;
+		} else {
+			newEditorStyles.rightNav = DEFAULT_WIDTH;
+		}
+
+		setEditorStyles(newEditorStyles);
+	}, []);
+
+	// Synchronize the editorStyles nav widths electron-store
+	useEffect(() => {
+		store.set(`editorStyles.leftNav`, editorStyles.leftNav);
+		store.set(`editorStyles.rightNav`, editorStyles.rightNav);
+	}, [editorStyles]);
 
 	// Resets the width of the side nav bars
 	const resetNavWidth = useCallback(
