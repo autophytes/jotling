@@ -29,6 +29,7 @@
 		"mousetrap": "^1.6.5",
 		"ncp": "^2.0.0",
 		"react": "^16.13.1",
+		"react-color": "^2.18.1",
 		"react-css-collapse": "^4.0.6",
 		"react-dom": "^16.13.1",
 		"react-popper": "^2.2.3",

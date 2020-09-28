@@ -9,7 +9,10 @@ import React, {
 
 import { SettingsContext } from '../../../contexts/settingsContext';
 
+import PopperContainer from '../../containers/PopperContainer';
 import ResizableWindow from '../../containers/ResizableWindow';
+
+import { SketchPicker, ChromePicker } from 'react-color';
 
 const EditorSettings = () => {
 	// CONTEXT
@@ -25,10 +28,23 @@ const EditorSettings = () => {
 	// STATE
 	const [editorPadding, setEditorPadding] = useState(editorSettings.editorPadding);
 	const [editorMaxWidth, setEditorMaxWidth] = useState(editorSettings.editorMaxWidth);
+	const [showAccentPicker, setShowAccentPicker] = useState(false);
+	const [primaryColor, setPrimaryColor] = useState('');
+
+	// REFS
+	const colorSwatchRef = useRef(null);
 
 	// UPDATE
 	const closeFn = useCallback(() => {
 		setShowEditorSettings(false);
+	}, []);
+
+	useEffect(() => {
+		let newPrimary = getComputedStyle(document.querySelector(':root')).getPropertyValue(
+			'--color-primary'
+		); // #999999
+
+		setPrimaryColor(newPrimary);
 	}, []);
 
 	// Editor Padding Change
@@ -129,6 +145,34 @@ const EditorSettings = () => {
 					</div>
 
 					<h3>Accent color</h3>
+					<div
+						ref={colorSwatchRef}
+						className='accent-color-swatch'
+						onClick={() => setShowAccentPicker(true)}
+					/>
+					{showAccentPicker && (
+						<PopperContainer
+							referenceElement={colorSwatchRef.current}
+							closeFn={() => setShowAccentPicker(false)}>
+							<div className='accent-color-swatch-picker'>
+								<SketchPicker
+									disableAlpha={true}
+									color={primaryColor}
+									width={160}
+									onChange={(color) => {
+										const rootElement = document.querySelector(':root');
+										rootElement.style.setProperty('--color-primary', color.hex);
+										rootElement.style.setProperty(
+											'--color-primary-rgb',
+											`${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`
+										);
+										setPrimaryColor(color.hex);
+									}}
+								/>
+							</div>
+						</PopperContainer>
+					)}
+
 					<h3>Default font</h3>
 					<h3>Default font size</h3>
 					<h3>Default line spacing</h3>
