@@ -662,7 +662,7 @@ input[type='number']::-webkit-outer-spin-button {
 	color: white;
 	font-weight: bold;
 	cursor: pointer;
-	transition: 150ms ease all;
+	transition: 150ms ease transform, 150ms ease box-shadow;
 	outline: none;
 	user-select: none;
 }
@@ -781,7 +781,7 @@ input[type='number']::-webkit-outer-spin-button {
 
 .link-popper input:focus {
 	outline: none;
-	box-shadow: 0 0 0 3px rgba(0, 149, 255, 0.7);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);
 }
 
 .link-popper p {
@@ -927,7 +927,7 @@ input[type='number']::-webkit-outer-spin-button {
 
 .editor-find-container input:focus {
 	outline: none;
-	box-shadow: 0 0 0 3px rgba(0, 149, 255, 0.7);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);
 }
 
 .editor-find-container .find-containter-counter {
@@ -978,7 +978,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .find-container-replace-button:focus {
 	outline: none;
-	box-shadow: 0 0 0 3px rgba(0, 149, 255, 0.7);
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);
 }
 
 /* ::-webkit-scrollbar-track {
@@ -1196,6 +1196,7 @@ input[type='number']::-webkit-outer-spin-button {
 	font-size: 1.15rem;
 	font-weight: bold;
 	color: #333;
+	margin: 1.25rem 0 0.75rem 0;
 }
 .settings-range-slider {
 	width: 200px;
@@ -1217,13 +1218,13 @@ input[type='number']::-webkit-outer-spin-button {
 	box-shadow: none;
 	border: 0px solid #ffffff;
 	box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.25);
-	height: 2rem;
-	width: 1rem;
+	height: 1.5rem;
+	width: 0.75rem;
 	border-radius: 1rem;
 	background: #555;
 	cursor: pointer;
 	-webkit-appearance: none;
-	margin-top: -1rem;
+	margin-top: -0.75rem;
 }
 
 .settings-range-number-input {
@@ -1235,10 +1236,18 @@ input[type='number']::-webkit-outer-spin-button {
 	font-size: 1rem;
 }
 
+.accent-color-swatch-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
 .accent-color-swatch {
 	background-color: var(--color-primary);
-	width: 5rem;
+	width: 3.5rem;
 	height: 1.5rem;
+	/* width: 1.5rem; */
+	margin-left: 1.5rem;
 	/* border: 1px solid #444; */
 	border-radius: 5px;
 	cursor: pointer;
@@ -1246,10 +1255,29 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .accent-color-swatch-picker {
-	margin: 0.5rem;
+	margin: 0.75rem;
 }
 
 .accent-color-swatch-picker input {
 	width: 100% !important;
 	text-align: center;
+}
+
+.editor-settings-reset {
+	margin-left: 0.5rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+	border-radius: 5px;
+}
+
+.editor-settings-reset:hover {
+	background-color: rgba(var(--color-primary-rgb), 0.2);
+}
+
+.editor-settings-reset svg {
+	fill: var(--color-primary);
+	width: 1.5rem;
+	height: 1.5rem;
 }

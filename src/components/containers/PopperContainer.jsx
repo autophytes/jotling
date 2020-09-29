@@ -38,17 +38,19 @@ const AddLinkPopper = ({
 	});
 
 	// Add listener to stop text blur on
-	useEffect(() => {
-		const handleStopBlur = (e) => {
-			e.preventDefault();
-		};
+	// NOTE: this didn't stop the selection text blur, but we probably should :)
+	// useEffect(() => {
+	// 	console.log('blur being stopped??');
+	// 	const handleStopBlur = (e) => {
+	// 		e.preventDefault();
+	// 	};
 
-		document.addEventListener('mousedown', handleStopBlur);
+	// 	document.addEventListener('mousedown', handleStopBlur);
 
-		return () => {
-			document.removeEventListener('mousedown', handleStopBlur);
-		};
-	}, []);
+	// 	return () => {
+	// 		document.removeEventListener('mousedown', handleStopBlur);
+	// 	};
+	// }, []);
 
 	// NEED TO UPDATE - close function
 	// Closes the popper if clicking outside the popper or hitting escape
@@ -57,6 +59,7 @@ const AddLinkPopper = ({
 			console.log('click or keypress triggered');
 			if (!popperElement.current.contains(e.target) || e.keyCode === 27) {
 				e.stopPropagation();
+				console.log('propagation is being stopped!!');
 
 				closeFn();
 			}
@@ -71,11 +74,8 @@ const AddLinkPopper = ({
 		};
 	}, []);
 
-	// NEED TO UPDATE - alltags from parent
 	useLayoutEffect(() => {
 		if (minWidth === 0 && isContentRendered) {
-			console.log('popper.current: ', popperElement.current);
-			console.log('clientWidth: ', popperElement.current.clientWidth);
 			setMinWidth(popperElement.current.clientWidth / 2 + 15);
 		}
 	}, [minWidth, isContentRendered]);

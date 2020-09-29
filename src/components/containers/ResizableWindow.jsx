@@ -11,6 +11,7 @@ const ResizableWindow = ({
 	leftTopButtonTitle,
 	leftTopButtonFn,
 	closeFn,
+	defaultWidth = 450,
 }) => {
 	// STATE
 	const [containerTop, setContainerTop] = useState(200);
@@ -182,17 +183,17 @@ const ResizableWindow = ({
 		const windowWidth = window.innerWidth;
 
 		const defaultHeight = Math.min(500, windowHeight - 2.5 * rootSize - 1.25 * rootSize);
-		const defaultWidth = Math.min(450, (windowWidth - 100) / 2);
+		const newDefaultWidth = Math.min(defaultWidth, (windowWidth - 100) / 2);
 
 		console.log('2.5 * rootSize: ', 2.5 * rootSize);
 
 		const defaultTop =
 			windowHeight / 2 - defaultHeight / 2 + (1.25 * rootSize) / 2 + (2.5 * rootSize) / 2;
-		const defaultLeft = windowWidth - defaultWidth - 50;
+		const defaultLeft = windowWidth - newDefaultWidth - 50;
 
 		setContainerTop(defaultTop);
 		setContainerLeft(defaultLeft);
-		setContainerWidth(defaultWidth);
+		setContainerWidth(newDefaultWidth);
 		setContainerHeight(defaultHeight);
 	}, []);
 

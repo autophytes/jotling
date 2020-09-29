@@ -8,6 +8,9 @@ export const SettingsContext = createContext();
 const defaultSettings = {
 	editorMaxWidth: 60,
 	editorPadding: 5.0,
+	primaryColor: '#0095ff',
+	primaryColorRgb: '0, 149, 255',
+	primaryColorList: ['#C61F37', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
 };
 
 const SettingsContextProvider = (props) => {
@@ -15,6 +18,9 @@ const SettingsContextProvider = (props) => {
 	const [editorSettings, setEditorSettings] = useState({
 		editorMaxWidth: defaultSettings.editorMaxWidth,
 		editorPadding: defaultSettings.editorPadding,
+		primaryColor: '#0095ff',
+		primaryColorRgb: '0, 149, 255',
+		primaryColorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
 	});
 	const [showEditorSettings, setShowEditorSettings] = useState(false);
 
@@ -24,6 +30,7 @@ const SettingsContextProvider = (props) => {
 
 		for (let prop in editorSettings) {
 			let newValue = store.get(`settings.${prop}`, null);
+			console.log(newValue);
 			if (newValue !== null) {
 				newEditorSettings[prop] = newValue;
 			} else {
@@ -31,13 +38,18 @@ const SettingsContextProvider = (props) => {
 			}
 		}
 
+		// Load in our primary color
+		const rootElement = document.querySelector(':root');
+		rootElement.style.setProperty('--color-primary', newEditorSettings.primaryColor);
+		rootElement.style.setProperty('--color-primary-rgb', newEditorSettings.primaryColorRgb);
+
 		setEditorSettings(newEditorSettings);
 	}, []);
 
 	// Synchronize the editorSettings electron-store
 	useEffect(() => {
 		for (let prop in editorSettings) {
-			console.log(prop);
+			console.log(prop, ': ', editorSettings[prop]);
 			store.set(`settings.${prop}`, editorSettings[prop]);
 		}
 	}, [editorSettings]);

@@ -13,6 +13,7 @@ import PopperContainer from '../../containers/PopperContainer';
 import ResizableWindow from '../../containers/ResizableWindow';
 
 import { SketchPicker, ChromePicker } from 'react-color';
+import ResetSVG from '../../../assets/svg/ResetSVG';
 
 const EditorSettings = () => {
 	// CONTEXT
@@ -36,8 +37,37 @@ const EditorSettings = () => {
 
 	// UPDATE
 	const closeFn = useCallback(() => {
+		// Check if we should add the new primaryColor to the primaryColorList
+		let primaryColorList = [...editorSettings.primaryColorList];
+		let colorListIndex = primaryColorList.findIndex(
+			(item) => item === primaryColor.toUpperCase()
+		);
+
+		// If the color is NOT in the list, add it to the front.
+		if (colorListIndex === -1) {
+			primaryColorList.unshift(primaryColor.toUpperCase());
+			while (primaryColorList.length > 6) {
+				primaryColorList.pop();
+			}
+		}
+
+		// We want the color to be first in the list. > 0 is after first.
+		if (colorListIndex > 0) {
+			primaryColorList.splice(colorListIndex, 1);
+			primaryColorList.unshift(primaryColor.toUpperCase());
+		}
+
+		// If we made changes, save those chnages to the color list
+		if (colorListIndex !== 0) {
+			setEditorSettings({
+				...editorSettings,
+				primaryColorList,
+			});
+		}
+
+		// Close the settings window
 		setShowEditorSettings(false);
-	}, []);
+	}, [editorSettings, primaryColor]);
 
 	useEffect(() => {
 		let newPrimary = getComputedStyle(document.querySelector(':root')).getPropertyValue(
@@ -96,9 +126,18 @@ const EditorSettings = () => {
 		}
 	};
 
+	const handlePrimaryColorChange = (color) => {
+		const rootElement = document.querySelector(':root');
+		rootElement.style.setProperty('--color-primary', color.hex);
+
+		let newRgb = color.rgb ? color.rgb : `${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`;
+		rootElement.style.setProperty('--color-primary-rgb', newRgb);
+		setPrimaryColor(color.hex);
+	};
+
 	return (
 		<>
-			<ResizableWindow windowTitle='Editor Settings' closeFn={closeFn}>
+			<ResizableWindow windowTitle='Editor Settings' closeFn={closeFn} defaultWidth={350}>
 				<div className='editor-settings-wrapper'>
 					{/* EDITOR PADDING */}
 					<p className='settings-category-title'>Page Margin</p>
@@ -144,12 +183,29 @@ const EditorSettings = () => {
 						/>
 					</div>
 
-					<h3>Accent color</h3>
-					<div
-						ref={colorSwatchRef}
-						className='accent-color-swatch'
-						onClick={() => setShowAccentPicker(true)}
-					/>
+					<p className='settings-category-title'>Accent color</p>
+					<div className='accent-color-swatch-row'>
+						<div
+							ref={colorSwatchRef}
+							className='accent-color-swatch'
+							onClick={() => setShowAccentPicker(true)}
+						/>
+						<button
+							className='editor-settings-reset'
+							onClick={() => {
+								setEditorSettings({
+									...editorSettings,
+									primaryColor: defaultSettings.primaryColor,
+									primaryColorRgb: defaultSettings.primaryColorRgb,
+								});
+								handlePrimaryColorChange({
+									hex: defaultSettings.primaryColor,
+									rgb: defaultSettings.primaryColorRgb,
+								});
+							}}>
+							<ResetSVG />
+						</button>
+					</div>
 					{showAccentPicker && (
 						<PopperContainer
 							referenceElement={colorSwatchRef.current}
@@ -159,23 +215,23 @@ const EditorSettings = () => {
 									disableAlpha={true}
 									color={primaryColor}
 									width={160}
-									onChange={(color) => {
-										const rootElement = document.querySelector(':root');
-										rootElement.style.setProperty('--color-primary', color.hex);
-										rootElement.style.setProperty(
-											'--color-primary-rgb',
-											`${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`
-										);
-										setPrimaryColor(color.hex);
+									onChange={handlePrimaryColorChange}
+									onChangeComplete={(color) => {
+										setEditorSettings({
+											...editorSettings,
+											primaryColor: color.hex,
+											primaryColorRgb: `${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`,
+										});
 									}}
+									presetColors={editorSettings.primaryColorList}
 								/>
 							</div>
 						</PopperContainer>
 					)}
 
-					<h3>Default font</h3>
-					<h3>Default font size</h3>
-					<h3>Default line spacing</h3>
+					<p className='settings-category-title'>Default font</p>
+					<p className='settings-category-title'>Default font size</p>
+					<p className='settings-category-title'>Default line spacing</p>
 					<ul>
 						<li>Requires project level settings</li>
 					</ul>
