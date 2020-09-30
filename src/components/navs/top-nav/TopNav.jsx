@@ -47,7 +47,7 @@ const TopNav = () => {
 				<span
 					className='nav-button-text'
 					onClick={() => setShowEditorSettings(!showEditorSettings)}>
-					User Settings
+					Editor Settings
 				</span>
 			</button>
 			<button className='nav-button with-text'>

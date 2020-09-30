@@ -53,16 +53,17 @@ import ChainSVG from '../../../assets/svg/ChainSVG';
 // STRIKETHROUGH (added in customStyleMap)
 
 const BLOCK_TYPES = [
-	{ label: 'H1', style: 'header-one' },
-	{ label: 'H2', style: 'header-two' },
-	{ label: 'H3', style: 'header-three' },
-	{ label: 'H4', style: 'header-four' },
-	{ label: 'H5', style: 'header-five' },
-	{ label: 'H6', style: 'header-six' },
-	{ label: 'Blockquote', style: 'blockquote' },
-	{ label: 'UL', style: 'unordered-list-item' },
-	{ label: 'OL', style: 'ordered-list-item' },
-	{ label: 'Code Block', style: 'code-block' },
+	{ label: 'Normal', style: 'unstyled' },
+	{ label: 'Heading 1', style: 'header-one' },
+	{ label: 'Heading 2', style: 'header-two' },
+	{ label: 'Heading 3', style: 'header-three' },
+	{ label: 'Heading 4', style: 'header-four' },
+	// { label: 'H5', style: 'header-five' },
+	// { label: 'H6', style: 'header-six' },
+	{ label: 'Quote', style: 'blockquote' },
+	// { label: 'UL', style: 'unordered-list-item' },
+	// { label: 'OL', style: 'ordered-list-item' },
+	{ label: 'Code', style: 'code-block' },
 ];
 
 const INLINE_STYLES = [
@@ -83,12 +84,6 @@ const EditorNav = React.memo(
 		toggleTextAlign,
 		spellCheck,
 		toggleSpellCheck,
-		currentFont,
-		setCurrentFont,
-		fontSize,
-		setFontSize,
-		lineHeight,
-		setLineHeight,
 		saveFile,
 		loadFile,
 		currentAlignment,
@@ -98,83 +93,14 @@ const EditorNav = React.memo(
 	}) => {
 		// STATE
 		const [pinNav, setPinNav] = useState(true);
-		const [recentlyUsedFonts, setRecentlyUsedFonts] = useState(['PT Sans']);
-		const [fontList, setFontList] = useState([]);
 		const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
 		const [hoverRegionLeft, setHoverRegionLeft] = useState(0);
 		const [hoverRegionRight, setHoverRegionRight] = useState(0);
+		const [blockType, setBlockType] = useState('unstyled');
 
 		// CONTEXT
 		const { editorStyles } = useContext(LeftNavContext);
 		const { editorSettings } = useContext(SettingsContext);
-
-		const handleFontSelect = useCallback(
-			(font) => {
-				const fontIndex = recentlyUsedFonts.indexOf(font);
-				if (fontIndex !== 0) {
-					let recentFonts = [...recentlyUsedFonts];
-
-					// If already in the list, remove so we can add it to the front
-					if (fontIndex > 0) {
-						recentFonts.splice(fontIndex, 1);
-					}
-
-					recentFonts.unshift(font);
-
-					// Trim down to max length (min 0)
-					while (recentFonts.length > MAX_RECENT_FONTS && recentFonts.length > 0) {
-						recentFonts.pop();
-					}
-
-					setRecentlyUsedFonts(recentFonts);
-				}
-
-				setCurrentFont(font);
-			},
-			[setCurrentFont, recentlyUsedFonts, setRecentlyUsedFonts]
-		);
-
-		// Will either 'increase' or 'decrease' font size
-		const increaseDecreaseFontSize = useCallback(
-			(direction) => {
-				let oldSize = typeof fontSize === 'string' ? Number(fontSize) : fontSize;
-
-				if (direction === 'increase') {
-					if (oldSize < 12) {
-						console.log('< 12');
-						setFontSize(Math.floor(oldSize + 1));
-					} else if (oldSize < 28) {
-						setFontSize(Math.floor((oldSize + 2) * 2) / 2);
-					} else if (oldSize < 70) {
-						setFontSize(Math.floor((oldSize + 6) * 6) / 6);
-					} else {
-						setFontSize(Math.floor((oldSize + 12) * 12) / 12);
-					}
-				}
-				if (direction === 'decrease') {
-					if (oldSize > 70) {
-						setFontSize(Math.ceil((oldSize - 12) / 12) * 12);
-					} else if (oldSize > 28) {
-						setFontSize(Math.ceil((oldSize - 6) / 6) * 6);
-					} else if (oldSize > 12) {
-						setFontSize(Math.ceil((oldSize - 2) / 2) * 2);
-					} else {
-						setFontSize(Math.max(Math.ceil(oldSize - 1), 1));
-					}
-				}
-			},
-			[fontSize]
-		);
-
-		// Load available fonts
-		useEffect(() => {
-			const fetchFonts = async () => {
-				const newFontList = await ipcRenderer.invoke('load-font-list');
-				setFontList(newFontList);
-			};
-			fetchFonts();
-			console.log('ipcRenderer useEffect triggered');
-		}, [ipcRenderer, setFontList]);
 
 		// Calculates the left and right hover region boundaries
 		useEffect(() => {
@@ -218,25 +144,22 @@ const EditorNav = React.memo(
 							<PushpinSVG />
 						</button>
 
-						<select value={currentFont} onChange={(e) => handleFontSelect(e.target.value)}>
-							{recentlyUsedFonts.map((font, i) => (
-								<option key={i} value={font}>
-									{font}
-								</option>
-							))}
-							<option disabled>- - - - -</option>
-
-							{fontList.map((font, i) => {
-								const trimFont = font.replace(/["]+/g, '');
+						<select
+							value={blockType}
+							onChange={(e) => {
+								toggleBlockType(e, e.target.value);
+								setBlockType(e.target.value);
+							}}>
+							{BLOCK_TYPES.map((item, i) => {
 								return (
-									<option key={i} value={trimFont}>
-										{trimFont}
+									<option key={i} value={item.style}>
+										{item.label}
 									</option>
 								);
 							})}
 						</select>
 
-						<input
+						{/* <input
 							type='number'
 							min='0'
 							max='999'
@@ -268,7 +191,7 @@ const EditorNav = React.memo(
 						/>
 						<button className='nav-button' disabled>
 							<LineSpacingSVG />
-						</button>
+						</button> */}
 					</span>
 
 					{/* <div className='editor-nav-vertical-rule' /> */}

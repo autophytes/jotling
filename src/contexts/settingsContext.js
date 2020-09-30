@@ -1,4 +1,5 @@
 import React, { createContext, useState, useRef, useEffect } from 'react';
+import { ipcRenderer } from 'electron';
 
 const Store = require('electron-store');
 const store = new Store();
@@ -11,6 +12,9 @@ const defaultSettings = {
 	primaryColor: '#0095ff',
 	primaryColorRgb: '0, 149, 255',
 	primaryColorList: ['#C61F37', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
+	currentFont: 'PT Sans',
+	fontSize: 20,
+	lineHeight: 1.15,
 };
 
 const SettingsContextProvider = (props) => {
@@ -23,6 +27,13 @@ const SettingsContextProvider = (props) => {
 		primaryColorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
 	});
 	const [showEditorSettings, setShowEditorSettings] = useState(false);
+	const [fontList, setFontList] = useState([]);
+	const [lineHeight, setLineHeight] = useState(1.15);
+	const [fontSize, setFontSize] = useState(20);
+	const [fontSettings, setFontSettings] = useState({
+		currentFont: 'PT Sans',
+		recentlyUsedFonts: ['PT Sans'],
+	});
 
 	// Initialize the values from electron-store
 	useEffect(() => {
@@ -49,12 +60,19 @@ const SettingsContextProvider = (props) => {
 	// Synchronize the editorSettings electron-store
 	useEffect(() => {
 		for (let prop in editorSettings) {
-			console.log(prop, ': ', editorSettings[prop]);
 			store.set(`settings.${prop}`, editorSettings[prop]);
 		}
 	}, [editorSettings]);
 
-	console.log('editorSettings: ', editorSettings);
+	// Load available fonts
+	useEffect(() => {
+		const fetchFonts = async () => {
+			const newFontList = await ipcRenderer.invoke('load-font-list');
+			setFontList(newFontList);
+		};
+		fetchFonts();
+		console.log('ipcRenderer useEffect triggered');
+	}, [ipcRenderer, setFontList]);
 
 	// REFS
 	const editorContainerRef = useRef(null);
@@ -70,6 +88,13 @@ const SettingsContextProvider = (props) => {
 				editorContainerRef,
 				editorPaddingWrapperRef,
 				defaultSettings,
+				fontList,
+				lineHeight,
+				setLineHeight,
+				fontSize,
+				setFontSize,
+				fontSettings,
+				setFontSettings,
 			}}>
 			{props.children}
 		</SettingsContext.Provider>

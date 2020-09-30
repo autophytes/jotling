@@ -96,9 +96,14 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setEditorStateRef,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
-	const { editorPaddingWrapperRef, editorContainerRef, editorSettings } = useContext(
-		SettingsContext
-	);
+	const {
+		editorPaddingWrapperRef,
+		editorContainerRef,
+		editorSettings,
+		lineHeight,
+		fontSize,
+		fontSettings,
+	} = useContext(SettingsContext);
 
 	// EDITOR STATE
 	const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -110,9 +115,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// STATE
 	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
-	const [currentFont, setCurrentFont] = useState('PT Sans');
-	const [fontSize, setFontSize] = useState(20);
-	const [lineHeight, setLineHeight] = useState(1.15);
 	const [style, setStyle] = useState({});
 	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
 	const [currentAlignment, setCurrentAlignment] = useState('');
@@ -365,7 +367,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// Sets editor styles
 	useEffect(() => {
 		let newStyles = {};
-		!!currentFont && (newStyles['fontFamily'] = currentFont.toString());
+		!!fontSettings.currentFont &&
+			(newStyles['fontFamily'] = fontSettings.currentFont.toString());
 		!!lineHeight && (newStyles['lineHeight'] = lineHeight + 'em');
 		!!editorSettings.editorMaxWidth &&
 			(newStyles['maxWidth'] = editorSettings.editorMaxWidth + 'rem');
@@ -375,7 +378,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 
 		setStyle(newStyles);
-	}, [currentFont, fontSize, lineHeight, editorSettings]);
+	}, [editorSettings, lineHeight, fontSize, fontSettings]);
 
 	// Saves current document file
 	const saveFile = useCallback(
@@ -571,12 +574,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						toggleTextAlign,
 						spellCheck,
 						toggleSpellCheck,
-						currentFont,
-						setCurrentFont,
-						fontSize,
-						setFontSize,
-						lineHeight,
-						setLineHeight,
 						saveFile,
 						loadFile,
 						createTagLink,
@@ -587,6 +584,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				<div
 					ref={editorPaddingWrapperRef}
 					style={{ padding: `0 ${editorSettings.editorPadding}rem` }}>
+					<h1>heading 1</h1>
+					<h2>heading 2</h2>
+					<h3>heading 3</h3>
+					<h4>heading 4</h4>
+					<h5>heading 5</h5>
+					<h6>heading 6</h6>
 					<Editor
 						editorState={editorState}
 						onChange={setEditorState}

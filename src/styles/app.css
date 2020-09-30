@@ -58,6 +58,13 @@ body {
 	overflow-y: auto;
 }
 
+.flex-row-center {
+	display: flex;
+	flex-direction: row;
+	justify-content: start;
+	align-items: center;
+}
+
 .editor-area {
 	/* padding: 0 2rem 0 2rem; */
 	/* position: relative; */
@@ -516,6 +523,8 @@ button.file-nav:focus {
 	padding: 3px 3px 1px 3px;
 	margin: 0 0.2rem;
 	cursor: pointer;
+	display: flex;
+	align-items: center;
 }
 
 .nav-button:hover {
@@ -1280,4 +1289,29 @@ input[type='number']::-webkit-outer-spin-button {
 	fill: var(--color-primary);
 	width: 1.5rem;
 	height: 1.5rem;
+}
+
+.editor-settings-font-select {
+	margin-left: 1.5rem;
+	border: 1px solid #555;
+	border-radius: 5px;
+	font-size: 1rem;
+	max-width: calc(100% - 1.5rem);
+}
+
+.nav-button.toggle-font-size {
+	margin-left: 0.15rem;
+	margin-right: 0;
+}
+.nav-button.toggle-font-size svg {
+	width: 1.15rem;
+}
+
+.editor h1,
+.editor h2,
+.editor h3,
+.editor h4,
+.editor h5,
+.editor h6 {
+	line-height: 1.15em;
 }

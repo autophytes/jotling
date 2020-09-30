@@ -12,8 +12,12 @@ import { SettingsContext } from '../../../contexts/settingsContext';
 import PopperContainer from '../../containers/PopperContainer';
 import ResizableWindow from '../../containers/ResizableWindow';
 
-import { SketchPicker, ChromePicker } from 'react-color';
+import { SketchPicker } from 'react-color';
 import ResetSVG from '../../../assets/svg/ResetSVG';
+import DecreaseFontSizeSVG from '../../../assets/svg/editor/DecreaseFontSizeSVG';
+import IncreaseFontSizeSVG from '../../../assets/svg/editor/IncreaseFontSizeSVG';
+
+const MAX_RECENT_FONTS = 5;
 
 const EditorSettings = () => {
 	// CONTEXT
@@ -24,6 +28,13 @@ const EditorSettings = () => {
 		editorContainerRef,
 		editorPaddingWrapperRef,
 		defaultSettings,
+		fontList,
+		lineHeight,
+		setLineHeight,
+		fontSize,
+		setFontSize,
+		fontSettings,
+		setFontSettings,
 	} = useContext(SettingsContext);
 
 	// STATE
@@ -135,6 +146,67 @@ const EditorSettings = () => {
 		setPrimaryColor(color.hex);
 	};
 
+	// Set the selected font
+	const handleFontSelect = useCallback(
+		(font) => {
+			const fontIndex = fontSettings.recentlyUsedFonts.indexOf(font);
+
+			let newRecentFonts = [...fontSettings.recentlyUsedFonts];
+
+			// If already in the list, remove so we can add it to the front
+			if (fontIndex > 0) {
+				newRecentFonts.splice(fontIndex, 1);
+			}
+
+			newRecentFonts.unshift(font);
+
+			// Trim down to max length (min 0)
+			while (newRecentFonts.length > MAX_RECENT_FONTS && newRecentFonts.length > 0) {
+				newRecentFonts.pop();
+			}
+
+			setFontSettings({
+				currentFont: font,
+				recentlyUsedFonts: newRecentFonts,
+			});
+		},
+		[fontSettings]
+	);
+
+	// Will either 'increase' or 'decrease' font size
+	const increaseDecreaseFontSize = useCallback(
+		(direction) => {
+			let oldSize = typeof fontSize === 'string' ? Number(fontSize) : fontSize;
+			let newFontSize;
+
+			if (direction === 'increase') {
+				if (oldSize < 12) {
+					newFontSize = Math.floor(oldSize + 1);
+				} else if (oldSize < 28) {
+					newFontSize = Math.floor((oldSize + 2) * 2) / 2;
+				} else if (oldSize < 70) {
+					newFontSize = Math.floor((oldSize + 6) * 6) / 6;
+				} else {
+					newFontSize = Math.floor((oldSize + 12) * 12) / 12;
+				}
+			}
+			if (direction === 'decrease') {
+				if (oldSize > 70) {
+					newFontSize = Math.ceil((oldSize - 12) / 12) * 12;
+				} else if (oldSize > 28) {
+					newFontSize = Math.ceil((oldSize - 6) / 6) * 6;
+				} else if (oldSize > 12) {
+					newFontSize = Math.ceil((oldSize - 2) / 2) * 2;
+				} else {
+					newFontSize = Math.max(Math.ceil(oldSize - 1), 1);
+				}
+			}
+
+			setFontSize(newFontSize);
+		},
+		[fontSize]
+	);
+
 	return (
 		<>
 			<ResizableWindow windowTitle='Editor Settings' closeFn={closeFn} defaultWidth={350}>
@@ -229,12 +301,70 @@ const EditorSettings = () => {
 						</PopperContainer>
 					)}
 
+					{/* FONTS */}
 					<p className='settings-category-title'>Default font</p>
+					<select
+						value={fontSettings.currentFont}
+						className='editor-settings-font-select'
+						onChange={(e) => handleFontSelect(e.target.value)}>
+						{fontSettings.recentlyUsedFonts.map((font, i) => (
+							<option key={i} value={font}>
+								{font}
+							</option>
+						))}
+						<option disabled>- - - - -</option>
+
+						{fontList.map((font, i) => {
+							const trimFont = font.replace(/["]+/g, '');
+							return (
+								<option key={i} value={trimFont}>
+									{trimFont}
+								</option>
+							);
+						})}
+					</select>
+
+					{/* FONT SIZE */}
 					<p className='settings-category-title'>Default font size</p>
+					<div className='flex-row-center' style={{ marginLeft: '1.5rem' }}>
+						<input
+							type='number'
+							min='0'
+							max='999'
+							value={fontSize}
+							className='settings-range-number-input'
+							style={{ marginLeft: 0 }}
+							onChange={(e) => setFontSize(e.target.value)}
+						/>
+						<button
+							className='nav-button toggle-font-size'
+							onClick={() => increaseDecreaseFontSize('decrease')}
+							style={{ marginLeft: '0.5rem' }}>
+							<DecreaseFontSizeSVG />
+						</button>
+						<button
+							className='nav-button toggle-font-size'
+							onClick={() => increaseDecreaseFontSize('increase')}>
+							<IncreaseFontSizeSVG />
+						</button>
+					</div>
+
+					{/* LINE HEIGHT */}
 					<p className='settings-category-title'>Default line spacing</p>
-					<ul>
-						<li>Requires project level settings</li>
-					</ul>
+					<input
+						type='number'
+						min='0'
+						max='10'
+						step='0.1'
+						className='settings-range-number-input'
+						style={{ marginLeft: '1.5rem' }}
+						value={lineHeight}
+						onChange={(e) => {
+							setLineHeight(e.target.value);
+						}}
+					/>
+					<br />
+					<br />
 				</div>
 			</ResizableWindow>
 		</>
