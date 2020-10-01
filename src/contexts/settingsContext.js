@@ -35,6 +35,34 @@ const SettingsContextProvider = (props) => {
 		recentlyUsedFonts: ['PT Sans'],
 	});
 
+	useEffect(() => {
+		const newStyleSheetRule = `
+    .editor h1,
+    .editor h2,
+    .editor h3,
+    .editor h4,
+    .editor h5,
+    .editor h6 {
+      line-height: ${lineHeight}em;
+    }`;
+
+		// Delete the old line height css rule
+		const cssRuleArray = Array.from(document.styleSheets[0].cssRules);
+		const deleteIndex = cssRuleArray.findIndex(
+			(item) =>
+				item.selectorText ===
+				'.editor h1, .editor h2, .editor h3, .editor h4, .editor h5, .editor h6'
+		);
+		if (deleteIndex !== -1) {
+			document.styleSheets[0].deleteRule(deleteIndex);
+		}
+
+		// Insert the new rule
+		const insertIndex = document.styleSheets[0].cssRules.length;
+		document.styleSheets[0].insertRule(newStyleSheetRule, insertIndex);
+		console.log(document.styleSheets[0]);
+	}, [lineHeight]);
+
 	// Initialize the values from electron-store
 	useEffect(() => {
 		let newEditorSettings = { ...editorSettings };

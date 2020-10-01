@@ -46,93 +46,129 @@ const FindReplaceDecorator = ({ children, decoratedText, blockKey, start, end })
 	// REFS
 	const decoratorRef = useRef(null);
 
+	// useEffect(() => {
+	//   // Runs when the decorator is unmounted
+	// 	const cleanupOnUnmount = () => {
+	// 		console.log('unmounted a decorator');
+	// 		console.log('unmounting for: ', decoratedText);
+	// 		let registerArray = [...findRegisterRef.current[decoratedText.toLowerCase()].array];
+
+	// 		const removeIndex = registerArray.findIndex(
+	// 			(item) => item.blockKey === blockKey && item.start === start
+	// 		);
+	// 		registerArray.splice(removeIndex, 1);
+
+	// 		findRegisterRef.current[decoratedText.toLowerCase()].array = [...registerArray];
+
+	// 		queueDecoratorUpdate(decoratedText);
+	// 	};
+
+	// 	return cleanupOnUnmount;
+	// }, [decoratedText, blockKey, start, prev]);
+
 	useEffect(() => {
-		if (
-			prev.blockKey !== blockKey ||
-			prev.start !== start ||
-			prev.decoratedText !== decoratedText
-		) {
-			let registerArray = [...findRegisterRef.current[decoratedText.toLowerCase()].array];
-			const updatedMatch = { blockKey, start };
+		// if (
+		// 	prev.blockKey !== blockKey ||
+		// 	prev.start !== start ||
+		// 	prev.decoratedText !== decoratedText
+		// ) {
+		let registerArray = [...findRegisterRef.current[decoratedText.toLowerCase()].array];
+		const updatedMatch = { blockKey, start };
 
-			let matchIndex = registerArray.findIndex(
-				(item) => item.blockKey === prev.blockKey && item.start === prev.start
-			);
+		// let matchIndex = registerArray.findIndex(
+		// 	(item) => item.blockKey === prev.blockKey && item.start === prev.start
+		// );
 
-			// If our current block is aready in the array, update it
-			if (matchIndex !== -1) {
-				registerArray.splice(matchIndex, 1, updatedMatch);
-				// If it's not in the array, find where to insert it
+		// // If our current block is aready in the array, update it
+		// if (matchIndex !== -1) {
+		// 	registerArray.splice(matchIndex, 1, updatedMatch);
+		// 	// If it's not in the array, find where to insert it
+		// } else {
+		let blockMap = editorStateRef.current.getCurrentContent().getBlockMap();
+		let blockKeyOrder = [...blockMap.keys()];
+
+		let matchingBlockKeyIndex = registerArray.findIndex((item) => item.blockKey === blockKey);
+		// If we found a block with a MATCHING BLOCK KEY
+		if (matchingBlockKeyIndex !== -1) {
+			// If that block is AFTER ours, insert it before
+			if (registerArray[matchingBlockKeyIndex].start > start) {
+				// Insert our updatedMatch
+				registerArray.splice(matchingBlockKeyIndex, 0, updatedMatch);
 			} else {
-				let blockMap = editorStateRef.current.getCurrentContent().getBlockMap();
-				let blockKeyOrder = [...blockMap.keys()];
-
-				let matchingBlockKeyIndex = registerArray.findIndex(
-					(item) => item.blockKey === blockKey
-				);
-				// If we found a block with a MATCHING BLOCK KEY
-				if (matchingBlockKeyIndex !== -1) {
-					// If that block is AFTER ours, insert it before
-					if (registerArray[matchingBlockKeyIndex].start > start) {
+				// Otherwise, check blocks after until find a new blockKey OR the start is after ours
+				let foundMatch = false;
+				while (!foundMatch && matchingBlockKeyIndex <= registerArray.length - 1) {
+					// If find a new blockKey OR the start is after ours
+					if (
+						registerArray[matchingBlockKeyIndex].blockKey !== blockKey ||
+						registerArray[matchingBlockKeyIndex].start > start
+					) {
 						// Insert our updatedMatch
 						registerArray.splice(matchingBlockKeyIndex, 0, updatedMatch);
+						foundMatch = true;
 					} else {
-						// Otherwise, check blocks after until find a new blockKey OR the start is after ours
-						let foundMatch = false;
-						while (!foundMatch && matchingBlockKeyIndex <= registerArray.length - 1) {
-							// If find a new blockKey OR the start is after ours
-							if (
-								registerArray[matchingBlockKeyIndex].blockKey !== blockKey ||
-								registerArray[matchingBlockKeyIndex].start > start
-							) {
-								// Insert our updatedMatch
-								registerArray.splice(matchingBlockKeyIndex, 0, updatedMatch);
-								foundMatch = true;
-							} else {
-								matchingBlockKeyIndex += 1;
-							}
-						}
-						// If we hit the end of the array, just push it onto the end
-						if (!foundMatch) {
-							registerArray.push(updatedMatch);
-						}
-					}
-					// If we found NO MATCHING BLOCK KEY
-				} else {
-					// Find where the next block is in the block order
-					let blockKeyIndex = blockKeyOrder.findIndex((item) => item === blockKey) + 1;
-					if (blockKeyIndex === 0) {
-						console.error('Our block key was NOT found in the blockKeyOrder array.');
-						return;
-					}
-
-					// Check if that next block has a match. If so, inject our updatedMatch before it.
-					let foundMatch = false;
-					while (!foundMatch && blockKeyIndex <= blockKeyOrder.length - 1) {
-						let nextBlockIndex = registerArray.findIndex(
-							(item) => item.blockKey === blockKeyOrder[blockKeyIndex]
-						);
-						if (nextBlockIndex !== -1) {
-							registerArray.splice(nextBlockIndex, 0, updatedMatch);
-							foundMatch = true;
-						}
-						blockKeyIndex += 1;
-					}
-
-					if (!foundMatch) {
-						registerArray.push(updatedMatch);
+						matchingBlockKeyIndex += 1;
 					}
 				}
+				// If we hit the end of the array, just push it onto the end
+				if (!foundMatch) {
+					registerArray.push(updatedMatch);
+				}
+			}
+			// If we found NO MATCHING BLOCK KEY
+		} else {
+			// Find where the next block is in the block order
+			let blockKeyIndex = blockKeyOrder.findIndex((item) => item === blockKey) + 1;
+			if (blockKeyIndex === 0) {
+				console.error('Our block key was NOT found in the blockKeyOrder array.');
+				return;
 			}
 
-			console.log('register array: ', registerArray);
+			// Check if that next block has a match. If so, inject our updatedMatch before it.
+			let foundMatch = false;
+			while (!foundMatch && blockKeyIndex <= blockKeyOrder.length - 1) {
+				let nextBlockIndex = registerArray.findIndex(
+					(item) => item.blockKey === blockKeyOrder[blockKeyIndex]
+				);
+				if (nextBlockIndex !== -1) {
+					registerArray.splice(nextBlockIndex, 0, updatedMatch);
+					foundMatch = true;
+				}
+				blockKeyIndex += 1;
+			}
+
+			if (!foundMatch) {
+				registerArray.push(updatedMatch);
+			}
+		}
+		// }
+
+		console.log('register array: ', registerArray);
+
+		findRegisterRef.current[decoratedText.toLowerCase()].array = [...registerArray];
+		// setPrev({ blockKey, start, decoratedText });
+		queueDecoratorUpdate(decoratedText);
+		// queueIncrement();
+		// }
+
+		// Runs when the decorator is unmounted
+		const cleanupOnUnmount = () => {
+			console.log('unmounted a decorator');
+			console.log('unmounting for: ', decoratedText);
+			let registerArray = [...findRegisterRef.current[decoratedText.toLowerCase()].array];
+
+			const removeIndex = registerArray.findIndex(
+				(item) => item.blockKey === blockKey && item.start === start
+			);
+			registerArray.splice(removeIndex, 1);
 
 			findRegisterRef.current[decoratedText.toLowerCase()].array = [...registerArray];
-			setPrev({ blockKey, start, decoratedText });
+
 			queueDecoratorUpdate(decoratedText);
-			// queueIncrement();
-		}
-	}, [decoratedText, blockKey, start, prev]);
+		};
+
+		return cleanupOnUnmount;
+	}, [decoratedText, blockKey, start]);
 
 	// Check if the decorator is the current result
 	useEffect(() => {

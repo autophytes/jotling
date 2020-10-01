@@ -192,11 +192,7 @@ const EditorNav = React.memo(
 						<button className='nav-button' disabled>
 							<LineSpacingSVG />
 						</button> */}
-					</span>
 
-					{/* <div className='editor-nav-vertical-rule' /> */}
-
-					<span className='editor-nav-subsection'>
 						<InlineStyleButton
 							currentStyles={currentStyles}
 							toggleFn={toggleInlineStyle}
@@ -240,25 +236,9 @@ const EditorNav = React.memo(
 							removeStyle='SUBSCRIPT'>
 							<SuperscriptSVG />
 						</InlineStyleButton>
+					</span>
 
-						<button
-							className='nav-button'
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={(e) => {
-								e.stopPropagation();
-								if (document.getSelection().toString().length) {
-									setDisplayLinkPopper(true);
-								}
-							}}>
-							<ChainSVG />
-						</button>
-						{/* Add Tag Popper */}
-						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
-                to close the popper. This can later be used for confirmation messages and things like that. */}
-						{displayLinkPopper && (
-							<AddLinkPopper {...{ createTagLink, setDisplayLinkPopper }} />
-						)}
-
+					<span className='editor-nav-subsection'>
 						<button className='nav-button' onClick={() => saveFile()}>
 							<HighlightSVG />
 						</button>
@@ -310,11 +290,31 @@ const EditorNav = React.memo(
 							<AlignJustifySVG />
 						</button>
 
+						<div className='editor-nav-vertical-rule' />
+
 						<button
 							className={'nav-button' + (spellCheck ? ' active' : '')}
 							onMouseDown={(e) => toggleSpellCheck(e)}>
 							<SpellcheckSVG />
 						</button>
+
+						<button
+							className='nav-button'
+							onMouseDown={(e) => e.preventDefault()}
+							onClick={(e) => {
+								e.stopPropagation();
+								if (document.getSelection().toString().length) {
+									setDisplayLinkPopper(true);
+								}
+							}}>
+							<ChainSVG />
+						</button>
+						{/* Add Tag Popper */}
+						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
+                to close the popper. This can later be used for confirmation messages and things like that. */}
+						{displayLinkPopper && (
+							<AddLinkPopper {...{ createTagLink, setDisplayLinkPopper }} />
+						)}
 					</span>
 				</nav>
 			</>

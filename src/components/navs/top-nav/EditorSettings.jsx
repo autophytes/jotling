@@ -255,7 +255,7 @@ const EditorSettings = () => {
 						/>
 					</div>
 
-					<p className='settings-category-title'>Accent color</p>
+					<p className='settings-category-title'>Accent Color</p>
 					<div className='accent-color-swatch-row'>
 						<div
 							ref={colorSwatchRef}
@@ -302,7 +302,7 @@ const EditorSettings = () => {
 					)}
 
 					{/* FONTS */}
-					<p className='settings-category-title'>Default font</p>
+					<p className='settings-category-title'>Font</p>
 					<select
 						value={fontSettings.currentFont}
 						className='editor-settings-font-select'
@@ -325,7 +325,7 @@ const EditorSettings = () => {
 					</select>
 
 					{/* FONT SIZE */}
-					<p className='settings-category-title'>Default font size</p>
+					<p className='settings-category-title'>Font Size</p>
 					<div className='flex-row-center' style={{ marginLeft: '1.5rem' }}>
 						<input
 							type='number'
@@ -350,7 +350,7 @@ const EditorSettings = () => {
 					</div>
 
 					{/* LINE HEIGHT */}
-					<p className='settings-category-title'>Default line spacing</p>
+					<p className='settings-category-title'>Line Spacing</p>
 					<input
 						type='number'
 						min='0'

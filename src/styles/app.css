@@ -186,6 +186,7 @@ li .public-DraftStyleDefault-block {
 	font-size: 0.85rem;
 	border-radius: 0.5rem;
 	padding-bottom: 1px;
+	margin-right: 0.25rem;
 	border: 1px solid #999;
 	color: #555;
 }
@@ -520,7 +521,7 @@ button.file-nav:focus {
 .nav-button {
 	outline: none;
 	border-radius: 0.25rem;
-	padding: 3px 3px 1px 3px;
+	padding: 2px 3px 2px 3px;
 	margin: 0 0.2rem;
 	cursor: pointer;
 	display: flex;
@@ -1305,13 +1306,4 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .nav-button.toggle-font-size svg {
 	width: 1.15rem;
-}
-
-.editor h1,
-.editor h2,
-.editor h3,
-.editor h4,
-.editor h5,
-.editor h6 {
-	line-height: 1.15em;
 }

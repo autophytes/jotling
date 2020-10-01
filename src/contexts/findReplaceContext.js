@@ -39,6 +39,19 @@ const FindReplaceContextProvider = (props) => {
 	const { navData, editorStateRef } = useContext(LeftNavContext);
 	const currentDoc = navData.currentDoc;
 
+	// Update the number of find matches
+	const queueDecoratorUpdate = useCallback((findText) => {
+		// Remove any queued updates to findRegisterRef
+		clearTimeout(updateFindRegisterQueueRef.current);
+
+		// Update the number of matches on the page
+		updateFindRegisterQueueRef.current = setTimeout(() => {
+			console.log('current 3: ', findRegisterRef.current);
+			console.log('findText: ', findText);
+			setTotalMatches(findRegisterRef.current[findText.toLowerCase()].array.length);
+		}, 100);
+	}, []);
+
 	// Reset the findRegister when the findText or currentDoc changes
 	useEffect(() => {
 		setFindIndex(null);
@@ -48,12 +61,14 @@ const FindReplaceContextProvider = (props) => {
 			blockList: {},
 		};
 
-		for (let key of Object.keys(findRegisterRef.current)) {
-			if (key !== findText.toLowerCase()) {
-				delete findRegisterRef.current[key];
-			}
-		}
-	}, [findText, currentDoc]);
+		// for (let key of Object.keys(findRegisterRef.current)) {
+		// 	if (key !== findText.toLowerCase()) {
+		// 		delete findRegisterRef.current[key];
+		// 	}
+		// }
+
+		queueDecoratorUpdate(findText);
+	}, [findText, currentDoc, queueDecoratorUpdate]);
 
 	// Once all replace alls have completed, reset the replace all variable
 	const resetReplaceAll = useCallback(() => {
@@ -118,6 +133,7 @@ const FindReplaceContextProvider = (props) => {
 			}
 
 			if (direction === 'INCREMENT') {
+				console.log('current 1: ', findRegisterRef.current);
 				if (findIndex === findRegisterRef.current[findText.toLowerCase()].array.length - 1) {
 					setFindIndex(0);
 				} else {
@@ -127,6 +143,7 @@ const FindReplaceContextProvider = (props) => {
 
 			if (direction === 'DECREMENT') {
 				if (findIndex === 0) {
+					console.log('current 2: ', findRegisterRef.current);
 					setFindIndex(findRegisterRef.current[findText.toLowerCase()].array.length - 1);
 				} else {
 					setFindIndex(findIndex - 1);
@@ -135,16 +152,6 @@ const FindReplaceContextProvider = (props) => {
 		},
 		[findIndex, setFindIndex, findText]
 	);
-
-	const queueDecoratorUpdate = useCallback((findText) => {
-		// Remove any queued updates to findRegisterRef
-		clearTimeout(updateFindRegisterQueueRef.current);
-
-		// Update the number of matches on the page
-		updateFindRegisterQueueRef.current = setTimeout(() => {
-			setTotalMatches(findRegisterRef.current[findText.toLowerCase()].array.length);
-		}, 100);
-	}, []);
 
 	// When we change our search, update our findIndex
 	useEffect(() => {
