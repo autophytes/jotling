@@ -25,6 +25,7 @@ import {
 	KeyBindingUtil,
 	convertToRaw,
 	convertFromRaw,
+	DefaultDraftBlockRenderMap,
 } from 'draft-js';
 import { setBlockData, getSelectedBlocksMetadata } from 'draftjs-utils';
 
@@ -41,6 +42,7 @@ import {
 	generateDecoratorWithTagHighlights,
 	updateLinkEntities,
 } from './editorFunctions';
+import { LinkDestBlock } from './decorators/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
 import { getTextSelection } from '../../utils/draftUtils';
 
@@ -70,11 +72,47 @@ const customStyleMap = {
 // Applies classes to certain blocks
 const blockStyleFn = (block) => {
 	// If the block data for a text-align property, add a class
-	const blockAlignment = block.getData() && block.getData().get('text-align');
-	if (blockAlignment) {
-		return `${blockAlignment}-aligned-block`;
+	const blockData = block.getData();
+	if (blockData) {
+		let blockClass = '';
+
+		const blockAlignment = blockData.get('text-align');
+		if (blockAlignment) {
+			blockClass = `${blockAlignment}-aligned-block`;
+		}
+
+		return blockClass;
 	}
+
 	return '';
+};
+
+// const MyCustomBlock = (props) => {
+//   console.log(props);
+
+// 	return <div className='new-link-destination'>{props.children}</div>;
+// };
+
+// const customBlockRenderMap = Immutable.Map({
+// 	'link-destination': {
+// 		element: 'div',
+// 		wrapper: <MyCustomBlock />,
+// 	},
+// });
+// const blockRenderMap = DefaultDraftBlockRenderMap.merge(customBlockRenderMap);
+
+const blockRendererFn = (contentBlock) => {
+	const type = contentBlock.getType();
+	if (type === 'link-destination') {
+		console.log('rendering the destination block');
+		return {
+			component: LinkDestBlock,
+			editable: true,
+			// props: {
+			//   foo: 'bar',
+			// },
+		};
+	}
 };
 
 //
@@ -592,6 +630,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						handleKeyCommand={handleKeyCommand}
 						customStyleMap={customStyleMap}
 						blockStyleFn={blockStyleFn}
+						blockRendererFn={blockRendererFn}
 						// blockRenderMap={blockRenderMap}
 						// plugins={[inlineToolbarPlugin]}
 						spellCheck={spellCheck}

@@ -1,4 +1,4 @@
-import { List, Repeat } from 'immutable';
+import { List, Repeat, Map } from 'immutable';
 import {
 	EditorState,
 	SelectionState,
@@ -8,11 +8,14 @@ import {
 	CompositeDecorator,
 	CharacterMetadata,
 	Modifier,
+	RichUtils,
 } from 'draft-js';
+import { setBlockData } from 'draftjs-utils';
 
 import { LinkSourceDecorator, LinkDestDecorator } from './decorators/LinkDecorators';
 import { HighlightTagDecorator } from './decorators/HighlightTagDecorator';
 import { FindReplaceDecorator } from './decorators/FindReplaceDecorator';
+import { CompoundDecorator } from './decorators/CompoundDecorator';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
@@ -110,10 +113,12 @@ export const generateDecorators = (
 		});
 	}
 	// console.log('inside our decorator generating function');
+	// return new CompoundDecorator(decoratorArray);
 	return new CompositeDecorator(decoratorArray);
 };
 
 export const defaultDecorator = new CompositeDecorator([
+	// export const defaultDecorator = new CompoundDecorator([
 	{
 		strategy: getEntityStrategy('LINK-SOURCE'),
 		component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
@@ -221,7 +226,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			// Creating a new block with our link content
 			const newBlock = new ContentBlock({
 				key: newBlockKey,
-				type: 'unstyled',
+				type: 'link-destination',
 				text: content,
 				characterList: List(Repeat(CharacterMetadata.create(), content.length)),
 			});
@@ -254,7 +259,6 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	let linkContentState = newEditorState.getCurrentContent();
 
 	for (let entityKey of Object.keys(nonAliasedEntities)) {
-		console.log('updating for entityKey: ', entityKey);
 		let linkData = nonAliasedEntities[entityKey];
 		let structureContent = linkStructure.links[linkData.linkId].content;
 
@@ -275,10 +279,8 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		);
 
 		const blockList = nonAliasedEntities[entityKey].blockList;
-		console.log('blockList: ', blockList);
 		// for (let blockKey of blockList) {
 		let blockKey = blockList[0];
-		console.log(linkContentState.getBlocksAsArray());
 		let block = linkContentState.getBlockForKey(blockKey);
 		let blockText = block.getText();
 		let newLineIndex = blockText.lastIndexOf('\n');
@@ -292,11 +294,9 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			});
 
 			linkContentState = Modifier.splitBlock(linkContentState, newLineSelectionState);
-			console.log(linkContentState.getBlocksAsArray());
 
 			block = linkContentState.getBlockForKey(blockKey);
 			blockText = block.getText();
-			console.log('blockText: ', blockText);
 			newLineIndex = blockText.lastIndexOf('\n');
 		}
 		// }
@@ -395,4 +395,16 @@ export const findVisibleBlocks = (editorRef) => {
 		}
 	}
 	return blockKeyList;
+};
+
+export const scrollToBlock = (blockKey, element = document) => {
+	let blockElement = element.querySelector(`[data-offset-key='${blockKey}-0-0'`);
+
+	let blockRect = blockElement.getBoundingClientRect();
+
+	window.scrollTo({
+		left: 0,
+		top: Math.floor(blockRect.top + window.pageYOffset - 200, 0),
+		behavior: 'smooth',
+	});
 };

@@ -2,9 +2,11 @@ import React, { useContext, useState, useEffect, useCallback, Fragment } from 'r
 import PlusSVG from '../../../../assets/svg/PlusSVG';
 
 import { LeftNavContext } from '../../../../contexts/leftNavContext';
+import { SettingsContext } from '../../../../contexts/settingsContext';
 import NewTag from './NewTag';
 import CaratDownSVG from '../../../../assets/svg/CaratDownSVG';
 
+import { scrollToBlock } from '../../../editor/editorFunctions';
 import Collapse from 'react-css-collapse';
 
 const RightNavTags = ({ activeTab }) => {
@@ -25,7 +27,9 @@ const RightNavTags = ({ activeTab }) => {
 		setEditorStyles,
 		setScrollToLinkId,
 		scrollToLinkIdRef,
+		editorStateRef,
 	} = useContext(LeftNavContext);
+	const { editorContainerRef } = useContext(SettingsContext);
 
 	// Keeps the currentDoc in state
 	useEffect(() => {
@@ -144,6 +148,21 @@ const RightNavTags = ({ activeTab }) => {
 		[editorStyles]
 	);
 
+	const handleScrollToLinkId = (linkId) => {
+		let entityKey = linkStructure.links[linkId].sourceEntityKey;
+
+		const currentContent = editorStateRef.current.getCurrentContent();
+		const blockArray = currentContent.getBlocksAsArray();
+
+		let contentBlock = blockArray.find((block) => {
+			let characterList = block.getCharacterList();
+			return characterList.find((char) => char.getEntity() === entityKey);
+		});
+
+		if (contentBlock) {
+			scrollToBlock(contentBlock.getKey());
+		}
+	};
 	// TO click to jump to a link
 	// We need to queue a scrollTo event that the decorators monitor and if it is their linkId,
 	// they calculate the top offset of their block and scroll the page to that.
@@ -213,7 +232,8 @@ const RightNavTags = ({ activeTab }) => {
 											key={linkId}
 											onClick={() => {
 												setScrollToLinkId(linkId);
-												scrollToLinkIdRef.current = linkId;
+												// scrollToLinkIdRef.current = linkId;
+												handleScrollToLinkId(linkId);
 											}}>
 											{linkStructure.links[linkId].content}
 										</p>

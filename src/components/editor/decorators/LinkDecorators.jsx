@@ -1,6 +1,5 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
-
-import PeekDocument from '../PeekDocument';
+import { EditorBlock } from 'draft-js';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
@@ -69,17 +68,18 @@ const LinkSourceDecorator = ({
 	// Scroll to the clicked-on link from the right nav
 	useEffect(() => {
 		if (linkId !== null && scrollToLinkId === linkId) {
-			if (scrollToLinkIdRef.current === linkId) {
-				scrollToLinkIdRef.current = null;
-				setScrollToLinkId(null);
-				let decoratorRect = decoratorRef.current.getBoundingClientRect();
+			// if (scrollToLinkIdRef.current === linkId) {
+			// 	scrollToLinkIdRef.current = null;
 
-				window.scrollTo({
-					left: 0,
-					top: Math.floor(decoratorRect.top + window.pageYOffset - 200, 0),
-					behavior: 'smooth',
-				});
-			}
+			// 	let decoratorRect = decoratorRef.current.getBoundingClientRect();
+
+			// 	window.scrollTo({
+			// 		left: 0,
+			// 		top: Math.floor(decoratorRect.top + window.pageYOffset - 200, 0),
+			// 		behavior: 'smooth',
+			// 	});
+			// }
+			setScrollToLinkId(null);
 			setShowActive(true);
 		}
 	}, [scrollToLinkId, linkId]);
@@ -216,6 +216,28 @@ const LinkDestDecorator = ({
 	);
 };
 
+// We need to compose a draft editor block inside our component. The props look the same.
+// https://draftjs.org/docs/advanced-topics-block-components
+// https://github.com/facebook/draft-js/issues/132
+// WE NEED TO GET THE BUTTON SET UP
+const LinkDestBlock = (props) => {
+	console.log(props);
+	const { setPeekWindowLinkId } = useContext(LeftNavContext);
+
+	return (
+		<div style={{ position: 'relative' }}>
+			<div className='peek-wrapper'>
+				<button
+					className='peek-destination-decorator'
+					onClick={() => setPeekWindowLinkId(linkId)}>
+					Peek
+				</button>
+			</div>
+			<EditorBlock {...props} />
+		</div>
+	);
+};
+
 // Gets the Link ID for the entity
 const getLinkId = (entityKey, contentState, blockKey, start) => {
 	if (entityKey) {
@@ -335,4 +357,4 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 	// If so, add {blockKey, start, end} to the START of the array as well
 };
 
-export { LinkSourceDecorator, LinkDestDecorator };
+export { LinkSourceDecorator, LinkDestDecorator, LinkDestBlock };

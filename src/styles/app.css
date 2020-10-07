@@ -853,6 +853,7 @@ input[type='number']::-webkit-outer-spin-button {
 .link-dest-decorator:not(:hover):not(.active) {
 	transition-duration: 2000ms;
 	transition-delay: 2000ms;
+	background-color: background-color;
 }
 
 @keyframes pop-upwards {
