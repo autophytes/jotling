@@ -88,7 +88,6 @@ const EditorNav = React.memo(
 		loadFile,
 		currentAlignment,
 		currentStyles,
-		createTagLink,
 		editorContainerRef,
 	}) => {
 		// STATE
@@ -312,9 +311,7 @@ const EditorNav = React.memo(
 						{/* Add Tag Popper */}
 						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
                 to close the popper. This can later be used for confirmation messages and things like that. */}
-						{displayLinkPopper && (
-							<AddLinkPopper {...{ createTagLink, setDisplayLinkPopper }} />
-						)}
+						{displayLinkPopper && <AddLinkPopper {...{ setDisplayLinkPopper }} />}
 					</span>
 				</nav>
 			</>

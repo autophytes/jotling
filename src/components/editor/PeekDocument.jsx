@@ -99,7 +99,7 @@ const PeekDocument = () => {
 	return (
 		<>
 			<ResizableWindow
-				leftTopButtonTitle='Open Document'
+				leftTopButtonTitle='Go To'
 				leftTopButtonFn={() => {
 					setNavData({ ...navData, currentDoc: documentName });
 					setScrollToLinkId(peekWindowLinkId);

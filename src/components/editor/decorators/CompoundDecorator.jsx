@@ -20,13 +20,13 @@ export class CompoundDecorator {
 			Array(this.decorators.length).fill(null)
 		);
 
-		[
-			[1, null, null],
-			[1, null, null],
-			[1, null, 3],
-			[1, null, 3],
-			[null, null, 3],
-		];
+		// [
+		// 	[1, null, null],
+		// 	[1, null, null],
+		// 	[1, null, 3],
+		// 	[1, null, 3],
+		// 	[null, null, 3],
+		// ];
 
 		// Populate our emptyTuples
 		const decorations = this.decorators.reduce((tuples, decorator, index) => {

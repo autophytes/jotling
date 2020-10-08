@@ -60,7 +60,6 @@ const SettingsContextProvider = (props) => {
 		// Insert the new rule
 		const insertIndex = document.styleSheets[0].cssRules.length;
 		document.styleSheets[0].insertRule(newStyleSheetRule, insertIndex);
-		console.log(document.styleSheets[0]);
 	}, [lineHeight]);
 
 	// Initialize the values from electron-store
@@ -69,7 +68,6 @@ const SettingsContextProvider = (props) => {
 
 		for (let prop in editorSettings) {
 			let newValue = store.get(`settings.${prop}`, null);
-			console.log(newValue);
 			if (newValue !== null) {
 				newEditorSettings[prop] = newValue;
 			} else {

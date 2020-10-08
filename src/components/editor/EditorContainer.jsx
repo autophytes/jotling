@@ -44,7 +44,6 @@ import {
 } from './editorFunctions';
 import { LinkDestBlock } from './decorators/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
-import { getTextSelection } from '../../utils/draftUtils';
 
 import EditorFindReplace from './EditorFindReplace';
 
@@ -103,6 +102,12 @@ const blockStyleFn = (block) => {
 
 const blockRendererFn = (contentBlock) => {
 	const type = contentBlock.getType();
+	const entity = contentBlock.getEntityAt(0);
+	if (entity) {
+		console.log('entity: ', entity);
+		// console.log('entity type: ', entity.get('type'));
+	}
+	// LINK-DEST
 	if (type === 'link-destination') {
 		console.log('rendering the destination block');
 		return {
@@ -182,6 +187,20 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		},
 		[editorRef, editorState]
 	);
+
+	const blockRendererFn = useCallback((contentBlock) => {
+		const entityKey = contentBlock.getEntityAt(0);
+		if (entityKey) {
+			const contentState = editorStateRef.current.getCurrentContent();
+			const entity = contentState.getEntity(entityKey);
+			if (entity.get('type') === 'LINK-DEST') {
+				return {
+					component: LinkDestBlock,
+					editable: true,
+				};
+			}
+		}
+	}, []);
 
 	// Make setEditorState available in the context
 	useEffect(() => {
@@ -340,59 +359,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			setEditorState(setBlockData(editorStateRef.current, { 'text-align': undefined }));
 		}
 	}, []);
-
-	// Creating a new source tag link
-	const createTagLink = useCallback(
-		(tagName) => {
-			// Increment the max id by 1, or start at 0
-			let arrayOfLinkIds = Object.keys(linkStructureRef.current.links).map((item) =>
-				Number(item)
-			);
-			let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 0;
-
-			const contentState = editorState.getCurrentContent();
-			const selectionState = editorState.getSelection();
-
-			// Apply the linkId as an entity to the selection
-			const contentStateWithEntity = contentState.createEntity('LINK-SOURCE', 'MUTABLE', {
-				linkId: newLinkId,
-			});
-			const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-			const contentStateWithLink = Modifier.applyEntity(
-				contentStateWithEntity,
-				selectionState,
-				entityKey
-			);
-			const newEditorState = EditorState.push(
-				editorState,
-				contentStateWithLink,
-				'apply-entity'
-			);
-
-			// Get the selected text to include in the link
-			const selectedText = getTextSelection(contentStateWithLink, selectionState);
-
-			// Updating the linkStructure with the new link
-			let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
-			newLinkStructure.tagLinks[tagName].push(newLinkId); // FIX EVENTUALLY
-			newLinkStructure.links[newLinkId] = {
-				source: navData.currentDoc, // Source document
-				content: selectedText, // Selected text
-				alias: null,
-				sourceEntityKey: entityKey,
-			};
-
-			// Updating the linkStructure with the keyword the link is using
-			if (!newLinkStructure.docLinks.hasOwnProperty(navData.currentDoc)) {
-				newLinkStructure.docLinks[navData.currentDoc] = {};
-			}
-			newLinkStructure.docLinks[navData.currentDoc][newLinkId] = tagName; // FIX EVENTUALLY
-
-			setLinkStructure(newLinkStructure);
-			setEditorState(newEditorState);
-		},
-		[editorState, linkStructureRef, navData.currentDoc]
-	);
 
 	// Removes queued up styles to remove
 	useEffect(() => {
@@ -614,7 +580,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						toggleSpellCheck,
 						saveFile,
 						loadFile,
-						createTagLink,
 						editorContainerRef,
 					}}
 				/>

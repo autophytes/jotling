@@ -9,10 +9,12 @@ import { SettingsContext } from '../../../contexts/settingsContext';
 
 import EllipsisSVG from '../../../assets/svg/EllipsisSVG';
 
+import { createTagLink } from '../../editor/editorFunctions';
+
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
 
-const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
+const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 	// REFS
 	const popperInputRef = useRef(null);
 
@@ -23,7 +25,15 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 	const [rightOffset, setRightOffset] = useState(0);
 
 	// CONTEXT
-	const { linkStructure, navData, editorStyles } = useContext(LeftNavContext);
+	const {
+		linkStructure,
+		navData,
+		editorStyles,
+		editorStateRef,
+		linkStructureRef,
+		setEditorStateRef,
+		setLinkStructure,
+	} = useContext(LeftNavContext);
 	const { editorSettings } = useContext(SettingsContext);
 
 	// Initial rebuild of referenceElement
@@ -130,7 +140,14 @@ const AddLinkPopper = ({ createTagLink, setDisplayLinkPopper }) => {
 							(i === 0 ? ' first' : i === allTags.length - 1 ? ' last' : '')
 						}
 						onClick={() => {
-							createTagLink(item);
+							createTagLink(
+								item,
+								editorStateRef,
+								linkStructureRef,
+								navData.currentDoc,
+								setEditorStateRef.current,
+								setLinkStructure
+							);
 							setDisplayLinkPopper(false);
 						}}>
 						{item}

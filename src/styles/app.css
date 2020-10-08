@@ -1110,6 +1110,8 @@ input[type='number']::-webkit-outer-spin-button {
 	justify-self: center;
 	margin: 0;
 	font-size: 0.8rem;
+	text-overflow: hidden;
+	white-space: nowrap;
 }
 
 .peek-window-open {
@@ -1120,10 +1122,27 @@ input[type='number']::-webkit-outer-spin-button {
 	cursor: pointer;
 	text-align: left;
 	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	display: inline-block;
+	/* overflow: hidden;
+	text-overflow: ellipsis; */
+	/* display: inline-block; */
 	max-width: 100%;
+
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+.peek-window-open svg {
+	transform: rotate(225deg);
+	margin-left: 0.35rem;
+	fill: white;
+	width: 0.7rem;
+	height: 0.7rem;
+	transition: 200ms ease transform;
+}
+
+.peek-window-open:hover svg {
+	transform: translateX(2px);
 }
 
 .peek-window-close {

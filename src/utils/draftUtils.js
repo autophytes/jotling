@@ -24,7 +24,7 @@ export const getTextSelection = (contentState, selection, blockDelimiter) => {
 		});
 
 	// Returning a joined array of the blocks text - just the paragraphs of text
-	return selectedBlock
+	let selectedText = selectedBlock
 		.map((block) => {
 			var key = block.getKey();
 			var text = block.getText();
@@ -44,4 +44,9 @@ export const getTextSelection = (contentState, selection, blockDelimiter) => {
 			return text;
 		})
 		.join(blockDelimiter);
+
+	let cleanedSelectedText =
+		selectedText.slice(-1) === '\n' ? selectedText.slice(0, -1) : selectedText;
+
+	return cleanedSelectedText;
 };

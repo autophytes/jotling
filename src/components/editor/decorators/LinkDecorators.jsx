@@ -203,29 +203,56 @@ const LinkDestDecorator = ({
 
 	return (
 		<span className={'link-dest-decorator' + (editorStyles.showAllTags ? ' active' : '')}>
-			<div className='peek-wrapper'>
+			{/* <div className='peek-wrapper'>
 				<button
 					className='peek-destination-decorator'
 					onClick={() => setPeekWindowLinkId(linkId)}>
 					Peek
 				</button>
-			</div>
+			</div> */}
 			{/* {showPeekWindow && <PeekDocument {...{ linkId, linkStructureRef }} />} */}
 			{children}
 		</span>
 	);
 };
 
+// block: ContentBlock {_map: Map, __ownerID: undefined}
+// blockProps: undefined
+// blockStyleFn: block => {…}
+// contentState: ContentState {_map: Map, __ownerID: undefined}
+// customStyleFn: undefined
+// customStyleMap: {BOLD: {…}, CODE: {…}, ITALIC: {…}, STRIKETHROUGH: {…}, UNDERLINE: {…}, …}
+// decorator: CompositeDraftDecorator {_decorators: Array(2)}
+// direction: "LTR"
+// forceSelection: true
+// offsetKey: "ah7m4-0-0"
+// preventScroll: undefined
+// selection: SelectionState {_map: Map, __ownerID: undefined}
+// tree: List
+
 // We need to compose a draft editor block inside our component. The props look the same.
 // https://draftjs.org/docs/advanced-topics-block-components
 // https://github.com/facebook/draft-js/issues/132
 // WE NEED TO GET THE BUTTON SET UP
 const LinkDestBlock = (props) => {
-	console.log(props);
 	const { setPeekWindowLinkId } = useContext(LeftNavContext);
 
+	const [linkId, setLinkId] = useState(null);
+
+	useEffect(() => {
+		const { block, contentState } = props;
+
+		const entityKey = block.getEntityAt(0);
+		if (entityKey) {
+			const entity = contentState.getEntity(entityKey);
+			const entityData = entity.get('data');
+			console.log('entity data in LinkDestBlock: ', entityData);
+			setLinkId(entityData.linkId);
+		}
+	}, []);
+
 	return (
-		<div style={{ position: 'relative' }}>
+		<div className='link-dest-decorator' style={{ position: 'relative' }}>
 			<div className='peek-wrapper'>
 				<button
 					className='peek-destination-decorator'

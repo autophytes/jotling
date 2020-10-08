@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 import CloseSVG from '../../assets/svg/CloseSVG';
+import ForwardArrowSVG from '../../assets/svg/ForwardArrowSVG';
 
 const minWidth = 300;
 
@@ -77,8 +78,13 @@ const ResizableWindow = ({
 		// When the mouse moves, update the width to reflext the mouse's X coordinate
 		const handleResizeLeftMouseMove = (e) => {
 			if (e.clientX !== 0) {
-				const newX = containerLeft + (e.clientX - mouseX);
+				const tempWidth = containerWidth - (e.clientX - mouseX);
 				const newWidth = Math.max(minWidth, containerWidth - (e.clientX - mouseX));
+
+				const newX =
+					tempWidth > minWidth
+						? containerLeft + (e.clientX - mouseX)
+						: containerLeft + (containerWidth - minWidth);
 
 				peekWindowRef.current.style.left = newX + 'px';
 				peekWindowRef.current.style.width = newWidth + 'px';
@@ -91,8 +97,10 @@ const ResizableWindow = ({
 			window.removeEventListener('mousemove', handleResizeLeftMouseMove);
 			window.removeEventListener('mouseup', handleResizeLeftMouseUp);
 
-			const newX = containerLeft + (e.clientX - mouseX);
+			const tempWidth = containerWidth - (e.clientX - mouseX);
 			const newWidth = Math.max(minWidth, containerWidth - (e.clientX - mouseX));
+
+			const newX = tempWidth > minWidth ? containerLeft + (e.clientX - mouseX) : containerLeft;
 
 			setContainerLeft(newX);
 			setContainerWidth(newWidth);
@@ -212,6 +220,7 @@ const ResizableWindow = ({
 				<div className='peek-window-top-handle' onMouseDown={handleRepositionMouseDown}>
 					{leftTopButtonTitle ? (
 						<button className='peek-window-open' onClick={leftTopButtonFn}>
+							<ForwardArrowSVG />
 							{leftTopButtonTitle}
 						</button>
 					) : (

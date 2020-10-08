@@ -11,6 +11,7 @@ import {
 	RichUtils,
 } from 'draft-js';
 import { setBlockData } from 'draftjs-utils';
+import { getTextSelection } from '../../utils/draftUtils';
 
 import { LinkSourceDecorator, LinkDestDecorator } from './decorators/LinkDecorators';
 import { HighlightTagDecorator } from './decorators/HighlightTagDecorator';
@@ -407,4 +408,59 @@ export const scrollToBlock = (blockKey, element = document) => {
 		top: Math.floor(blockRect.top + window.pageYOffset - 200, 0),
 		behavior: 'smooth',
 	});
+};
+
+// Creating a new source tag link
+export const createTagLink = (
+	tagName,
+	editorStateRef,
+	linkStructureRef,
+	currentDoc,
+	setEditorState,
+	setLinkStructure
+) => {
+	// Increment the max id by 1, or start at 0
+	let arrayOfLinkIds = Object.keys(linkStructureRef.current.links).map((item) => Number(item));
+	let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 0;
+
+	const contentState = editorStateRef.current.getCurrentContent();
+	const selectionState = editorStateRef.current.getSelection();
+
+	// Apply the linkId as an entity to the selection
+	const contentStateWithEntity = contentState.createEntity('LINK-SOURCE', 'MUTABLE', {
+		linkId: newLinkId,
+	});
+	const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+	const contentStateWithLink = Modifier.applyEntity(
+		contentStateWithEntity,
+		selectionState,
+		entityKey
+	);
+	const newEditorState = EditorState.push(
+		editorStateRef.current,
+		contentStateWithLink,
+		'apply-entity'
+	);
+
+	// Get the selected text to include in the link
+	const selectedText = getTextSelection(contentStateWithLink, selectionState);
+
+	// Updating the linkStructure with the new link
+	let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
+	newLinkStructure.tagLinks[tagName].push(newLinkId); // FIX EVENTUALLY
+	newLinkStructure.links[newLinkId] = {
+		source: currentDoc, // Source document
+		content: selectedText, // Selected text
+		alias: null,
+		sourceEntityKey: entityKey,
+	};
+
+	// Updating the linkStructure with the keyword the link is using
+	if (!newLinkStructure.docLinks.hasOwnProperty(currentDoc)) {
+		newLinkStructure.docLinks[currentDoc] = {};
+	}
+	newLinkStructure.docLinks[currentDoc][newLinkId] = tagName; // FIX EVENTUALLY
+
+	setLinkStructure(newLinkStructure);
+	setEditorState(newEditorState);
 };
