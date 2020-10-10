@@ -400,6 +400,11 @@ const requestShowFindReplace = async ({ replace }) => {
 	mainWindow.webContents.send('show-find-replace', { replace });
 };
 
+const requestInsertLink = async () => {
+	let mainWindow = getMainWindow();
+	mainWindow.webContents.send('insert-link');
+};
+
 module.exports = {
 	createNewProject,
 	openProject,
@@ -412,4 +417,5 @@ module.exports = {
 	requestSaveAndOpen,
 	removeOldTempFilesSync,
 	requestShowFindReplace,
+	requestInsertLink,
 };

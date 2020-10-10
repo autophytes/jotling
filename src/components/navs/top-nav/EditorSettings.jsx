@@ -363,8 +363,6 @@ const EditorSettings = () => {
 							setLineHeight(e.target.value);
 						}}
 					/>
-					<br />
-					<br />
 				</div>
 			</ResizableWindow>
 		</>

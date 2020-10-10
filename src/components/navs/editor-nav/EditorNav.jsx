@@ -92,13 +92,14 @@ const EditorNav = React.memo(
 	}) => {
 		// STATE
 		const [pinNav, setPinNav] = useState(true);
-		const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
 		const [hoverRegionLeft, setHoverRegionLeft] = useState(0);
 		const [hoverRegionRight, setHoverRegionRight] = useState(0);
 		const [blockType, setBlockType] = useState('unstyled');
 
 		// CONTEXT
-		const { editorStyles } = useContext(LeftNavContext);
+		const { editorStyles, displayLinkPopper, setDisplayLinkPopper } = useContext(
+			LeftNavContext
+		);
 		const { editorSettings } = useContext(SettingsContext);
 
 		// Calculates the left and right hover region boundaries

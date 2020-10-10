@@ -57,9 +57,6 @@ const LinkSourceDecorator = ({
 	const [tagName, setTagName] = useState('');
 	const [showActive, setShowActive] = useState(false);
 
-	// REF
-	const decoratorRef = useRef(null);
-
 	// On load, grab the entity linkId
 	useEffect(() => {
 		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
@@ -68,17 +65,6 @@ const LinkSourceDecorator = ({
 	// Scroll to the clicked-on link from the right nav
 	useEffect(() => {
 		if (linkId !== null && scrollToLinkId === linkId) {
-			// if (scrollToLinkIdRef.current === linkId) {
-			// 	scrollToLinkIdRef.current = null;
-
-			// 	let decoratorRect = decoratorRef.current.getBoundingClientRect();
-
-			// 	window.scrollTo({
-			// 		left: 0,
-			// 		top: Math.floor(decoratorRect.top + window.pageYOffset - 200, 0),
-			// 		behavior: 'smooth',
-			// 	});
-			// }
 			setScrollToLinkId(null);
 			setShowActive(true);
 		}
@@ -130,7 +116,6 @@ const LinkSourceDecorator = ({
 
 	return (
 		<span
-			ref={decoratorRef}
 			className={
 				'link-source-decorator' +
 				(editorStyles.showAllTags || editorStyles.showIndTags.includes(tagName) || showActive
@@ -153,14 +138,9 @@ const LinkDestDecorator = ({
 	decoratedText,
 }) => {
 	// CONTEXT
-	const {
-		setLinkStructure,
-		linkStructureRef,
-		editorStyles,
-		editorStateRef,
-		navData,
-		setPeekWindowLinkId,
-	} = useContext(LeftNavContext);
+	const { setLinkStructure, linkStructureRef, editorStyles, editorStateRef } = useContext(
+		LeftNavContext
+	);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
@@ -203,14 +183,6 @@ const LinkDestDecorator = ({
 
 	return (
 		<span className={'link-dest-decorator' + (editorStyles.showAllTags ? ' active' : '')}>
-			{/* <div className='peek-wrapper'>
-				<button
-					className='peek-destination-decorator'
-					onClick={() => setPeekWindowLinkId(linkId)}>
-					Peek
-				</button>
-			</div> */}
-			{/* {showPeekWindow && <PeekDocument {...{ linkId, linkStructureRef }} />} */}
 			{children}
 		</span>
 	);
@@ -230,18 +202,18 @@ const LinkDestDecorator = ({
 // selection: SelectionState {_map: Map, __ownerID: undefined}
 // tree: List
 
-// We need to compose a draft editor block inside our component. The props look the same.
-// https://draftjs.org/docs/advanced-topics-block-components
-// https://github.com/facebook/draft-js/issues/132
-// WE NEED TO GET THE BUTTON SET UP
 const LinkDestBlock = (props) => {
+	const { block, contentState } = props;
+
 	const { setPeekWindowLinkId } = useContext(LeftNavContext);
 
 	const [linkId, setLinkId] = useState(null);
 
 	useEffect(() => {
-		const { block, contentState } = props;
+		console.log('the LinkDestBlock has changed!');
+	}, [block]);
 
+	useEffect(() => {
 		const entityKey = block.getEntityAt(0);
 		if (entityKey) {
 			const entity = contentState.getEntity(entityKey);
@@ -293,6 +265,7 @@ const syncLinkStructureOnDelay = ({
 	end,
 }) => {
 	if (linkId !== null && prevDecoratedText !== decoratedText) {
+		console.log('syncing the link structure!');
 		// Remove any queued updates to linkStructure
 		if (queuedTimeout) {
 			clearTimeout(queuedTimeout);

@@ -1095,7 +1095,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .peek-window-contents {
-	padding: 1rem;
+	padding: 1rem 1rem 3rem 1rem;
 	overflow-y: scroll;
 	height: 100%;
 
@@ -1104,6 +1104,10 @@ input[type='number']::-webkit-outer-spin-button {
 	border: 2px solid var(--color-primary);
 	border-top: none;
 	background-color: white;
+}
+
+.peek-window-contents .public-DraftEditor-content > div {
+	padding-bottom: 2rem;
 }
 
 .peek-window-title {
@@ -1211,6 +1215,15 @@ input[type='number']::-webkit-outer-spin-button {
 	width: 10px;
 	height: 10px;
 	cursor: nwse-resize;
+}
+
+.peek-window-floating-button {
+	position: absolute;
+	left: 0.75rem;
+	bottom: 0.75rem;
+	z-index: 10;
+	margin: 0;
+	padding: 0.25rem 0.5rem;
 }
 
 .editor-settings-wrapper {

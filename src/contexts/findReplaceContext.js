@@ -46,20 +46,28 @@ const FindReplaceContextProvider = (props) => {
 
 		// Update the number of matches on the page
 		updateFindRegisterQueueRef.current = setTimeout(() => {
-			console.log('current 3: ', findRegisterRef.current);
-			console.log('findText: ', findText);
-			setTotalMatches(findRegisterRef.current[findText.toLowerCase()].array.length);
+			let newTotalMatches = findRegisterRef.current[findText.toLowerCase()].length;
+			// If we replaced the last match, reset to 0
+			// if (newTotalMatches.length - 1 > findIndex) {
+			// 	console.log('newMatches.length: ', newTotalMatches.length);
+			// 	console.log('findIndex:', findIndex);
+			// 	setFindIndex(0);
+			// }
+			setTotalMatches(newTotalMatches);
 		}, 100);
 	}, []);
+
+	useEffect(() => {
+		// If we replaced the last match, reset to 0
+		if (findIndex > totalMatches - 1) {
+			setFindIndex(0);
+		}
+	}, [totalMatches, findIndex]);
 
 	// Reset the findRegister when the findText or currentDoc changes
 	useEffect(() => {
 		setFindIndex(null);
-		findRegisterRef.current[findText.toLowerCase()] = {
-			array: [],
-			register: {},
-			blockList: {},
-		};
+		findRegisterRef.current[findText.toLowerCase()] = [];
 
 		// for (let key of Object.keys(findRegisterRef.current)) {
 		// 	if (key !== findText.toLowerCase()) {
@@ -77,7 +85,7 @@ const FindReplaceContextProvider = (props) => {
 		resetReplaceAllQueueRef.current = setTimeout(() => {
 			setReplaceAll('');
 			replaceAllCharacterOffsetRef.current = {};
-			setTotalMatches(findRegisterRef.current[findText.toLowerCase()].array.length);
+			setTotalMatches(findRegisterRef.current[findText.toLowerCase()].length);
 		}, 100);
 	});
 
@@ -85,7 +93,7 @@ const FindReplaceContextProvider = (props) => {
 		(direction) => {
 			if (
 				!findRegisterRef.current[findText.toLowerCase()] ||
-				!findRegisterRef.current[findText.toLowerCase()].array.length
+				!findRegisterRef.current[findText.toLowerCase()].length
 			) {
 				return;
 			}
@@ -95,9 +103,7 @@ const FindReplaceContextProvider = (props) => {
 				let visibleBlocks = findVisibleBlocks(contextEditorRef.current);
 
 				// Check the visible blocks for the first match
-				for (const [i, match] of findRegisterRef.current[
-					findText.toLowerCase()
-				].array.entries()) {
+				for (const [i, match] of findRegisterRef.current[findText.toLowerCase()].entries()) {
 					if (visibleBlocks.includes(match.blockKey)) {
 						setFindIndex(i);
 						return;
@@ -106,7 +112,7 @@ const FindReplaceContextProvider = (props) => {
 
 				// If not on screen, iterate through the off-screen blocks to find the first match
 				let contentState = editorStateRef.current.getCurrentContent();
-				const blocksWithMatches = findRegisterRef.current[findText.toLowerCase()].array.map(
+				const blocksWithMatches = findRegisterRef.current[findText.toLowerCase()].map(
 					(item) => item.blockKey
 				);
 
@@ -123,7 +129,7 @@ const FindReplaceContextProvider = (props) => {
 					blockKey = block.getKey();
 
 					if (blocksWithMatches.includes(blockKey)) {
-						let matchIndex = findRegisterRef.current[findText.toLowerCase()].array.findIndex(
+						let matchIndex = findRegisterRef.current[findText.toLowerCase()].findIndex(
 							(item) => item.blockKey === blockKey
 						);
 						setFindIndex(matchIndex);
@@ -133,8 +139,7 @@ const FindReplaceContextProvider = (props) => {
 			}
 
 			if (direction === 'INCREMENT') {
-				console.log('current 1: ', findRegisterRef.current);
-				if (findIndex === findRegisterRef.current[findText.toLowerCase()].array.length - 1) {
+				if (findIndex === findRegisterRef.current[findText.toLowerCase()].length - 1) {
 					setFindIndex(0);
 				} else {
 					setFindIndex(findIndex + 1);
@@ -143,8 +148,7 @@ const FindReplaceContextProvider = (props) => {
 
 			if (direction === 'DECREMENT') {
 				if (findIndex === 0) {
-					console.log('current 2: ', findRegisterRef.current);
-					setFindIndex(findRegisterRef.current[findText.toLowerCase()].array.length - 1);
+					setFindIndex(findRegisterRef.current[findText.toLowerCase()].length - 1);
 				} else {
 					setFindIndex(findIndex - 1);
 				}

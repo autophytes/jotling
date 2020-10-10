@@ -7,6 +7,7 @@ const Span = (props) => <span>{props.children}</span>;
 export class CompoundDecorator {
 	constructor(decorators = []) {
 		// Create an array of CompositeDecorators
+		console.log('constructing the compound decorator');
 		this.decorators = decorators.map((decorator) => {
 			return decorator.strategy && decorator.component
 				? new CompositeDecorator([decorator])
@@ -14,7 +15,7 @@ export class CompoundDecorator {
 		});
 	}
 
-	getDecorations(block) {
+	getDecorations(block, contentState) {
 		// Create a nested array, top level for each character and nested level for each decorator option
 		const emptyTuples = Array(block.getText().length).fill(
 			Array(this.decorators.length).fill(null)
@@ -31,7 +32,7 @@ export class CompoundDecorator {
 		// Populate our emptyTuples
 		const decorations = this.decorators.reduce((tuples, decorator, index) => {
 			// Returns an immutable array the length of the text with the decorator key for the correct location
-			const blockDecorations = decorator.getDecorations(block);
+			const blockDecorations = decorator.getDecorations(block, contentState);
 			// [null, null, 3, 3, null]
 
 			// For each top level character index, updates the nested decorator array with the appropriate character list array for that decorator

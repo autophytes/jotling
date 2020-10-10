@@ -22,8 +22,8 @@ export const useDecorator = (currentDoc, editorRef) => {
 	const queuedUpdate = useRef(null);
 	const visibleBlockKeys = useRef([]);
 
-	const { linkStructureRef, editorStyles } = useContext(LeftNavContext);
-	const { findText } = useContext(FindReplaceContext);
+	const { linkStructureRef, editorStyles, editorStateRef } = useContext(LeftNavContext);
+	const { findText, findRegisterRef } = useContext(FindReplaceContext);
 
 	// Break out our showAllTags flag
 	useEffect(() => {
@@ -42,7 +42,14 @@ export const useDecorator = (currentDoc, editorRef) => {
 			visibleBlockKeys.current = [];
 			console.log('DELAYED UPDATE is firing!: ', findText);
 			setDecorator(
-				generateDecorators(linkStructureRef.current, currentDoc, showAllTags, findText)
+				generateDecorators(
+					linkStructureRef.current,
+					currentDoc,
+					showAllTags,
+					findText,
+					findRegisterRef,
+					editorStateRef
+				)
 			);
 			console.log('DELAYED UPDATE resolved!: ', findText);
 		}, 500);
@@ -59,29 +66,14 @@ export const useDecorator = (currentDoc, editorRef) => {
 				generateDecorators(linkStructureRef.current, currentDoc, showAllTags, findText)
 			);
 		} else if (showAllTags || findText || needToClearFind) {
-			// On the first iteration, find the visible blocks
-			// if (!visibleBlockKeys.current.length) {
-			// 	visibleBlockKeys.current = findVisibleBlocks(editorRef);
-			// }
-
 			if (!findText && needToClearFind) {
 				setNeedToClearFind(false);
 			} else if (!needToClearFind) {
 				setNeedToClearFind(true);
 			}
 
-			// Immediately update the search results on the visible screen
-			setDecorator(
-				generateDecorators(
-					linkStructureRef.current,
-					currentDoc,
-					showAllTags,
-					findText
-					// visibleBlockKeys.current
-				)
-			);
 			// Delay the update of the rest of the search results
-			// queueDecoratorUpdate(currentDoc, showAllTags, findText);
+			queueDecoratorUpdate(currentDoc, showAllTags, findText);
 		} else {
 			setDecorator(defaultDecorator);
 		}

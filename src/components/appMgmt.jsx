@@ -43,6 +43,7 @@ const AppMgmt = () => {
 		setNavData,
 		setEditorArchives,
 		peekWindowLinkId,
+		setDisplayLinkPopper,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -228,6 +229,12 @@ const AppMgmt = () => {
 				setRefocusFind(true);
 			}
 			setShowFindReplace(true);
+		});
+
+		ipcRenderer.on('insert-link', (event) => {
+			if (document.getSelection().toString().length) {
+				setDisplayLinkPopper(true);
+			}
 		});
 	}, []);
 

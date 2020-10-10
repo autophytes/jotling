@@ -100,25 +100,25 @@ const blockStyleFn = (block) => {
 // });
 // const blockRenderMap = DefaultDraftBlockRenderMap.merge(customBlockRenderMap);
 
-const blockRendererFn = (contentBlock) => {
-	const type = contentBlock.getType();
-	const entity = contentBlock.getEntityAt(0);
-	if (entity) {
-		console.log('entity: ', entity);
-		// console.log('entity type: ', entity.get('type'));
-	}
-	// LINK-DEST
-	if (type === 'link-destination') {
-		console.log('rendering the destination block');
-		return {
-			component: LinkDestBlock,
-			editable: true,
-			// props: {
-			//   foo: 'bar',
-			// },
-		};
-	}
-};
+// const blockRendererFn = (contentBlock) => {
+// 	const type = contentBlock.getType();
+// 	const entity = contentBlock.getEntityAt(0);
+// 	if (entity) {
+// 		console.log('entity: ', entity);
+// 		// console.log('entity type: ', entity.get('type'));
+// 	}
+// 	// LINK-DEST
+// 	if (type === 'link-destination') {
+// 		console.log('rendering the destination block');
+// 		return {
+// 			component: LinkDestBlock,
+// 			editable: true,
+// 			// props: {
+// 			//   foo: 'bar',
+// 			// },
+// 		};
+// 	}
+// };
 
 //
 //

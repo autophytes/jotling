@@ -8,6 +8,7 @@ const {
 	requestSaveAndCreateNew,
 	requestSaveAndOpen,
 	requestShowFindReplace,
+	requestInsertLink,
 } = require('./fileFunctions');
 const { createWindow } = require('./createWindow');
 
@@ -152,6 +153,14 @@ const registerMenu = () => {
 					click: async () => {
 						requestShowFindReplace({ replace: true });
 					},
+					enabled: isWindowOpen,
+				},
+				{
+					label: 'Insert Link',
+					accelerator: 'CmdOrCtrl+L',
+					registerAccelerator: true,
+					acceleratorWorksWhenHidden: true,
+					click: requestInsertLink,
 					enabled: isWindowOpen,
 				},
 				// FIND

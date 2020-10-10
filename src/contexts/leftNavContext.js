@@ -32,6 +32,7 @@ const LeftNavContextProvider = (props) => {
 	const [editorArchives, setEditorArchives] = useState({});
 	const [scrollToLinkId, setScrollToLinkId] = useState(null);
 	const [peekWindowLinkId, setPeekWindowLinkId] = useState(null);
+	const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
 
 	// REFS
 	const linkStructureRef = useRef(linkStructure);
@@ -103,6 +104,8 @@ const LeftNavContextProvider = (props) => {
 				setEditorStateRef,
 				peekWindowLinkId,
 				setPeekWindowLinkId,
+				displayLinkPopper,
+				setDisplayLinkPopper,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

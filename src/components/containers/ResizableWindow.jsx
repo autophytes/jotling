@@ -218,14 +218,14 @@ const ResizableWindow = ({
 					opacity: containerWidth ? 1 : 0,
 				}}>
 				<div className='peek-window-top-handle' onMouseDown={handleRepositionMouseDown}>
-					{leftTopButtonTitle ? (
+					{/* {leftTopButtonTitle ? (
 						<button className='peek-window-open' onClick={leftTopButtonFn}>
-							<ForwardArrowSVG />
 							{leftTopButtonTitle}
 						</button>
 					) : (
-						<span />
-					)}
+						
+					)} */}
+					<span />
 					<p className='peek-window-title'>{windowTitle}</p>
 					<button className='peek-window-close' onClick={closeFn}>
 						<CloseSVG />

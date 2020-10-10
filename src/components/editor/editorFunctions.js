@@ -43,7 +43,7 @@ function getEntityStrategy(type) {
 // 	}
 // }
 
-const buildFindWithRegexFunction = (findTextArray, visibleBlockKeys) => {
+const buildFindWithRegexFunction = (findTextArray, findRegisterRef, editorStateRef) => {
 	var regexMetachars = /[(){[*+?.\\^$|]/g;
 	// Escape regex metacharacters in the tags
 	for (var i = 0; i < findTextArray.length; i++) {
@@ -53,14 +53,32 @@ const buildFindWithRegexFunction = (findTextArray, visibleBlockKeys) => {
 
 	return function (contentBlock, callback, contentState) {
 		// If we have a list of block keys, make sure this block is in it
-		if (visibleBlockKeys && !visibleBlockKeys.includes(contentBlock.getKey())) {
-			return;
-		}
+		// if (visibleBlockKeys && !visibleBlockKeys.includes(contentBlock.getKey())) {
+		// 	return;
+		// }
 
 		const text = contentBlock.getText();
+		const blockKey = contentBlock.getKey();
+
+		if (findRegisterRef) {
+			removeBlockFromFindRegisterRef(findRegisterRef, blockKey, findTextArray[0]);
+		}
+
 		let matchArr, start;
 		while ((matchArr = regex.exec(text)) !== null) {
 			start = matchArr.index;
+
+			// INSERT A FUNCTION that will register this as a match
+			if (findRegisterRef) {
+				updateFindRegisterRef(
+					findRegisterRef,
+					blockKey,
+					start,
+					findTextArray[0],
+					editorStateRef
+				);
+			}
+
 			callback(start, start + matchArr[0].length);
 		}
 	};
@@ -78,8 +96,8 @@ const findTagsToHighlight = (linkStructure, currentDoc) => {
 	return buildFindWithRegexFunction(tagList);
 };
 
-const findSearchKeyword = (findText, visibleBlockKeys) => {
-	return buildFindWithRegexFunction([findText], visibleBlockKeys);
+const findSearchKeyword = (findText, findRegisterRef, editorStateRef) => {
+	return buildFindWithRegexFunction([findText], findRegisterRef, editorStateRef);
 };
 
 export const generateDecorators = (
@@ -87,7 +105,9 @@ export const generateDecorators = (
 	currentDoc,
 	showAllTags,
 	findText,
-	visibleBlockKeys
+	findRegisterRef,
+	editorStateRef
+	// visibleBlockKeys
 ) => {
 	let decoratorArray = [
 		{
@@ -109,13 +129,13 @@ export const generateDecorators = (
 	console.log('find text inside the decorator: ', findText);
 	if (findText) {
 		decoratorArray.push({
-			strategy: findSearchKeyword(findText, visibleBlockKeys),
+			strategy: findSearchKeyword(findText, findRegisterRef, editorStateRef),
 			component: FindReplaceDecorator,
 		});
 	}
 	// console.log('inside our decorator generating function');
-	// return new CompoundDecorator(decoratorArray);
-	return new CompositeDecorator(decoratorArray);
+	return new CompoundDecorator(decoratorArray);
+	// return new CompositeDecorator(decoratorArray);
 };
 
 export const defaultDecorator = new CompositeDecorator([
@@ -463,4 +483,95 @@ export const createTagLink = (
 
 	setLinkStructure(newLinkStructure);
 	setEditorState(newEditorState);
+};
+
+// Update the find match in the find register array
+const updateFindRegisterRef = (findRegisterRef, blockKey, start, findText, editorStateRef) => {
+	let registerArray = [...findRegisterRef.current[findText.toLowerCase()]];
+	const updatedMatch = { blockKey, start };
+
+	let matchIndex = registerArray.findIndex(
+		(item) => item.blockKey === blockKey && item.start === start
+	);
+	if (matchIndex !== -1) {
+		return;
+	}
+
+	let blockMap = editorStateRef.current.getCurrentContent().getBlockMap();
+	let blockKeyOrder = [...blockMap.keys()];
+
+	let matchingBlockKeyIndex = registerArray.findIndex((item) => item.blockKey === blockKey);
+	// If we found a block with a MATCHING BLOCK KEY
+	if (matchingBlockKeyIndex !== -1) {
+		// If that block is AFTER ours, insert it before
+		if (registerArray[matchingBlockKeyIndex].start > start) {
+			// Insert our updatedMatch
+			registerArray.splice(matchingBlockKeyIndex, 0, updatedMatch);
+		} else {
+			// Otherwise, check blocks after until find a new blockKey OR the start is after ours
+			let foundMatch = false;
+			while (!foundMatch && matchingBlockKeyIndex <= registerArray.length - 1) {
+				// If find a new blockKey OR the start is after ours
+				if (
+					registerArray[matchingBlockKeyIndex].blockKey !== blockKey ||
+					registerArray[matchingBlockKeyIndex].start > start
+				) {
+					// Insert our updatedMatch
+					registerArray.splice(matchingBlockKeyIndex, 0, updatedMatch);
+					foundMatch = true;
+				} else {
+					matchingBlockKeyIndex += 1;
+				}
+			}
+			// If we hit the end of the array, just push it onto the end
+			if (!foundMatch) {
+				registerArray.push(updatedMatch);
+			}
+		}
+		// If we found NO MATCHING BLOCK KEY
+	} else {
+		// Find where the next block is in the block order
+		let blockKeyIndex = blockKeyOrder.findIndex((item) => item === blockKey) + 1;
+		if (blockKeyIndex === 0) {
+			console.error('Our block key was NOT found in the blockKeyOrder array.');
+			return;
+		}
+
+		// Check if that next block has a match. If so, inject our updatedMatch before it.
+		let foundMatch = false;
+		while (!foundMatch && blockKeyIndex <= blockKeyOrder.length - 1) {
+			let nextBlockIndex = registerArray.findIndex(
+				(item) => item.blockKey === blockKeyOrder[blockKeyIndex]
+			);
+			if (nextBlockIndex !== -1) {
+				registerArray.splice(nextBlockIndex, 0, updatedMatch);
+				foundMatch = true;
+			}
+			blockKeyIndex += 1;
+		}
+
+		if (!foundMatch) {
+			registerArray.push(updatedMatch);
+		}
+	}
+
+	findRegisterRef.current[findText.toLowerCase()] = [...registerArray];
+};
+
+const removeBlockFromFindRegisterRef = (findRegisterRef, blockKey, findText) => {
+	let registerArray = [...findRegisterRef.current[findText.toLowerCase()]];
+	// Remove all elements in the array for a given blockKey
+	const updateRemoveIndex = () =>
+		registerArray.findIndex((item) => item.blockKey === blockKey);
+
+	let removeIndex = updateRemoveIndex();
+
+	if (removeIndex !== -1) {
+		while (removeIndex !== -1) {
+			registerArray.splice(removeIndex, 1);
+			removeIndex = updateRemoveIndex();
+		}
+
+		findRegisterRef.current[findText.toLowerCase()] = [...registerArray];
+	}
 };

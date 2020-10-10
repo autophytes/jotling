@@ -99,17 +99,23 @@ const PeekDocument = () => {
 	return (
 		<>
 			<ResizableWindow
-				leftTopButtonTitle='Go To'
-				leftTopButtonFn={() => {
-					setNavData({ ...navData, currentDoc: documentName });
-					setScrollToLinkId(peekWindowLinkId);
-					scrollToLinkIdRef.current = peekWindowLinkId;
-					setPeekWindowLinkId(null);
-				}}
 				windowTitle={documentTitle ? documentTitle : documentName}
 				peekWindowContentRef={peekWindowContentRef}
 				closeFn={closeFn}>
-				<Editor editorState={editorState} readOnly />
+				<Editor editorState={editorState} readOnly style={{ paddingBottom: '3rem' }} />
+				<br />
+				<br />
+				<br />
+				<button
+					className='show-hide-tags-button peek-window-floating-button'
+					onClick={() => {
+						setNavData({ ...navData, currentDoc: documentName });
+						setScrollToLinkId(peekWindowLinkId);
+						scrollToLinkIdRef.current = peekWindowLinkId;
+						setPeekWindowLinkId(null);
+					}}>
+					Open Source
+				</button>
 			</ResizableWindow>
 		</>
 	);

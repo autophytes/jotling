@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+import { SelectionState, EditorState, Modifier } from 'draft-js';
 
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
 import { LeftNavContext } from '../../contexts/leftNavContext';
@@ -58,7 +59,7 @@ const EditorFindReplace = ({ editorRef }) => {
 		updateFindIndex,
 		contextEditorRef,
 	} = useContext(FindReplaceContext);
-	const { editorStyles } = useContext(LeftNavContext);
+	const { editorStyles, editorStateRef, setEditorStateRef } = useContext(LeftNavContext);
 	const { editorSettings } = useContext(SettingsContext);
 
 	// REFS
@@ -129,7 +130,6 @@ const EditorFindReplace = ({ editorRef }) => {
 		(e) => {
 			// If enter was pressed
 			if (e.key === 'Enter') {
-				console.log('handle input enter');
 				if (e.shiftKey) {
 					updateFindIndex('DECREMENT');
 				} else {
@@ -140,20 +140,42 @@ const EditorFindReplace = ({ editorRef }) => {
 		[updateFindIndex]
 	);
 
+	const replaceSingle = useCallback((findText, replaceText, blockKey, start, editorState) => {
+		// Lets grab the initial selection state and reset it when we're done
+		const selectionState = SelectionState.createEmpty();
+		const newSelectionState = selectionState.merge({
+			anchorKey: blockKey, // Starting block (position is the start)
+			anchorOffset: start, // How much to adjust from the starting position
+			focusKey: blockKey, // Ending position (position is the start)
+			focusOffset: start + findText.length,
+		});
+
+		const contentState = editorState.getCurrentContent();
+		const newContentState = Modifier.replaceText(contentState, newSelectionState, replaceText);
+
+		const newEditorState = EditorState.push(editorState, newContentState, 'insert-characters');
+
+		return newEditorState;
+	}, []);
+
 	// Replace a single find match
 	const handleReplaceSingle = useCallback(() => {
 		if (
 			findRegisterRef.current[findText.toLowerCase()] &&
-			findRegisterRef.current[findText.toLowerCase()].array.length &&
+			findRegisterRef.current[findText.toLowerCase()].length &&
 			findIndex !== null
 		) {
 			// Finds the object to replace
-			let findObject = findRegisterRef.current[findText.toLowerCase()].array[findIndex];
+			let findObject = findRegisterRef.current[findText.toLowerCase()][findIndex];
 
-			// Queues the replacement of that match
-			setReplaceSingleQueue({
-				[`${findObject.blockKey}-${findObject.start}`]: true,
-			});
+			const newEditorState = replaceSingle(
+				findText,
+				replaceText,
+				findObject.blockKey,
+				findObject.start,
+				editorStateRef.current
+			);
+			setEditorStateRef.current(newEditorState);
 
 			// If the replacement still matches our find, increment to the next index.
 			if (findText.toLowerCase() === replaceText.toLowerCase()) {
@@ -162,12 +184,28 @@ const EditorFindReplace = ({ editorRef }) => {
 
 			queueDecoratorUpdate(findText);
 		}
-	}, [findIndex, queueDecoratorUpdate]);
+	}, [findIndex, queueDecoratorUpdate, findText, replaceText]);
 
 	const handleReplaceAll = useCallback(() => {
-		console.log('firing replace all');
-		setReplaceAll(replaceText);
-	}, [replaceText]);
+		let registerArray = [...findRegisterRef.current[findText.toLowerCase()]].reverse();
+
+		let editorStateArray = [editorStateRef.current];
+		// let newEditorState = { ...editorStateRef.current };
+		for (let match of registerArray) {
+			let newEditorState = replaceSingle(
+				findText,
+				replaceText,
+				match.blockKey,
+				match.start,
+				editorStateArray[editorStateArray.length - 1]
+			);
+			editorStateArray.push(newEditorState);
+		}
+
+		if (registerArray.length) {
+			setEditorStateRef.current(editorStateArray[editorStateArray.length - 1]);
+		}
+	}, [replaceText, findText]);
 
 	// NEXT
 	// DONE - Implement the replace
@@ -191,6 +229,7 @@ const EditorFindReplace = ({ editorRef }) => {
 						value={findText}
 						onChange={(e) => {
 							console.log('on change fired');
+							findRegisterRef.current[e.target.value.toLowerCase()] = [];
 							setFindText(e.target.value);
 							setContextFindText(e.target.value);
 						}}
