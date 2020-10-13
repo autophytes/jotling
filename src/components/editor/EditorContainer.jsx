@@ -216,6 +216,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// Monitor the decorator for changes to update the editorState
 	useEffect(() => {
 		// Need to SET rather than createWithContent to maintain the undo/redo stack
+		console.log('Updating the editor state with a new decorator');
 		let newEditorState = EditorState.set(editorStateRef.current, {
 			decorator: decorator,
 		});

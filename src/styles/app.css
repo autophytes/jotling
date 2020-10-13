@@ -840,8 +840,8 @@ input[type='number']::-webkit-outer-spin-button {
 	/* transform: rotate(-45deg); */
 }
 
-.link-source-decorator:hover,
-.link-dest-decorator:hover,
+/* .link-source-decorator:hover, */
+/* .link-dest-decorator:hover, */
 .link-source-decorator.active,
 .link-dest-decorator.active {
 	background-color: #cef2fe;

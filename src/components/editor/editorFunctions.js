@@ -121,14 +121,14 @@ export const generateDecorators = (
 	];
 
 	if (showAllTags) {
-		decoratorArray.push({
+		decoratorArray.unshift({
 			strategy: findTagsToHighlight(linkStructure, currentDoc),
 			component: HighlightTagDecorator,
 		});
 	}
 	console.log('find text inside the decorator: ', findText);
 	if (findText) {
-		decoratorArray.push({
+		decoratorArray.unshift({
 			strategy: findSearchKeyword(findText, findRegisterRef, editorStateRef),
 			component: FindReplaceDecorator,
 		});

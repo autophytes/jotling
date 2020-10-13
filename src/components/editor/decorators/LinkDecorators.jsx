@@ -48,11 +48,13 @@ const LinkSourceDecorator = ({
 		scrollToLinkId,
 		setScrollToLinkId,
 		scrollToLinkIdRef,
+		hoverSourceLinkId,
+		setHoverSourceLinkId,
 	} = useContext(LeftNavContext);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
-	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
+	const [prevDecoratedText, setPrevDecoratedText] = useState(null);
 	const [queuedTimeout, setQueuedTimeout] = useState(null);
 	const [tagName, setTagName] = useState('');
 	const [showActive, setShowActive] = useState(false);
@@ -60,6 +62,10 @@ const LinkSourceDecorator = ({
 	// On load, grab the entity linkId
 	useEffect(() => {
 		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
+	}, []);
+
+	useEffect(() => {
+		console.log('THE COMPONENT WAS RECREATED');
 	}, []);
 
 	// Scroll to the clicked-on link from the right nav
@@ -87,6 +93,9 @@ const LinkSourceDecorator = ({
 
 	// Update our linkStructure with the changes in the link text
 	useEffect(() => {
+		console.log('preparing to synchronize the link content');
+		console.log('decoratedText:', decoratedText);
+		console.log('prevDecoratedText:', prevDecoratedText);
 		syncLinkStructureOnDelay({
 			linkId,
 			linkPropName: 'content',
@@ -112,16 +121,32 @@ const LinkSourceDecorator = ({
 		blockKey,
 		start,
 		end,
+		prevDecoratedText,
 	]);
+
+	const handleHoverStart = () => {
+		setHoverSourceLinkId(linkId);
+	};
+
+	const handleHoverLeave = () => {
+		if (hoverSourceLinkId === linkId) {
+			setHoverSourceLinkId(null);
+		}
+	};
 
 	return (
 		<span
 			className={
 				'link-source-decorator' +
-				(editorStyles.showAllTags || editorStyles.showIndTags.includes(tagName) || showActive
+				(editorStyles.showAllTags ||
+				editorStyles.showIndTags.includes(tagName) ||
+				showActive ||
+				hoverSourceLinkId === linkId
 					? ' active'
 					: '')
-			}>
+			}
+			onMouseEnter={handleHoverStart}
+			onMouseLeave={handleHoverLeave}>
 			{children}
 		</span>
 	);
@@ -181,11 +206,7 @@ const LinkDestDecorator = ({
 		end,
 	]);
 
-	return (
-		<span className={'link-dest-decorator' + (editorStyles.showAllTags ? ' active' : '')}>
-			{children}
-		</span>
-	);
+	return children;
 };
 
 // block: ContentBlock {_map: Map, __ownerID: undefined}
@@ -205,7 +226,12 @@ const LinkDestDecorator = ({
 const LinkDestBlock = (props) => {
 	const { block, contentState } = props;
 
-	const { setPeekWindowLinkId } = useContext(LeftNavContext);
+	const {
+		setPeekWindowLinkId,
+		hoverDestLinkId,
+		setHoverDestLinkId,
+		editorStyles,
+	} = useContext(LeftNavContext);
 
 	const [linkId, setLinkId] = useState(null);
 
@@ -223,8 +249,25 @@ const LinkDestBlock = (props) => {
 		}
 	}, []);
 
+	const handleHoverStart = () => {
+		setHoverDestLinkId(linkId);
+	};
+
+	const handleHoverLeave = () => {
+		if (hoverDestLinkId === linkId) {
+			setHoverDestLinkId(null);
+		}
+	};
+
 	return (
-		<div className='link-dest-decorator' style={{ position: 'relative' }}>
+		<div
+			className={
+				'link-dest-decorator' +
+				(editorStyles.showAllTags || hoverDestLinkId === linkId ? ' active' : '')
+			}
+			style={{ position: 'relative' }}
+			onMouseEnter={handleHoverStart}
+			onMouseLeave={handleHoverLeave}>
 			<div className='peek-wrapper'>
 				<button
 					className='peek-destination-decorator'
@@ -297,25 +340,38 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 	const startingBlock = contentState.getBlockForKey(currentBlockKey);
 	const entityKey = startingBlock.getEntityAt(currentStart);
 
-	let contentArray = [startingBlock.getText().slice(currentStart, currentEnd)];
+	let contentArray = [];
+
+	startingBlock.findEntityRanges(
+		(value) => {
+			let newEntityKey = value.getEntity();
+			if (newEntityKey === entityKey) {
+				return true;
+			}
+			return false;
+		},
+		(start, end) => {
+			contentArray.push(startingBlock.getText().slice(start, end));
+		}
+	);
 
 	const checkBlocksBeforeAfter = (direction) => {
 		let continueForward = true;
 		let forwardKey = currentBlockKey;
 
 		while (continueForward) {
-			let forwardBlock =
-				direction === 'FORWARD'
+			let contentBlock =
+				direction === 'BEFORE'
 					? contentState.getBlockAfter(forwardKey)
 					: contentState.getBlockBefore(forwardKey);
 
-			if (!forwardBlock) {
+			if (!contentBlock) {
 				continueForward = false;
 				continue;
 			}
-			forwardKey = forwardBlock.getKey();
+			forwardKey = contentBlock.getKey();
 
-			forwardBlock.findEntityRanges(
+			contentBlock.findEntityRanges(
 				(value) => {
 					let newEntityKey = value.getEntity();
 					if (newEntityKey === entityKey) {
@@ -324,13 +380,13 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 					return false;
 				},
 				(start, end) => {
-					if (direction === 'FORWARD') {
-						contentArray.push(forwardBlock.getText().slice(start, end));
-						if (end !== forwardBlock.getLength()) {
+					if (direction === 'BEFORE') {
+						contentArray.push(contentBlock.getText().slice(start, end));
+						if (end !== contentBlock.getLength()) {
 							continueForward = false;
 						}
 					} else {
-						contentArray.unshift(forwardBlock.getText().slice(start, end));
+						contentArray.unshift(contentBlock.getText().slice(start, end));
 						if (start !== 0) {
 							continueForward = false;
 						}
@@ -340,7 +396,7 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 		}
 	};
 
-	checkBlocksBeforeAfter('FORWARD');
+	checkBlocksBeforeAfter('BEFORE');
 	checkBlocksBeforeAfter('AFTER');
 
 	// console.log('blockPropArray: ', blockPropArray);

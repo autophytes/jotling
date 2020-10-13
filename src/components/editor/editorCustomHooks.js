@@ -20,7 +20,6 @@ export const useDecorator = (currentDoc, editorRef) => {
 	const [needToClearFind, setNeedToClearFind] = useState(false);
 
 	const queuedUpdate = useRef(null);
-	const visibleBlockKeys = useRef([]);
 
 	const { linkStructureRef, editorStyles, editorStateRef } = useContext(LeftNavContext);
 	const { findText, findRegisterRef } = useContext(FindReplaceContext);
@@ -39,7 +38,6 @@ export const useDecorator = (currentDoc, editorRef) => {
 
 		// Queue an update to linkStructure with the updated text
 		queuedUpdate.current = setTimeout(() => {
-			visibleBlockKeys.current = [];
 			console.log('DELAYED UPDATE is firing!: ', findText);
 			setDecorator(
 				generateDecorators(

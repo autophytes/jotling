@@ -33,6 +33,8 @@ const LeftNavContextProvider = (props) => {
 	const [scrollToLinkId, setScrollToLinkId] = useState(null);
 	const [peekWindowLinkId, setPeekWindowLinkId] = useState(null);
 	const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
+	const [hoverSourceLinkId, setHoverSourceLinkId] = useState(null);
+	const [hoverDestLinkId, setHoverDestLinkId] = useState(null);
 
 	// REFS
 	const linkStructureRef = useRef(linkStructure);
@@ -106,6 +108,10 @@ const LeftNavContextProvider = (props) => {
 				setPeekWindowLinkId,
 				displayLinkPopper,
 				setDisplayLinkPopper,
+				hoverSourceLinkId,
+				setHoverSourceLinkId,
+				hoverDestLinkId,
+				setHoverDestLinkId,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>
