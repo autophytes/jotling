@@ -1,7 +1,9 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { EditorBlock } from 'draft-js';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
+
+
 
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
@@ -36,7 +38,8 @@ const LinkSourceDecorator = ({
 	contentState,
 	start,
 	end,
-	decoratedText,
+  decoratedText,
+  childDecorator={} 
 }) => {
 	// CONTEXT
 	const {
@@ -54,18 +57,30 @@ const LinkSourceDecorator = ({
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
-	const [prevDecoratedText, setPrevDecoratedText] = useState(null);
+	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
 	const [queuedTimeout, setQueuedTimeout] = useState(null);
 	const [tagName, setTagName] = useState('');
-	const [showActive, setShowActive] = useState(false);
+  const [showActive, setShowActive] = useState(false);
+  
+  // CHILD DECORATOR
+  let {currentIndex, getNextComponentIndex, getComponentForIndex, getComponentProps} = childDecorator;
+  const [componentIndex, setComponentIndex] = useState(-1);
+  useEffect(() => {
+    if (getNextComponentIndex) {
+      const newComponentIndex = getNextComponentIndex(currentIndex);
+      setComponentIndex(newComponentIndex);
+    }
+  }, [getNextComponentIndex, currentIndex]);
+
+  const Component = useMemo(() => 
+    componentIndex !== -1 ?
+      getComponentForIndex(componentIndex) :
+      null
+  ,[componentIndex, getComponentForIndex]);
 
 	// On load, grab the entity linkId
 	useEffect(() => {
 		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
-	}, []);
-
-	useEffect(() => {
-		console.log('THE COMPONENT WAS RECREATED');
 	}, []);
 
 	// Scroll to the clicked-on link from the right nav
@@ -93,9 +108,6 @@ const LinkSourceDecorator = ({
 
 	// Update our linkStructure with the changes in the link text
 	useEffect(() => {
-		console.log('preparing to synchronize the link content');
-		console.log('decoratedText:', decoratedText);
-		console.log('prevDecoratedText:', prevDecoratedText);
 		syncLinkStructureOnDelay({
 			linkId,
 			linkPropName: 'content',
@@ -147,7 +159,17 @@ const LinkSourceDecorator = ({
 			}
 			onMouseEnter={handleHoverStart}
 			onMouseLeave={handleHoverLeave}>
-			{children}
+			{Component ? 
+        <Component {...getComponentProps(componentIndex)}
+          childDecorator={{
+            currentIndex: componentIndex,
+            getNextComponentIndex,
+            getComponentForIndex,
+            getComponentProps
+          }}
+        /> : 
+        children
+      }
 		</span>
 	);
 };
@@ -160,7 +182,8 @@ const LinkDestDecorator = ({
 	contentState,
 	start,
 	end,
-	decoratedText,
+  decoratedText,
+  childDecorator={} 
 }) => {
 	// CONTEXT
 	const { setLinkStructure, linkStructureRef, editorStyles, editorStateRef } = useContext(
@@ -170,7 +193,19 @@ const LinkDestDecorator = ({
 	// STATE
 	const [linkId, setLinkId] = useState(null);
 	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
-	const [queuedTimeout, setQueuedTimeout] = useState(null);
+  const [queuedTimeout, setQueuedTimeout] = useState(null);
+
+  // CHILD DECORATOR
+  let {currentIndex, getNextComponentIndex, getComponentForIndex, getComponentProps} = childDecorator;
+  const [componentIndex, setComponentIndex] = useState(-1);
+  useEffect(() => {
+    if (getNextComponentIndex) {
+      const newComponentIndex = getNextComponentIndex(currentIndex);
+      console.log('newComponentIndex:', newComponentIndex)
+      setComponentIndex(newComponentIndex);
+    }
+  }, [getNextComponentIndex, currentIndex]);
+  const Component = componentIndex !== -1 ? getComponentForIndex(componentIndex) : null;
 
 	// On load, grab the entity linkId
 	useEffect(() => {
@@ -206,7 +241,21 @@ const LinkDestDecorator = ({
 		end,
 	]);
 
-	return children;
+	return (			
+    <>
+      {Component ? 
+        <Component {...getComponentProps(componentIndex)}
+          childDecorator={{
+            componentIndex,
+            getNextComponentIndex,
+            getComponentForIndex,
+            getComponentProps
+          }}
+        /> : 
+        children
+      }
+    </>
+  );
 };
 
 // block: ContentBlock {_map: Map, __ownerID: undefined}

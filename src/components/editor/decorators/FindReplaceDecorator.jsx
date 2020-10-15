@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState, useRef, useMemo } from 'react';
 import { Modifier, SelectionState, EditorState } from 'draft-js';
 
 import { FindReplaceContext } from '../../../contexts/findReplaceContext';
@@ -22,10 +22,26 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 // offsetKey: string,
 // start: number,
 
-const FindReplaceDecorator = ({ children, decoratedText, blockKey, start, end }) => {
-	// STATE
+const FindReplaceDecorator = ({ children, decoratedText, blockKey, start, end, childDecorator={} }) => {
+
+  // STATE
 	const [isCurrentResult, setIsCurrentResult] = useState(false);
-	const [prev, setPrev] = useState({});
+  const [prev, setPrev] = useState({});
+  
+  // CHILD DECORATOR
+  let {currentIndex, getNextComponentIndex, getComponentForIndex, getComponentProps} = childDecorator;
+  const [componentIndex, setComponentIndex] = useState(-1);
+  useEffect(() => {
+    if (getNextComponentIndex) {
+      const newComponentIndex = getNextComponentIndex(currentIndex);
+      setComponentIndex(newComponentIndex);
+    }
+  }, [getNextComponentIndex, currentIndex]);
+  const Component = useMemo(() => 
+    componentIndex !== -1 ?
+      getComponentForIndex(componentIndex) :
+      null
+  ,[componentIndex, getComponentForIndex]);
 
 	// CONTEXT
 	const {
@@ -89,13 +105,24 @@ const FindReplaceDecorator = ({ children, decoratedText, blockKey, start, end })
 				});
 			}
 		}
-	}, [isCurrentResult]);
+  }, [isCurrentResult]);
 
 	return (
 		<span
 			ref={decoratorRef}
 			style={{ backgroundColor: isCurrentResult ? '#FFA500' : '#FFFF00' }}>
-			{children}
+
+			{Component ? 
+        <Component {...getComponentProps(componentIndex)}
+          childDecorator={{
+            currentIndex: componentIndex,
+            getNextComponentIndex,
+            getComponentForIndex,
+            getComponentProps
+          }}
+        /> : 
+        children
+      }
 		</span>
 	);
 };
