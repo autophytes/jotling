@@ -108,6 +108,8 @@ const NavDocument = ({
 			className={
 				'file-nav document' + (navData.currentDoc === child.fileName ? ' active' : '')
 			}
+			data-context-menu-item-type='document'
+			data-context-menu-item-id={child.id}
 			style={fileStyles}
 			ref={docRef}
 			draggable

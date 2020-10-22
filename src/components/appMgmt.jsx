@@ -15,10 +15,13 @@ import { SettingsContext } from '../contexts/settingsContext';
 import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
+import { removeLinkFromSelection } from './editor/editorFunctions';
+
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
 import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
+import HiddenContextMenu from './hiddenContextMenu';
 
 // import ReactResizeDetector from 'react-resize-detector';
 
@@ -44,6 +47,8 @@ const AppMgmt = () => {
 		setEditorArchives,
 		peekWindowLinkId,
 		setDisplayLinkPopper,
+		editorStateRef,
+		setEditorStateRef,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -52,6 +57,9 @@ const AppMgmt = () => {
 		setRefocusReplace,
 	} = useContext(FindReplaceContext);
 	const { showEditorSettings } = useContext(SettingsContext);
+
+	// HiddenContextMenu();
+	console.log('appMgmt refreshed!!');
 
 	// Loads the document map (function)
 	const loadDocStructure = useCallback(
@@ -236,6 +244,31 @@ const AppMgmt = () => {
 				setDisplayLinkPopper(true);
 			}
 		});
+
+		ipcRenderer.on('remove-link', (event) => {
+			// IMPLEMENT A FUNCTION TO REMOVE LINKS FROM THE SELECTION
+			console.log('will remove the link!');
+			const newEditorState = removeLinkFromSelection(editorStateRef.current);
+			setEditorStateRef.current(newEditorState);
+		});
+
+		ipcRenderer.on('request-context-button', (event) => {
+			if (document.getSelection().toString().length) {
+				setDisplayLinkPopper(true);
+			}
+		});
+
+		ipcRenderer.on('edit-file-tree', (event, options) => {
+			console.log('received edit-file-tree request');
+			console.log('options: ', options);
+			// Handle the inserts / deletes
+		});
+
+		ipcRenderer.on('edit-file-tree', (event, options) => {
+			console.log('received edit-file-tree request');
+			console.log('options: ', options);
+			// Handle the inserts / deletes
+		});
 	}, []);
 
 	// If no current doc, finds the first document
@@ -255,6 +288,7 @@ const AppMgmt = () => {
 			<LoadingOverlay {...{ structureLoaded }} />
 			{peekWindowLinkId !== null && <PeekDocument />}
 			{showEditorSettings && <EditorSettings />}
+			<HiddenContextMenu />
 		</>
 	);
 };

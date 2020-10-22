@@ -3,8 +3,6 @@ import { EditorBlock } from 'draft-js';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
-
-
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
 // children?: Array<React.Node>,
@@ -38,8 +36,8 @@ const LinkSourceDecorator = ({
 	contentState,
 	start,
 	end,
-  decoratedText,
-  childDecorator={} 
+	decoratedText,
+	childDecorator = {},
 }) => {
 	// CONTEXT
 	const {
@@ -60,23 +58,27 @@ const LinkSourceDecorator = ({
 	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
 	const [queuedTimeout, setQueuedTimeout] = useState(null);
 	const [tagName, setTagName] = useState('');
-  const [showActive, setShowActive] = useState(false);
-  
-  // CHILD DECORATOR
-  let {currentIndex, getNextComponentIndex, getComponentForIndex, getComponentProps} = childDecorator;
-  const [componentIndex, setComponentIndex] = useState(-1);
-  useEffect(() => {
-    if (getNextComponentIndex) {
-      const newComponentIndex = getNextComponentIndex(currentIndex);
-      setComponentIndex(newComponentIndex);
-    }
-  }, [getNextComponentIndex, currentIndex]);
+	const [showActive, setShowActive] = useState(false);
 
-  const Component = useMemo(() => 
-    componentIndex !== -1 ?
-      getComponentForIndex(componentIndex) :
-      null
-  ,[componentIndex, getComponentForIndex]);
+	// CHILD DECORATOR
+	let {
+		currentIndex,
+		getNextComponentIndex,
+		getComponentForIndex,
+		getComponentProps,
+	} = childDecorator;
+	const [componentIndex, setComponentIndex] = useState(-1);
+	useEffect(() => {
+		if (getNextComponentIndex) {
+			const newComponentIndex = getNextComponentIndex(currentIndex);
+			setComponentIndex(newComponentIndex);
+		}
+	}, [getNextComponentIndex, currentIndex]);
+
+	const Component = useMemo(
+		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
+		[componentIndex, getComponentForIndex]
+	);
 
 	// On load, grab the entity linkId
 	useEffect(() => {
@@ -159,17 +161,19 @@ const LinkSourceDecorator = ({
 			}
 			onMouseEnter={handleHoverStart}
 			onMouseLeave={handleHoverLeave}>
-			{Component ? 
-        <Component {...getComponentProps(componentIndex)}
-          childDecorator={{
-            currentIndex: componentIndex,
-            getNextComponentIndex,
-            getComponentForIndex,
-            getComponentProps
-          }}
-        /> : 
-        children
-      }
+			{Component ? (
+				<Component
+					{...getComponentProps(componentIndex)}
+					childDecorator={{
+						currentIndex: componentIndex,
+						getNextComponentIndex,
+						getComponentForIndex,
+						getComponentProps,
+					}}
+				/>
+			) : (
+				children
+			)}
 		</span>
 	);
 };
@@ -182,8 +186,8 @@ const LinkDestDecorator = ({
 	contentState,
 	start,
 	end,
-  decoratedText,
-  childDecorator={} 
+	decoratedText,
+	childDecorator = {},
 }) => {
 	// CONTEXT
 	const { setLinkStructure, linkStructureRef, editorStyles, editorStateRef } = useContext(
@@ -193,19 +197,24 @@ const LinkDestDecorator = ({
 	// STATE
 	const [linkId, setLinkId] = useState(null);
 	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
-  const [queuedTimeout, setQueuedTimeout] = useState(null);
+	const [queuedTimeout, setQueuedTimeout] = useState(null);
 
-  // CHILD DECORATOR
-  let {currentIndex, getNextComponentIndex, getComponentForIndex, getComponentProps} = childDecorator;
-  const [componentIndex, setComponentIndex] = useState(-1);
-  useEffect(() => {
-    if (getNextComponentIndex) {
-      const newComponentIndex = getNextComponentIndex(currentIndex);
-      console.log('newComponentIndex:', newComponentIndex)
-      setComponentIndex(newComponentIndex);
-    }
-  }, [getNextComponentIndex, currentIndex]);
-  const Component = componentIndex !== -1 ? getComponentForIndex(componentIndex) : null;
+	// CHILD DECORATOR
+	let {
+		currentIndex,
+		getNextComponentIndex,
+		getComponentForIndex,
+		getComponentProps,
+	} = childDecorator;
+	const [componentIndex, setComponentIndex] = useState(-1);
+	useEffect(() => {
+		if (getNextComponentIndex) {
+			const newComponentIndex = getNextComponentIndex(currentIndex);
+			console.log('newComponentIndex:', newComponentIndex);
+			setComponentIndex(newComponentIndex);
+		}
+	}, [getNextComponentIndex, currentIndex]);
+	const Component = componentIndex !== -1 ? getComponentForIndex(componentIndex) : null;
 
 	// On load, grab the entity linkId
 	useEffect(() => {
@@ -241,21 +250,23 @@ const LinkDestDecorator = ({
 		end,
 	]);
 
-	return (			
-    <>
-      {Component ? 
-        <Component {...getComponentProps(componentIndex)}
-          childDecorator={{
-            componentIndex,
-            getNextComponentIndex,
-            getComponentForIndex,
-            getComponentProps
-          }}
-        /> : 
-        children
-      }
-    </>
-  );
+	return (
+		<>
+			{Component ? (
+				<Component
+					{...getComponentProps(componentIndex)}
+					childDecorator={{
+						componentIndex,
+						getNextComponentIndex,
+						getComponentForIndex,
+						getComponentProps,
+					}}
+				/>
+			) : (
+				children
+			)}
+		</>
+	);
 };
 
 // block: ContentBlock {_map: Map, __ownerID: undefined}
@@ -420,6 +431,8 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 			}
 			forwardKey = contentBlock.getKey();
 
+			let contentToAdd, linkStart, linkEnd;
+
 			contentBlock.findEntityRanges(
 				(value) => {
 					let newEntityKey = value.getEntity();
@@ -429,19 +442,39 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 					return false;
 				},
 				(start, end) => {
-					if (direction === 'BEFORE') {
-						contentArray.push(contentBlock.getText().slice(start, end));
-						if (end !== contentBlock.getLength()) {
-							continueForward = false;
-						}
-					} else {
-						contentArray.unshift(contentBlock.getText().slice(start, end));
-						if (start !== 0) {
-							continueForward = false;
-						}
-					}
+					contentToAdd = contentBlock.getText().slice(start, end);
+					linkStart = start;
+					linkEnd = end;
+
+					// if (direction === 'BEFORE') {
+					// 	contentArray.push(contentBlock.getText().slice(start, end));
+					// 	if (end !== contentBlock.getLength()) {
+					// 		continueForward = false;
+					// 	}
+					// } else {
+					// 	contentArray.unshift(contentBlock.getText().slice(start, end));
+					// 	if (start !== 0) {
+					// 		continueForward = false;
+					// 	}
+					// }
 				}
 			);
+
+			if (contentToAdd) {
+				if (direction === 'BEFORE') {
+					contentArray.push(contentToAdd);
+					if (linkStart !== contentBlock.getLength()) {
+						continueForward = false;
+					}
+				} else {
+					contentArray.unshift(contentToAdd);
+					if (linkEnd !== 0) {
+						continueForward = false;
+					}
+				}
+			} else {
+				continueForward = false;
+			}
 		}
 	};
 

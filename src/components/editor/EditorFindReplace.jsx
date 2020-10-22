@@ -141,19 +141,48 @@ const EditorFindReplace = ({ editorRef }) => {
 	);
 
 	const replaceSingle = useCallback((findText, replaceText, blockKey, start, editorState) => {
+		const contentState = editorState.getCurrentContent();
+		const contentBlock = contentState.getBlockForKey(blockKey);
+		const entityKey = contentBlock.getEntityAt(start);
+
+		// Find content block with block key
+		// Find the entity at the start index
+		// On content state, get the entity for the entity key
+		// Somehow apply this entity to the new selection
+
 		// Lets grab the initial selection state and reset it when we're done
-		const selectionState = SelectionState.createEmpty();
-		const newSelectionState = selectionState.merge({
+		const emptySelectionState = SelectionState.createEmpty();
+		const selectionState = emptySelectionState.merge({
 			anchorKey: blockKey, // Starting block (position is the start)
 			anchorOffset: start, // How much to adjust from the starting position
 			focusKey: blockKey, // Ending position (position is the start)
 			focusOffset: start + findText.length,
 		});
 
-		const contentState = editorState.getCurrentContent();
-		const newContentState = Modifier.replaceText(contentState, newSelectionState, replaceText);
+		const newContentState = Modifier.replaceText(contentState, selectionState, replaceText);
 
-		const newEditorState = EditorState.push(editorState, newContentState, 'insert-characters');
+		// If we have an entity, apply that entity to the new text
+		let contentStateWithLink;
+		if (entityKey !== null) {
+			const selectionStateForEntity = emptySelectionState.merge({
+				anchorKey: blockKey,
+				anchorOffset: start,
+				focusKey: blockKey,
+				focusOffset: start + replaceText.length,
+			});
+
+			contentStateWithLink = Modifier.applyEntity(
+				newContentState,
+				selectionStateForEntity,
+				entityKey
+			);
+		}
+
+		const newEditorState = EditorState.push(
+			editorState,
+			contentStateWithLink ? contentStateWithLink : newContentState,
+			'insert-characters'
+		);
 
 		return newEditorState;
 	}, []);

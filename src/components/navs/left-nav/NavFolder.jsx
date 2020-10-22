@@ -139,6 +139,8 @@ const NavFolder = ({
 	return (
 		<button
 			className={'file-nav folder title' + (isOpen ? ' open' : '')}
+			data-context-menu-item-type='folder'
+			data-context-menu-item-id={child.id}
 			style={folderStyles}
 			ref={folderRef}
 			draggable

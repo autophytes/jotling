@@ -41,6 +41,8 @@ import {
 	defaultDecorator,
 	generateDecoratorWithTagHighlights,
 	updateLinkEntities,
+	hasSelectionStartEntity,
+	insertTextWithEntity,
 } from './editorFunctions';
 import { LinkDestBlock } from './decorators/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
@@ -268,7 +270,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	};
 
 	// Process the key presses
-	const handleKeyCommand = (command) => {
+	const handleKeyCommand = useCallback((command, editorState) => {
 		// First, handle commands that happen outside the editor (like saving)
 		if (command === 'myeditor-save') {
 			// Insert code to save the file
@@ -289,6 +291,69 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 
 		return 'not-handled'; // Lets Draft know to try to handle this itself.
+	}, []);
+
+	const handleBeforeInput = (char, editorState) => {
+		const selection = editorState.getSelection();
+
+		if (selection.isCollapsed()) {
+			const contentState = editorState.getCurrentContent();
+			const blockKey = selection.getStartKey();
+			const block = contentState.getBlockForKey(blockKey);
+			const blockLength = block.getLength();
+			const start = Math.max(selection.getStartOffset() - 1, 0);
+
+			// Ensure the character before has an entity
+			// NOTE: may need to do start - 1 (min 0)
+			let startEntityKey = null;
+			if (blockLength) {
+				startEntityKey = block.getEntityAt(start);
+			} else {
+				const prevBlock = contentState.getBlockBefore(blockKey);
+				if (prevBlock) {
+					startEntityKey = prevBlock.getEntityAt(prevBlock.getLength() - 1);
+				}
+			}
+			if (startEntityKey === null) {
+				console.log('startEntityKey:', startEntityKey);
+				return 'not-handled';
+			}
+
+			// Ensuring we're typing at the end of the block
+			const selectionEnd = selection.getEndOffset();
+			if (blockLength !== selectionEnd) {
+				console.log('selectionEnd:', selectionEnd);
+				return 'not-handled';
+			}
+
+			// Ensure the entity is a link source or dest
+			const entity = contentState.getEntity(startEntityKey);
+			if (entity && !['LINK-SOURCE', 'LINK-DEST'].includes(entity.getType())) {
+				console.log('entity.getType():', entity.getType());
+				return 'not-handled';
+			}
+
+			// Ensure the next block starts with the same entity
+			const nextBlock = contentState.getBlockAfter(blockKey);
+			if (nextBlock && nextBlock.getEntityAt(0) !== startEntityKey) {
+				console.log('nextBlock.getEntityAt(0):', nextBlock.getEntityAt(0));
+				return 'not-handled';
+			}
+
+			const style = editorState.getCurrentInlineStyle();
+			const newContent = Modifier.insertText(
+				contentState,
+				selection,
+				char,
+				style,
+				startEntityKey
+			);
+			const newEditorState = EditorState.push(editorState, newContent, 'insert-characters');
+			setEditorState(newEditorState);
+			return 'handled';
+		}
+
+		return 'not-handled';
 	};
 
 	// I'll use this and the one below in my EditorNav buttons
@@ -594,6 +659,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						ref={editorRef}
 						keyBindingFn={customKeyBindingFn}
 						handleKeyCommand={handleKeyCommand}
+						handleBeforeInput={handleBeforeInput}
 						customStyleMap={customStyleMap}
 						blockStyleFn={blockStyleFn}
 						blockRendererFn={blockRendererFn}
