@@ -591,10 +591,156 @@ export const insertTextWithEntity = (editorState, content, selection, block, tex
   return EditorState.push(editorState, newContent, 'insert-characters');
 }
 
-export const removeLinkFromSelection = (editorState) => {
+export const removeLinkSourceFromSelection = (editorState, linkStructure, setLinkStructure, setSyncLinkIdList) => {
   const contentState = editorState.getCurrentContent();
   const selectionState = editorState.getSelection();
+
+  const linkData = grabSelectionLinkIdsAndContent(editorState);
+  console.log('linkData:', linkData)
+
+  // Find what linkId(s) we're removing from the selection
+  // For each link, determine if we are removing the entire link or only part
+  //    - We'll need to save the text from the link ranges to compare
+  // If we're removing everything, remove the link from the linkStructure (links, docLinks, tagLinks)
+  // Then set the syncLinkIdList to our partial links we need to remove
+
+  // NOTE: if just removing a segment inside a link... the link should really be split
+  //   Maybe don't let people remove the middle of a link??
+
+  // In our LINK-DEST pages, if a link is completely removed, we need to remove the links from that page as well
+
+  // If we ever add any other entities and we only wnat to remove the LINK-SOURCE, this will be a problem
   const newContentState = Modifier.applyEntity(contentState, selectionState, null);
   const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity')
   return newEditorState;
 }
+
+// Returns an object of { [linkId]: linkText } for all LINK-SOURCE in a selectionState
+const grabSelectionLinkIdsAndContent = (editorState) => {
+  const contentState = editorState.getCurrentContent();
+  const selection = editorState.getSelection();
+  const startBlockKey = selection.getStartKey();
+  const startOffset = selection.getStartOffset();
+  const endBlockKey = selection.getEndKey();
+  const endOffset = selection.getEndOffset();
+
+  let linkData = {};
+
+  let block = contentState.getBlockForKey(startBlockKey);
+  let finished = false;
+  while (!finished) {
+    const currentBlockKey = block.getKey();
+
+    // FIND ENTITY RANGES
+    block.findEntityRanges(
+      (char) => {
+        const entityKey = char.getEntity();
+        if (!entityKey) {
+          return false;
+        }
+
+        const entity = contentState.getEntity(entityKey);
+        return entity.getType() === 'LINK-SOURCE';
+      },
+      (start, end) => {
+        let adjStart = start;
+        let adjEnd = end;
+        let skip = false;
+
+        // Starting block - Only use the portion of the link inside our selection
+        if (currentBlockKey === startBlockKey) {
+          if (adjEnd < startOffset) {
+            skip = true;
+          }
+          adjStart = Math.max(startOffset, adjStart);
+        }
+
+        // Ending block - Only use the portion of the link inside our selection
+        if (currentBlockKey === endBlockKey) {
+          if (adjStart > endOffset) {
+            skip = true;
+          }
+          adjEnd = Math.min(endOffset, adjEnd);
+        }
+
+        if (!skip) {
+          // Find the linkId
+          const entityKey = block.getEntityAt(adjStart);
+          const entity = contentState.getEntity(entityKey);
+          const entityData = entity.getData();
+          const linkId = entityData.linkId;
+
+          // Find the linkText
+          const allText = block.getText();
+          const linkText = allText.slice(adjStart, adjEnd);
+
+          if (linkId !== undefined) {
+            if (linkData.hasOwnProperty(linkId)) {
+              linkData[linkId] = linkData[linkId] + '\n' + linkText;
+            } else {
+              linkData[linkId] = linkText;
+            }
+          }
+        }
+
+
+
+        // if starting block && ending block
+
+
+        // if starting block
+        // if end is before start offset, ignore the link
+        //  otherwise, take the greater of the start offset or the start
+
+        // if ending block
+        // if start is after end offset, ignore the link
+        //  otherwise, take the lesser of the ending offset or the end
+
+      }
+    )
+
+    if (currentBlockKey === endBlockKey) {
+      finished = true;
+    }
+
+    block = contentState.getBlockAfter(currentBlockKey);
+  }
+
+  return linkData;
+}
+
+// Checks if the selected text has a given entity type
+export const selectionHasEntityType = (editorState, entityType) => {
+  const currentContent = editorState.getCurrentContent();
+  const selection = editorState.getSelection();
+  const startBlockKey = selection.getStartKey();
+  const startOffset = selection.getStartOffset();
+  const endBlockKey = selection.getEndKey();
+  const endOffset = selection.getEndOffset();
+
+  let block = currentContent.getBlockForKey(startBlockKey);
+  let finished = false;
+  while (!finished) {
+    const currentBlockKey = block.getKey();
+    const length = currentBlockKey === endBlockKey ? endOffset : block.getLength();
+    let i = currentBlockKey === startBlockKey ? startOffset : 0;
+    for (i; i < length; i++) {
+      let entityKey = block.getEntityAt(i);
+      if (entityKey) {
+        let entity = currentContent.getEntity(entityKey);
+        if (entity.get('type') === entityType) {
+          // WE FOUND OUR MATCH, DO THE THING
+          return true;
+        }
+      }
+    }
+
+    if (currentBlockKey === endBlockKey) {
+      finished = true;
+    }
+
+    block = currentContent.getBlockAfter(currentBlockKey);
+  }
+
+  return false;
+};

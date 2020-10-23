@@ -239,6 +239,7 @@ const create = (win, options) => {
         id: 'addLink',
         label: browserParams.hasLink ? 'Overwrite Link' : 'Insert Link',
         visible: browserParams.type === 'document-text',
+        enabled: !browserParams.hasLinkDest,
         click() {
           webContents(win).send('insert-link');
         }
@@ -247,6 +248,7 @@ const create = (win, options) => {
         id: 'removeLink',
         label: 'Remove Link',
         visible: browserParams.type === 'document-text' && browserParams.hasLink,
+        enabled: !browserParams.hasLinkDest,
         click() {
           webContents(win).send('remove-link')
         }

@@ -9,7 +9,7 @@ import { SettingsContext } from '../../../contexts/settingsContext';
 
 import EllipsisSVG from '../../../assets/svg/EllipsisSVG';
 
-import { createTagLink } from '../../editor/editorFunctions';
+import { createTagLink, selectionHasEntityType } from '../../editor/editorFunctions';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
@@ -23,6 +23,7 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 	const [tagFilter, setTagFilter] = useState('');
 	const [leftOffset, setLeftOffset] = useState(0);
 	const [rightOffset, setRightOffset] = useState(0);
+	const [isInvalid, setIsInvalid] = useState(false);
 
 	// CONTEXT
 	const {
@@ -42,16 +43,24 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 		referenceElement = new LinkSelectionRangeRef();
 	}, []);
 
+	// Check if a LINK-DEST is selected. If so, disable popper.
+	useEffect(() => {
+		const hasLinkDest = selectionHasEntityType(editorStateRef.current, 'LINK-DEST');
+		if (hasLinkDest) {
+			setIsInvalid(true);
+		}
+	}, []);
+
 	// Adds a scroll listener to reposition our reference element.
 	// Managed here to remove on unmount
 	useEffect(() => {
 		referenceElement.update();
-		popperInputRef.current.focus();
+		!isInvalid && popperInputRef.current.focus();
 		window.addEventListener('scroll', referenceElement.update);
 		return () => {
 			window.removeEventListener('scroll', referenceElement.update);
 		};
-	}, [referenceElement]);
+	}, [referenceElement, isInvalid]);
 
 	// Calculates the left and right popper boundaries
 	useEffect(() => {
@@ -120,45 +129,50 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 					padding: '0.5rem 0.25rem 0.5rem 0.5rem',
 				}}>
 				{/* Text input for filter */}
-				<input
-					value={tagFilter}
-					ref={popperInputRef}
-					// onFocus={(e) => e.preventDefault()}
-					onChange={(e) => setTagFilter(e.target.value)}
-					onClick={(e) => {
-						e.stopPropagation();
-						e.target.focus();
-					}}
-				/>
+				{!isInvalid && (
+					<input
+						value={tagFilter}
+						ref={popperInputRef}
+						// onFocus={(e) => e.preventDefault()}
+						onChange={(e) => setTagFilter(e.target.value)}
+						onClick={(e) => {
+							e.stopPropagation();
+							e.target.focus();
+						}}
+					/>
+				)}
 
 				{/* Loop through first 3 tag buttons */}
-				{allTags.slice(0, 3).map((item, i) => (
-					<button
-						key={item}
-						className={
-							'link-popper-tag-button' +
-							(i === 0 ? ' first' : i === allTags.length - 1 ? ' last' : '')
-						}
-						onClick={() => {
-							createTagLink(
-								item,
-								editorStateRef,
-								linkStructureRef,
-								navData.currentDoc,
-								setEditorStateRef.current,
-								setLinkStructure
-							);
-							setDisplayLinkPopper(false);
-						}}>
-						{item}
-					</button>
-				))}
+				{!isInvalid &&
+					allTags.slice(0, 3).map((item, i) => (
+						<button
+							key={item}
+							className={
+								'link-popper-tag-button' +
+								(i === 0 ? ' first' : i === allTags.length - 1 ? ' last' : '')
+							}
+							onClick={() => {
+								createTagLink(
+									item,
+									editorStateRef,
+									linkStructureRef,
+									navData.currentDoc,
+									setEditorStateRef.current,
+									setLinkStructure
+								);
+								setDisplayLinkPopper(false);
+							}}>
+							{item}
+						</button>
+					))}
 
 				{/* Display an ellipsis if more than 3 tags available */}
-				{allTags.length > 3 && <EllipsisSVG />}
+				{!isInvalid && allTags.length > 3 && <EllipsisSVG />}
 
 				{/* Default text for no tags. */}
-				{!allTags.length && <p>No tags.</p>}
+				{!isInvalid && !allTags.length && <p>No tags.</p>}
+
+				{isInvalid && <p>Cannot overwrite links to this page.</p>}
 			</div>
 		</PopperContainer>
 	);

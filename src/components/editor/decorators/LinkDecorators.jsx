@@ -51,6 +51,8 @@ const LinkSourceDecorator = ({
 		scrollToLinkIdRef,
 		hoverSourceLinkId,
 		setHoverSourceLinkId,
+		syncLinkIdList,
+		setSyncLinkIdList,
 	} = useContext(LeftNavContext);
 
 	// STATE
@@ -84,6 +86,20 @@ const LinkSourceDecorator = ({
 	useEffect(() => {
 		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
 	}, []);
+
+	useEffect(() => {
+		if (syncLinkIdList.includes(linkId)) {
+			// Trigger the re-synchronization
+			setPrevDecoratedText('');
+
+			// Remove our linkId from the array
+			let newSyncLinkIdList = [...syncLinkIdList];
+			let idIndex = newSyncLinkIdList.findIndex((item) => item === linkId);
+			newSyncLinkIdList.splice(idIndex, 1);
+
+			setSyncLinkIdList(newSyncLinkIdList);
+		}
+	}, [syncLinkIdList]);
 
 	// Scroll to the clicked-on link from the right nav
 	useEffect(() => {
@@ -384,7 +400,8 @@ const syncLinkStructureOnDelay = ({
 				end
 			);
 			// getAllEntityContent(editorStateRef, blockKey, start, end);
-			setLinkStructure({ ...newLinkStructure });
+			linkStructureRef.current = newLinkStructure;
+			setLinkStructure(newLinkStructure);
 		}, 500);
 
 		// Save the timeout (for potential clearing on changes)

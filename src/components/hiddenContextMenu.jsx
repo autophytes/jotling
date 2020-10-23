@@ -3,40 +3,7 @@ import { remote, ipcRenderer } from 'electron';
 
 import { LeftNavContext } from '../contexts/leftNavContext';
 
-const selectionHasLink = (editorState) => {
-	const currentContent = editorState.getCurrentContent();
-	const selection = editorState.getSelection();
-	const startBlockKey = selection.getStartKey();
-	const startOffset = selection.getStartOffset();
-	const endBlockKey = selection.getEndKey();
-	const endOffset = selection.getEndOffset();
-
-	let block = currentContent.getBlockForKey(startBlockKey);
-	let finished = false;
-	while (!finished) {
-		const currentBlockKey = block.getKey();
-		const length = currentBlockKey === endBlockKey ? endOffset : block.getLength();
-		let i = currentBlockKey === startBlockKey ? startOffset : 0;
-		for (i; i < length; i++) {
-			let entityKey = block.getEntityAt(i);
-			if (entityKey) {
-				let entity = currentContent.getEntity(entityKey);
-				if (entity.get('type') === 'LINK-SOURCE') {
-					// WE FOUND OUR MATCH, DO THE THING
-					return true;
-				}
-			}
-		}
-
-		if (currentBlockKey === endBlockKey) {
-			finished = true;
-		}
-
-		block = currentContent.getBlockAfter(currentBlockKey);
-	}
-
-	return false;
-};
+import { selectionHasEntityType } from './editor/editorFunctions';
 
 const HiddenContextMenu = () => {
 	const [browserParams, setBrowserParams] = useState(null);
@@ -80,7 +47,7 @@ const HiddenContextMenu = () => {
 			// 		const selection = editorStateRef.current.getSelection();
 			// 		if (!selection.isCollapsed()) {
 			// 			console.log("selection isn't collapsed!");
-			// 			const hasLink = selectionHasLink(editorStateRef.current);
+			// 			const hasLink = selectionHasEntityType(editorStateRef.current);
 			// 			newBrowserParams = {
 			// 				type: 'document-text',
 			// 				hasLink: hasLink,
@@ -105,10 +72,16 @@ const HiddenContextMenu = () => {
 					const selection = editorStateRef.current.getSelection();
 					if (!selection.isCollapsed()) {
 						console.log("selection isn't collapsed!");
-						const hasLink = selectionHasLink(editorStateRef.current);
+						const hasLinkDest = selectionHasEntityType(editorStateRef.current, 'LINK-DEST');
+						// No insert/remove link options if selecting a destination link
+						const hasLinkSource = selectionHasEntityType(
+							editorStateRef.current,
+							'LINK-SOURCE'
+						);
 						newBrowserParams = {
 							type: 'document-text',
-							hasLink: hasLink,
+							hasLink: hasLinkSource,
+							hasLinkDest: hasLinkDest,
 						};
 					}
 					return true;

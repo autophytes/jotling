@@ -15,7 +15,7 @@ import { SettingsContext } from '../contexts/settingsContext';
 import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
-import { removeLinkFromSelection } from './editor/editorFunctions';
+import { removeLinkSourceFromSelection } from './editor/editorFunctions';
 
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
@@ -49,6 +49,7 @@ const AppMgmt = () => {
 		setDisplayLinkPopper,
 		editorStateRef,
 		setEditorStateRef,
+		setSyncLinkId,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -248,7 +249,12 @@ const AppMgmt = () => {
 		ipcRenderer.on('remove-link', (event) => {
 			// IMPLEMENT A FUNCTION TO REMOVE LINKS FROM THE SELECTION
 			console.log('will remove the link!');
-			const newEditorState = removeLinkFromSelection(editorStateRef.current);
+			const newEditorState = removeLinkSourceFromSelection(
+				editorStateRef.current,
+				linkStructure,
+				setLinkStructure,
+				setSyncLinkId
+			);
 			setEditorStateRef.current(newEditorState);
 		});
 
