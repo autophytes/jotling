@@ -591,27 +591,66 @@ export const insertTextWithEntity = (editorState, content, selection, block, tex
   return EditorState.push(editorState, newContent, 'insert-characters');
 }
 
+// Remove all links in a given editor selection, and update the linkStructure
 export const removeLinkSourceFromSelection = (editorState, linkStructure, setLinkStructure, setSyncLinkIdList) => {
   const contentState = editorState.getCurrentContent();
   const selectionState = editorState.getSelection();
 
   const linkData = grabSelectionLinkIdsAndContent(editorState);
-  console.log('linkData:', linkData)
+  const linkIds = [...Object.keys(linkData)];
+  let resyncLinkIds = [];
 
+  let shouldResyncLinkStructure = false;
+  let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
+
+  for (let id of linkIds) {
+    let content = linkStructure.links[id].content;
+    if (linkData[id] === content) {
+      // Delete all entries for the link from the linkStructure
+      let source = linkStructure.links[id].source;
+      let keyword = linkStructure.docLinks[source][id];
+
+      delete newLinkStructure.links[id];
+      delete newLinkStructure.docLinks[source][id];
+
+      let newTagLinksArray = [...newLinkStructure.tagLinks[keyword]];
+      let idIndex = newTagLinksArray.findIndex((item) => item === Number(id));
+      newTagLinksArray.splice(idIndex, 1);
+      newLinkStructure.tagLinks[keyword] = newTagLinksArray;
+
+      shouldResyncLinkStructure = true;
+    } else {
+      // Push the id into the queue to resynchronize that link
+      resyncLinkIds.push(id);
+    }
+  }
+
+  // DONE
   // Find what linkId(s) we're removing from the selection
   // For each link, determine if we are removing the entire link or only part
   //    - We'll need to save the text from the link ranges to compare
   // If we're removing everything, remove the link from the linkStructure (links, docLinks, tagLinks)
   // Then set the syncLinkIdList to our partial links we need to remove
 
-  // NOTE: if just removing a segment inside a link... the link should really be split
+  // DONE NOTE: if just removing a segment inside a link... the link should really be split
   //   Maybe don't let people remove the middle of a link??
 
   // In our LINK-DEST pages, if a link is completely removed, we need to remove the links from that page as well
 
   // If we ever add any other entities and we only wnat to remove the LINK-SOURCE, this will be a problem
   const newContentState = Modifier.applyEntity(contentState, selectionState, null);
-  const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity')
+  const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
+
+  // I wonder if this will trigger too early, before the editor state has updated.
+  // If so, return the list and set it after we set the state.
+  if (resyncLinkIds.length) {
+    setSyncLinkIdList(resyncLinkIds);
+  }
+
+  if (shouldResyncLinkStructure) {
+    setLinkStructure(newLinkStructure);
+  }
+
   return newEditorState;
 }
 
@@ -744,3 +783,40 @@ export const selectionHasEntityType = (editorState, entityType) => {
 
   return false;
 };
+
+export const selectionInMiddleOfLink = (editorState) => {
+  const currentContent = editorState.getCurrentContent();
+  const selection = editorState.getSelection();
+  const startBlockKey = selection.getStartKey();
+  const startOffset = selection.getStartOffset();
+  const endBlockKey = selection.getEndKey();
+  const endOffset = selection.getEndOffset();
+
+  let startBlock = startOffset === 0
+    ? currentContent.getBlockBefore(startBlockKey)
+    : currentContent.getBlockForKey(startBlockKey);
+
+  let endBlock = currentContent.getBlockForKey(endBlockKey);
+  let isSelectionAtBlockEnd = endBlock.getLength() <= endOffset; // >= ?
+  if (isSelectionAtBlockEnd) {
+    endBlock = currentContent.getBlockAfter(endBlockKey);
+  }
+
+  // If at the start/end of the document, can't be in the middle of a link.
+  if (!endBlock || !startBlock) {
+    return false;
+  }
+
+  let startEntityKey = startBlock.getEntityAt(startOffset === 0 ? startBlock.getLength() - 1 : startOffset - 1);
+  let endEntityKey = endBlock.getEntityAt(isSelectionAtBlockEnd ? 0 : endOffset);
+
+  if (startEntityKey && startEntityKey === endEntityKey) {
+    let entity = currentContent.getEntity(startEntityKey);
+
+    if (entity.getType() === 'LINK-SOURCE') {
+      return true;
+    }
+  }
+
+  return false;
+}

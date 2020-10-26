@@ -248,7 +248,7 @@ const create = (win, options) => {
         id: 'removeLink',
         label: 'Remove Link',
         visible: browserParams.type === 'document-text' && browserParams.hasLink,
-        enabled: !browserParams.hasLinkDest,
+        enabled: !browserParams.hasLinkDest && !browserParams.inMiddleOfLink,
         click() {
           webContents(win).send('remove-link')
         }

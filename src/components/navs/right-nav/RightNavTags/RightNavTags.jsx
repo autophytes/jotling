@@ -226,18 +226,22 @@ const RightNavTags = ({ activeTab }) => {
 						<Collapse isOpen={!!isOpenDest[item]}>
 							<div className='tag-item-options'>
 								{usedSourceTags[item] &&
-									usedSourceTags[item].map((linkId) => (
-										<p
-											className='tag-item-source-content'
-											key={linkId}
-											onClick={() => {
-												setScrollToLinkId(linkId);
-												// scrollToLinkIdRef.current = linkId;
-												handleScrollToLinkId(linkId);
-											}}>
-											{linkStructure.links[linkId].content}
-										</p>
-									))}
+									usedSourceTags[item].map((linkId) =>
+										linkStructure.links[linkId] ? (
+											<p
+												className='tag-item-source-content'
+												key={linkId}
+												onClick={() => {
+													setScrollToLinkId(linkId);
+													// scrollToLinkIdRef.current = linkId;
+													handleScrollToLinkId(linkId);
+												}}>
+												{linkStructure.links[linkId].content}
+											</p>
+										) : (
+											<Fragment key={linkId}></Fragment>
+										)
+									)}
 							</div>
 						</Collapse>
 					</Fragment>

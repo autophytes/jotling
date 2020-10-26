@@ -49,7 +49,8 @@ const AppMgmt = () => {
 		setDisplayLinkPopper,
 		editorStateRef,
 		setEditorStateRef,
-		setSyncLinkId,
+		linkStructureRef,
+		setSyncLinkIdList,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -251,9 +252,9 @@ const AppMgmt = () => {
 			console.log('will remove the link!');
 			const newEditorState = removeLinkSourceFromSelection(
 				editorStateRef.current,
-				linkStructure,
+				linkStructureRef.current,
 				setLinkStructure,
-				setSyncLinkId
+				setSyncLinkIdList
 			);
 			setEditorStateRef.current(newEditorState);
 		});

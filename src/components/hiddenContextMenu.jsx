@@ -3,7 +3,7 @@ import { remote, ipcRenderer } from 'electron';
 
 import { LeftNavContext } from '../contexts/leftNavContext';
 
-import { selectionHasEntityType } from './editor/editorFunctions';
+import { selectionHasEntityType, selectionInMiddleOfLink } from './editor/editorFunctions';
 
 const HiddenContextMenu = () => {
 	const [browserParams, setBrowserParams] = useState(null);
@@ -71,17 +71,25 @@ const HiddenContextMenu = () => {
 					console.log('building the document-text params');
 					const selection = editorStateRef.current.getSelection();
 					if (!selection.isCollapsed()) {
-						console.log("selection isn't collapsed!");
 						const hasLinkDest = selectionHasEntityType(editorStateRef.current, 'LINK-DEST');
+
 						// No insert/remove link options if selecting a destination link
 						const hasLinkSource = selectionHasEntityType(
 							editorStateRef.current,
 							'LINK-SOURCE'
 						);
+
+						let inMiddleOfLink = false;
+						if (hasLinkSource) {
+							inMiddleOfLink = selectionInMiddleOfLink(editorStateRef.current);
+							console.log('inMiddleOfLink:', inMiddleOfLink);
+						}
+
 						newBrowserParams = {
 							type: 'document-text',
 							hasLink: hasLinkSource,
 							hasLinkDest: hasLinkDest,
+							inMiddleOfLink: inMiddleOfLink,
 						};
 					}
 					return true;
