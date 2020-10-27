@@ -16,6 +16,7 @@ import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import { removeLinkSourceFromSelection } from './editor/editorFunctions';
+import { addFile } from './navs/navFunctions';
 
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
@@ -38,6 +39,7 @@ const AppMgmt = () => {
 	const {
 		docStructure,
 		setDocStructure,
+		docStructureRef,
 		linkStructure,
 		setLinkStructure,
 		project,
@@ -259,23 +261,39 @@ const AppMgmt = () => {
 			setEditorStateRef.current(newEditorState);
 		});
 
+		ipcRenderer.on('insert-file', (event, { insertFileType, type, id, currentTab }) => {
+			// Call the addFile function with the refFileType, refFileId, currentTab, docStructure, setDocStructure
+			addFile(
+				insertFileType,
+				docStructureRef.current,
+				setDocStructure,
+				currentTab,
+				type,
+				Number(id)
+			);
+		});
+
+		ipcRenderer.on('remove-file', (event, { action, type, id, currentTab }) => {
+			// Maybe only let users delete empty folders??
+		});
+
 		ipcRenderer.on('request-context-button', (event) => {
 			if (document.getSelection().toString().length) {
 				setDisplayLinkPopper(true);
 			}
 		});
 
-		ipcRenderer.on('edit-file-tree', (event, options) => {
-			console.log('received edit-file-tree request');
-			console.log('options: ', options);
-			// Handle the inserts / deletes
-		});
+		// ipcRenderer.on('edit-file-tree', (event, options) => {
+		// 	console.log('received edit-file-tree request');
+		// 	console.log('options: ', options);
+		// 	// Handle the inserts / deletes
+		// });
 
-		ipcRenderer.on('edit-file-tree', (event, options) => {
-			console.log('received edit-file-tree request');
-			console.log('options: ', options);
-			// Handle the inserts / deletes
-		});
+		// ipcRenderer.on('edit-file-tree', (event, options) => {
+		// 	console.log('received edit-file-tree request');
+		// 	console.log('options: ', options);
+		// 	// Handle the inserts / deletes
+		// });
 	}, []);
 
 	// If no current doc, finds the first document

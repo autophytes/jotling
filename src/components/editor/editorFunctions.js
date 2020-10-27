@@ -437,14 +437,23 @@ export const createTagLink = (
   linkStructureRef,
   currentDoc,
   setEditorState,
-  setLinkStructure
+  setLinkStructure,
+  setSyncLinkIdList
 ) => {
+  // Clear out any existing links in the selection
+  const cleanedEditorState = removeLinkSourceFromSelection(
+    editorStateRef.current,
+    linkStructureRef.current,
+    setLinkStructure,
+    setSyncLinkIdList
+  )
+
   // Increment the max id by 1, or start at 0
   let arrayOfLinkIds = Object.keys(linkStructureRef.current.links).map((item) => Number(item));
   let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 0;
 
-  const contentState = editorStateRef.current.getCurrentContent();
-  const selectionState = editorStateRef.current.getSelection();
+  const contentState = cleanedEditorState.getCurrentContent();
+  const selectionState = cleanedEditorState.getSelection();
 
   // Apply the linkId as an entity to the selection
   const contentStateWithEntity = contentState.createEntity('LINK-SOURCE', 'MUTABLE', {
@@ -457,7 +466,7 @@ export const createTagLink = (
     entityKey
   );
   const newEditorState = EditorState.push(
-    editorStateRef.current,
+    cleanedEditorState,
     contentStateWithLink,
     'apply-entity'
   );

@@ -34,6 +34,7 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 		linkStructureRef,
 		setEditorStateRef,
 		setLinkStructure,
+		setSyncLinkIdList,
 	} = useContext(LeftNavContext);
 	const { editorSettings } = useContext(SettingsContext);
 
@@ -158,7 +159,8 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 									linkStructureRef,
 									navData.currentDoc,
 									setEditorStateRef.current,
-									setLinkStructure
+									setLinkStructure,
+									setSyncLinkIdList
 								);
 								setDisplayLinkPopper(false);
 							}}>

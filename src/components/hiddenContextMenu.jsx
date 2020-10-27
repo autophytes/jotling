@@ -58,10 +58,12 @@ const HiddenContextMenu = () => {
 			// }
 
 			e.path.find((element) => {
+				// LEFT NAV DOCUMENT / FOLDER
 				if (element.dataset && element.dataset.contextMenuItemType) {
 					newBrowserParams = {
 						type: element.dataset.contextMenuItemType,
 						id: element.dataset.contextMenuItemId,
+						currentTab: element.dataset.contextMenuCurrentTab,
 					};
 					return true;
 				}

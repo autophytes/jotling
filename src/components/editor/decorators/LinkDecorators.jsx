@@ -82,10 +82,15 @@ const LinkSourceDecorator = ({
 		[componentIndex, getComponentForIndex]
 	);
 
-	// On load, grab the entity linkId
+	// On load (or decorator change - overwriting parts of links does this), grab the entity linkId
 	useEffect(() => {
-		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
-	}, []);
+		let newLinkId = getLinkId(entityKey, contentState, blockKey, start);
+		setLinkId(newLinkId);
+
+		// Resync the content (needed for when overwriting part of a link with a new one)
+		setPrevDecoratedText('');
+	}, [entityKey]);
+	// }, [entityKey, linkId]);
 
 	useEffect(() => {
 		if (syncLinkIdList.includes(linkId)) {
@@ -99,7 +104,7 @@ const LinkSourceDecorator = ({
 
 			setSyncLinkIdList(newSyncLinkIdList);
 		}
-	}, [syncLinkIdList]);
+	}, [linkId, syncLinkIdList]);
 
 	// Scroll to the clicked-on link from the right nav
 	useEffect(() => {

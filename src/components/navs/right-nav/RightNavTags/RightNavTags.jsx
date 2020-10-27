@@ -65,12 +65,9 @@ const RightNavTags = ({ activeTab }) => {
 			for (const tag of pageLinkedTags) {
 				let usedTagLinks = [];
 				let allLinksToTag = linkStructure.tagLinks[tag];
-				console.log('allLinksToTag: ', allLinksToTag);
 
 				for (const linkId of allLinksToTag) {
-					console.log('linkId: ', linkId);
 					if (linkStructure.links[linkId].source === navData.currentDoc) {
-						console.log('pushing a new link!');
 						usedTagLinks.push(linkId);
 					}
 				}

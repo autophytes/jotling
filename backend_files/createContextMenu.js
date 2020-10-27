@@ -33,8 +33,6 @@ const removeUnusedMenuItems = menuTemplate => {
 
 const create = (win, options) => {
   const handleContextMenu = (e, browserParams, props) => {
-    console.log('browserParams:', browserParams)
-    console.log('handle context menu fired!!!')
 
     if (typeof options.shouldShowMenu === 'function' && options.shouldShowMenu(props) === false) {
       return;
@@ -206,25 +204,35 @@ const create = (win, options) => {
       insertDocument: () => ({
         id: 'insertDocument',
         label: 'Insert Document',
-        visible: browserParams.type === 'document' || browserParams.type === 'folder',
+        visible: browserParams.type === 'doc' || browserParams.type === 'folder',
         click() {
-          webContents(win).send('edit-file-tree', { action: 'insert-document', type: browserParams.type, id: browserParams.id })
+          webContents(win).send('insert-file', {
+            insertFileType: 'doc',
+            type: browserParams.type,
+            id: browserParams.id,
+            currentTab: browserParams.currentTab
+          })
         }
       }),
       deleteDocument: () => ({
         id: 'deleteDocument',
         label: 'Delete Document',
-        visible: browserParams.type === 'document',
+        visible: browserParams.type === 'doc',
         click() {
-          webContents(win).send('edit-file-tree', { action: 'delete-document', type: browserParams.type, id: browserParams.id })
+          webContents(win).send('remove-file', { action: 'delete-document', type: browserParams.type, id: browserParams.id })
         }
       }),
       insertFolder: () => ({
         id: 'insertFolder',
         label: 'Insert Folder',
-        visible: browserParams.type === 'document' || browserParams.type === 'folder',
+        visible: browserParams.type === 'doc' || browserParams.type === 'folder',
         click() {
-          webContents(win).send('edit-file-tree', { action: 'insert-folder', type: browserParams.type, id: browserParams.id })
+          webContents(win).send('insert-file', {
+            insertFileType: 'folder',
+            type: browserParams.type,
+            id: browserParams.id,
+            currentTab: browserParams.currentTab
+          })
         }
       }),
       deleteFolder: () => ({
@@ -232,14 +240,14 @@ const create = (win, options) => {
         label: 'Delete Folder',
         visible: browserParams.type === 'folder',
         click() {
-          webContents(win).send('edit-file-tree', { action: 'delete-folder', type: browserParams.type, id: browserParams.id })
+          webContents(win).send('remove-file', { action: 'delete-folder', type: browserParams.type, id: browserParams.id })
         }
       }),
       addLink: () => ({
         id: 'addLink',
         label: browserParams.hasLink ? 'Overwrite Link' : 'Insert Link',
         visible: browserParams.type === 'document-text',
-        enabled: !browserParams.hasLinkDest,
+        enabled: !browserParams.hasLinkDest && !browserParams.inMiddleOfLink,
         click() {
           webContents(win).send('insert-link');
         }

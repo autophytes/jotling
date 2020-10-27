@@ -14,10 +14,11 @@ import DocumentSingleSVG from '../../../assets/svg/DocumentSingleSVG';
 import FolderOpenSVG from '../../../assets/svg/FolderOpenSVG';
 
 import {
-	findFilePath,
 	setObjPropertyAtPropertyPath,
 	insertIntoArrayAtPropertyPath,
 } from '../../../utils/utils';
+
+import { findFilePath } from '../navFunctions';
 
 const LeftNav = () => {
 	const {
@@ -93,6 +94,9 @@ const LeftNav = () => {
 					navData.lastClicked.type,
 					navData.lastClicked.id
 				);
+				console.log('navData.lastClicked.type:', navData.lastClicked.type);
+				console.log('navData.lastClicked.id:', navData.lastClicked.id);
+
 				console.log('tempPath: ', tempPath);
 				filePath =
 					tempPath +
