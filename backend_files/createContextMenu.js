@@ -219,7 +219,11 @@ const create = (win, options) => {
         label: 'Delete Document',
         visible: browserParams.type === 'doc',
         click() {
-          webContents(win).send('remove-file', { action: 'delete-document', type: browserParams.type, id: browserParams.id })
+          webContents(win).send('remove-file', {
+            removeFileType: 'doc',
+            id: browserParams.id,
+            currentTab: browserParams.currentTab
+          })
         }
       }),
       insertFolder: () => ({

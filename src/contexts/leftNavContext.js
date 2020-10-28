@@ -41,6 +41,7 @@ const LeftNavContextProvider = (props) => {
   const linkStructureRef = useRef(linkStructure);
   const docStructureRef = useRef(docStructure);
   const editorStateRef = useRef(null);
+  const navDataRef = useRef(navData);
   const setEditorStateRef = useRef(null);
   const scrollToLinkIdRef = useRef(null);
 
@@ -51,6 +52,10 @@ const LeftNavContextProvider = (props) => {
   useEffect(() => {
     docStructureRef.current = docStructure;
   }, [docStructure]);
+
+  useEffect(() => {
+    navDataRef.current = navData;
+  }, [navData]);
 
   // Initialize the left and right nav width from electron-store
   useEffect(() => {
@@ -96,6 +101,7 @@ const LeftNavContextProvider = (props) => {
         docStructureRef,
         navData,
         setNavData,
+        navDataRef,
         project,
         setProject,
         linkStructure,
@@ -120,7 +126,7 @@ const LeftNavContextProvider = (props) => {
         hoverDestLinkId,
         setHoverDestLinkId,
         syncLinkIdList,
-        setSyncLinkIdList
+        setSyncLinkIdList,
       }}>
       {props.children}
     </LeftNavContext.Provider>

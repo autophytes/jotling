@@ -16,7 +16,7 @@ import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import { removeLinkSourceFromSelection } from './editor/editorFunctions';
-import { addFile } from './navs/navFunctions';
+import { addFile, deleteDocument } from './navs/navFunctions';
 
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
@@ -46,6 +46,7 @@ const AppMgmt = () => {
 		setProject,
 		navData,
 		setNavData,
+		navDataRef,
 		setEditorArchives,
 		peekWindowLinkId,
 		setDisplayLinkPopper,
@@ -269,12 +270,24 @@ const AppMgmt = () => {
 				setDocStructure,
 				currentTab,
 				type,
-				Number(id)
+				Number(id),
+				navDataRef.current,
+				setNavData
 			);
 		});
 
-		ipcRenderer.on('remove-file', (event, { action, type, id, currentTab }) => {
+		ipcRenderer.on('remove-file', (event, { removeFileType, id, currentTab }) => {
 			// Maybe only let users delete empty folders??
+			if (removeFileType === 'doc') {
+				deleteDocument(
+					docStructureRef.current,
+					setDocStructure,
+					linkStructureRef.current,
+					setLinkStructure,
+					currentTab,
+					id
+				);
+			}
 		});
 
 		ipcRenderer.on('request-context-button', (event) => {

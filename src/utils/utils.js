@@ -1,10 +1,16 @@
 // Retrieves a value along an object property path string (draft/1/folders/5/children)
 // Uses '/' as the property delimiter.
 export const retrieveContentAtPropertyPath = (key, obj) => {
-  let newContent = key.split('/').reduce(function (a, b) {
+  console.log(key);
+  const newContent = key.split('/').reduce(function (a, b) {
     return a && a[b];
   }, obj);
-  return JSON.parse(JSON.stringify(newContent));
+
+  console.log('newContent: ', newContent);
+
+  const copiedValues = JSON.parse(JSON.stringify({ value: newContent }))
+
+  return copiedValues.value;
 };
 
 // Inserts a value at an object property path string (draft/1/folders/5/children)
@@ -59,7 +65,7 @@ export const deleteObjPropertyAtPropertyPath = (path, object) => {
 
 // Inserts a value into an array at an object property path string (draft/1/folders/5/children)
 // Uses '/' as the property delimiter.
-export const insertIntoArrayAtPropertyPath = (path, value, object) => {
+export const insertIntoArrayAtPropertyPath = (path, value, object, optionalIndex) => {
   let newObject = JSON.parse(JSON.stringify(object)); // This method performs a deep copy
   let objectRef = newObject; // A moving reference to internal objects within 'object'
   let trimPath = path[0] === '/' ? path.slice(1) : path;
@@ -80,7 +86,14 @@ export const insertIntoArrayAtPropertyPath = (path, value, object) => {
   }
 
   // Set the final property in our path to our value
-  objectRef[pathArray[arrayLength - 1]].push(value);
+  if (optionalIndex !== undefined
+    && optionalIndex >= 0
+    && optionalIndex < objectRef[pathArray[arrayLength - 1]].length) {
+    objectRef[pathArray[arrayLength - 1]].splice(optionalIndex, 0, value);
+  } else {
+    objectRef[pathArray[arrayLength - 1]].push(value);
+  }
+
   // Object was mutated by our change at the reference location above.
   return newObject;
 };

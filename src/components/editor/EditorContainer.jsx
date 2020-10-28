@@ -315,28 +315,24 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				}
 			}
 			if (startEntityKey === null) {
-				console.log('startEntityKey:', startEntityKey);
 				return 'not-handled';
 			}
 
 			// Ensuring we're typing at the end of the block
 			const selectionEnd = selection.getEndOffset();
 			if (blockLength !== selectionEnd) {
-				console.log('selectionEnd:', selectionEnd);
 				return 'not-handled';
 			}
 
 			// Ensure the entity is a link source or dest
 			const entity = contentState.getEntity(startEntityKey);
 			if (entity && !['LINK-SOURCE', 'LINK-DEST'].includes(entity.getType())) {
-				console.log('entity.getType():', entity.getType());
 				return 'not-handled';
 			}
 
 			// Ensure the next block starts with the same entity
 			const nextBlock = contentState.getBlockAfter(blockKey);
 			if (nextBlock && nextBlock.getEntityAt(0) !== startEntityKey) {
-				console.log('nextBlock.getEntityAt(0):', nextBlock.getEntityAt(0));
 				return 'not-handled';
 			}
 

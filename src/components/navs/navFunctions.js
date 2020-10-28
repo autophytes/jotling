@@ -1,6 +1,7 @@
 import {
   setObjPropertyAtPropertyPath,
   insertIntoArrayAtPropertyPath,
+  retrieveContentAtPropertyPath
 } from '../../utils/utils';
 
 // Inserts a new file/folder into the docStructure
@@ -10,7 +11,9 @@ export const addFile = (
   setDocStructure,
   currentTab,
   lastClickedType,
-  lastClickedId
+  lastClickedId,
+  navData,
+  setNavData
 ) => {
   // Create a docStructure object for our current tab.
   // We'll insert our file and overwrite this section of docStructure.
@@ -68,11 +71,28 @@ export const addFile = (
     console.log(folderStructure);
   }
 
+  let insertIndex;
+  // If we're inserting on a doc, insert the file directly below it
+  if (lastClickedType === 'doc') {
+    const childrenArray = retrieveContentAtPropertyPath(
+      filePath + (filePath === '' ? '' : '/') + 'children',
+      folderStructure
+    );
+    let prevIndex = childrenArray.findIndex((item) => (
+      item.id === lastClickedId && item.type === lastClickedType)
+    );
+    if (prevIndex > -1) {
+      insertIndex = prevIndex + 1;
+    }
+  }
+
+
   // Inserts the new child into our folderStructure at the destination path
   folderStructure = insertIntoArrayAtPropertyPath(
     filePath + (filePath === '' ? '' : '/') + 'children',
     childObject,
-    folderStructure
+    folderStructure,
+    insertIndex
   );
   console.log(folderStructure);
 
@@ -123,3 +143,63 @@ export const findFilePath = (currentFolder, path, fileType, fileId) => {
     }
   }
 };
+
+export const deleteDocument = (docStructure, setDocStructure, linkStructure, setLinkStructure, currentTab, docId) => {
+  console.log('docId:', docId)
+  console.log('currentTab:', currentTab)
+  console.log('docStructure:', docStructure)
+  // Delete from the docStructure
+  // Remove all links on that page from the linkStructure
+  // Remove the actual file
+
+  const fileName = removeDocFromDocStructure(docStructure, setDocStructure, currentTab, docId);
+  removeAllLinksRelatedToFile(linkStructure, setLinkStructure, fileName);
+
+
+
+}
+
+// Removes a specific document from the docStructure and saves it
+const removeDocFromDocStructure = (docStructure, setDocStructure, currentTab, docId) => {
+  const folderStructure = docStructure[currentTab];
+
+  const filePath = findFilePath(folderStructure, '', 'doc', Number(docId));
+  const childrenPath = filePath + (filePath === '' ? '' : '/') + 'children';
+  let childrenArray = retrieveContentAtPropertyPath(
+    childrenPath,
+    folderStructure
+  );
+  const docIndex = childrenArray.findIndex((item) => (
+    item.id === Number(docId) && item.type === 'doc')
+  );
+
+  const fileName = childrenArray[docIndex].fileName;
+  childrenArray.splice(docIndex, 1);
+
+  const newFolderStructure = setObjPropertyAtPropertyPath(childrenPath, childrenArray, folderStructure);
+  let newDocStructure = JSON.parse(JSON.stringify(docStructure));
+  newDocStructure[currentTab] = newFolderStructure;
+
+  setDocStructure(newDocStructure);
+
+  return fileName;
+}
+
+const removeAllLinksRelatedToFile = (linkStructure, setLinkStructure, fileName) => {
+  console.log('removing links for: ');
+  console.log('fileName:', fileName)
+  console.log('linkStructure:', linkStructure)
+
+
+
+  // find fileName in docTags, retrive the tags to that page
+  //   remove the fileName property from docTags
+  // in tagLinks, find all linkIds TO this page
+  //   remove the tag from the tagLinks
+  // in docLinks, find all linkIds FROM this page and what tag they link to
+  //   remove this fileName property from docLinks
+  // in tagLinks, for each tag that was linked to FROM this page (using linkId and tag from above), remove from arrays
+  // in links, delete all of the linkIds that were linked FROM this page
+  //   find the source for all the linkIds TO this page. Remove those links.
+  // in docLinks, for each source of linkIds TO this page, remove that linkId from that source
+}
