@@ -16,7 +16,7 @@ import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import { removeLinkSourceFromSelection } from './editor/editorFunctions';
-import { addFile, deleteDocument } from './navs/navFunctions';
+import { addFile, deleteDocument, deleteFolder } from './navs/navFunctions';
 
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
@@ -285,7 +285,19 @@ const AppMgmt = () => {
 					linkStructureRef.current,
 					setLinkStructure,
 					currentTab,
-					id
+					id,
+					navDataRef.current,
+					setNavData
+				);
+			}
+			if (removeFileType === 'folder') {
+				deleteFolder(
+					docStructureRef.current,
+					setDocStructure,
+					currentTab,
+					id,
+					navDataRef.current,
+					setNavData
 				);
 			}
 		});
@@ -322,7 +334,7 @@ const AppMgmt = () => {
 			<TopNav />
 			<LeftNav />
 			<RightNav />
-			<EditorContainer {...{ saveProject, setSaveProject }} />
+			{navData.currentDoc && <EditorContainer {...{ saveProject, setSaveProject }} />}
 			<LoadingOverlay {...{ structureLoaded }} />
 			{peekWindowLinkId !== null && <PeekDocument />}
 			{showEditorSettings && <EditorSettings />}

@@ -244,7 +244,12 @@ const create = (win, options) => {
         label: 'Delete Folder',
         visible: browserParams.type === 'folder',
         click() {
-          webContents(win).send('remove-file', { action: 'delete-folder', type: browserParams.type, id: browserParams.id })
+          webContents(win).send('remove-file', {
+            removeFileType: 'folder',
+            type: 'folder',
+            id: browserParams.id,
+            currentTab: browserParams.currentTab
+          })
         }
       }),
       addLink: () => ({

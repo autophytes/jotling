@@ -1,7 +1,10 @@
+import { ipcRenderer } from 'electron';
+
 import {
   setObjPropertyAtPropertyPath,
   insertIntoArrayAtPropertyPath,
-  retrieveContentAtPropertyPath
+  retrieveContentAtPropertyPath,
+  findFirstDocInFolder
 } from '../../utils/utils';
 
 // Inserts a new file/folder into the docStructure
@@ -117,7 +120,6 @@ export const addFile = (
   setDocStructure({ ...docStructure, [currentTab]: folderStructure, maxIds });
 };
 
-
 // Finds the file path of a given file a docStructure folder
 export const findFilePath = (currentFolder, path, fileType, fileId) => {
   // For this folder level's children, look for a matching type and id
@@ -144,23 +146,113 @@ export const findFilePath = (currentFolder, path, fileType, fileId) => {
   }
 };
 
-export const deleteDocument = (docStructure, setDocStructure, linkStructure, setLinkStructure, currentTab, docId) => {
+export const deleteDocument = (
+  origDocStructure, setDocStructure, origLinkStructure, setLinkStructure, currentTab, docId, navData, setNavData
+) => {
   console.log('docId:', docId)
   console.log('currentTab:', currentTab)
-  console.log('docStructure:', docStructure)
-  // Delete from the docStructure
-  // Remove all links on that page from the linkStructure
-  // Remove the actual file
+  console.log('origDocStructure:', origDocStructure)
+  // DONE - Delete from the docStructure
+  // DONE - Remove all links on that page from the linkStructure
+  // DONE - If the file is open, close it. Show the next file? Blank page?
+  // NAHHHH - Remove the file from the editorState archives
+  // DONE - Rename actual file to _deleted_doc3.json so it is recoverable
 
-  const fileName = removeDocFromDocStructure(docStructure, setDocStructure, currentTab, docId);
-  removeAllLinksRelatedToFile(linkStructure, setLinkStructure, fileName);
+  const { fileName, docStructure } = removeDocFromDocStructure(origDocStructure, currentTab, docId);
+  const linkStructure = removeAllLinksRelatedToFile(origLinkStructure, setLinkStructure, fileName);
+
+  if (navData.currentDoc === fileName) {
+    let currentDoc = '';
+    let lastClicked = { type: '', id: '' }
+
+    const response = findFirstDocInFolder(docStructure[currentTab]);
+    console.log('response:', response)
+    if (response) {
+      currentDoc = response.docName;
+      lastClicked = {
+        type: 'doc',
+        id: response.docId
+      }
+    }
+
+    setNavData({
+      ...navData,
+      currentDoc,
+      lastClicked
+    })
+  }
+
+  // Tell electron to rename the file (prefix with '_deleted_')
+  ipcRenderer.invoke(
+    'rename-doc',
+    navData.currentTempPath,
+    fileName, // Original doc name
+    '_deleted_' + fileName // New doc name
+  );
+
+  setDocStructure(docStructure);
+  setLinkStructure(linkStructure);
+}
+
+export const deleteFolder = (origDocStructure, setDocStructure, currentTab, folderId, navData, setNavData) => {
+  // Check if folder is empty
+  // Find file path of the folder
+  // Run findFirstDocInFolder. If false, folder has no document children (but could have empty folders)
+  // Then remove from doc structure
+
+  let docStructure = JSON.parse(JSON.stringify(origDocStructure));
+
+  // Check if folder is empty.
+  const filePath = findFilePath(docStructure[currentTab], '', 'folder', Number(folderId));
+  const folderPath = filePath + (filePath ? '/' : '') + `folders/${folderId}`;
+  const folder = retrieveContentAtPropertyPath(folderPath, docStructure[currentTab])
+  const firstDoc = findFirstDocInFolder(folder);
+
+  // Folder not empty. Show user warning.
+  if (firstDoc !== false) {
+    console.log('Folder not empty!')
+    // Pop up a warning message explaining that the folder needs to have no documents
+    // Use a popup window or a popper?
+    return;
+  }
+
+  // Delete the folder from the section of the docStructure
+  let parentFolder = filePath ?
+    retrieveContentAtPropertyPath(filePath, docStructure[currentTab]) :
+    docStructure[currentTab];
+  console.log('parentFolder:', parentFolder)
+  delete parentFolder.folders[folderId];
+  const childIndex = parentFolder.children.findIndex((item) => item.type === 'folder' && item.id === Number(folderId));
+  parentFolder.children.splice(childIndex, 1);
+
+  // Update the copied docStructure with the changes
+  if (filePath) {
+    const newFolder = setObjPropertyAtPropertyPath(filePath, parentFolder, docStructure[currentTab]);
+    docStructure[currentTab] = newFolder;
+  } else {
+    docStructure[currentTab] = parentFolder;
+  }
+  setDocStructure(docStructure);
+
+  // Reset last clicked
+  if (navData.lastClicked.id === Number(folderId) && navData.lastClicked.type === 'folder') {
+    console.log('resetting navData');
+    setNavData({
+      ...navData,
+      lastClicked: {
+        id: '',
+        type: ''
+      }
+    })
+  }
 
 
 
+  console.log('We would now delete the folder!!')
 }
 
 // Removes a specific document from the docStructure and saves it
-const removeDocFromDocStructure = (docStructure, setDocStructure, currentTab, docId) => {
+const removeDocFromDocStructure = (docStructure, currentTab, docId) => {
   const folderStructure = docStructure[currentTab];
 
   const filePath = findFilePath(folderStructure, '', 'doc', Number(docId));
@@ -180,26 +272,65 @@ const removeDocFromDocStructure = (docStructure, setDocStructure, currentTab, do
   let newDocStructure = JSON.parse(JSON.stringify(docStructure));
   newDocStructure[currentTab] = newFolderStructure;
 
-  setDocStructure(newDocStructure);
+  // setDocStructure(newDocStructure);
 
-  return fileName;
+  return { fileName, docStructure: newDocStructure };
 }
 
 const removeAllLinksRelatedToFile = (linkStructure, setLinkStructure, fileName) => {
-  console.log('removing links for: ');
-  console.log('fileName:', fileName)
-  console.log('linkStructure:', linkStructure)
-
-
+  let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
 
   // find fileName in docTags, retrive the tags to that page
   //   remove the fileName property from docTags
+  const tagList = newLinkStructure.docTags[fileName];
+  delete newLinkStructure.docTags[fileName];
+
+
   // in tagLinks, find all linkIds TO this page
   //   remove the tag from the tagLinks
+  let linksToPage = [];
+  if (tagList && tagList.length) {
+    for (let tag of tagList) {
+      const linkList = newLinkStructure.tagLinks[tag];
+      linksToPage = [...linksToPage, ...linkList];
+      delete newLinkStructure.tagLinks[tag];
+    }
+  }
+
   // in docLinks, find all linkIds FROM this page and what tag they link to
   //   remove this fileName property from docLinks
-  // in tagLinks, for each tag that was linked to FROM this page (using linkId and tag from above), remove from arrays
-  // in links, delete all of the linkIds that were linked FROM this page
-  //   find the source for all the linkIds TO this page. Remove those links.
+  const linksFromPage = newLinkStructure.docLinks[fileName];
+  delete newLinkStructure.docLinks[fileName];
+
+  // in tagLinks, for each tag that was linked to FROM this page (using linkId and tag from above)
+  //   remove from arrays
+  if (linksFromPage) {
+    for (let linkId in linksFromPage) {
+      const tag = linksFromPage[linkId];
+      let linkArray = newLinkStructure.tagLinks[tag];
+
+      const index = linkArray.findIndex((item) => item === Number(linkId));
+      linkArray.splice(index, 1);
+
+      newLinkStructure.tagLinks[tag] = linkArray;
+
+      // Delete entry in "links"
+      delete newLinkStructure.links[linkId];
+    }
+  }
+
+  // in links, find the source for all the linkIds TO this page. Remove those links.
   // in docLinks, for each source of linkIds TO this page, remove that linkId from that source
+  if (linksToPage.length) {
+    for (let linkId of linksToPage) {
+      const source = newLinkStructure.links[linkId].source;
+      delete newLinkStructure.links[linkId];
+      delete newLinkStructure.docLinks[source][linkId];
+    }
+  }
+
+  // setLinkStructure(newLinkStructure);
+
+  return newLinkStructure;
+
 }

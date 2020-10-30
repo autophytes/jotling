@@ -6,8 +6,6 @@ export const retrieveContentAtPropertyPath = (key, obj) => {
     return a && a[b];
   }, obj);
 
-  console.log('newContent: ', newContent);
-
   const copiedValues = JSON.parse(JSON.stringify({ value: newContent }))
 
   return copiedValues.value;
