@@ -214,9 +214,9 @@ const create = (win, options) => {
           })
         }
       }),
-      deleteDocument: () => ({
+      moveDocToTrash: () => ({
         id: 'deleteDocument',
-        label: 'Delete Document',
+        label: 'Move To Trash',
         visible: browserParams.type === 'doc',
         click() {
           webContents(win).send('remove-file', {
@@ -250,6 +250,26 @@ const create = (win, options) => {
             id: browserParams.id,
             currentTab: browserParams.currentTab
           })
+        }
+      }),
+      restoreDoc: () => ({
+        id: 'restoreDoc',
+        label: 'Restore Document',
+        visible: browserParams.type === 'trash-doc',
+        click() {
+          console.log('restore this document');
+          webContents(win).send('restore-doc', {
+            id: browserParams.id,
+          })
+        }
+      }),
+      deleteDoc: () => ({
+        id: 'deleteDoc',
+        label: 'Delete Document',
+        visible: browserParams.type === 'trash-doc',
+        click() {
+          // NOTE: want a confirmation of some type
+          console.log('delete this document');
         }
       }),
       addLink: () => ({
@@ -324,7 +344,9 @@ const create = (win, options) => {
       defaultActions.paste(),
       defaultActions.separator(),
       defaultActions.insertDocument(),
-      defaultActions.deleteDocument(),
+      defaultActions.moveDocToTrash(),
+      defaultActions.restoreDoc(),
+      defaultActions.deleteDoc(),
       defaultActions.separator(),
       defaultActions.insertFolder(),
       defaultActions.deleteFolder(),

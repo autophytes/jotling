@@ -16,7 +16,7 @@ import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import { removeLinkSourceFromSelection } from './editor/editorFunctions';
-import { addFile, deleteDocument, deleteFolder } from './navs/navFunctions';
+import { addFile, deleteDocument, deleteFolder, restoreDocument } from './navs/navFunctions';
 
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
@@ -300,6 +300,16 @@ const AppMgmt = () => {
 					setNavData
 				);
 			}
+		});
+
+		ipcRenderer.on('restore-doc', (event, { id }) => {
+			restoreDocument(
+				docStructureRef.current,
+				setDocStructure,
+				navDataRef.current,
+				setNavData,
+				id
+			);
 		});
 
 		ipcRenderer.on('request-context-button', (event) => {

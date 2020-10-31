@@ -1,7 +1,7 @@
 // Retrieves a value along an object property path string (draft/1/folders/5/children)
 // Uses '/' as the property delimiter.
 export const retrieveContentAtPropertyPath = (key, obj) => {
-  console.log(key);
+
   const newContent = key.split('/').reduce(function (a, b) {
     return a && a[b];
   }, obj);
@@ -64,7 +64,9 @@ export const deleteObjPropertyAtPropertyPath = (path, object) => {
 // Inserts a value into an array at an object property path string (draft/1/folders/5/children)
 // Uses '/' as the property delimiter.
 export const insertIntoArrayAtPropertyPath = (path, value, object, optionalIndex) => {
+  console.log('object:', object)
   let newObject = JSON.parse(JSON.stringify(object)); // This method performs a deep copy
+  console.log('newObject:', newObject)
   let objectRef = newObject; // A moving reference to internal objects within 'object'
   let trimPath = path[0] === '/' ? path.slice(1) : path;
   let pathArray = trimPath.split('/');
@@ -75,13 +77,17 @@ export const insertIntoArrayAtPropertyPath = (path, value, object, optionalIndex
   // Move our reference down the file path inside the object
   for (let i = 0; i < arrayLength - 1; i++) {
     let pathSegment = pathArray[i];
+    console.log('pathSegment:', pathSegment)
     // If the object at the path doesn't exist, we'll create it.
     if (!objectRef[pathSegment]) {
       objectRef[pathSegment] = {};
+      console.log('objectRef[pathSegment]:', objectRef[pathSegment])
     }
     // Move the object reference to the next location down.
     objectRef = objectRef[pathSegment];
   }
+
+  console.log('objectRef:', objectRef)
 
   // Set the final property in our path to our value
   if (optionalIndex !== undefined
@@ -123,7 +129,6 @@ export const findMaxFileTypeIds = (currentFolder) => {
 
   return childIds;
 };
-
 
 // Updates the name of a file/folder in a given 'children' array in the docStructure
 export const updateChildName = (
@@ -265,3 +270,20 @@ export const findTitleForGivenDocFileName = (currentFolder, fileName) => {
   // If no match in any of the children, return false
   return false;
 };
+
+// Finds the deepest folder level along a path that has a valid children folder. Returns that path.
+export const findFurthestChildrenFolderAlongPath = (currentFolder, path) => {
+  let pathArray = path.split('/');
+
+  for (let i = pathArray.length; i >= 0; i--) {
+    let pathSubArray = pathArray.slice(0, i);
+    pathSubArray.push('children');
+    const path = pathSubArray.join('/');
+
+    const content = retrieveContentAtPropertyPath(path, currentFolder);
+
+    if (content) {
+      return path;
+    }
+  }
+}

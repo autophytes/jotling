@@ -4,7 +4,8 @@ import {
   setObjPropertyAtPropertyPath,
   insertIntoArrayAtPropertyPath,
   retrieveContentAtPropertyPath,
-  findFirstDocInFolder
+  findFirstDocInFolder,
+  findFurthestChildrenFolderAlongPath
 } from '../../utils/utils';
 
 // Inserts a new file/folder into the docStructure
@@ -158,8 +159,8 @@ export const deleteDocument = (
   // NAHHHH - Remove the file from the editorState archives
   // DONE - Rename actual file to _deleted_doc3.json so it is recoverable
 
-  const { fileName, docStructure } = removeDocFromDocStructure(origDocStructure, currentTab, docId);
-  const linkStructure = removeAllLinksRelatedToFile(origLinkStructure, setLinkStructure, fileName);
+  const { fileName, docStructure } = moveDocToTrash(origDocStructure, currentTab, docId);
+  // const linkStructure = removeAllLinksRelatedToFile(origLinkStructure, setLinkStructure, fileName);
 
   if (navData.currentDoc === fileName) {
     let currentDoc = '';
@@ -183,15 +184,15 @@ export const deleteDocument = (
   }
 
   // Tell electron to rename the file (prefix with '_deleted_')
-  ipcRenderer.invoke(
-    'rename-doc',
-    navData.currentTempPath,
-    fileName, // Original doc name
-    '_deleted_' + fileName // New doc name
-  );
+  // ipcRenderer.invoke(
+  //   'rename-doc',
+  //   navData.currentTempPath,
+  //   fileName, // Original doc name
+  //   '_deleted_' + fileName // New doc name
+  // );
 
   setDocStructure(docStructure);
-  setLinkStructure(linkStructure);
+  // setLinkStructure(linkStructure);
 }
 
 export const deleteFolder = (origDocStructure, setDocStructure, currentTab, folderId, navData, setNavData) => {
@@ -252,7 +253,9 @@ export const deleteFolder = (origDocStructure, setDocStructure, currentTab, fold
 }
 
 // Removes a specific document from the docStructure and saves it
-const removeDocFromDocStructure = (docStructure, currentTab, docId) => {
+const moveDocToTrash = (docStructure, currentTab, docId) => {
+  let newDocStructure = JSON.parse(JSON.stringify(docStructure));
+
   const folderStructure = docStructure[currentTab];
 
   const filePath = findFilePath(folderStructure, '', 'doc', Number(docId));
@@ -264,17 +267,69 @@ const removeDocFromDocStructure = (docStructure, currentTab, docId) => {
   const docIndex = childrenArray.findIndex((item) => (
     item.id === Number(docId) && item.type === 'doc')
   );
-
   const fileName = childrenArray[docIndex].fileName;
+
+  const docToMove = {
+    ...childrenArray[docIndex],
+    origPath: childrenPath,
+    origIndex: docIndex,
+    origTab: currentTab
+  };
   childrenArray.splice(docIndex, 1);
 
   const newFolderStructure = setObjPropertyAtPropertyPath(childrenPath, childrenArray, folderStructure);
-  let newDocStructure = JSON.parse(JSON.stringify(docStructure));
+
   newDocStructure[currentTab] = newFolderStructure;
 
-  // setDocStructure(newDocStructure);
+  if (!newDocStructure.trash) {
+    newDocStructure.trash = [];
+  }
+
+  newDocStructure.trash.unshift(docToMove);
 
   return { fileName, docStructure: newDocStructure };
+}
+
+export const restoreDocument = (origDocStructure, setDocStructure, navData, setNavData, docId) => {
+  console.log('docId:', docId)
+  let docStructure = JSON.parse(JSON.stringify(origDocStructure));
+  const trashIndex = docStructure.trash.findIndex((item) => item.type === 'doc' && item.id === Number(docId));
+  console.log('docStructure.trash:', docStructure.trash)
+  console.log('trashIndex:', trashIndex)
+
+  // Copy the item to restore and delete from trash
+  let docToRestore = { ...docStructure.trash[trashIndex] };
+  console.log('docToRestore:', docToRestore)
+
+  docStructure.trash.splice(trashIndex, 1);
+
+  const childrenPath = findFurthestChildrenFolderAlongPath(
+    docStructure[docToRestore.origTab],
+    docToRestore.origPath
+  );
+  console.log('childrenPath:', childrenPath)
+
+  let insertIndex = docToRestore.origPath === childrenPath ? docToRestore.origIndex : undefined;
+  let currentTab = docToRestore.origTab;
+  delete docToRestore.origPath;
+  delete docToRestore.origIndex;
+  delete docToRestore.origTab;
+
+  const folderStructure = insertIntoArrayAtPropertyPath(childrenPath, docToRestore, docStructure[currentTab], insertIndex)
+  docStructure[currentTab] = folderStructure;
+
+  setDocStructure(docStructure);
+
+  setNavData({
+    ...navData,
+    currentTab,
+    currentDoc: docToRestore.fileName,
+    lastClicked: {
+      type: docToRestore.type,
+      id: docToRestore.id
+    }
+  })
+
 }
 
 const removeAllLinksRelatedToFile = (linkStructure, setLinkStructure, fileName) => {

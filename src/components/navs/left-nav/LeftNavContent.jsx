@@ -6,6 +6,7 @@ import NavFolderEmpty from './NavFolderEmpty';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import Collapse from 'react-css-collapse';
+import NavTrash from './NavTrash';
 
 const LeftNavContent = () => {
 	const [openFolders, setOpenFolders] = useState({});
@@ -112,6 +113,7 @@ const LeftNavContent = () => {
 			) : (
 				<></>
 			)}
+			{docStructure.trash && <NavTrash />}
 		</div>
 	);
 };

@@ -148,7 +148,6 @@ const NavDocument = ({
 			) : (
 				<span>{child.name}</span>
 			)}
-			{/* {child.name} */}
 		</button>
 	);
 };

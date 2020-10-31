@@ -503,6 +503,7 @@ button.file-nav:focus {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	text-align: left;
 }
 
 .file-nav.document.active {
