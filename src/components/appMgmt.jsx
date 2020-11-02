@@ -16,7 +16,7 @@ import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import { removeLinkSourceFromSelection } from './editor/editorFunctions';
-import { addFile, deleteDocument, deleteFolder, restoreDocument } from './navs/navFunctions';
+import { addFile, moveDocToTrash, deleteFolder, restoreDocument } from './navs/navFunctions';
 
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
@@ -279,11 +279,9 @@ const AppMgmt = () => {
 		ipcRenderer.on('remove-file', (event, { removeFileType, id, currentTab }) => {
 			// Maybe only let users delete empty folders??
 			if (removeFileType === 'doc') {
-				deleteDocument(
+				moveDocToTrash(
 					docStructureRef.current,
 					setDocStructure,
-					linkStructureRef.current,
-					setLinkStructure,
 					currentTab,
 					id,
 					navDataRef.current,

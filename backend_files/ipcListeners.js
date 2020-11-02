@@ -26,6 +26,7 @@ const registerHandlers = () => {
   readSingleDocumentListener();
   saveProjectListener();
   renameDocListener();
+  deleteDocListener();
 };
 
 // Utility function
@@ -339,6 +340,19 @@ const renameDocListener = () => {
       }
       console.log('renamed the file to: ', newFilePath)
     })
+  });
+};
+
+const deleteDocListener = () => {
+  ipcMain.handle('delete-doc', (e, projectTempPath, fileName) => {
+    const filePath = path.join(projectTempPath, 'docs', fileName);
+
+    try {
+      fs.unlink(filePath);
+    } catch (err) {
+      console.error(`Failed to delete the document ${fileName}.`)
+      console.error(err);
+    }
   });
 };
 

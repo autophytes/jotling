@@ -148,10 +148,9 @@ export const findFilePath = (currentFolder, path, fileType, fileId) => {
 };
 
 export const deleteDocument = (
-  origDocStructure, setDocStructure, origLinkStructure, setLinkStructure, currentTab, docId, navData, setNavData
+  origDocStructure, setDocStructure, origLinkStructure, setLinkStructure, docId, navData, setNavData
 ) => {
   console.log('docId:', docId)
-  console.log('currentTab:', currentTab)
   console.log('origDocStructure:', origDocStructure)
   // DONE - Delete from the docStructure
   // DONE - Remove all links on that page from the linkStructure
@@ -159,15 +158,24 @@ export const deleteDocument = (
   // NAHHHH - Remove the file from the editorState archives
   // DONE - Rename actual file to _deleted_doc3.json so it is recoverable
 
-  const { fileName, docStructure } = moveDocToTrash(origDocStructure, currentTab, docId);
-  // const linkStructure = removeAllLinksRelatedToFile(origLinkStructure, setLinkStructure, fileName);
+  // const { fileName, docStructure } = moveDocToTrash(origDocStructure, currentTab, docId);
 
-  if (navData.currentDoc === fileName) {
+  // Delete item out of trash array
+  let docStructure = JSON.parse(JSON.stringify(origDocStructure));
+  const deleteIndex = docStructure.trash.findIndex((item) => item.id === Number(docId));
+  const deleteItem = { ...docStructure.trash[deleteIndex] }
+  docStructure.trash.splice(deleteIndex, 1);
+
+  // Remove all references in the linkStructure
+  const linkStructure = removeAllLinksRelatedToFile(origLinkStructure, deleteItem.fileName);
+
+  // Updates what file we're viewing if the deleted document was open
+  if (navData.currentDoc === deleteItem.fileName) {
     let currentDoc = '';
     let lastClicked = { type: '', id: '' }
 
-    const response = findFirstDocInFolder(docStructure[currentTab]);
-    console.log('response:', response)
+    const response = findFirstDocInFolder(docStructure[navData.currentTab]);
+
     if (response) {
       currentDoc = response.docName;
       lastClicked = {
@@ -181,18 +189,18 @@ export const deleteDocument = (
       currentDoc,
       lastClicked
     })
+
   }
 
-  // Tell electron to rename the file (prefix with '_deleted_')
-  // ipcRenderer.invoke(
-  //   'rename-doc',
-  //   navData.currentTempPath,
-  //   fileName, // Original doc name
-  //   '_deleted_' + fileName // New doc name
-  // );
+  // Tell electron to delete the file
+  ipcRenderer.invoke(
+    'delete-doc',
+    navData.currentTempPath,
+    deleteItem.fileName
+  );
 
   setDocStructure(docStructure);
-  // setLinkStructure(linkStructure);
+  setLinkStructure(linkStructure);
 }
 
 export const deleteFolder = (origDocStructure, setDocStructure, currentTab, folderId, navData, setNavData) => {
@@ -253,11 +261,12 @@ export const deleteFolder = (origDocStructure, setDocStructure, currentTab, fold
 }
 
 // Removes a specific document from the docStructure and saves it
-const moveDocToTrash = (docStructure, currentTab, docId) => {
-  let newDocStructure = JSON.parse(JSON.stringify(docStructure));
+export const moveDocToTrash = (origDocStructure, setDocStructure, currentTab, docId, navData, setNavData) => {
+  let newDocStructure = JSON.parse(JSON.stringify(origDocStructure));
 
-  const folderStructure = docStructure[currentTab];
+  const folderStructure = origDocStructure[currentTab];
 
+  // Finding our variables to use
   const filePath = findFilePath(folderStructure, '', 'doc', Number(docId));
   const childrenPath = filePath + (filePath === '' ? '' : '/') + 'children';
   let childrenArray = retrieveContentAtPropertyPath(
@@ -269,6 +278,7 @@ const moveDocToTrash = (docStructure, currentTab, docId) => {
   );
   const fileName = childrenArray[docIndex].fileName;
 
+  // Remove our doc from our old children array
   const docToMove = {
     ...childrenArray[docIndex],
     origPath: childrenPath,
@@ -276,30 +286,46 @@ const moveDocToTrash = (docStructure, currentTab, docId) => {
     origTab: currentTab
   };
   childrenArray.splice(docIndex, 1);
-
   const newFolderStructure = setObjPropertyAtPropertyPath(childrenPath, childrenArray, folderStructure);
 
+  // Insert the doc into the trash
   newDocStructure[currentTab] = newFolderStructure;
-
   if (!newDocStructure.trash) {
     newDocStructure.trash = [];
   }
-
   newDocStructure.trash.unshift(docToMove);
 
-  return { fileName, docStructure: newDocStructure };
+  // If our deleted file was selected, select the first available file around it
+  if (navData.currentDoc === fileName) {
+    let currentDoc = '';
+    let lastClicked = { type: '', id: '' }
+
+    const response = findFirstDocInFolder(newDocStructure[currentTab]);
+    console.log('response:', response)
+    if (response) {
+      currentDoc = response.docName;
+      lastClicked = {
+        type: 'doc',
+        id: response.docId
+      }
+    }
+
+    setNavData({
+      ...navData,
+      currentDoc,
+      lastClicked
+    })
+  }
+
+  setDocStructure(newDocStructure);
 }
 
 export const restoreDocument = (origDocStructure, setDocStructure, navData, setNavData, docId) => {
-  console.log('docId:', docId)
   let docStructure = JSON.parse(JSON.stringify(origDocStructure));
   const trashIndex = docStructure.trash.findIndex((item) => item.type === 'doc' && item.id === Number(docId));
-  console.log('docStructure.trash:', docStructure.trash)
-  console.log('trashIndex:', trashIndex)
 
   // Copy the item to restore and delete from trash
   let docToRestore = { ...docStructure.trash[trashIndex] };
-  console.log('docToRestore:', docToRestore)
 
   docStructure.trash.splice(trashIndex, 1);
 
@@ -307,7 +333,6 @@ export const restoreDocument = (origDocStructure, setDocStructure, navData, setN
     docStructure[docToRestore.origTab],
     docToRestore.origPath
   );
-  console.log('childrenPath:', childrenPath)
 
   let insertIndex = docToRestore.origPath === childrenPath ? docToRestore.origIndex : undefined;
   let currentTab = docToRestore.origTab;
@@ -332,7 +357,7 @@ export const restoreDocument = (origDocStructure, setDocStructure, navData, setN
 
 }
 
-const removeAllLinksRelatedToFile = (linkStructure, setLinkStructure, fileName) => {
+const removeAllLinksRelatedToFile = (linkStructure, fileName) => {
   let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
 
   // find fileName in docTags, retrive the tags to that page

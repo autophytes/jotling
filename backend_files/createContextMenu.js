@@ -215,7 +215,7 @@ const create = (win, options) => {
         }
       }),
       moveDocToTrash: () => ({
-        id: 'deleteDocument',
+        id: 'moveToTrash',
         label: 'Move To Trash',
         visible: browserParams.type === 'doc',
         click() {
@@ -268,6 +268,9 @@ const create = (win, options) => {
         label: 'Delete Document',
         visible: browserParams.type === 'trash-doc',
         click() {
+          webContents(win).send('delete-doc', {
+            id: browserParams.id,
+          })
           // NOTE: want a confirmation of some type
           console.log('delete this document');
         }
