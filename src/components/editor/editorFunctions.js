@@ -182,7 +182,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
         if (entity.getType() === 'LINK-DEST') {
           usedLinkIdArray.push(entity.data.linkId);
           // Only call the second function for links that are not aliased (which we need to synchronize)
-          if (linkStructure.links[entity.data.linkId].alias) {
+          if (linkStructure.links[entity.data.linkId] && linkStructure.links[entity.data.linkId].alias) {
             return false;
           }
           return true;
@@ -195,6 +195,10 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
         let entityKey = block.getEntityAt(start);
         let entity = contentState.getEntity(entityKey);
         let linkId = entity.data.linkId;
+
+        if (!linkStructure.links[linkId]) {
+
+        }
 
         if (!nonAliasedEntities.hasOwnProperty(entityKey)) {
           nonAliasedEntities[entityKey] = { blockList: [] };
@@ -281,15 +285,49 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
   for (let entityKey of Object.keys(nonAliasedEntities)) {
     let linkData = nonAliasedEntities[entityKey];
-    let structureContent = linkStructure.links[linkData.linkId].content;
+    let structureContent = linkStructure.links[linkData.linkId] ?
+      linkStructure.links[linkData.linkId].content :
+      '';
+
+    // If removing the whole block, set the selection to the start of the next block
+    // Otherwise we'll have a blank block remaining
+    let anchorOffset = linkData.startOffset;
+    let anchorKey = linkData.startBlockKey;
+    console.log('anchorKey:', anchorKey)
+    if (structureContent === '') {
+      const block = linkContentState.getBlockForKey(linkData.endBlockKey);
+      const prevBlock = linkContentState.getBlockBefore(linkData.endBlockKey);
+      if (block.getLength() === linkData.endOffset && prevBlock) {
+        anchorKey = prevBlock.getKey();
+        console.log('anchorKey:', anchorKey)
+        anchorOffset = prevBlock.getLength();
+      }
+    }
 
     const selectionState = SelectionState.createEmpty();
     const linkSelectionState = selectionState.merge({
-      anchorKey: linkData.startBlockKey,
-      anchorOffset: linkData.startOffset,
+      anchorKey: anchorKey,
+      anchorOffset: anchorOffset,
       focusKey: linkData.endBlockKey,
       focusOffset: linkData.endOffset,
     });
+
+    if (structureContent === '') {
+      const block = linkContentState.getBlockForKey(linkData.endBlockKey);
+      console.log('block length: ', block.getLength())
+      console.log('endOffset: ', linkData.endOffset);
+      console.log('text: ', block.getText())
+      console.log('last char: ', block.getText()[linkData.endOffset])
+
+      linkContentState = Modifier.removeRange(
+        linkContentState,
+        linkSelectionState,
+        'forward'
+      );
+
+      // The rest of the code is only relevant if we aren't deleting the block.
+      continue;
+    }
 
     linkContentState = Modifier.replaceText(
       linkContentState,
@@ -298,6 +336,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
       null,
       entityKey
     );
+
 
     const blockList = nonAliasedEntities[entityKey].blockList;
     // for (let blockKey of blockList) {

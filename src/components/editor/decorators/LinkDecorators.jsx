@@ -397,13 +397,10 @@ const syncLinkStructureOnDelay = ({
 
 		// Queue an update to linkStructure with the updated text
 		const newTimeout = setTimeout(() => {
+			let newEntityContent = getAllEntityContent(editorStateRef, blockKey, start, end);
+
 			let newLinkStructure = { ...linkStructureRef.current };
-			newLinkStructure.links[linkId][linkPropName] = getAllEntityContent(
-				editorStateRef,
-				blockKey,
-				start,
-				end
-			);
+			newLinkStructure.links[linkId][linkPropName] = newEntityContent;
 			// getAllEntityContent(editorStateRef, blockKey, start, end);
 			linkStructureRef.current = newLinkStructure;
 			setLinkStructure(newLinkStructure);
@@ -467,30 +464,18 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 					contentToAdd = contentBlock.getText().slice(start, end);
 					linkStart = start;
 					linkEnd = end;
-
-					// if (direction === 'BEFORE') {
-					// 	contentArray.push(contentBlock.getText().slice(start, end));
-					// 	if (end !== contentBlock.getLength()) {
-					// 		continueForward = false;
-					// 	}
-					// } else {
-					// 	contentArray.unshift(contentBlock.getText().slice(start, end));
-					// 	if (start !== 0) {
-					// 		continueForward = false;
-					// 	}
-					// }
 				}
 			);
 
 			if (contentToAdd) {
 				if (direction === 'BEFORE') {
 					contentArray.push(contentToAdd);
-					if (linkStart !== contentBlock.getLength()) {
+					if (linkEnd !== contentBlock.getLength()) {
 						continueForward = false;
 					}
 				} else {
 					contentArray.unshift(contentToAdd);
-					if (linkEnd !== 0) {
+					if (linkStart !== 0) {
 						continueForward = false;
 					}
 				}

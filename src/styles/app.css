@@ -152,7 +152,7 @@ li .public-DraftStyleDefault-block {
 	left: 0;
 	right: 0;
 	top: 0;
-	z-index: 4;
+	z-index: 5;
 	/* background-color: #eecccc; */
 	background-color: var(--color-primary);
 	color: #fafafa;
@@ -341,6 +341,7 @@ li .public-DraftStyleDefault-block {
 	left: 0;
 	background-color: var(--color-background);
 	padding-right: 0;
+	z-index: 4; /* Needs a higher z-index than the right nav so the popup modal overlay covers it */
 }
 
 .right-nav {
