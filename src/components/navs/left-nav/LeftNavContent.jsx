@@ -2,11 +2,13 @@ import React, { useCallback, useState, useContext, useEffect } from 'react';
 import NavDocument from './NavDocument';
 import NavFolder from './NavFolder';
 import NavFolderEmpty from './NavFolderEmpty';
+import NavTrash from './NavTrash';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
+import { buildFileStructure } from '../navFunctions';
+
 import Collapse from 'react-css-collapse';
-import NavTrash from './NavTrash';
 
 const LeftNavContent = () => {
 	const [openFolders, setOpenFolders] = useState({});
@@ -47,69 +49,78 @@ const LeftNavContent = () => {
 	);
 
 	// Loops through the document structure and builds out the file/folder tree
-	const buildFileStructure = useCallback(
-		(doc, path) => {
-			return doc.children.map((child) => {
-				if (child.type === 'doc') {
-					return (
-						<NavDocument
-							child={child}
-							path={[path, 'children'].join('/')}
-							{...{ currentlyDragging, setCurrentlyDragging, openCloseFolder }}
-							key={'doc-' + child.id}
-						/>
-					);
-				}
-				if (child.type === 'folder') {
-					const hasChildren = !!doc.folders[child.id]['children'].length;
-					let isOpen;
-					if (openFolders.hasOwnProperty(child.id)) {
-						isOpen = openFolders[child.id];
-					} else {
-						isOpen = false;
-						setOpenFolders({ ...openFolders, [child.id]: true });
-					}
-					return (
-						<div className='file-nav folder' key={'folder-' + child.id}>
-							<NavFolder
-								child={child}
-								path={[path, 'children'].join('/')}
-								{...{
-									handleFolderClick,
-									openCloseFolder,
-									currentlyDragging,
-									setCurrentlyDragging,
-									isOpen,
-								}}
-							/>
-							<Collapse isOpen={isOpen}>
-								<div className='folder-contents'>
-									{hasChildren ? (
-										buildFileStructure(
-											doc.folders[child.id],
-											[path, 'folders', child.id].join('/')
-										)
-									) : (
-										<NavFolderEmpty
-											path={[path, 'folders', child.id, 'children'].join('/')}
-											currentlyDragging={currentlyDragging}
-										/>
-									)}
-								</div>
-							</Collapse>
-						</div>
-					);
-				}
-				// return <></>;
-			});
-		},
-		[currentlyDragging, openFolders, handleFolderClick, openCloseFolder]
-	);
+	// const buildFileStructure = useCallback(
+	// 	(doc, path) => {
+	// 		return doc.children.map((child) => {
+	// 			if (child.type === 'doc') {
+	// 				return (
+	// 					<NavDocument
+	// 						child={child}
+	// 						path={[path, 'children'].join('/')}
+	// 						{...{ currentlyDragging, setCurrentlyDragging, openCloseFolder }}
+	// 						key={'doc-' + child.id}
+	// 					/>
+	// 				);
+	// 			}
+	// 			if (child.type === 'folder') {
+	// 				const hasChildren = !!doc.folders[child.id]['children'].length;
+	// 				let isOpen;
+	// 				if (openFolders.hasOwnProperty(child.id)) {
+	// 					isOpen = openFolders[child.id];
+	// 				} else {
+	// 					isOpen = false;
+	// 					setOpenFolders({ ...openFolders, [child.id]: true });
+	// 				}
+	// 				return (
+	// 					<div className='file-nav folder' key={'folder-' + child.id}>
+	// 						<NavFolder
+	// 							child={child}
+	// 							path={[path, 'children'].join('/')}
+	// 							{...{
+	// 								handleFolderClick,
+	// 								openCloseFolder,
+	// 								currentlyDragging,
+	// 								setCurrentlyDragging,
+	// 								isOpen,
+	// 							}}
+	// 						/>
+	// 						<Collapse isOpen={isOpen}>
+	// 							<div className='folder-contents'>
+	// 								{hasChildren ? (
+	// 									buildFileStructure(
+	// 										doc.folders[child.id],
+	// 										[path, 'folders', child.id].join('/')
+	// 									)
+	// 								) : (
+	// 									<NavFolderEmpty
+	// 										path={[path, 'folders', child.id, 'children'].join('/')}
+	// 										currentlyDragging={currentlyDragging}
+	// 									/>
+	// 								)}
+	// 							</div>
+	// 						</Collapse>
+	// 					</div>
+	// 				);
+	// 			}
+	// 		});
+	// 	},
+	// 	[currentlyDragging, openFolders, handleFolderClick, openCloseFolder]
+	// );
 
 	return (
 		<div className='left-nav-content'>
 			{Object.keys(docStructure).length ? (
-				buildFileStructure(docStructure[navData.currentTab], '')
+				buildFileStructure(
+					docStructure[navData.currentTab],
+					'',
+					false,
+					handleFolderClick,
+					openFolders,
+					setOpenFolders,
+					openCloseFolder,
+					currentlyDragging,
+					setCurrentlyDragging
+				)
 			) : (
 				<></>
 			)}

@@ -1,12 +1,22 @@
+import React from 'react';
 import { ipcRenderer } from 'electron';
+
+import NavFolder from './left-nav/NavFolder';
+import NavFolderEmpty from './left-nav/NavFolderEmpty';
+import NavDocument from './left-nav/NavDocument';
+
+import Collapse from 'react-css-collapse';
 
 import {
   setObjPropertyAtPropertyPath,
   insertIntoArrayAtPropertyPath,
   retrieveContentAtPropertyPath,
+  deleteObjPropertyAtPropertyPath,
   findFirstDocInFolder,
   findFurthestChildrenFolderAlongPath
 } from '../../utils/utils';
+import NavDocumentTrash from './left-nav/NavDocumentTrash';
+import NavFolderTrash from './left-nav/NavFolderTrash';
 
 // Inserts a new file/folder into the docStructure
 export const addFile = (
@@ -162,9 +172,9 @@ export const deleteDocument = (
 
   // Delete item out of trash array
   let docStructure = JSON.parse(JSON.stringify(origDocStructure));
-  const deleteIndex = docStructure.trash.findIndex((item) => item.id === Number(docId));
-  const deleteItem = { ...docStructure.trash[deleteIndex] }
-  docStructure.trash.splice(deleteIndex, 1);
+  const deleteIndex = docStructure.trash.children.findIndex((item) => item.id === Number(docId));
+  const deleteItem = { ...docStructure.trash.children[deleteIndex] }
+  docStructure.trash.children.splice(deleteIndex, 1);
 
   // Remove all references in the linkStructure
   const linkStructure = removeAllLinksRelatedToFile(origLinkStructure, deleteItem.fileName);
@@ -290,10 +300,10 @@ export const moveDocToTrash = (origDocStructure, setDocStructure, currentTab, do
 
   // Insert the doc into the trash
   newDocStructure[currentTab] = newFolderStructure;
-  if (!newDocStructure.trash) {
-    newDocStructure.trash = [];
+  if (!newDocStructure.trash.children) {
+    newDocStructure.trash.children = [];
   }
-  newDocStructure.trash.unshift(docToMove);
+  newDocStructure.trash.children.unshift(docToMove);
 
   // If our deleted file was selected, select the first available file around it
   if (navData.currentDoc === fileName) {
@@ -320,14 +330,102 @@ export const moveDocToTrash = (origDocStructure, setDocStructure, currentTab, do
   setDocStructure(newDocStructure);
 }
 
+export const moveFolderToTrash = (origDocStructure, setDocStructure, currentTab, folderId, navData, setNavData) => {
+  let newDocStructure = JSON.parse(JSON.stringify(origDocStructure));
+
+  const folderStructure = origDocStructure[currentTab];
+
+  // Finding our variables to use
+  const filePath = findFilePath(folderStructure, '', 'folder', Number(folderId));
+  const childrenPath = filePath + (filePath === '' ? '' : '/') + 'children';
+  let childrenArray = retrieveContentAtPropertyPath(
+    childrenPath,
+    folderStructure
+  );
+  const folderIndex = childrenArray.findIndex((item) => (
+    item.id === Number(folderId) && item.type === 'folder')
+  );
+
+  // Remove our doc from our old children array
+  const folderChildToMove = {
+    ...childrenArray[folderIndex],
+    origPath: childrenPath,
+    origIndex: folderIndex,
+    origTab: currentTab
+  };
+  childrenArray.splice(folderIndex, 1);
+
+  const folderPath = filePath + (filePath === '' ? '' : '/') + 'folders/' + folderId;
+  let folderObjToMove = retrieveContentAtPropertyPath(
+    folderPath,
+    folderStructure
+  );
+
+  // Update the metadata on the folderObjToMove
+  let updatedFolderObjToMove = addRestoreDataToAllChildren(
+    folderStructure.folders[folderId],
+    folderPath,
+    currentTab
+  )
+  console.log('folder with updated metadata: ', updatedFolderObjToMove);
+
+
+  // Update the original doc structure to remove the folder
+  const folderStructureWithChildren = setObjPropertyAtPropertyPath(childrenPath, childrenArray, folderStructure);
+  const folderStructureRemovedFolder = deleteObjPropertyAtPropertyPath(folderPath, folderStructureWithChildren);
+  newDocStructure[currentTab] = folderStructureRemovedFolder;
+
+
+  // Code to insert the folder into the trash
+
+
+
+  setDocStructure(newDocStructure);
+}
+
+// Finds the file path of a given file a docStructure folder
+const addRestoreDataToAllChildren = (currentFolder, path, currentTab) => {
+  // For this folder level's children, look for a matching type and id
+  let newCurrentFolder = JSON.parse(JSON.stringify(currentFolder))
+
+  // Add the meta to the children
+  let newChildrenArray = [];
+  const childrenPath = path + (path === '' ? '' : '/') + 'children';
+  newCurrentFolder.children.forEach((child, i) => {
+    newChildrenArray.push({
+      ...child,
+      origPath: childrenPath,
+      origIndex: i,
+      origTab: currentTab
+    })
+  })
+  newCurrentFolder.children = newChildrenArray;
+
+  // Update all the children inside the folder (recursive, digs to all levels)
+  for (let folderName in newCurrentFolder.folders) {
+    let folderObject = addRestoreDataToAllChildren(
+      currentFolder.folders[folderName],
+      path + (path === '' ? '' : '/') + 'folders/' + folderName,
+      currentTab
+    );
+
+    newCurrentFolder.folders[folderName] = folderObject;
+  }
+
+  return newCurrentFolder;
+};
+
 export const restoreDocument = (origDocStructure, setDocStructure, navData, setNavData, docId) => {
+  // EVENTUALLY, if restoring from a subfolder, we need to be looking at the correct children array
+
+
   let docStructure = JSON.parse(JSON.stringify(origDocStructure));
-  const trashIndex = docStructure.trash.findIndex((item) => item.type === 'doc' && item.id === Number(docId));
+  const trashIndex = docStructure.trash.children.findIndex((item) => item.type === 'doc' && item.id === Number(docId));
 
   // Copy the item to restore and delete from trash
-  let docToRestore = { ...docStructure.trash[trashIndex] };
+  let docToRestore = { ...docStructure.trash.children[trashIndex] };
 
-  docStructure.trash.splice(trashIndex, 1);
+  docStructure.trash.children.splice(trashIndex, 1);
 
   const childrenPath = findFurthestChildrenFolderAlongPath(
     docStructure[docToRestore.origTab],
@@ -414,3 +512,91 @@ const removeAllLinksRelatedToFile = (linkStructure, fileName) => {
   return newLinkStructure;
 
 }
+
+// Loops through the document structure and builds out the file/folder tree
+export const buildFileStructure = (
+  doc,
+  path,
+  isTrash,
+  handleFolderClick,
+  openFolders,
+  setOpenFolders,
+  openCloseFolder,
+  currentlyDragging,
+  setCurrentlyDragging
+) => {
+
+  return doc.children.map((child) => {
+    if (child.type === 'doc') {
+      return isTrash ?
+        (<NavDocumentTrash
+          child={child}
+          key={'doc-' + child.id}
+        />)
+        :
+        (<NavDocument
+          child={child}
+          path={[path, 'children'].join('/')}
+          {...{ currentlyDragging, setCurrentlyDragging, openCloseFolder }}
+          key={'doc-' + child.id}
+        />)
+        ;
+    }
+    if (child.type === 'folder') {
+      const hasChildren = !!doc.folders[child.id]['children'].length;
+      let isOpen;
+      if (openFolders.hasOwnProperty(child.id)) {
+        isOpen = openFolders[child.id];
+      } else {
+        isOpen = false;
+        setOpenFolders({ ...openFolders, [child.id]: true });
+      }
+      return (
+        <div className='file-nav folder' key={'folder-' + child.id}>
+          {isTrash ? (
+            <NavFolderTrash
+              child={child}
+              handleFolderClick={handleFolderClick}
+              isOpen={openFolders[child.id]}
+            />
+          ) : (
+              <NavFolder
+                child={child}
+                path={[path, 'children'].join('/')}
+                {...{
+                  handleFolderClick,
+                  openCloseFolder,
+                  currentlyDragging,
+                  setCurrentlyDragging,
+                  isOpen,
+                }}
+              />
+            )}
+
+          <Collapse isOpen={isOpen}>
+            <div className='folder-contents'>
+              {hasChildren ? (
+                buildFileStructure(
+                  doc.folders[child.id],
+                  [path, 'folders', child.id].join('/'),
+                  isTrash,
+                  handleFolderClick,
+                  openFolders,
+                  setOpenFolders,
+                  openCloseFolder,
+                  currentlyDragging,
+                  setCurrentlyDragging
+                )
+              ) : (
+                  <NavFolderEmpty
+                    path={[path, 'folders', child.id, 'children'].join('/')}
+                    currentlyDragging={currentlyDragging}
+                  />
+                )}
+            </div>
+          </Collapse>
+        </div>
+      );
+    }
+  });
+};

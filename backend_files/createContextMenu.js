@@ -215,7 +215,7 @@ const create = (win, options) => {
         }
       }),
       moveDocToTrash: () => ({
-        id: 'moveToTrash',
+        id: 'moveDocToTrash',
         label: 'Move To Trash',
         visible: browserParams.type === 'doc',
         click() {
@@ -239,9 +239,9 @@ const create = (win, options) => {
           })
         }
       }),
-      deleteFolder: () => ({
-        id: 'deleteFolder',
-        label: 'Delete Folder',
+      moveFolderToTrash: () => ({
+        id: 'moveFolderToTrash',
+        label: 'Move To Trash',
         visible: browserParams.type === 'folder',
         click() {
           webContents(win).send('remove-file', {
@@ -352,7 +352,7 @@ const create = (win, options) => {
       defaultActions.deleteDoc(),
       defaultActions.separator(),
       defaultActions.insertFolder(),
-      defaultActions.deleteFolder(),
+      defaultActions.moveFolderToTrash(),
       defaultActions.separator(),
       defaultActions.addLink(),
       defaultActions.removeLink(),

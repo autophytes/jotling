@@ -35,7 +35,10 @@ const docStructureTemplate = {
       { type: 'folder', id: 4, name: 'Locations' },
     ],
   },
-  trash: []
+  trash: {
+    folders: {},
+    children: []
+  }
 };
 
 const linkStructureTemplate = {

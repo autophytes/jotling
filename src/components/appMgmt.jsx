@@ -16,7 +16,13 @@ import LoadingOverlay from './loadingOverlay';
 
 import { findFirstDocInFolder } from '../utils/utils';
 import { removeLinkSourceFromSelection } from './editor/editorFunctions';
-import { addFile, moveDocToTrash, deleteFolder, restoreDocument } from './navs/navFunctions';
+import {
+	addFile,
+	moveDocToTrash,
+	deleteFolder,
+	restoreDocument,
+	moveFolderToTrash,
+} from './navs/navFunctions';
 
 import Store from 'electron-store';
 import Mousetrap from 'mousetrap';
@@ -289,7 +295,7 @@ const AppMgmt = () => {
 				);
 			}
 			if (removeFileType === 'folder') {
-				deleteFolder(
+				moveFolderToTrash(
 					docStructureRef.current,
 					setDocStructure,
 					currentTab,
@@ -297,6 +303,14 @@ const AppMgmt = () => {
 					navDataRef.current,
 					setNavData
 				);
+				// deleteFolder(
+				// 	docStructureRef.current,
+				// 	setDocStructure,
+				// 	currentTab,
+				// 	id,
+				// 	navDataRef.current,
+				// 	setNavData
+				// );
 			}
 		});
 
