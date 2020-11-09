@@ -4,26 +4,21 @@ import { ipcRenderer } from 'electron';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import PopupModal from '../../containers/PopupModal';
+import NavDocumentTrash from './NavDocumentTrash';
 import ConfirmDeleteForm from '../../forms/ConfirmDeleteForm';
 
 import TrashSVG from '../../../assets/svg/TrashSVG';
 
-import { deleteDocument, buildFileStructure } from '../navFunctions';
+import { deleteDocument, deleteFolder, buildFileStructure } from '../navFunctions';
+import { findFilePath, retrieveContentAtPropertyPath } from '../../../utils/utils';
+
 import Collapse from 'react-css-collapse';
-import NavDocumentTrash from './NavDocumentTrash';
 
 const NavTrash = () => {
 	const [isOpen, setIsOpen] = useState(false);
-	const [docToDelete, setDocToDelete] = useState(false);
+	const [itemToDelete, setItemToDelete] = useState(false);
+	const [folderToDelete, setFolderToDelete] = useState(false);
 	const [openFolders, setOpenFolders] = useState({});
-
-	// Toggles open/close on folders
-	const handleFolderClick = useCallback(
-		(folderId) => {
-			setOpenFolders({ ...openFolders, [folderId]: !openFolders[folderId] });
-		},
-		[openFolders, setOpenFolders]
-	);
 
 	const {
 		docStructure,
@@ -35,18 +30,61 @@ const NavTrash = () => {
 		setNavData,
 	} = useContext(LeftNavContext);
 
-	useEffect(() => {
-		ipcRenderer.on('delete-doc', (event, { id }) => {
-			const trashArray = docStructureRef.current.trash.children;
-			const trashItem = trashArray.find((item) => item.id === Number(id));
-			console.log('trashItem: ', trashItem);
+	// Toggles open/close on folders
+	const handleFolderClick = useCallback(
+		(folderId) => {
+			setOpenFolders({ ...openFolders, [folderId]: !openFolders[folderId] });
+		},
+		[openFolders, setOpenFolders]
+	);
 
-			setDocToDelete(trashItem);
+	const handleFileDelete = useCallback(() => {
+		let results;
+		if (itemToDelete.type === 'doc') {
+			results = deleteDocument(
+				docStructureRef.current,
+				linkStructureRef.current,
+				itemToDelete.id,
+				navData
+			);
+		}
+
+		if (itemToDelete.type === 'folder') {
+			results = deleteFolder(
+				docStructureRef.current,
+				linkStructureRef.current,
+				itemToDelete.id,
+				navData
+			);
+		}
+
+		if (results) {
+			results.navData && setNavData(results.navData);
+			results.linkStructure && setLinkStructure(results.linkStructure);
+			results.docStructure && setDocStructure(results.docStructure);
+		}
+	}, [itemToDelete, navData]);
+
+	// Initialize the listener to set the itemToDelete
+	useEffect(() => {
+		ipcRenderer.on('delete-file', (event, { id, type }) => {
+			const trashFilePath = findFilePath(docStructureRef.current.trash, '', type, Number(id));
+			const trashChildrenPath = trashFilePath + (trashFilePath ? '/' : '') + 'children';
+
+			const trashArray = retrieveContentAtPropertyPath(
+				trashChildrenPath,
+				docStructureRef.current.trash
+			);
+			const trashItem = trashArray.find((item) => item.id === Number(id));
+			console.log('trashItem:', trashItem);
+
+			setItemToDelete(trashItem);
 		});
 	}, []);
 
 	return (
 		<>
+			<hr />
 			<div className='file-nav folder'>
 				<button className='file-nav folder title' onClick={() => setIsOpen(!isOpen)}>
 					<div className='svg-wrapper'>
@@ -75,23 +113,17 @@ const NavTrash = () => {
 				</Collapse>
 			</div>
 
-			{/* Confirm Delete */}
-			{docToDelete !== false && (
-				<PopupModal setDisplayModal={setDocToDelete} width='30rem'>
+			{/* Confirm Delete Document / Folder */}
+			{itemToDelete !== false && (
+				<PopupModal setDisplayModal={setItemToDelete} width='30rem'>
 					<ConfirmDeleteForm
-						setDisplayModal={setDocToDelete}
-						message={`the document "${docToDelete.name}"`}
-						deleteFunc={() =>
-							deleteDocument(
-								docStructureRef.current,
-								setDocStructure,
-								linkStructureRef.current,
-								setLinkStructure,
-								docToDelete.id,
-								navData,
-								setNavData
-							)
+						setDisplayModal={setItemToDelete}
+						message={
+							itemToDelete.type === 'folder'
+								? `the folder "${itemToDelete.name}" and all of its contents`
+								: `the document "${itemToDelete.name}"`
 						}
+						deleteFunc={handleFileDelete}
 					/>
 				</PopupModal>
 			)}

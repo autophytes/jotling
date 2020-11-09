@@ -216,16 +216,16 @@ const LeftNav = () => {
 					<div className='left-nav-sections'>
 						<div
 							className={
-								'nav-section-tab first' + (navData.currentTab === 'pages' ? ' active' : '')
+								'nav-section-tab first' + (navData.currentTab === 'draft' ? ' active' : '')
 							}
 							onClick={() =>
 								setNavData({
 									...navData,
-									currentTab: 'pages',
+									currentTab: 'draft',
 									lastClicked: { type: '', id: '' },
 								})
 							}>
-							<DocumentPagesSVG />
+							<BookDraftSVG />
 						</div>
 						<div
 							className={
@@ -242,18 +242,28 @@ const LeftNav = () => {
 						</div>
 						<div
 							className={
-								'nav-section-tab last' + (navData.currentTab === 'draft' ? ' active' : '')
+								'nav-section-tab last' + (navData.currentTab === 'pages' ? ' active' : '')
 							}
 							onClick={() =>
 								setNavData({
 									...navData,
-									currentTab: 'draft',
+									currentTab: 'pages',
 									lastClicked: { type: '', id: '' },
 								})
 							}>
-							<BookDraftSVG />
+							<DocumentPagesSVG />
 						</div>
 					</div>
+
+					<p className='left-nav-section-title'>
+						{navData.currentTab === 'draft'
+							? 'Manuscript'
+							: navData.currentTab === 'research'
+							? 'Planning'
+							: navData.currentTab === 'pages'
+							? 'Wikis'
+							: ''}
+					</p>
 
 					<LeftNavContent />
 

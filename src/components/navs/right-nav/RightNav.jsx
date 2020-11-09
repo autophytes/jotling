@@ -10,7 +10,7 @@ import RightNavContent from './RightNavContent';
 
 const RightNav = () => {
 	// STATE
-	const [pinNav, setPinNav] = useState(true);
+	const [pinNav, setPinNav] = useState(false);
 	const [isResizing, setIsResizing] = useState(false);
 	const [activeTab, setActiveTab] = useState('tags');
 

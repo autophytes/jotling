@@ -21,6 +21,7 @@ import {
 	moveDocToTrash,
 	deleteFolder,
 	restoreDocument,
+	restoreFolder,
 	moveFolderToTrash,
 } from './navs/navFunctions';
 
@@ -303,19 +304,21 @@ const AppMgmt = () => {
 					navDataRef.current,
 					setNavData
 				);
-				// deleteFolder(
-				// 	docStructureRef.current,
-				// 	setDocStructure,
-				// 	currentTab,
-				// 	id,
-				// 	navDataRef.current,
-				// 	setNavData
-				// );
 			}
 		});
 
 		ipcRenderer.on('restore-doc', (event, { id }) => {
 			restoreDocument(
+				docStructureRef.current,
+				setDocStructure,
+				navDataRef.current,
+				setNavData,
+				id
+			);
+		});
+
+		ipcRenderer.on('restore-folder', (event, { id }) => {
+			restoreFolder(
 				docStructureRef.current,
 				setDocStructure,
 				navDataRef.current,
@@ -344,12 +347,12 @@ const AppMgmt = () => {
 	}, []);
 
 	// If no current doc, finds the first document
-	useEffect(() => {
-		if (!navData.currentDoc && Object.keys(docStructure).length) {
-			console.log('no current doc, reseting');
-			resetCurrentDoc();
-		}
-	}, [docStructure, navData.currentDoc, resetCurrentDoc]);
+	// useEffect(() => {
+	// if (!navData.currentDoc && Object.keys(docStructure).length) {
+	// 	console.log('no current doc, reseting');
+	// 	resetCurrentDoc();
+	// }
+	// }, [docStructure, navData.currentDoc, resetCurrentDoc]);
 
 	return (
 		<>

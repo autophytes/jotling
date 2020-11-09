@@ -1,8 +1,8 @@
 // Retrieves a value along an object property path string (draft/1/folders/5/children)
 // Uses '/' as the property delimiter.
-export const retrieveContentAtPropertyPath = (key, obj) => {
+export const retrieveContentAtPropertyPath = (path, obj) => {
 
-  const newContent = key.split('/').reduce(function (a, b) {
+  const newContent = path.split('/').reduce(function (a, b) {
     return a && a[b];
   }, obj);
 
@@ -64,30 +64,22 @@ export const deleteObjPropertyAtPropertyPath = (path, object) => {
 // Inserts a value into an array at an object property path string (draft/1/folders/5/children)
 // Uses '/' as the property delimiter.
 export const insertIntoArrayAtPropertyPath = (path, value, object, optionalIndex) => {
-  console.log('object:', object)
   let newObject = JSON.parse(JSON.stringify(object)); // This method performs a deep copy
-  console.log('newObject:', newObject)
   let objectRef = newObject; // A moving reference to internal objects within 'object'
   let trimPath = path[0] === '/' ? path.slice(1) : path;
   let pathArray = trimPath.split('/');
   var arrayLength = pathArray.length;
 
-  console.log(pathArray);
-
   // Move our reference down the file path inside the object
   for (let i = 0; i < arrayLength - 1; i++) {
     let pathSegment = pathArray[i];
-    console.log('pathSegment:', pathSegment)
     // If the object at the path doesn't exist, we'll create it.
     if (!objectRef[pathSegment]) {
       objectRef[pathSegment] = {};
-      console.log('objectRef[pathSegment]:', objectRef[pathSegment])
     }
     // Move the object reference to the next location down.
     objectRef = objectRef[pathSegment];
   }
-
-  console.log('objectRef:', objectRef)
 
   // Set the final property in our path to our value
   if (optionalIndex !== undefined
@@ -287,3 +279,29 @@ export const findFurthestChildrenFolderAlongPath = (currentFolder, path) => {
     }
   }
 }
+
+// Finds the file path of a given file a docStructure folder
+export const findFilePath = (currentFolder, path, fileType, fileId) => {
+  // For this folder level's children, look for a matching type and id
+  for (let child of currentFolder.children) {
+    if (child.type === fileType && child.id === fileId) {
+      console.log(`found ${fileType} ${fileId} at ${path}`);
+      return path;
+    }
+  }
+
+  // Look for a matching type and id in the children folders
+  for (let folderName in currentFolder.folders) {
+    let filePath = findFilePath(
+      currentFolder.folders[folderName],
+      path + (path === '' ? '' : '/') + 'folders/' + folderName,
+      fileType,
+      fileId
+    );
+    // console.log(filePath);
+    if (filePath) {
+      console.log(`returned filePath: ${filePath}`);
+      return filePath;
+    }
+  }
+};
