@@ -516,6 +516,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				console.log("There's no currentDoc to load. loadFile() aborted.");
 				return;
 			}
+
 			const loadedFile = await ipcRenderer.invoke(
 				'read-single-document',
 				project.tempPath,
@@ -573,6 +574,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			// Check for existing editorState and load from that if available
 			if (editorArchives.hasOwnProperty(navData.currentDoc)) {
 				const newEditorState = editorArchives[navData.currentDoc].editorState;
+				console.log('navData.currentDoc:', navData.currentDoc);
+
 				// TO-DO: Check for new links to add before setting the editor state
 				const editorStateWithLinks = updateLinkEntities(
 					newEditorState,

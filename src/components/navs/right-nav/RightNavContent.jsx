@@ -4,7 +4,7 @@ import RightNavTags from './RightNavTags/RightNavTags';
 const RightNavContent = ({ activeTab }) => {
 	return (
 		<div className='right-nav-content'>
-			{activeTab === 'tags' && <RightNavTags {...{ activeTab }} />}
+			{/* {activeTab === 'tags' && <RightNavTags {...{ activeTab }} />} */}
 		</div>
 	);
 };

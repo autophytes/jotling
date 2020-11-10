@@ -10,6 +10,7 @@ import { SettingsContext } from '../../../contexts/settingsContext';
 import EllipsisSVG from '../../../assets/svg/EllipsisSVG';
 
 import { createTagLink, selectionHasEntityType } from '../../editor/editorFunctions';
+import { findAllDocsInFolder } from '../navFunctions';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
@@ -31,6 +32,7 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 		navData,
 		editorStyles,
 		editorStateRef,
+		docStructureRef,
 		linkStructureRef,
 		setEditorStateRef,
 		setLinkStructure,
@@ -86,16 +88,22 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 		setRightOffset(newRightOffset);
 	}, [editorStyles, editorSettings, referenceElement]);
 
-	// Update the list of tags when the linkStructure changes
+	// Grab all available wiki pages to link to
 	useEffect(() => {
-		let filteredDocTags = { ...linkStructure.docTags };
-		delete filteredDocTags[navData.currentDoc];
+		const docId = navData.currentDoc.slice(3, -5);
+		let wikiDocs = findAllDocsInFolder(docStructureRef.current.pages, '');
 
-		let newTags = Object.values(filteredDocTags).flat();
-		let filteredTags = newTags.filter((item) => item.includes(tagFilter));
+		// Remove the current page from the wiki docs
+		let currentDocIndex = wikiDocs.findIndex((item) => item.id.toString() === docId);
+		if (currentDocIndex !== -1) {
+			wikiDocs.splice(currentDocIndex, 1);
+		}
+
+		let wikiDocIds = wikiDocs.reduce((array, item) => [...array, item.id.toString()], []);
+		let filteredTags = wikiDocIds.filter((item) => item.includes(tagFilter));
 
 		setAllTags(filteredTags);
-	}, [linkStructure, tagFilter, navData]);
+	}, [tagFilter, navData]);
 
 	// TO-DO
 	// We need to check if the selection (in the editorNav) is contained by the .editor (or container?)

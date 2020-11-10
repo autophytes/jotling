@@ -1,96 +1,81 @@
-import React, { Fragment, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { CompositeDecorator } from 'draft-js';
 import { List } from 'immutable';
 
-// let FragmentWrapper = (props) => {
-// 	useEffect(() => {
-// 		console.log('RERENDERING THE FRAGMENT WRAPPER');
-// 		console.log(props);
-// 	}, []);
-// 	return <Fragment>{props.children}</Fragment>;
-// };
-
 const DecoratorComponentComposition = (props) => {
-  const { decoratorProps, decorators, keyTuple, ...allOtherProps } = props;
-  
-  const [componentIndex, setComponentIndex] = useState(-1);
+	const { decoratorProps, decorators, keyTuple, ...allOtherProps } = props;
 
-  const getComponentForIndex = useCallback((componentIndex) => {
-    const NewComponent = componentIndex !== -1 && keyTuple[componentIndex] ? 
-      decorators[componentIndex].getComponentForKey(keyTuple[componentIndex]) : 
-      null
-    return NewComponent;
-  }, [decorators, keyTuple])
+	const [componentIndex, setComponentIndex] = useState(-1);
 
-  const getNextComponentIndex = useCallback((componentIndex) => {
-    console.log('componentIndex:', componentIndex)
-    let slicedTuple = componentIndex > -1 ? keyTuple.slice(componentIndex + 1) : keyTuple;
-    console.log('slicedTuple:', slicedTuple)
-    let slicedIndex = slicedTuple.findIndex((item) => item !== null);
-    console.log('slicedIndex:', slicedIndex)
-    let newComponentIndex = (componentIndex > -1 && slicedIndex > -1) ?
-      slicedIndex + componentIndex + 1 :
-      slicedIndex;
-      console.log('newComponentIndex:', newComponentIndex)
-    return newComponentIndex;
-  }, [keyTuple])
+	const getComponentForIndex = useCallback(
+		(componentIndex) => {
+			const NewComponent =
+				componentIndex !== -1 && keyTuple[componentIndex]
+					? decorators[componentIndex].getComponentForKey(keyTuple[componentIndex])
+					: null;
+			return NewComponent;
+		},
+		[decorators, keyTuple]
+	);
 
-  const getComponentProps = useCallback((componentIndex) => {
-    // let componentIndex = keyTuple.findIndex((item) => item === key);
-    if (componentIndex === -1) {
-      return {};
-    }
-		return {
-			...allOtherProps,
-			...decoratorProps[componentIndex],
-		};
-  }, [decoratorProps, allOtherProps]);
+	const getNextComponentIndex = useCallback(
+		(componentIndex) => {
+			console.log('componentIndex:', componentIndex);
+			let slicedTuple = componentIndex > -1 ? keyTuple.slice(componentIndex + 1) : keyTuple;
+			console.log('slicedTuple:', slicedTuple);
+			let slicedIndex = slicedTuple.findIndex((item) => item !== null);
+			console.log('slicedIndex:', slicedIndex);
+			let newComponentIndex =
+				componentIndex > -1 && slicedIndex > -1
+					? slicedIndex + componentIndex + 1
+					: slicedIndex;
+			console.log('newComponentIndex:', newComponentIndex);
+			return newComponentIndex;
+		},
+		[keyTuple]
+	);
+
+	const getComponentProps = useCallback(
+		(componentIndex) => {
+			// let componentIndex = keyTuple.findIndex((item) => item === key);
+			if (componentIndex === -1) {
+				return {};
+			}
+			return {
+				...allOtherProps,
+				...decoratorProps[componentIndex],
+			};
+		},
+		[decoratorProps, allOtherProps]
+	);
 
 	useEffect(() => {
-    let newComponentIndex = getNextComponentIndex();
-    setComponentIndex(newComponentIndex);
-  }, [keyTuple, getNextComponentIndex]);
+		let newComponentIndex = getNextComponentIndex();
+		setComponentIndex(newComponentIndex);
+	}, [keyTuple, getNextComponentIndex]);
 
-  const Component = useMemo(() => getComponentForIndex(componentIndex), [componentIndex, getComponentForIndex]);
-
-
-	// const Composed = keyTuple.reduce((Composition, decoration, index) => {
-	// 	if (decoration !== null) {
-	// 		const decorator = decorators[index];
-	// 		// Grabs the current component to render
-	// 		const Component = decorator.getComponentForKey(decoration);
-	// 		// Only includes the decoratorProps for this specific decorator
-	// 		const componentProps = {
-	// 			...allOtherProps,
-	// 			...decoratorProps[index],
-	// 		};
-	// 		return () => (
-	// 			// Wraps each layer of components in the next level
-	// 			<Component {...componentProps}>
-	// 				<Composition {...allOtherProps} />
-	// 			</Component>
-	// 		);
-	// 	}
-	// 	return Composition;
-	// }, FragmentWrapper);
-
+	const Component = useMemo(() => getComponentForIndex(componentIndex), [
+		componentIndex,
+		getComponentForIndex,
+	]);
 
 	return (
 		// Returns the final combined components
 		<>
-      {Component ? 
-        <Component {...getComponentProps(componentIndex)}
-        childDecorator={{
-          currentIndex: componentIndex,
-          getNextComponentIndex,
-          getComponentForIndex,
-          getComponentProps
-        }}
-        >
-          {props.children}
-        </Component> : 
-        props.children
-      }
+			{Component ? (
+				<Component
+					{...getComponentProps(componentIndex)}
+					childDecorator={{
+						currentIndex: componentIndex,
+						getNextComponentIndex,
+						getComponentForIndex,
+						getComponentProps,
+					}}>
+					{props.children}
+				</Component>
+			) : (
+				props.children
+			)}
 		</>
 	);
 };

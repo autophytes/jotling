@@ -608,21 +608,10 @@ export const restoreFolder = (
 const removeAllLinksRelatedToFile = (linkStructure, fileName) => {
 	let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
 
-	// find fileName in docTags, retrive the tags to that page
-	//   remove the fileName property from docTags
-	const tagList = newLinkStructure.docTags[fileName];
-	delete newLinkStructure.docTags[fileName];
-
-	// in tagLinks, find all linkIds TO this page
-	//   remove the tag from the tagLinks
-	let linksToPage = [];
-	if (tagList && tagList.length) {
-		for (let tag of tagList) {
-			const linkList = newLinkStructure.tagLinks[tag];
-			linksToPage = [...linksToPage, ...linkList];
-			delete newLinkStructure.tagLinks[tag];
-		}
-	}
+	// Grab all links to a page and remove from tagLinks
+	const docId = fileName.slice(3, -5);
+	let linksToPage = linkStructure.tagLinks[docId] ? linkStructure.tagLinks[docId] : [];
+	delete newLinkStructure.tagLinks[docId];
 
 	// in docLinks, find all linkIds FROM this page and what tag they link to
 	//   remove this fileName property from docLinks
@@ -743,4 +732,32 @@ export const buildFileStructure = (
 			);
 		}
 	});
+};
+
+// Return an array of all docs in a given folder
+export const findAllDocsInFolder = (currentFolder, path) => {
+	let docArray = [];
+
+	// For this folder level's children, add all docs to the docArray
+	for (let child of currentFolder.children) {
+		if (child.type === 'doc') {
+			docArray.push({
+				...child,
+				path: path + (path ? '/' : '') + 'children',
+			});
+		}
+	}
+
+	// Find and store all docs from children folders
+	for (let folderName in currentFolder.folders) {
+		let subDocArray = findAllDocsInFolder(
+			currentFolder.folders[folderName],
+			path + (path === '' ? '' : '/') + 'folders/' + folderName
+		);
+		if (subDocArray) {
+			docArray = [...docArray, ...subDocArray];
+		}
+	}
+
+	return docArray;
 };

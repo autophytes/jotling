@@ -29,6 +29,8 @@ import AlignJustifySVG from '../../../assets/svg/editor/AlignJustifySVG';
 import LineSpacingSVG from '../../../assets/svg/editor/LineSpacingSVG';
 import SpellcheckSVG from '../../../assets/svg/editor/SpellcheckSVG';
 import ChainSVG from '../../../assets/svg/ChainSVG';
+import EyeSVG from '../../../assets/svg/EyeSVG';
+import EyeHideSVG from '../../../assets/svg/EyeHideSVG';
 
 // AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
 // unstyled
@@ -97,9 +99,12 @@ const EditorNav = React.memo(
 		const [blockType, setBlockType] = useState('unstyled');
 
 		// CONTEXT
-		const { editorStyles, displayLinkPopper, setDisplayLinkPopper } = useContext(
-			LeftNavContext
-		);
+		const {
+			editorStyles,
+			setEditorStyles,
+			displayLinkPopper,
+			setDisplayLinkPopper,
+		} = useContext(LeftNavContext);
 		const { editorSettings } = useContext(SettingsContext);
 
 		// Calculates the left and right hover region boundaries
@@ -309,6 +314,19 @@ const EditorNav = React.memo(
 							}}>
 							<ChainSVG />
 						</button>
+
+						{/* Show / Hide Links */}
+						<button
+							className={'nav-button' + (editorStyles.showAllTags ? ' active' : '')}
+							onMouseDown={() =>
+								setEditorStyles({
+									...editorStyles,
+									showAllTags: !editorStyles.showAllTags,
+								})
+							}>
+							{editorStyles.showAllTags ? <EyeSVG /> : <EyeHideSVG />}
+						</button>
+
 						{/* Add Tag Popper */}
 						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
                 to close the popper. This can later be used for confirmation messages and things like that. */}

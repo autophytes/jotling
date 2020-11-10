@@ -21,7 +21,9 @@ export const useDecorator = (currentDoc, editorRef) => {
 
 	const queuedUpdate = useRef(null);
 
-	const { linkStructureRef, editorStyles, editorStateRef } = useContext(LeftNavContext);
+	const { linkStructureRef, docStructureRef, editorStyles, editorStateRef } = useContext(
+		LeftNavContext
+	);
 	const { findText, findRegisterRef } = useContext(FindReplaceContext);
 
 	// Break out our showAllTags flag
@@ -41,7 +43,7 @@ export const useDecorator = (currentDoc, editorRef) => {
 			console.log('DELAYED UPDATE is firing!: ', findText);
 			setDecorator(
 				generateDecorators(
-					linkStructureRef.current,
+					docStructureRef.current,
 					currentDoc,
 					showAllTags,
 					findText,
@@ -61,7 +63,7 @@ export const useDecorator = (currentDoc, editorRef) => {
 
 		if (!findText && showAllTags && !needToClearFind) {
 			setDecorator(
-				generateDecorators(linkStructureRef.current, currentDoc, showAllTags, findText)
+				generateDecorators(docStructureRef.current, currentDoc, showAllTags, findText)
 			);
 		} else if (showAllTags || findText || needToClearFind) {
 			if (!findText && needToClearFind) {

@@ -73,6 +73,7 @@ const LinkSourceDecorator = ({
 	useEffect(() => {
 		if (getNextComponentIndex) {
 			const newComponentIndex = getNextComponentIndex(currentIndex);
+			console.log('newComponentIndex:', newComponentIndex);
 			setComponentIndex(newComponentIndex);
 		}
 	}, [getNextComponentIndex, currentIndex]);
@@ -80,6 +81,10 @@ const LinkSourceDecorator = ({
 	const Component = useMemo(
 		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
 		[componentIndex, getComponentForIndex]
+	);
+	const componentProps = useMemo(
+		() => (componentIndex !== -1 ? getComponentProps(componentIndex) : {}),
+		[componentIndex, getComponentProps]
 	);
 
 	// On load (or decorator change - overwriting parts of links does this), grab the entity linkId
@@ -184,7 +189,7 @@ const LinkSourceDecorator = ({
 			onMouseLeave={handleHoverLeave}>
 			{Component ? (
 				<Component
-					{...getComponentProps(componentIndex)}
+					{...componentProps}
 					childDecorator={{
 						currentIndex: componentIndex,
 						getNextComponentIndex,
@@ -235,7 +240,14 @@ const LinkDestDecorator = ({
 			setComponentIndex(newComponentIndex);
 		}
 	}, [getNextComponentIndex, currentIndex]);
-	const Component = componentIndex !== -1 ? getComponentForIndex(componentIndex) : null;
+	const Component = useMemo(
+		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
+		[componentIndex, getComponentForIndex]
+	);
+	const componentProps = useMemo(
+		() => (componentIndex !== -1 ? getComponentProps(componentIndex) : {}),
+		[componentIndex, getComponentProps]
+	);
 
 	// On load, grab the entity linkId
 	useEffect(() => {
@@ -275,9 +287,9 @@ const LinkDestDecorator = ({
 		<>
 			{Component ? (
 				<Component
-					{...getComponentProps(componentIndex)}
+					{...componentProps}
 					childDecorator={{
-						componentIndex,
+						currentIndex: componentIndex,
 						getNextComponentIndex,
 						getComponentForIndex,
 						getComponentProps,
