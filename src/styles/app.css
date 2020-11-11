@@ -866,6 +866,23 @@ input[type='number']::-webkit-outer-spin-button {
 	background-image: linear-gradient(135deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%);
 	/* transform: rotate(-45deg); */
 }
+#link-popper-element[data-popper-placement^='left'] .link-popper-arrow {
+	right: 0px;
+}
+
+#link-popper-element[data-popper-placement^='left'] .link-popper-arrow:after {
+	background-image: linear-gradient(225deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%);
+	top: 0px;
+	right: -5px;
+}
+#link-popper-element[data-popper-placement^='right'] .link-popper-arrow {
+	left: 0px;
+}
+#link-popper-element[data-popper-placement^='right'] .link-popper-arrow:after {
+	background-image: linear-gradient(45deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%);
+	top: 0px;
+	left: -5px;
+}
 
 /* .link-source-decorator:hover, */
 /* .link-dest-decorator:hover, */

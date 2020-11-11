@@ -18,6 +18,8 @@ import {
 } from '../../utils/utils';
 import NavDocumentTrash from './left-nav/NavDocumentTrash';
 import NavFolderTrash from './left-nav/NavFolderTrash';
+import FolderOpenSVG from '../../assets/svg/FolderOpenSVG';
+import DocumentSingleSVG from '../../assets/svg/DocumentSingleSVG';
 
 // Inserts a new file/folder into the docStructure
 export const addFile = (
@@ -728,6 +730,48 @@ export const buildFileStructure = (
 							)}
 						</div>
 					</Collapse>
+				</div>
+			);
+		}
+	});
+};
+
+// Loops through the document structure and builds out the file/folder tree
+export const buildAddToWikiStructure = (folderStructure, path, handleDocClick) => {
+	return folderStructure.children.map((child) => {
+		if (child.type === 'doc') {
+			return (
+				// NEED TO ADD CLICK AND HOVER
+				<button className='file-nav document'>
+					<div className='svg-wrapper'>
+						<DocumentSingleSVG />
+					</div>
+					<span>{child.name}</span>
+				</button>
+			);
+		}
+		if (child.type === 'folder') {
+			const hasChildren = !!folderStructure.folders[child.id]['children'].length;
+			return (
+				<div className='file-nav folder' key={'folder-' + child.id}>
+					<div className='file-nav folder title open'>
+						<div className='svg-wrapper'>
+							<FolderOpenSVG />
+						</div>
+						<span>{child.name}</span>
+					</div>
+
+					<div className='folder-contents'>
+						{hasChildren ? (
+							buildFileStructure(
+								folderStructure.folders[child.id],
+								[path, 'folders', child.id].join('/'),
+								handleDocClick
+							)
+						) : (
+							<NavFolderEmpty path={[path, 'folders', child.id, 'children'].join('/')} />
+						)}
+					</div>
 				</div>
 			);
 		}

@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useContext } from 'react';
 // import { getSelectedBlocksMetadata } from 'draftjs-utils';
 import { ipcRenderer } from 'electron';
 
-import AddLinkPopper from './AddLinkPopper';
+import AddToWikiPopper from './AddToWikiPopper';
 import InlineStyleButton from './InlineStyleButton';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
@@ -104,8 +104,19 @@ const EditorNav = React.memo(
 			setEditorStyles,
 			displayLinkPopper,
 			setDisplayLinkPopper,
+			linkStructure,
+			setLinkStructure,
 		} = useContext(LeftNavContext);
 		const { editorSettings } = useContext(SettingsContext);
+
+		// TEMPORARY. Cleans up old projects that still have docTags.
+		useEffect(() => {
+			if (linkStructure.docTags) {
+				let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
+				delete newLinkStructure.docTags;
+				setLinkStructure(newLinkStructure);
+			}
+		}, [linkStructure]);
 
 		// Calculates the left and right hover region boundaries
 		useEffect(() => {
@@ -230,6 +241,7 @@ const EditorNav = React.memo(
 							currentStyles={currentStyles}
 							toggleFn={toggleInlineStyle}
 							style='SUBSCRIPT'
+							injectStyle={{ paddingTop: '5px' }}
 							removeStyle='SUPERSCRIPT'>
 							<SubscriptSVG />
 						</InlineStyleButton>
@@ -238,6 +250,7 @@ const EditorNav = React.memo(
 							currentStyles={currentStyles}
 							toggleFn={toggleInlineStyle}
 							style='SUPERSCRIPT'
+							injectStyle={{ paddingBottom: '5px' }}
 							removeStyle='SUBSCRIPT'>
 							<SuperscriptSVG />
 						</InlineStyleButton>
@@ -330,7 +343,7 @@ const EditorNav = React.memo(
 						{/* Add Tag Popper */}
 						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
                 to close the popper. This can later be used for confirmation messages and things like that. */}
-						{displayLinkPopper && <AddLinkPopper {...{ setDisplayLinkPopper }} />}
+						{displayLinkPopper && <AddToWikiPopper {...{ setDisplayLinkPopper }} />}
 					</span>
 				</nav>
 			</>
