@@ -742,8 +742,11 @@ export const buildAddToWikiStructure = (folderStructure, path, handleDocClick) =
 		if (child.type === 'doc') {
 			return (
 				// NEED TO ADD CLICK AND HOVER
-				<button className='file-nav document'>
-					<div className='svg-wrapper'>
+				<button
+					className='file-nav document add-to-wiki'
+					onClick={() => handleDocClick(child.id)}
+					key={'doc-' + child.id}>
+					<div className='svg-wrapper add-to-wiki'>
 						<DocumentSingleSVG />
 					</div>
 					<span>{child.name}</span>
@@ -753,17 +756,17 @@ export const buildAddToWikiStructure = (folderStructure, path, handleDocClick) =
 		if (child.type === 'folder') {
 			const hasChildren = !!folderStructure.folders[child.id]['children'].length;
 			return (
-				<div className='file-nav folder' key={'folder-' + child.id}>
-					<div className='file-nav folder title open'>
-						<div className='svg-wrapper'>
+				<div className='file-nav folder add-to-wiki' key={'folder-' + child.id}>
+					<div className='file-nav folder title open add-to-wiki'>
+						<div className='svg-wrapper add-to-wiki'>
 							<FolderOpenSVG />
 						</div>
 						<span>{child.name}</span>
 					</div>
 
-					<div className='folder-contents'>
+					<div className='folder-contents add-to-wiki'>
 						{hasChildren ? (
-							buildFileStructure(
+							buildAddToWikiStructure(
 								folderStructure.folders[child.id],
 								[path, 'folders', child.id].join('/'),
 								handleDocClick

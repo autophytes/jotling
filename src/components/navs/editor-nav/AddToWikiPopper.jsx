@@ -1,5 +1,4 @@
-import React, { useContext, useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { usePopper } from 'react-popper';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
 
 import PopperVerticalContainer from '../../containers/PopperVerticalContainer';
 import { LinkSelectionRangeRef } from './LinkSelectionRangeRef';
@@ -7,18 +6,13 @@ import { LinkSelectionRangeRef } from './LinkSelectionRangeRef';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../contexts/settingsContext';
 
-import EllipsisSVG from '../../../assets/svg/EllipsisSVG';
-
 import { createTagLink, selectionHasEntityType } from '../../editor/editorFunctions';
-import { findAllDocsInFolder, buildAddToWikiStructure } from '../navFunctions';
+import { buildAddToWikiStructure } from '../navFunctions';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
 
 const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
-	// REFS
-	// const popperInputRef = useRef(null);
-
 	// STATE
 	const [allTags, setAllTags] = useState([]);
 	const [tagFilter, setTagFilter] = useState('');
@@ -28,7 +22,6 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 
 	// CONTEXT
 	const {
-		linkStructure,
 		navData,
 		editorStyles,
 		editorStateRef,
@@ -79,43 +72,25 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 		let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
 		let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
 
-		setLeftOffset(leftNav + 20);
-		setRightOffset(rightNav + 20);
+		setLeftOffset(leftNav + 50);
+		setRightOffset(rightNav + 50);
 	}, [editorStyles, editorSettings, referenceElement]);
 
-	// Grab all available wiki pages to link to
-	// useEffect(() => {
-	// 	const docId = navData.currentDoc.slice(3, -5);
-	// 	let wikiDocs = findAllDocsInFolder(docStructureRef.current.pages, '');
-
-	// 	// Remove the current page from the wiki docs
-	// 	let currentDocIndex = wikiDocs.findIndex((item) => item.id.toString() === docId);
-	// 	if (currentDocIndex !== -1) {
-	// 		wikiDocs.splice(currentDocIndex, 1);
-	// 	}
-
-	// 	let wikiDocIds = wikiDocs.reduce((array, item) => [...array, item.id.toString()], []);
-	// 	let filteredTags = wikiDocIds.filter((item) => item.includes(tagFilter));
-
-	// 	setAllTags(filteredTags);
-	// }, [tagFilter, navData]);
-
-	// TO-DO
-	// We need to check if the selection (in the editorNav) is contained by the .editor (or container?)
-	// Make sure text is selected for link button to work
-	// Need to add the text to the linked-to document
-	//   Will be text with the other side of the link associated with it so it's rendered in a special component.
-	//   When editing that text, edit the aliased text
-	// Need to be able to remove link
-	// Link text to more than one tag??
-
-	// Backlinking
-	// On document open, check for new link entitites to add
-	//   If new, find the last USED block and insert a new block with
-	//     the entity and content or alias
-	//   We'll need a new decorator for this too
-	// On document open, IF we aren't using an alias, make sure content is updated
-	// Eventually, check for link deletions too
+	const handleDocClick = useCallback(
+		(docId) => {
+			createTagLink(
+				docId,
+				editorStateRef,
+				linkStructureRef,
+				navData.currentDoc,
+				setEditorStateRef.current,
+				setLinkStructure,
+				setSyncLinkIdList
+			);
+			setDisplayLinkPopper(false);
+		},
+		[navData]
+	);
 
 	return (
 		<PopperVerticalContainer
@@ -126,9 +101,10 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 				rightOffset,
 				referenceElement,
 			}}>
-			<div>
-				{/* <p>Test content. Much wow.</p> */}
-				{buildAddToWikiStructure(docStructureRef.current.pages, '')}
+			<div className='add-to-wiki-wrapper'>
+				<p className='popper-title'>Add to Wiki</p>
+				<hr />
+				{buildAddToWikiStructure(docStructureRef.current.pages, '', handleDocClick)}
 			</div>
 		</PopperVerticalContainer>
 	);

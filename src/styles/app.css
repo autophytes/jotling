@@ -545,6 +545,33 @@ button.file-nav:focus {
 	height: 0.9rem;
 }
 
+.file-nav.add-to-wiki {
+	/* color: white; */
+	user-select: none;
+	font-size: 0.95rem;
+}
+
+.file-nav.document.add-to-wiki:hover {
+	/* font-weight: bold; */
+	background-color: rgba(var(--color-primary-rgb), 0.2);
+}
+
+.file-nav.document.add-to-wiki:hover svg {
+	fill: var(--color-primary);
+}
+
+.svg-wrapper.add-to-wiki {
+	width: 1.65rem;
+}
+
+.file-nav.add-to-wiki svg,
+.file-nav.folder.title.open svg {
+	fill: #888;
+	width: 0.9rem;
+	height: 0.9rem;
+	align-self: flex-start;
+}
+
 .nav-button {
 	outline: none;
 	border-radius: 0.25rem;
@@ -806,6 +833,29 @@ input[type='number']::-webkit-outer-spin-button {
 	/* z-index: 2; */
 }
 
+.link-popper.add-to-wiki {
+	background-color: var(--color-background);
+	background-image: none;
+	box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.05), 3px 3px 15px rgba(0, 0, 0, 0.08),
+		3px 3px 25px rgba(0, 0, 0, 0.12);
+	border: 4px solid var(--color-primary);
+	border-radius: 0.75rem;
+	color: black;
+	max-height: 60vh;
+
+	overflow-y: scroll;
+}
+
+.link-popper.add-to-wiki .popper-title {
+	color: #212529;
+	font-size: 1.1rem;
+	font-weight: bold;
+	margin: 0 0 0.5rem 0;
+	padding: 0;
+	text-align: center;
+	user-select: none;
+}
+
 .link-popper input {
 	/* margin-right: 0.5rem; */
 	border-radius: 5px;
@@ -825,6 +875,9 @@ input[type='number']::-webkit-outer-spin-button {
 	display: inline-block;
 	padding-top: 2px;
 	margin: 0 0.25rem 0 0.5rem;
+}
+.link-popper.add-to-wiki p {
+	display: block;
 }
 
 .link-popper svg {
@@ -950,6 +1003,10 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .link-popper-tag-button.last {
 	margin-right: 0.5rem;
+}
+
+.add-to-wiki-wrapper {
+	padding: 1rem 1.25rem;
 }
 
 .editor-find-container {

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { usePopper } from 'react-popper';
 
-const AddLinkPopper = ({
+const PopperVerticalContainer = ({
 	referenceElement,
 	closeFn,
 	children,
-	leftOffset = 20,
-	rightOffset = 20,
+	leftOffset = 50,
+	rightOffset = 50,
 	isContentRendered = true,
 }) => {
 	// REFS
@@ -43,20 +43,24 @@ const AddLinkPopper = ({
 	// Closes the popper if clicking outside the popper or hitting escape
 	useEffect(() => {
 		const handleEscapePopper = (e) => {
-			console.log('click or keypress triggered');
-			if (!popperElement.current.contains(e.target) || e.keyCode === 27) {
+			if (e.keyCode === 27) {
 				e.stopPropagation();
-				console.log('propagation is being stopped!!');
-
 				closeFn();
 			}
 		};
 
-		document.addEventListener('click', handleEscapePopper);
+		const handleExternalClickPopper = (e) => {
+			if (!popperElement.current.contains(e.target)) {
+				e.stopPropagation();
+				closeFn();
+			}
+		};
+
+		document.addEventListener('click', handleExternalClickPopper);
 		document.addEventListener('keyup', handleEscapePopper);
 
 		return () => {
-			document.removeEventListener('click', handleEscapePopper);
+			document.removeEventListener('click', handleExternalClickPopper);
 			document.removeEventListener('keyup', handleEscapePopper);
 		};
 	}, []);
@@ -67,7 +71,7 @@ const AddLinkPopper = ({
 			style={styles.popper}
 			{...attributes.popper}
 			id='link-popper-element'>
-			<div className='link-popper'>
+			<div className='link-popper add-to-wiki'>
 				{/* PASS THROUGH CHILDREN */}
 				{children}
 			</div>
@@ -75,4 +79,4 @@ const AddLinkPopper = ({
 	);
 };
 
-export default AddLinkPopper;
+export default PopperVerticalContainer;
