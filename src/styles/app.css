@@ -867,8 +867,10 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .link-popper input:focus {
-	outline: none;
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);
+	/* Re-enabling the below messes up the input in the add-to-wiki popper */
+
+	/* outline: none; */
+	/* box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7); */
 }
 
 .link-popper p {

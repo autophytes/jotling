@@ -782,7 +782,7 @@ export const buildAddToWikiStructure = (folderStructure, path, handleDocClick) =
 };
 
 // Return an array of all docs in a given folder
-export const findAllDocsInFolder = (currentFolder, path) => {
+export const findAllDocsInFolder = (currentFolder, path = '') => {
 	let docArray = [];
 
 	// For this folder level's children, add all docs to the docArray
