@@ -11,7 +11,7 @@ const PopperVerticalContainer = ({
 	setShouldUpdatePopper,
 }) => {
 	// REFS
-	const popperElement = useRef(null);
+	const popperElementRef = useRef(null);
 
 	// STATE
 	const [minWidth, setMinWidth] = useState(0);
@@ -19,7 +19,7 @@ const PopperVerticalContainer = ({
 	// POPPER
 	const { styles, attributes, forceUpdate } = usePopper(
 		referenceElement,
-		popperElement.current,
+		popperElementRef.current,
 		{
 			placement: 'right',
 			modifiers: [
@@ -46,10 +46,12 @@ const PopperVerticalContainer = ({
 	useEffect(() => {
 		if (shouldUpdatePopper) {
 			console.log('updating the popper positioning');
-			setShouldUpdatePopper(false);
-			forceUpdate();
+			if (forceUpdate) {
+				setShouldUpdatePopper(false);
+				forceUpdate();
+			}
 		}
-	}, [shouldUpdatePopper]);
+	}, [shouldUpdatePopper, forceUpdate]);
 
 	// NEED TO UPDATE - close function
 	// Closes the popper if clicking outside the popper or hitting escape
@@ -62,7 +64,7 @@ const PopperVerticalContainer = ({
 		};
 
 		const handleExternalClickPopper = (e) => {
-			if (!popperElement.current.contains(e.target)) {
+			if (!popperElementRef.current.contains(e.target)) {
 				e.stopPropagation();
 				closeFn();
 			}
@@ -79,7 +81,7 @@ const PopperVerticalContainer = ({
 
 	return (
 		<div
-			ref={popperElement}
+			ref={popperElementRef}
 			style={styles.popper}
 			{...attributes.popper}
 			id='link-popper-element'>

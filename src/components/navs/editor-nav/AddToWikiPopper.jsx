@@ -19,6 +19,7 @@ import { getTextSelection } from '../../../utils/draftUtils';
 
 import DocumentSingleSVG from '../../../assets/svg/DocumentSingleSVG';
 import FolderOpenSVG from '../../../assets/svg/FolderOpenSVG';
+import BackArrowSVG from '../../../assets/svg/BackArrowSVG';
 
 import Swal from 'sweetalert2';
 
@@ -33,6 +34,8 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 	const [newWikiName, setNewWikiName] = useState('New Name');
 	const [showPickFolder, setShowPickFolder] = useState(false);
 	const [shouldUpdatePopper, setShouldUpdatePopper] = useState(false);
+	const [allWikiDocs, setAllWikiDocs] = useState([]);
+	const [suggestedDocs, setSuggestedDocs] = useState([]);
 
 	// REF
 	const newWikiRef = useRef(null);
@@ -64,6 +67,23 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 		if (hasLinkDest) {
 			setIsInvalid(true);
 		}
+	}, []);
+
+	// Grabbing a list of all
+	useEffect(() => {
+		const newAllDocs = findAllDocsInFolder(docStructureRef.current.pages);
+		console.log('newAllDocs:', newAllDocs);
+
+		const contentState = editorStateRef.current.getCurrentContent();
+		const selectionState = editorStateRef.current.getSelection();
+		const selectionText = getTextSelection(contentState, selectionState).toLowerCase();
+		const matchingDocs = newAllDocs.filter((doc) =>
+			selectionText.includes(doc.name.toLowerCase())
+		);
+		console.log('matchingDocs:', matchingDocs);
+
+		setAllWikiDocs(newAllDocs);
+		setSuggestedDocs(matchingDocs);
 	}, []);
 
 	// Adds a scroll listener to reposition our reference element.
@@ -157,8 +177,7 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 	const handleNewWikiEnter = useCallback(
 		(e) => {
 			if (e.key === 'Enter' || e.keyCode === 27) {
-				const allDocs = findAllDocsInFolder(docStructureRef.current.pages);
-				const wikiNames = allDocs.map((item) => item.name.toLowerCase());
+				const wikiNames = allWikiDocs.map((item) => item.name.toLowerCase());
 				console.log('wikiNames:', wikiNames);
 
 				if (wikiNames.includes(newWikiName.toLowerCase())) {
@@ -180,7 +199,7 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 				}
 			}
 		},
-		[newWikiName]
+		[newWikiName, allWikiDocs]
 	);
 
 	useEffect(() => {
@@ -289,7 +308,7 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 	}, []);
 
 	useLayoutEffect(() => {
-		showPickFolder && setShouldUpdatePopper(true);
+		setShouldUpdatePopper(true);
 		console.log('should have fired the popper update');
 	}, [showPickFolder]);
 
@@ -327,9 +346,40 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 					</>
 				)}
 
+				{!showPickFolder && !!suggestedDocs.length && (
+					<>
+						{suggestedDocs.map((item) => (
+							<button
+								className='file-nav document add-to-wiki'
+								onClick={handleDocClick(item)}
+								key={'doc-' + item.id}>
+								<div className='svg-wrapper add-to-wiki'>
+									<DocumentSingleSVG />
+								</div>
+								<span>{item.name}</span>
+							</button>
+						))}
+						<hr />
+					</>
+				)}
+
 				{showPickFolder ? (
 					<>
-						<p className='popper-title'>Add to Folder</p>
+						<div className='popper-title'>
+							<button
+								onClick={(e) => {
+									setTimeout(() => {
+										setShowPickFolder(false);
+									}, 0);
+								}}
+								className='back-arrow'>
+								<BackArrowSVG />
+							</button>
+							<span>
+								Add <span className='new-wiki-title'>{newWikiName}</span> to Folder
+							</span>
+						</div>
+
 						<div className='file-nav folder add-to-wiki'>
 							<div
 								className='file-nav title open add-to-wiki document'

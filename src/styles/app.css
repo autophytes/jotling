@@ -858,10 +858,19 @@ input[type='number']::-webkit-outer-spin-button {
 	color: #212529;
 	font-size: 1.1rem;
 	font-weight: bold;
-	margin: 0 0 0.5rem 0;
+	margin: 0 0 0.25rem 0;
 	padding: 0;
 	text-align: center;
 	user-select: none;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	max-width: 15rem;
+}
+
+.link-popper.add-to-wiki .new-wiki-title {
+	color: var(--color-primary);
+	text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .new-wiki-validation-alert {
@@ -1581,4 +1590,27 @@ input[type='number']::-webkit-outer-spin-button {
 
 .modal-form-hr {
 	margin: 1rem 0;
+}
+
+.back-arrow {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	transition: 150ms ease transform;
+	border: none;
+	cursor: pointer;
+	user-select: none;
+	margin-right: 0.4rem;
+	/* margin-left: 0.5rem; */
+}
+
+.back-arrow svg {
+	width: 1rem;
+	height: 1rem;
+	fill: var(--color-primary);
+}
+
+.back-arrow:hover {
+	transform: translateX(-4px);
 }
