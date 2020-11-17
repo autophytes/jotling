@@ -14,22 +14,25 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../contexts/settingsContext';
 
 import { createTagLink, selectionHasEntityType } from '../../editor/editorFunctions';
-import { buildAddToWikiStructure, findAllDocsInFolder } from '../navFunctions';
+import { buildAddToWikiStructure, findAllDocsInFolder, addFile } from '../navFunctions';
 import { getTextSelection } from '../../../utils/draftUtils';
 
 import DocumentSingleSVG from '../../../assets/svg/DocumentSingleSVG';
+import FolderOpenSVG from '../../../assets/svg/FolderOpenSVG';
+
+import Swal from 'sweetalert2';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
 
 const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 	// STATE
-	const [allTags, setAllTags] = useState([]);
-	const [tagFilter, setTagFilter] = useState('');
 	const [leftOffset, setLeftOffset] = useState(0);
 	const [rightOffset, setRightOffset] = useState(0);
 	const [isInvalid, setIsInvalid] = useState(false);
 	const [newWikiName, setNewWikiName] = useState('New Name');
+	const [showPickFolder, setShowPickFolder] = useState(false);
+	const [shouldUpdatePopper, setShouldUpdatePopper] = useState(false);
 
 	// REF
 	const newWikiRef = useRef(null);
@@ -41,6 +44,8 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 		editorStateRef,
 		docStructureRef,
 		linkStructureRef,
+		setDocStructure,
+		setNavData,
 		setEditorStateRef,
 		setLinkStructure,
 		setSyncLinkIdList,
@@ -91,19 +96,91 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 	}, [editorStyles, editorSettings, referenceElement]);
 
 	const handleDocClick = useCallback(
-		(docId) => {
-			createTagLink(
-				docId,
-				editorStateRef,
-				linkStructureRef,
-				navData.currentDoc,
-				setEditorStateRef.current,
-				setLinkStructure,
-				setSyncLinkIdList
-			);
-			setDisplayLinkPopper(false);
+		(child) => {
+			if (child.type === 'doc') {
+				return () => {
+					createTagLink(
+						child.id,
+						editorStateRef,
+						linkStructureRef,
+						navData.currentDoc,
+						setEditorStateRef.current,
+						setLinkStructure,
+						setSyncLinkIdList
+					);
+					setDisplayLinkPopper(false);
+				};
+			}
 		},
 		[navData]
+	);
+
+	const handleFolderClick = useCallback(
+		(child, foldersOnly) => {
+			return foldersOnly
+				? () => {
+						console.log('folder: ', child);
+						// Add the file to the given folder
+						// Might need add file to return the file we've created?
+						const { id: newDocId } = addFile(
+							'doc',
+							docStructureRef.current,
+							setDocStructure,
+							'pages',
+							child.type,
+							child.id,
+							navData,
+							setNavData,
+							newWikiName,
+							true // don't open the file after creating it
+						);
+
+						// Create the link to the new wiki document
+						createTagLink(
+							newDocId, // Need to return the doc id from addFile
+							editorStateRef,
+							linkStructureRef,
+							navData.currentDoc,
+							setEditorStateRef.current,
+							setLinkStructure,
+							setSyncLinkIdList
+						);
+
+						// Then create the link
+						setDisplayLinkPopper(false);
+				  }
+				: undefined;
+		},
+		[navData, newWikiName]
+	);
+
+	const handleNewWikiEnter = useCallback(
+		(e) => {
+			if (e.key === 'Enter' || e.keyCode === 27) {
+				const allDocs = findAllDocsInFolder(docStructureRef.current.pages);
+				const wikiNames = allDocs.map((item) => item.name.toLowerCase());
+				console.log('wikiNames:', wikiNames);
+
+				if (wikiNames.includes(newWikiName.toLowerCase())) {
+					// Visual indicator of invalid name
+					Swal.fire({
+						toast: true,
+						title: 'Wiki name must be unique.',
+						target: document.getElementById('create-new-wiki-input'),
+						position: 'top-start',
+						showConfirmButton: false,
+						customClass: {
+							container: 'new-wiki-validation-alert',
+						},
+						timer: 3000,
+						timerProgressBar: true,
+					});
+				} else {
+					setShowPickFolder(true);
+				}
+			}
+		},
+		[newWikiName]
 	);
 
 	useEffect(() => {
@@ -211,39 +288,75 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 		}, 0);
 	}, []);
 
+	useLayoutEffect(() => {
+		showPickFolder && setShouldUpdatePopper(true);
+		console.log('should have fired the popper update');
+	}, [showPickFolder]);
+
 	return (
 		<PopperVerticalContainer
 			closeFn={() => setDisplayLinkPopper(false)}
-			isContentRendered={!!allTags.length}
 			{...{
 				leftOffset,
 				rightOffset,
 				referenceElement,
+				shouldUpdatePopper,
+				setShouldUpdatePopper,
 			}}>
 			<div className='add-to-wiki-wrapper'>
-				<p className='popper-title'>Create a Wiki</p>
-				<button className='file-nav document add-to-wiki'>
-					<div className='svg-wrapper add-to-wiki'>
-						<DocumentSingleSVG />
-					</div>
-					<input
-						type='text'
-						value={newWikiName}
-						ref={newWikiRef}
-						// autoFocus
-						onChange={(e) => setNewWikiName(e.target.value)}
-						onFocus={(e) => e.target.select()}
-						onKeyUp={(e) => {
-							if (e.key === 'Enter' || e.keyCode === 27) {
-								// INSTEAD OF BLURRING, submit the new wiki
-								e.target.blur();
-							}
-						}}
-					/>
-				</button>
-				<hr />
-				<p className='popper-title'>Add to Wiki</p>
-				{buildAddToWikiStructure(docStructureRef.current.pages, '', handleDocClick)}
+				{!showPickFolder && (
+					<>
+						<p className='popper-title'>Create a Wiki</p>
+						<div style={{ position: 'relative' }} id='create-new-wiki-input'>
+							<button className='file-nav document add-to-wiki new-wiki'>
+								<div className='svg-wrapper add-to-wiki'>
+									<DocumentSingleSVG />
+								</div>
+								<input
+									type='text'
+									value={newWikiName}
+									ref={newWikiRef}
+									// autoFocus
+									onChange={(e) => setNewWikiName(e.target.value)}
+									onFocus={(e) => e.target.select()}
+									onKeyUp={handleNewWikiEnter}
+								/>
+							</button>
+						</div>
+						<hr />
+					</>
+				)}
+
+				{showPickFolder ? (
+					<>
+						<p className='popper-title'>Add to Folder</p>
+						<div className='file-nav folder add-to-wiki'>
+							<div
+								className='file-nav title open add-to-wiki document'
+								style={{ cursor: 'pointer' }}
+								onClick={handleFolderClick({}, true)}>
+								<div className='svg-wrapper add-to-wiki'>
+									<FolderOpenSVG />
+								</div>
+								<span>Wikis</span>
+							</div>
+
+							<div className='folder-contents add-to-wiki'>
+								{buildAddToWikiStructure(
+									docStructureRef.current.pages,
+									'',
+									showPickFolder ? handleFolderClick : handleDocClick,
+									showPickFolder
+								)}
+							</div>
+						</div>
+					</>
+				) : (
+					<>
+						<p className='popper-title'>Add to Wiki</p>
+						{buildAddToWikiStructure(docStructureRef.current.pages, '', handleDocClick)}
+					</>
+				)}
 			</div>
 		</PopperVerticalContainer>
 	);

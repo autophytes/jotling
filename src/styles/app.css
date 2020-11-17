@@ -560,6 +560,14 @@ button.file-nav:focus {
 	fill: var(--color-primary);
 }
 
+.file-nav.document.add-to-wiki.new-wiki svg {
+	fill: var(--color-primary);
+}
+
+.file-nav.document.add-to-wiki.new-wiki:hover {
+	background-color: inherit;
+}
+
 .svg-wrapper.add-to-wiki {
 	width: 1.65rem;
 }
@@ -854,6 +862,13 @@ input[type='number']::-webkit-outer-spin-button {
 	padding: 0;
 	text-align: center;
 	user-select: none;
+}
+
+.new-wiki-validation-alert {
+	top: 4.5rem !important;
+}
+.new-wiki-validation-alert .swal2-timer-progress-bar {
+	background-color: var(--color-primary);
 }
 
 .link-popper input {

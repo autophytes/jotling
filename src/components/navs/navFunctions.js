@@ -30,7 +30,9 @@ export const addFile = (
 	lastClickedType,
 	lastClickedId,
 	navData,
-	setNavData
+	setNavData,
+	fileName, // Optional
+	dontOpenFile = false
 ) => {
 	// Create a docStructure object for our current tab.
 	// We'll insert our file and overwrite this section of docStructure.
@@ -62,7 +64,7 @@ export const addFile = (
 	let childObject = {
 		type: fileType,
 		id: maxIds[fileType] + 1,
-		name: fileType === 'Doc' ? 'New Document' : `New ${fileType}`,
+		name: fileName ? fileName : fileType === 'Doc' ? 'New Document' : `New ${fileType}`,
 	};
 	if (fileType === 'doc') {
 		childObject.fileName = 'doc' + childObject.id + '.json';
@@ -107,15 +109,18 @@ export const addFile = (
 
 	// Will put the file name into edit mode
 	let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
-	if (fileType === 'doc') {
+	if (fileType === 'doc' && !dontOpenFile) {
 		setNavData({
 			...navData,
-			editFile: newEditFileId,
+			editFile: fileName ? '' : newEditFileId,
 			currentDoc: childObject.fileName,
 			lastClicked: { type: 'doc', id: childObject.id },
 		});
 	} else {
-		setNavData({ ...navData, editFile: newEditFileId });
+		setNavData({
+			...navData,
+			editFile: fileName ? '' : newEditFileId,
+		});
 	}
 
 	// console.log(folderStructure);
@@ -124,6 +129,8 @@ export const addFile = (
 	maxIds[fileType] = maxIds[fileType] + 1;
 
 	setDocStructure({ ...docStructure, [currentTab]: folderStructure, maxIds });
+
+	return { id: childObject.id };
 };
 
 // Permanently delete a single document from the trash bin
@@ -737,14 +744,19 @@ export const buildFileStructure = (
 };
 
 // Loops through the document structure and builds out the file/folder tree
-export const buildAddToWikiStructure = (folderStructure, path, handleDocClick) => {
+export const buildAddToWikiStructure = (
+	folderStructure,
+	path,
+	handleFileClick,
+	foldersOnly
+) => {
 	return folderStructure.children.map((child) => {
-		if (child.type === 'doc') {
+		if (child.type === 'doc' && !foldersOnly) {
 			return (
 				// NEED TO ADD CLICK AND HOVER
 				<button
 					className='file-nav document add-to-wiki'
-					onClick={() => handleDocClick(child.id)}
+					onClick={handleFileClick(child)}
 					key={'doc-' + child.id}>
 					<div className='svg-wrapper add-to-wiki'>
 						<DocumentSingleSVG />
@@ -757,7 +769,13 @@ export const buildAddToWikiStructure = (folderStructure, path, handleDocClick) =
 			const hasChildren = !!folderStructure.folders[child.id]['children'].length;
 			return (
 				<div className='file-nav folder add-to-wiki' key={'folder-' + child.id}>
-					<div className='file-nav folder title open add-to-wiki'>
+					<div
+						className={`file-nav title open add-to-wiki ${
+							foldersOnly ? 'document' : 'folder'
+						}`}
+						style={foldersOnly ? { cursor: 'pointer' } : {}}
+						// onClick={() => foldersOnly && handleFileClick(child)}>
+						onClick={handleFileClick(child, foldersOnly)}>
 						<div className='svg-wrapper add-to-wiki'>
 							<FolderOpenSVG />
 						</div>
@@ -765,15 +783,13 @@ export const buildAddToWikiStructure = (folderStructure, path, handleDocClick) =
 					</div>
 
 					<div className='folder-contents add-to-wiki'>
-						{hasChildren ? (
+						{hasChildren &&
 							buildAddToWikiStructure(
 								folderStructure.folders[child.id],
 								[path, 'folders', child.id].join('/'),
-								handleDocClick
-							)
-						) : (
-							<NavFolderEmpty path={[path, 'folders', child.id, 'children'].join('/')} />
-						)}
+								handleFileClick,
+								foldersOnly
+							)}
 					</div>
 				</div>
 			);

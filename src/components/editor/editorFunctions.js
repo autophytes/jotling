@@ -235,7 +235,26 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		}
 	}
 
+	// If we have unusedLinkIds, and currently the page just has an empty block, delete that block
 	let newEditorState = editorState;
+	if (unusedLinkIds.length && blockArray.length === 1) {
+		const block = blockArray[0];
+		if (block.getLength() === 0) {
+			const selectionState = SelectionState.createEmpty();
+			const newSelectionState = selectionState.merge({
+				anchorKey: block.getKey(),
+				anchorOffset: 0,
+				focusKey: block.getKey(),
+				focusOffset: 1,
+			});
+
+			let contentState = editorState.getCurrentContent();
+			let newContentState = Modifier.removeRange(contentState, newSelectionState, 'forward');
+
+			newEditorState = EditorState.push(newEditorState, newContentState, 'delete-character');
+		}
+	}
+
 	// Inserting the unsused links at the bottom of the page
 	for (let linkId of unusedLinkIds) {
 		// If we have a new line character inside our content, we need to break it up into
@@ -275,12 +294,6 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		// Apply the LINK-DEST entity to the new block
 		newEditorState = createTagDestLink(newEditorState, linkId, blockKeys);
 	}
-
-	// filter usedLinkIds down to a list of non-aliased links
-	// loop through the non-aliased link ids
-	//    grab the linkStructure content for each
-	//    grab the editorState content
-	//    compare the two. If different, set the editorState content to linkStructure content
 
 	let linkContentState = newEditorState.getCurrentContent();
 
@@ -511,6 +524,12 @@ export const createTagLink = (
 
 	// Updating the linkStructure with the new link
 	let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
+
+	// Ensure the page tag links exist
+	if (!newLinkStructure.tagLinks[tagName]) {
+		newLinkStructure.tagLinks[tagName] = [];
+	}
+
 	newLinkStructure.tagLinks[tagName].push(newLinkId); // FIX EVENTUALLY
 	newLinkStructure.links[newLinkId] = {
 		source: currentDoc, // Source document

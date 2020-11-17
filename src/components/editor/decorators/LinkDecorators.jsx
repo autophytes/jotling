@@ -128,6 +128,8 @@ const LinkSourceDecorator = ({
 
 	useEffect(() => {
 		if (linkId || linkId === 0) {
+			console.log('linkStructure: ', linkStructureRef.current.docLinks);
+			console.log('currentDoc: ', navData.currentDoc);
 			let newTagName = linkStructureRef.current.docLinks[navData.currentDoc][linkId];
 			setTagName(newTagName);
 		}

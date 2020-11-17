@@ -525,7 +525,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 			const fileContents = loadedFile.fileContents;
 
-			// If the file isn't empty (potentially meaning it)
+			// If the file isn't empty
 			if (!!fileContents && Object.keys(fileContents).length !== 0) {
 				const newContentState = convertFromRaw(loadedFile.fileContents);
 				const newEditorState = EditorState.createWithContent(newContentState, decorator);
@@ -539,7 +539,14 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				console.log('about to set editorState inside LOADFILE');
 				setEditorState(editorStateWithLinks);
 			} else {
-				setEditorState(EditorState.createEmpty(decorator));
+				// Synchronizing links to this page
+				const newEditorState = EditorState.createEmpty(decorator);
+				const editorStateWithLinks = updateLinkEntities(
+					newEditorState,
+					linkStructureRef.current,
+					navData.currentDoc
+				);
+				setEditorState(editorStateWithLinks);
 			}
 			setShouldResetScroll(true);
 			setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
