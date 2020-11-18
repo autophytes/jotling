@@ -748,10 +748,12 @@ export const buildAddToWikiStructure = (
 	folderStructure,
 	path,
 	handleFileClick,
-	foldersOnly
+	foldersOnly,
+	currentDoc
 ) => {
+	const currentDocId = currentDoc ? Number(currentDoc.slice(3, -5)) : '';
 	return folderStructure.children.map((child) => {
-		if (child.type === 'doc' && !foldersOnly) {
+		if (child.type === 'doc' && child.id !== currentDocId && !foldersOnly) {
 			return (
 				// NEED TO ADD CLICK AND HOVER
 				<button
@@ -788,7 +790,8 @@ export const buildAddToWikiStructure = (
 								folderStructure.folders[child.id],
 								[path, 'folders', child.id].join('/'),
 								handleFileClick,
-								foldersOnly
+								foldersOnly,
+								currentDoc
 							)}
 					</div>
 				</div>

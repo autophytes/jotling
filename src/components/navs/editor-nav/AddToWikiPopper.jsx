@@ -25,6 +25,30 @@ import Swal from 'sweetalert2';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
+const sentenceBreakingPunctuation = [
+	'.',
+	'?',
+	'!',
+	',',
+	'<',
+	'>',
+	'"',
+	'”',
+	'“',
+	'/',
+	'\\',
+	'|',
+	';',
+	':',
+	'[',
+	']',
+	'{',
+	'}',
+	'(',
+	')',
+	'=',
+	'_',
+];
 
 const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 	// STATE
@@ -69,22 +93,25 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 		}
 	}, []);
 
-	// Grabbing a list of all
+	// Grabbing a suggested list of all wiki doc names in the selected text
 	useEffect(() => {
+		// Grab all docs in the wiki tab
 		const newAllDocs = findAllDocsInFolder(docStructureRef.current.pages);
-		console.log('newAllDocs:', newAllDocs);
 
+		// Get selection Text
 		const contentState = editorStateRef.current.getCurrentContent();
 		const selectionState = editorStateRef.current.getSelection();
 		const selectionText = getTextSelection(contentState, selectionState).toLowerCase();
-		const matchingDocs = newAllDocs.filter((doc) =>
-			selectionText.includes(doc.name.toLowerCase())
+
+		// Filter to docs in the wiki tab INSIDE our selection, not our currently open document
+		const currentDocId = navData.currentDoc ? Number(navData.currentDoc.slice(3, -5)) : '';
+		const matchingDocs = newAllDocs.filter(
+			(doc) => selectionText.includes(doc.name.toLowerCase()) && doc.id !== currentDocId
 		);
-		console.log('matchingDocs:', matchingDocs);
 
 		setAllWikiDocs(newAllDocs);
 		setSuggestedDocs(matchingDocs);
-	}, []);
+	}, [navData]);
 
 	// Adds a scroll listener to reposition our reference element.
 	// Managed here to remove on unmount
@@ -202,6 +229,7 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 		[newWikiName, allWikiDocs]
 	);
 
+	// Find a suggested new wiki page name in the selected text
 	useEffect(() => {
 		const contentState = editorStateRef.current.getCurrentContent();
 		const selectionState = editorStateRef.current.getSelection();
@@ -257,13 +285,14 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 
 				if (
 					(char === ' ' && (nextCharCode < 65 || nextCharCode > 90)) ||
+					sentenceBreakingPunctuation.includes(char) ||
 					i + n >= selectionText.length - 1
 				) {
 					continueForward = false;
 
 					let newNoun = selectionText.slice(i, i + n);
 					// Remove ending punctuation (non alphanumeric characters)
-					console.log('newNoun from mr. warrior: ', newNoun.match(/.+(?=[^a-zA-Z\d]+)\b/));
+					// console.log('newNoun from mr. warrior: ', newNoun.match(/.+(?=[^a-zA-Z\d]+)\b/));
 					newNoun = newNoun.replace(/^[^a-z\d]*|[^a-z\d]*$/gi, '');
 
 					// Trim off the possessive form
@@ -283,20 +312,17 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 		}
 
 		const allDocs = findAllDocsInFolder(docStructureRef.current.pages);
-		const docNames = allDocs.map((item) => item.name.toLowerCase());
+		const docNamesNoPunc = allDocs.map((item) =>
+			item.name.replace(/[^a-z0-9\s]/gi, '').toLowerCase()
+		);
 
-		const nameToUse = properNounArray.find((item) => !docNames.includes(item.toLowerCase()));
+		const nameToUse = properNounArray.find(
+			(item) => !docNamesNoPunc.includes(item.replace(/[^a-z0-9\s]/gi, '').toLowerCase())
+		);
 
 		if (nameToUse) {
 			setNewWikiName(nameToUse);
 		}
-
-		// const regex = /(?<!\. |^)[A-Z]\S*(?=\s)/g;
-		// const regex = new RegExp('([a-zA-Z]+)\\s([A-Z][a-z]*)\\s([a-zA-Z]+)');
-		// const properNouns = selectionText.match(/(?<!\. |^)\b[A-Z]\S*\b/g);
-
-		// // const properNouns = regex.exec(selectionText);
-		// console.log('properNouns:', properNouns);
 
 		// TO-DO: if we have multiple words in a row that are capitalized, return all of them
 	}, []);
@@ -348,17 +374,20 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 
 				{!showPickFolder && !!suggestedDocs.length && (
 					<>
-						{suggestedDocs.map((item) => (
-							<button
-								className='file-nav document add-to-wiki'
-								onClick={handleDocClick(item)}
-								key={'doc-' + item.id}>
-								<div className='svg-wrapper add-to-wiki'>
-									<DocumentSingleSVG />
-								</div>
-								<span>{item.name}</span>
-							</button>
-						))}
+						<p className='popper-title'>Suggested Wiki</p>
+						<div className='folder-contents add-to-wiki'>
+							{suggestedDocs.map((item) => (
+								<button
+									className='file-nav document add-to-wiki'
+									onClick={handleDocClick(item)}
+									key={'doc-' + item.id}>
+									<div className='svg-wrapper add-to-wiki'>
+										<DocumentSingleSVG />
+									</div>
+									<span>{item.name}</span>
+								</button>
+							))}
+						</div>
 						<hr />
 					</>
 				)}
@@ -404,7 +433,13 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 				) : (
 					<>
 						<p className='popper-title'>Add to Wiki</p>
-						{buildAddToWikiStructure(docStructureRef.current.pages, '', handleDocClick)}
+						{buildAddToWikiStructure(
+							docStructureRef.current.pages,
+							'',
+							handleDocClick,
+							false,
+							navData.currentDoc
+						)}
 					</>
 				)}
 			</div>

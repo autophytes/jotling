@@ -90,99 +90,14 @@ const LeftNav = () => {
 		);
 	}, []);
 
-	// const addFile = useCallback(
-	// 	(fileType) => {
-	// 		// Create a docStructure object for our current tab.
-	// 		// We'll insert our file and overwrite this section of docStructure.
-	// 		let folderStructure = JSON.parse(JSON.stringify(docStructure[navData.currentTab]));
-	// 		let maxIds = JSON.parse(JSON.stringify(docStructure.maxIds));
-	// 		// Note the spread operator only performs a shallow copy (nested objects are still refs).
-	// 		//   The JSON method performs a deep copy.
-
-	// 		// Find out where we need to insert the new file
-	// 		let filePath = '';
-	// 		console.log('lastClicked.type: ', navData.lastClicked.type);
-	// 		if (navData.lastClicked.type !== '') {
-	// 			let tempPath = findFilePath(
-	// 				folderStructure,
-	// 				'',
-	// 				navData.lastClicked.type,
-	// 				navData.lastClicked.id
-	// 			);
-	// 			console.log('navData.lastClicked.type:', navData.lastClicked.type);
-	// 			console.log('navData.lastClicked.id:', navData.lastClicked.id);
-
-	// 			console.log('tempPath: ', tempPath);
-	// 			filePath =
-	// 				tempPath +
-	// 				(navData.lastClicked.type === 'folder'
-	// 					? (tempPath === '' ? '' : '/') + `folders/${navData.lastClicked.id}`
-	// 					: '');
-
-	// 			console.log('filePath: ', filePath);
-	// 		}
-
-	// 		// Build the object that will go in 'children' at the path
-	// 		let childObject = {
-	// 			type: fileType,
-	// 			id: maxIds[fileType] + 1,
-	// 			name: fileType === 'Doc' ? 'New Document' : `New ${fileType}`,
-	// 		};
-	// 		if (fileType === 'doc') {
-	// 			childObject.fileName = 'doc' + childObject.id + '.json';
-	// 		}
-
-	// 		// Build the object that will go in 'folders' at the path.
-	// 		if (fileType === 'folder') {
-	// 			let folderObject = { folders: {}, children: [] };
-	// 			// Insert the folder into the folder structure
-	// 			console.log('filepath: ', filePath);
-	// 			folderStructure = setObjPropertyAtPropertyPath(
-	// 				filePath + (filePath === '' ? '' : '/') + 'folders/' + childObject.id,
-	// 				folderObject,
-	// 				folderStructure
-	// 			);
-	// 			console.log(folderStructure);
-	// 		}
-
-	// 		// Inserts the new child into our folderStructure at the destination path
-	// 		folderStructure = insertIntoArrayAtPropertyPath(
-	// 			filePath + (filePath === '' ? '' : '/') + 'children',
-	// 			childObject,
-	// 			folderStructure
-	// 		);
-	// 		console.log(folderStructure);
-
-	// 		// Will put the file name into edit mode
-	// 		let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
-	// 		if (fileType === 'doc') {
-	// 			setNavData({
-	// 				...navData,
-	// 				editFile: newEditFileId,
-	// 				currentDoc: childObject.fileName,
-	// 				lastClicked: { type: 'doc', id: childObject.id },
-	// 			});
-	// 		} else {
-	// 			setNavData({ ...navData, editFile: newEditFileId });
-	// 		}
-
-	// 		// console.log(folderStructure);
-
-	// 		// Increment the max ID for a file type
-	// 		maxIds[fileType] = maxIds[fileType] + 1;
-
-	// 		setDocStructure({ ...docStructure, [navData.currentTab]: folderStructure, maxIds });
-	// 	},
-	// 	[navData.currentTab, navData.lastClicked, docStructure, setDocStructure]
-	// );
-
 	return (
 		<>
 			<div className='side-nav-hover-region left' />
 			<nav
 				className={'side-nav left-nav animation' + (pinNav ? '' : ' hidden')}
 				style={{ width: editorStyles.leftNav + 'rem' }}
-				ref={navRef}>
+				ref={navRef}
+				id='left-nav'>
 				<div className='side-nav-container'>
 					<div className='left-nav-top-buttons'>
 						<div className='add-file-folder-wrapper'>

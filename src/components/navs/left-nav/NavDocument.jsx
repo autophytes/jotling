@@ -4,6 +4,9 @@ import DocumentSingleSVG from '../../../assets/svg/DocumentSingleSVG';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import { updateChildName, moveFileToPath } from '../../../utils/utils';
+import { findAllDocsInFolder } from '../navFunctions';
+
+import Swal from 'sweetalert2';
 
 const NavDocument = ({
 	path,
@@ -19,7 +22,9 @@ const NavDocument = ({
 
 	const docRef = useRef(null);
 
-	const { navData, setNavData, docStructure, setDocStructure } = useContext(LeftNavContext);
+	const { navData, setNavData, docStructure, setDocStructure, docStructureRef } = useContext(
+		LeftNavContext
+	);
 
 	const handleClick = useCallback(() => {
 		navData.currentDoc !== child.fileName &&
@@ -31,18 +36,48 @@ const NavDocument = ({
 	}, [setNavData, child, navData]);
 
 	const saveDocNameChange = useCallback(
-		(newName) => {
-			// update
-			updateChildName(
-				'doc',
-				child.id,
-				newName,
-				path,
-				docStructure,
-				setDocStructure,
-				navData.currentTab
-			);
-			setNavData({ ...navData, editFile: '' });
+		(newName, isBlur) => {
+			// If on the wiki tab, pull the page names
+			let wikiNames = [];
+			if (navData.currentTab === 'pages') {
+				const allWikiDocs = findAllDocsInFolder(docStructureRef.current.pages);
+				wikiNames = allWikiDocs.map((item) => item.name.toLowerCase());
+			}
+
+			// If the new name is already a wiki page name (if on the wiki tab)
+			if (wikiNames.includes(newName.toLowerCase())) {
+				// Visual indicator of invalid name
+				Swal.fire({
+					toast: true,
+					title: 'Wiki name must be unique.',
+					target: document.getElementById('left-nav'),
+					position: 'top-start',
+					showConfirmButton: false,
+					customClass: {
+						container: 'new-wiki-validation-alert',
+					},
+					timer: 3000,
+					timerProgressBar: true,
+				});
+
+				// If clicking away, disable edit mode
+				if (isBlur) {
+					setNavData({ ...navData, editFile: '' });
+					setFileName(child.name);
+				}
+			} else {
+				// Set the new document name
+				updateChildName(
+					'doc',
+					child.id,
+					newName,
+					path,
+					docStructure,
+					setDocStructure,
+					navData.currentTab
+				);
+				setNavData({ ...navData, editFile: '' });
+			}
 		},
 		[child, path, navData, docStructure, setDocStructure]
 	);
@@ -137,11 +172,11 @@ const NavDocument = ({
 					value={fileName}
 					autoFocus
 					onChange={(e) => setFileName(e.target.value)}
-					onBlur={(e) => saveDocNameChange(e.target.value ? e.target.value : 'Unnamed')}
+					onBlur={(e) => saveDocNameChange(e.target.value ? e.target.value : 'Unnamed', true)}
 					onFocus={(e) => e.target.select()}
 					onKeyUp={(e) => {
 						if (e.key === 'Enter' || e.keyCode === 27) {
-							e.target.blur();
+							saveDocNameChange(e.target.value ? e.target.value : 'Unnamed');
 						}
 					}}
 				/>

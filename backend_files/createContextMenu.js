@@ -250,6 +250,17 @@ const create = (win, options) => {
 					});
 				},
 			}),
+			duplicateDocument: () => ({
+				id: 'duplicateDocument',
+				label: 'Duplicate Document',
+				visible: browserParams.type === 'doc',
+				click() {
+					webContents(win).send('duplicate-document', {
+						docId: browserParams.id,
+						currentTab: browserParams.currentTab,
+					});
+				},
+			}),
 			insertFolder: () => ({
 				id: 'insertFolder',
 				label: 'Insert Folder',
@@ -391,6 +402,7 @@ const create = (win, options) => {
 			defaultActions.paste(),
 			defaultActions.separator(),
 			defaultActions.insertDocument(),
+			defaultActions.duplicateDocument(),
 			defaultActions.moveDocToTrash(),
 			defaultActions.restoreDoc(),
 			defaultActions.deleteDoc(),
