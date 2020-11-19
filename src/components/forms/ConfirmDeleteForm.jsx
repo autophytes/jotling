@@ -17,7 +17,7 @@ const ConfirmDeleteForm = (props) => {
 
 	return (
 		<>
-			<h2 style={{ margin: 0, padding: 0, fontWeight: 600 }}>{formTitle}</h2>
+			<h2 className='popup-modal-title'>{formTitle}</h2>
 			<hr className='modal-form-hr' />
 
 			<div className='delete-modal-body'>

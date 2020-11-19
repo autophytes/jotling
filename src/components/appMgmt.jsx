@@ -30,6 +30,7 @@ import Mousetrap from 'mousetrap';
 import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
 import HiddenContextMenu from './hiddenContextMenu';
+import UploadImageForm from './forms/UploadImageForm';
 
 // import ReactResizeDetector from 'react-resize-detector';
 
@@ -61,6 +62,7 @@ const AppMgmt = () => {
 		setEditorStateRef,
 		linkStructureRef,
 		setSyncLinkIdList,
+		uploadImageUrl,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -364,6 +366,7 @@ const AppMgmt = () => {
 			{peekWindowLinkId !== null && <PeekDocument />}
 			{showEditorSettings && <EditorSettings />}
 			<HiddenContextMenu />
+			{uploadImageUrl && <UploadImageForm />}
 		</>
 	);
 };

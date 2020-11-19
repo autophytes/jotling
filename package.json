@@ -35,6 +35,7 @@
 		"react-color": "^2.18.1",
 		"react-css-collapse": "^4.0.6",
 		"react-dom": "^16.13.1",
+		"react-image-crop": "^8.6.6",
 		"react-popper": "^2.2.3",
 		"react-resize-detector": "^5.0.7",
 		"sweetalert2": "^10.10.1",

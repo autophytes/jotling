@@ -36,6 +36,7 @@ const LeftNavContextProvider = (props) => {
 	const [hoverSourceLinkId, setHoverSourceLinkId] = useState(null);
 	const [hoverDestLinkId, setHoverDestLinkId] = useState(null);
 	const [syncLinkIdList, setSyncLinkIdList] = useState([]);
+	const [uploadImageUrl, setUploadImageUrl] = useState('');
 
 	// REFS
 	const linkStructureRef = useRef(linkStructure);
@@ -127,6 +128,8 @@ const LeftNavContextProvider = (props) => {
 				setHoverDestLinkId,
 				syncLinkIdList,
 				setSyncLinkIdList,
+				uploadImageUrl,
+				setUploadImageUrl,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

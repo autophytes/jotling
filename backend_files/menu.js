@@ -156,7 +156,7 @@ const registerMenu = () => {
 					enabled: isWindowOpen,
 				},
 				{
-					label: 'Insert Link',
+					label: 'Add to Wiki',
 					accelerator: 'CmdOrCtrl+L',
 					registerAccelerator: true,
 					acceleratorWorksWhenHidden: true,
