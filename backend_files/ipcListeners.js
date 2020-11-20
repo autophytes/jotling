@@ -54,12 +54,12 @@ const loadFontsListener = () => {
 const saveSingleDocumentListener = () => {
 	ipcMain.handle(
 		'save-single-document',
-		(e, projectTempPath, projectJotsPath, fileName, fileContents) => {
+		(e, projectTempPath, projectJotsPath, fileName, fileContents, shouldStringify = true) => {
 			// File path to the Documents folder, combined with the folders and file name
 			const filePath = path.join(projectTempPath, fileName);
 
-			// Convert to JSON, then write to file
-			let dataToWrite = JSON.stringify(fileContents);
+			// Convert to JSON if needed, then write to file
+			let dataToWrite = shouldStringify ? JSON.stringify(fileContents) : fileContents;
 			fs.writeFileSync(filePath, dataToWrite);
 
 			// If we already have a .jots file, update it (after a delay)

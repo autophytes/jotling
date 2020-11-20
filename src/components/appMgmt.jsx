@@ -39,6 +39,7 @@ const AppMgmt = () => {
 	// STATE
 	const [structureLoaded, setStructureLoaded] = useState(false);
 	const [linkStructureLoaded, setLinkStructureLoaded] = useState(false);
+	const [mediaStructureLoaded, setMediaStructureLoaded] = useState(false);
 	const [prevProj, setPrevProj] = useState('');
 	const [saveProject, setSaveProject] = useState({});
 	const [needCurrentDocReset, setNeedCurrentDocReset] = useState(false);
@@ -50,6 +51,8 @@ const AppMgmt = () => {
 		docStructureRef,
 		linkStructure,
 		setLinkStructure,
+		mediaStructure,
+		setMediaStructure,
 		project,
 		setProject,
 		navData,
@@ -100,6 +103,17 @@ const AppMgmt = () => {
 		setLinkStructure(newLinkStructure.fileContents);
 		setLinkStructureLoaded(true);
 	}, [setLinkStructure, project.tempPath]);
+
+	// Loads the document media structure (function)
+	const loadMediaStructure = useCallback(async () => {
+		const newMediaStructure = await ipcRenderer.invoke(
+			'read-single-document',
+			project.tempPath,
+			'mediaStructure.json'
+		);
+		setMediaStructure(newMediaStructure.fileContents);
+		setMediaStructureLoaded(true);
+	}, [setMediaStructure, project.tempPath]);
 
 	const resetCurrentDoc = useCallback(() => {
 		// Find the first document in the first tab with contents
@@ -166,9 +180,10 @@ const AppMgmt = () => {
 			setEditorArchives({});
 			loadDocStructure({ isNewProject: true });
 			loadLinkStructure();
+			loadMediaStructure();
 			setPrevProj(project.tempPath);
 		}
-	}, [loadDocStructure, loadLinkStructure, prevProj, project]);
+	}, [loadDocStructure, loadMediaStructure, prevProj, project]);
 
 	// Saves the document map after every change
 	useEffect(() => {

@@ -12,6 +12,7 @@ const LeftNavContextProvider = (props) => {
 	// STATE
 	const [docStructure, setDocStructure] = useState({});
 	const [linkStructure, setLinkStructure] = useState({});
+	const [mediaStructure, setMediaStructure] = useState({});
 	const [project, setProject] = useState({ tempPath: '', jotsPath: '' });
 	const [navData, setNavData] = useState({
 		currentDoc: '',
@@ -130,6 +131,8 @@ const LeftNavContextProvider = (props) => {
 				setSyncLinkIdList,
 				uploadImageUrl,
 				setUploadImageUrl,
+				mediaStructure,
+				setMediaStructure,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

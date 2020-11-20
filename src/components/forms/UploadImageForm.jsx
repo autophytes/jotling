@@ -1,4 +1,6 @@
 import React, { useState, useContext } from 'react';
+import { ipcRenderer } from 'electron';
+
 import ReactCrop from 'react-image-crop';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
@@ -17,35 +19,53 @@ const MAX_HEIGHT = 1000;
 
 const UploadImageForm = () => {
 	const [image, setImage] = useState(null);
-	const [croppedImgUrl, setCroppedImgUrl] = useState(null);
+	const [croppedImgBlob, setCroppedImgBlob] = useState(null);
 	const [fileUrl, setFileUrl] = useState(null);
 	const [crop, setCrop] = useState({
 		unit: '%',
 		width: 75,
+		height: 75,
 		x: 12.5,
 		y: 12.5,
-		aspect: 1 / 1,
+		// aspect: 1 / 1,
 	});
 
-	const { uploadImageUrl, setUploadImageUrl } = useContext(LeftNavContext);
+	const {
+		uploadImageUrl,
+		setUploadImageUrl,
+		mediaStructure,
+		setMediaStructure,
+		navData,
+		project,
+	} = useContext(LeftNavContext);
 
 	const makeClientCrop = async (crop) => {
 		if (image && crop.width && crop.height) {
 			const newUrl = await getCroppedImg(image, crop, 'newFile.jpeg');
-			setCroppedImgUrl(newUrl);
+			setCroppedImgBlob(newUrl);
 		}
 	};
 
 	// Uses Canvas to crop and compress the image
 	const getCroppedImg = (image, crop, fileName) => {
+		console.log('image: ', image);
 		const canvas = document.createElement('canvas');
 		const scaleX = image.naturalWidth / image.width;
 		const scaleY = image.naturalHeight / image.height;
 
 		// Sets the new canvas to be the same size as the cropped image
 		// NEED TO FIX - if the width or height is constrained, the other needs to be adjusted to scale
-		canvas.width = Math.min(Math.ceil(crop.width * scaleX), MAX_WIDTH);
-		canvas.height = Math.min(Math.ceil(crop.height * scaleY), MAX_HEIGHT);
+		const unconstrainedWidth = Math.ceil(crop.width * scaleX);
+		const unconstrainedHeight = Math.ceil(crop.height * scaleY);
+		const maxWidthRatio = MAX_WIDTH / unconstrainedWidth; // If less than 1, we're constrained
+		const maxHeightRatio = MAX_HEIGHT / unconstrainedHeight; // If less than 1, we're constrained
+		const maxConstraint = Math.min(maxWidthRatio, maxHeightRatio);
+
+		canvas.width = maxConstraint > 1 ? unconstrainedWidth * maxConstraint : unconstrainedWidth;
+		canvas.height =
+			maxConstraint > 1 ? unconstrainedHeight * maxConstraint : unconstrainedHeight;
+		// canvas.width = Math.min(Math.ceil(crop.width * scaleX), MAX_WIDTH);
+		// canvas.height = Math.min(Math.ceil(crop.height * scaleY), MAX_HEIGHT);
 
 		const ctx = canvas.getContext('2d');
 
@@ -85,6 +105,41 @@ const UploadImageForm = () => {
 		});
 	};
 
+	const submitImage = (e) => {
+		// e.stopPropagation();
+		// e.preventDefault();
+		const mediaIds = Object.keys(mediaStructure).map((item) => Number(item));
+		const newId = Math.max(...mediaIds) + 1;
+		const fileName = `media${newId}.jpeg`;
+
+		// NEED TO FIX SENDING THE IMAGE
+		// https://stackoverflow.com/questions/43562192/write-file-to-disk-from-blob-in-electron-application
+		var buffer = new Buffer(croppedImgBlob);
+
+		ipcRenderer.invoke(
+			'save-single-document',
+			project.tempPath + '/media',
+			project.jotsPath,
+			fileName,
+			buffer,
+			false // prevents stringifying the contents
+		);
+
+		let newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
+		newMediaStructure[newId] = {
+			fileName,
+			name: '',
+			uses: {
+				1: {
+					sourceDoc: navData.currentDoc,
+				},
+			},
+		};
+
+		setMediaStructure(newMediaStructure);
+		setUploadImageUrl(false);
+	};
+
 	return (
 		<PopupModal setDisplayModal={setUploadImageUrl}>
 			<h2 className='popup-modal-title'>Upload New Image</h2>
@@ -102,6 +157,13 @@ const UploadImageForm = () => {
 					onComplete={makeClientCrop}
 					onChange={(crop) => setCrop(crop)}
 				/>
+
+				{/* Submit */}
+				{image && (
+					<button className='submit-button' onClick={submitImage}>
+						Submit
+					</button>
+				)}
 			</div>
 		</PopupModal>
 	);

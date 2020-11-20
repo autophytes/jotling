@@ -7,7 +7,11 @@ const tar = require('tar');
 const Store = require('electron-store');
 const store = new Store();
 
-const { docStructureTemplate, linkStructureTemplate } = require('./structureTemplates');
+const {
+	docStructureTemplate,
+	linkStructureTemplate,
+	mediaStructureTemplate,
+} = require('./structureTemplates');
 
 // Create a new blank project
 const createNewProjectStructure = (projectTempDirectory) => {
@@ -23,6 +27,9 @@ const createNewProjectStructure = (projectTempDirectory) => {
 
 	let newLinkStructure = JSON.stringify(linkStructureTemplate);
 	fs.writeFileSync(path.join(projectTempDirectory, 'linkStructure.json'), newLinkStructure);
+
+	let newMediaStructure = JSON.stringify(mediaStructureTemplate);
+	fs.writeFileSync(path.join(projectTempDirectory, 'mediaStructure.json'), newMediaStructure);
 };
 
 // Creates a temp folder and extracts a project to that folder
