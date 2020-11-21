@@ -2,7 +2,7 @@
 
 // Import parts of electron to use
 require('v8-compile-cache'); // Speeds up boot time
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, protocol } = require('electron');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
@@ -116,6 +116,14 @@ app.on('open-file', (e, jotsPath) => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
+	// Set up local file handling
+	protocol.registerFileProtocol('file', (request, callback) => {
+		console.log('request:', request);
+		console.log('request.url:', request.url);
+		let pathname = request.url.replace('file:///', '');
+		callback(pathname);
+	});
+
 	// TEMPORARY - Generates and opens a Between Worlds project
 	if (dev && process.platform === 'darwin') {
 		let docsPath = app.getPath('documents');

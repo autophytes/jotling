@@ -1,19 +1,22 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { ipcRenderer } from 'electron';
-
-import ReactCrop from 'react-image-crop';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
 
 import PopupModal from '../containers/PopupModal';
 
-const CROP = {
-	unit: '%',
-	width: 75,
-	x: 12.5,
-	y: 12.5,
-	aspect: 1 / 1,
-};
+import { insertImageEntity } from '../editor/editorFunctions';
+
+import ReactCrop from 'react-image-crop';
+
+// const CROP = {
+// 	unit: '%',
+// 	width: 75,
+// 	x: 12.5,
+// 	y: 12.5,
+// 	aspect: 1 / 1,
+// };
+
 const MAX_WIDTH = 1000;
 const MAX_HEIGHT = 1000;
 
@@ -23,14 +26,16 @@ const UploadImageForm = () => {
 	const [fileUrl, setFileUrl] = useState(null);
 	const [crop, setCrop] = useState({
 		unit: '%',
-		width: 75,
-		height: 75,
-		x: 12.5,
-		y: 12.5,
+		width: 100,
+		height: 100,
+		x: 0,
+		y: 0,
 		// aspect: 1 / 1,
 	});
 
 	const {
+		editorStateRef,
+		setEditorStateRef,
 		uploadImageUrl,
 		setUploadImageUrl,
 		mediaStructure,
@@ -39,10 +44,17 @@ const UploadImageForm = () => {
 		project,
 	} = useContext(LeftNavContext);
 
+	useEffect(() => {
+		console.log('the image use effect triggered, calling make client crop');
+		makeClientCrop(crop);
+		// Don't include crop in monitored variables.
+	}, [image]);
+
 	const makeClientCrop = async (crop) => {
 		if (image && crop.width && crop.height) {
-			const newUrl = await getCroppedImg(image, crop, 'newFile.jpeg');
-			setCroppedImgBlob(newUrl);
+			const newBlob = await getCroppedImg(image, crop, 'newFile.jpeg');
+			console.log('newBlob:', newBlob);
+			setCroppedImgBlob(newBlob);
 		}
 	};
 
@@ -61,9 +73,9 @@ const UploadImageForm = () => {
 		const maxHeightRatio = MAX_HEIGHT / unconstrainedHeight; // If less than 1, we're constrained
 		const maxConstraint = Math.min(maxWidthRatio, maxHeightRatio);
 
-		canvas.width = maxConstraint > 1 ? unconstrainedWidth * maxConstraint : unconstrainedWidth;
+		canvas.width = maxConstraint < 1 ? unconstrainedWidth * maxConstraint : unconstrainedWidth;
 		canvas.height =
-			maxConstraint > 1 ? unconstrainedHeight * maxConstraint : unconstrainedHeight;
+			maxConstraint < 1 ? unconstrainedHeight * maxConstraint : unconstrainedHeight;
 		// canvas.width = Math.min(Math.ceil(crop.width * scaleX), MAX_WIDTH);
 		// canvas.height = Math.min(Math.ceil(crop.height * scaleY), MAX_HEIGHT);
 
@@ -80,8 +92,8 @@ const UploadImageForm = () => {
 			crop.height * scaleY,
 			0,
 			0,
-			Math.min(crop.width * scaleX, MAX_WIDTH), // AGAIN, SCALING ISSUES WITH MAX
-			Math.min(crop.height * scaleY, MAX_HEIGHT) // AGAIN, SCALING ISSUES WITH MAX
+			crop.width * scaleX * Math.min(maxConstraint, 1), // AGAIN, SCALING ISSUES WITH MAX
+			crop.height * scaleY * Math.min(maxConstraint, 1) // AGAIN, SCALING ISSUES WITH MAX
 		);
 
 		// Converts the image to a blob, compresses, saves the URL
@@ -109,35 +121,52 @@ const UploadImageForm = () => {
 		// e.stopPropagation();
 		// e.preventDefault();
 		const mediaIds = Object.keys(mediaStructure).map((item) => Number(item));
-		const newId = Math.max(...mediaIds) + 1;
+		console.log('mediaIds:', mediaIds);
+		const newId = mediaIds.length ? Math.max(...mediaIds) + 1 : 1;
+		console.log('newId:', newId);
 		const fileName = `media${newId}.jpeg`;
+		// console.log(croppedImgBlob);
 
 		// NEED TO FIX SENDING THE IMAGE
 		// https://stackoverflow.com/questions/43562192/write-file-to-disk-from-blob-in-electron-application
-		var buffer = new Buffer(croppedImgBlob);
+		// var buffer = Buffer.from(croppedImgBlob);
 
-		ipcRenderer.invoke(
-			'save-single-document',
-			project.tempPath + '/media',
-			project.jotsPath,
-			fileName,
-			buffer,
-			false // prevents stringifying the contents
-		);
+		const reader = new FileReader();
+		reader.onload = () => {
+			if (reader.readyState == 2) {
+				var buffer = Buffer.from(reader.result);
 
-		let newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
-		newMediaStructure[newId] = {
-			fileName,
-			name: '',
-			uses: {
-				1: {
-					sourceDoc: navData.currentDoc,
-				},
-			},
+				// Save the file
+				ipcRenderer.invoke(
+					'save-single-document',
+					project.tempPath + '/media',
+					project.jotsPath,
+					fileName,
+					buffer,
+					false // prevents stringifying the contents
+				);
+
+				// Add the file to the mediaStructure
+				let newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
+				newMediaStructure[newId] = {
+					fileName,
+					name: '',
+					uses: {
+						1: {
+							sourceDoc: navData.currentDoc,
+						},
+					},
+				};
+
+				// EVENTUALLY NEED TO INCREMENT IMAGE USE IDS
+				insertImageEntity(newId, 1, editorStateRef.current, setEditorStateRef.current);
+
+				setMediaStructure(newMediaStructure);
+				setUploadImageUrl(false);
+			}
 		};
 
-		setMediaStructure(newMediaStructure);
-		setUploadImageUrl(false);
+		reader.readAsArrayBuffer(croppedImgBlob);
 	};
 
 	return (
@@ -153,7 +182,10 @@ const UploadImageForm = () => {
 					crop={crop}
 					ruleOfThirds
 					// circularCrop
-					onImageLoaded={(img) => setImage(img)}
+					onImageLoaded={(img) => {
+						console.log('on image loaded fired!');
+						setImage(img);
+					}}
 					onComplete={makeClientCrop}
 					onChange={(crop) => setCrop(crop)}
 				/>
