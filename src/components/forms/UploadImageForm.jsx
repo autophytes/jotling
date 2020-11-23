@@ -73,11 +73,11 @@ const UploadImageForm = () => {
 		const maxHeightRatio = MAX_HEIGHT / unconstrainedHeight; // If less than 1, we're constrained
 		const maxConstraint = Math.min(maxWidthRatio, maxHeightRatio);
 
-		canvas.width = maxConstraint < 1 ? unconstrainedWidth * maxConstraint : unconstrainedWidth;
-		canvas.height =
-			maxConstraint < 1 ? unconstrainedHeight * maxConstraint : unconstrainedHeight;
-		// canvas.width = Math.min(Math.ceil(crop.width * scaleX), MAX_WIDTH);
-		// canvas.height = Math.min(Math.ceil(crop.height * scaleY), MAX_HEIGHT);
+		const fullCropWidth = Math.ceil(unconstrainedWidth * Math.min(maxConstraint, 1));
+		const fullCropHeight = Math.ceil(unconstrainedHeight * Math.min(maxConstraint, 1));
+
+		canvas.width = fullCropWidth;
+		canvas.height = fullCropHeight;
 
 		const ctx = canvas.getContext('2d');
 
@@ -88,12 +88,12 @@ const UploadImageForm = () => {
 			image,
 			crop.x * scaleX,
 			crop.y * scaleY,
-			crop.width * scaleX,
-			crop.height * scaleY,
+			unconstrainedWidth,
+			unconstrainedHeight,
 			0,
 			0,
-			crop.width * scaleX * Math.min(maxConstraint, 1), // AGAIN, SCALING ISSUES WITH MAX
-			crop.height * scaleY * Math.min(maxConstraint, 1) // AGAIN, SCALING ISSUES WITH MAX
+			fullCropWidth,
+			fullCropHeight
 		);
 
 		// Converts the image to a blob, compresses, saves the URL
@@ -147,6 +147,7 @@ const UploadImageForm = () => {
 				);
 
 				// Add the file to the mediaStructure
+				// When initializing the use ID, start at 1, not 0!
 				let newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
 				newMediaStructure[newId] = {
 					fileName,

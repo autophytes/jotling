@@ -575,9 +575,11 @@ export const insertImageEntity = (imageId, imageUseId, editorState, setEditorSta
 	const newSelectionState = SelectionState.createEmpty();
 	const blockEndSelectionState = newSelectionState.merge({
 		anchorKey: blockKey, // Starting position
-		anchorOffset: block.getLength(), // How much to adjust from the starting position
+		anchorOffset: 0, // How much to adjust from the starting position
+		// anchorOffset: block.getLength(), // How much to adjust from the starting position
 		focusKey: blockKey, // Ending position
-		focusOffset: block.getLength(), // How much to adjust from the ending position.
+		focusOffset: 0, // How much to adjust from the ending position.
+		// focusOffset: block.getLength(), // How much to adjust from the ending position.
 	});
 
 	// Insert the character with the image entity at the end of the block
