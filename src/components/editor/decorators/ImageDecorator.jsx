@@ -44,8 +44,14 @@ const ImageDecorator = ({
 	childDecorator = {},
 }) => {
 	// CONTEXT
-	// const { editorMaxWidth } = useContext(SettingsContext).editorSettings;
-	const { project, mediaStructure, setMediaStructure } = useContext(LeftNavContext);
+	const { editorMaxWidth, editorPadding } = useContext(SettingsContext).editorSettings;
+	const {
+		editorStateRef,
+		setEditorState,
+		project,
+		mediaStructure,
+		setMediaStructure,
+	} = useContext(LeftNavContext);
 
 	// STATE
 	const [imageUrl, setImageUrl] = useState(null);
@@ -120,15 +126,24 @@ const ImageDecorator = ({
 
 	// Set image styles
 	useEffect(() => {
+		const rootSize = Number(
+			window
+				.getComputedStyle(document.querySelector(':root'))
+				.getPropertyValue('font-size')
+				.replace('px', '')
+		);
+		const pageWidth = (editorMaxWidth - editorPadding * 2) * rootSize;
+
 		let newStyle = {
 			maxWidth: '100%',
 			padding: '2px',
 		};
 		if (displayData.resize && displayData.resize.width) {
 			newStyle.width = displayData.resize.width.toString() + 'px';
-		}
-		if (displayData.resize && displayData.resize.height) {
+		} else if (displayData.resize && displayData.resize.height) {
 			newStyle.height = displayData.resize.height.toString() + 'px';
+		} else {
+			newStyle.width = Math.ceil(pageWidth * 0.5) + 'px';
 		}
 
 		setStyle(newStyle);
@@ -257,10 +272,51 @@ const ImageDecorator = ({
 		window.addEventListener('mouseup', handleResizeBottomMouseUp);
 	};
 
+	// const handleDragStart = () => {
+	// 	console.log('drag start');
+
+	// 	const handleDragEnd = () => {
+	// 		console.log('drag ended');
+	// 		document.removeEventListener('mousemove', handleDragMove);
+	// 		document.removeEventListener('mouseup', handleDragEnd);
+	// 	};
+
+	// 	const handleDragMove = (e) => {
+	// 		console.log('e: ', e);
+	// 		const selection = editorStateRef.current.getSelection();
+	// 		console.log('selectionStart: ', selection.getStartOffset());
+	// 	};
+
+	// 	document.addEventListener('mousemove', handleDragMove);
+	// 	document.addEventListener('mouseup', handleDragEnd);
+	// };
+
+	const handleDragStart = (e) => {
+		// Set the drop type (not sure if working - logging the dataTransfer still seems empty)
+		e.dataTransfer.dropEffect = 'move';
+
+		// Store the data for the image to move
+		e.dataTransfer.setData('image-block-key', blockKey);
+		e.dataTransfer.setData('image-start-offset', start);
+	};
+
+	// const handleDragMove = (e) => {
+	// 	console.log('e: ', e);
+	// 	// const selection = editorStateRef.current.getSelection();
+	// 	// console.log('selectionStart: ', selection.getStartOffset());
+	// 	console.log('selection: ', window.getSelection());
+	// };
+
 	return (
 		!!imageUrl && (
 			<div className='decorator-image-wrapper'>
-				<img ref={imgRef} className='decorator-image' src={imageUrl} style={style} />
+				<img
+					ref={imgRef}
+					className='decorator-image'
+					src={imageUrl}
+					style={style}
+					onDragStart={handleDragStart}
+				/>
 				<div className='peek-window-resize left' onMouseDown={handleResizeLeftMouseDown} />
 				<div className='peek-window-resize right' onMouseDown={handleResizeRightMouseDown} />
 				<div className='peek-window-resize bottom' onMouseDown={handleResizeBottomMouseDown} />
@@ -298,4 +354,29 @@ const getImageIds = (entityKey, contentState, blockKey, start) => {
 	return contentState.getEntity(retrievedEntityKey).data;
 };
 
-export { ImageDecorator };
+// Handle the moved image (eventually probably hook other moves into this too)
+// Plugged into the Editor component, wrapped to provide editorState and setter.
+const handleDrop = (selection, dataTransfer, isInternal, editorStateRef, setEditorState) => {
+	console.log('selection: ', selection);
+	console.log('dataTransfer: ', dataTransfer);
+	console.log('isInternal: ', isInternal);
+
+	const text = dataTransfer.data.getData('text');
+	console.log('text:', text);
+	const imageBlockKey = dataTransfer.data.getData('image-block-key');
+	console.log('imageBlockKey:', imageBlockKey);
+	const imageStartOffset = dataTransfer.data.getData('image-start-offset');
+	console.log('imageStartOffset:', imageStartOffset);
+
+	// Ensure a valid move
+	// Get the old entity key
+	// Remove the space with the old entity in it
+	// Insert a space between words(?) with the new image metadata
+	// Can we determine if it's in the left/right half? If so, set the float left/right metadata
+	// We'll need to pull handlers for this in from somewhere - where does the plugin do it?
+
+	// Only return handled if we don't want Draft to continue processing
+	return 'handled';
+};
+
+export { ImageDecorator, handleDrop };

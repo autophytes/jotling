@@ -46,6 +46,7 @@ import {
 } from './editorFunctions';
 import { LinkDestBlock } from './decorators/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
+import { handleDrop } from './decorators/ImageDecorator';
 
 import EditorFindReplace from './EditorFindReplace';
 
@@ -267,6 +268,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		twoKeyStrokesAgo = oneKeyStrokeAgo;
 		oneKeyStrokeAgo = e.keyCode;
 		return getDefaultKeyBinding(e);
+	};
+
+	// Provides the additional editorState and setEditorState props to handleDrop
+	const wrappedHandleDrop = (selection, dataTransfer, isInternal) => {
+		handleDrop(selection, dataTransfer, isInternal, editorStateRef, setEditorState);
 	};
 
 	// Process the key presses
@@ -666,6 +672,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						keyBindingFn={customKeyBindingFn}
 						handleKeyCommand={handleKeyCommand}
 						handleBeforeInput={handleBeforeInput}
+						handleDrop={wrappedHandleDrop}
 						customStyleMap={customStyleMap}
 						blockStyleFn={blockStyleFn}
 						blockRendererFn={blockRendererFn}
