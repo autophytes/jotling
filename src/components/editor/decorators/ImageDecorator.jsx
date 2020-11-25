@@ -1,8 +1,10 @@
 import React, { useContext, useState, useEffect, useRef, useMemo } from 'react';
-import { EditorBlock } from 'draft-js';
+import { EditorState, Modifier, SelectionState } from 'draft-js';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../contexts/settingsContext';
+
+import { ImageIcon } from '../../../assets/svg/ImageIcon.js';
 
 const MIN_WIDTH = 50;
 const MIN_HEIGHT = 50;
@@ -59,6 +61,10 @@ const ImageDecorator = ({
 	const [imageUseId, setImageUseId] = useState(null);
 	const [displayData, setDisplayData] = useState({});
 	const [style, setStyle] = useState({ maxWidth: '100%' });
+	const [pageWidth, setPageWidth] = useState(null);
+
+	// TESTING
+	const [disable, setDisable] = useState(false);
 
 	// REF
 	const imgRef = useRef(null);
@@ -71,29 +77,23 @@ const ImageDecorator = ({
 		setImageUseId(imageUseId);
 	}, [entityKey, project]);
 
+	// Calculate the page width
+	useEffect(() => {
+		const rootSize = Number(
+			window
+				.getComputedStyle(document.querySelector(':root'))
+				.getPropertyValue('font-size')
+				.replace('px', '')
+		);
+		const pageWidth = (editorMaxWidth - editorPadding * 2) * rootSize;
+
+		setPageWidth(pageWidth);
+	}, [editorMaxWidth, editorPadding]);
+
 	// Load the displayData from our mediaStructure
 	useEffect(() => {
 		if (imageId && imageUseId) {
 			let data = mediaStructure[imageId].uses[imageUseId];
-
-			// // If the width/height doesn't already exist, need to set
-			// if (!data.resize.width && !data.resize.height) {
-			//   let rootSize = Number(
-			//     window
-			//       .getComputedStyle(document.querySelector(':root'))
-			//       .getPropertyValue('font-size')
-			//       .replace('px', '')
-			//   );
-			//   let initialWidth = editorMaxWidth * rootSize / 4;
-
-			// }
-			// let rootSize = Number(
-			//   window
-			//     .getComputedStyle(document.querySelector(':root'))
-			//     .getPropertyValue('font-size')
-			//     .replace('px', '')
-			// );
-			// let initialWidth = editorMaxWidth * rootSize / 4;
 
 			setDisplayData(data);
 		}
@@ -126,18 +126,12 @@ const ImageDecorator = ({
 
 	// Set image styles
 	useEffect(() => {
-		const rootSize = Number(
-			window
-				.getComputedStyle(document.querySelector(':root'))
-				.getPropertyValue('font-size')
-				.replace('px', '')
-		);
-		const pageWidth = (editorMaxWidth - editorPadding * 2) * rootSize;
-
 		let newStyle = {
 			maxWidth: '100%',
 			padding: '2px',
+			display: 'block',
 		};
+
 		if (displayData.resize && displayData.resize.width) {
 			newStyle.width = displayData.resize.width.toString() + 'px';
 		} else if (displayData.resize && displayData.resize.height) {
@@ -146,43 +140,37 @@ const ImageDecorator = ({
 			newStyle.width = Math.ceil(pageWidth * 0.5) + 'px';
 		}
 
-		setStyle(newStyle);
-	}, [displayData]);
+		if (disable) {
+			newStyle.display = 'none';
+		}
 
-	// RESIZE LEFT
-	const handleResizeLeftMouseDown = (e) => {
+		setStyle(newStyle);
+	}, [displayData, pageWidth, disable]);
+
+	// RESIZE HORIZONTAL
+	const handleResizeHorizontalMouseDown = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
 		const initialX = e.clientX;
 		const startWidth = imgRef.current.getBoundingClientRect().width;
 
 		// When the mouse moves, update the width to reflext the mouse's X coordinate
-		const handleResizeLeftMouseMove = (e) => {
+		const handleResizeHorizontalMouseMove = (e) => {
 			if (e.clientX !== 0) {
-				// const tempWidth = displayData.resize.width - (e.clientX - mouseX);
 				const newWidth = Math.max(MIN_WIDTH, startWidth - (e.clientX - initialX));
 
-				// const newX =
-				// 	tempWidth > minWidth
-				// 		? containerLeft + (e.clientX - mouseX)
-				// 		: containerLeft + (startWidth - minWidth);
-
-				// imgRef.current.style.left = newX + 'px';
 				imgRef.current.style.width = newWidth + 'px';
 				imgRef.current.style.height = 'auto';
 			}
 		};
 
 		// When finshed resizing, set the width in REMs so it responds to root size changes
-		const handleResizeLeftMouseUp = (e) => {
-			// setIsResizing(false);
-			window.removeEventListener('mousemove', handleResizeLeftMouseMove);
-			window.removeEventListener('mouseup', handleResizeLeftMouseUp);
+		const handleResizeHorizontalMouseUp = (e) => {
+			window.removeEventListener('mousemove', handleResizeHorizontalMouseMove);
+			window.removeEventListener('mouseup', handleResizeHorizontalMouseUp);
 
-			// const tempWidth = containerWidth - (e.clientX - mouseX);
 			const newWidth = Math.max(MIN_WIDTH, startWidth - (e.clientX - initialX));
 
-			// const newX = tempWidth > minWidth ? containerLeft + (e.clientX - mouseX) : containerLeft;
-
-			// setContainerWidth(newWidth);j
 			setDisplayData((prev) => ({
 				...prev,
 				resize: {
@@ -193,57 +181,31 @@ const ImageDecorator = ({
 			}));
 		};
 
-		window.addEventListener('mousemove', handleResizeLeftMouseMove);
-		window.addEventListener('mouseup', handleResizeLeftMouseUp);
+		window.addEventListener('mousemove', handleResizeHorizontalMouseMove);
+		window.addEventListener('mouseup', handleResizeHorizontalMouseUp);
 	};
 
-	// RESIZE RIGHT
-	const handleResizeRightMouseDown = (e) => {
-		const initialX = e.clientX;
-		const startWidth = imgRef.current.getBoundingClientRect().width;
+	// RESIZE VERTICAL
+	const handleResizeVerticalMouseDown = (e) => {
+		e.preventDefault();
+		// e.stopPropagation();
 
-		// When the mouse moves, update the width to reflext the mouse's X coordinate
-		const handleResizeRightMouseMove = (e) => {
-			if (e.clientX !== 0) {
-				const newWidth = Math.max(MIN_WIDTH, startWidth + (e.clientX - initialX));
-
-				imgRef.current.style.width = newWidth + 'px';
-				imgRef.current.style.height = 'auto';
-			}
-		};
-
-		// When finshed resizing, set the width in REMs so it responds to root size changes
-		const handleResizeRightMouseUp = (e) => {
-			// setIsResizing(false);
-			window.removeEventListener('mousemove', handleResizeRightMouseMove);
-			window.removeEventListener('mouseup', handleResizeRightMouseUp);
-
-			const newWidth = Math.max(MIN_WIDTH, startWidth + (e.clientX - initialX));
-
-			// setContainerWidth(newWidth);
-			setDisplayData((prev) => ({
-				...prev,
-				resize: {
-					...prev.resize,
-					width: newWidth,
-					height: null,
-				},
-			}));
-		};
-
-		window.addEventListener('mousemove', handleResizeRightMouseMove);
-		window.addEventListener('mouseup', handleResizeRightMouseUp);
-	};
-
-	// RESIZE BOTTOM
-	const handleResizeBottomMouseDown = (e) => {
 		const initialY = e.clientY;
 		const startHeight = imgRef.current.getBoundingClientRect().height;
 
+		// Calculate max height
+		const fullHeight = imgRef.current.naturalHeight;
+		const fullWidth = imgRef.current.naturalWidth;
+		const aspectRatio = fullWidth / fullHeight;
+		const maxHeight = (pageWidth - 8) / aspectRatio; // Remove the 8px image margin
+
 		// When the mouse moves, update the width to reflext the mouse's X coordinate
-		const handleResizeBottomMouseMove = (e) => {
+		const handleResizeVerticalMouseMove = (e) => {
 			if (e.clientY !== 0) {
-				const newHeight = Math.max(MIN_HEIGHT, startHeight + (e.clientY - initialY));
+				const newHeight = Math.min(
+					Math.max(MIN_HEIGHT, startHeight + (e.clientY - initialY)),
+					maxHeight
+				);
 
 				imgRef.current.style.height = newHeight + 'px';
 				imgRef.current.style.width = 'auto';
@@ -251,11 +213,14 @@ const ImageDecorator = ({
 		};
 
 		// When finshed resizing, set the width in REMs so it responds to root size changes
-		const handleResizeBottomMouseUp = (e) => {
-			window.removeEventListener('mousemove', handleResizeBottomMouseMove);
-			window.removeEventListener('mouseup', handleResizeBottomMouseUp);
+		const handleResizeVerticalMouseUp = (e) => {
+			window.removeEventListener('mousemove', handleResizeVerticalMouseMove);
+			window.removeEventListener('mouseup', handleResizeVerticalMouseUp);
 
-			const newHeight = Math.max(MIN_HEIGHT, startHeight + (e.clientY - initialY));
+			const newHeight = Math.min(
+				Math.max(MIN_HEIGHT, startHeight + (e.clientY - initialY)),
+				maxHeight
+			);
 
 			// setContainerHeight(newHeight);
 			setDisplayData((prev) => ({
@@ -268,28 +233,9 @@ const ImageDecorator = ({
 			}));
 		};
 
-		window.addEventListener('mousemove', handleResizeBottomMouseMove);
-		window.addEventListener('mouseup', handleResizeBottomMouseUp);
+		window.addEventListener('mousemove', handleResizeVerticalMouseMove);
+		window.addEventListener('mouseup', handleResizeVerticalMouseUp);
 	};
-
-	// const handleDragStart = () => {
-	// 	console.log('drag start');
-
-	// 	const handleDragEnd = () => {
-	// 		console.log('drag ended');
-	// 		document.removeEventListener('mousemove', handleDragMove);
-	// 		document.removeEventListener('mouseup', handleDragEnd);
-	// 	};
-
-	// 	const handleDragMove = (e) => {
-	// 		console.log('e: ', e);
-	// 		const selection = editorStateRef.current.getSelection();
-	// 		console.log('selectionStart: ', selection.getStartOffset());
-	// 	};
-
-	// 	document.addEventListener('mousemove', handleDragMove);
-	// 	document.addEventListener('mouseup', handleDragEnd);
-	// };
 
 	const handleDragStart = (e) => {
 		// Set the drop type (not sure if working - logging the dataTransfer still seems empty)
@@ -298,14 +244,15 @@ const ImageDecorator = ({
 		// Store the data for the image to move
 		e.dataTransfer.setData('image-block-key', blockKey);
 		e.dataTransfer.setData('image-start-offset', start);
-	};
 
-	// const handleDragMove = (e) => {
-	// 	console.log('e: ', e);
-	// 	// const selection = editorStateRef.current.getSelection();
-	// 	// console.log('selectionStart: ', selection.getStartOffset());
-	// 	console.log('selection: ', window.getSelection());
-	// };
+		// Set the ghost image
+		// const base64Icon = btoa(ImageIcon);
+		// let img = new Image();
+		// img.src = base64Icon;
+		// e.dataTransfer.setDragImage(img, 10, 10);
+
+		setDisable(true);
+	};
 
 	return (
 		!!imageUrl && (
@@ -316,22 +263,32 @@ const ImageDecorator = ({
 					src={imageUrl}
 					style={style}
 					onDragStart={handleDragStart}
+					onDragEnd={() => setDisable(false)}
 				/>
-				<div className='peek-window-resize left' onMouseDown={handleResizeLeftMouseDown} />
-				<div className='peek-window-resize right' onMouseDown={handleResizeRightMouseDown} />
-				<div className='peek-window-resize bottom' onMouseDown={handleResizeBottomMouseDown} />
+				<div
+					className='peek-window-resize left'
+					onMouseDown={handleResizeHorizontalMouseDown}
+				/>
+				<div
+					className='peek-window-resize right'
+					onMouseDown={handleResizeHorizontalMouseDown}
+				/>
+				<div
+					className='peek-window-resize bottom'
+					onMouseDown={handleResizeVerticalMouseDown}
+				/>
 				<div
 					className='peek-window-resize bottom-left'
 					onMouseDown={(e) => {
-						handleResizeLeftMouseDown(e);
-						handleResizeBottomMouseDown(e);
+						handleResizeHorizontalMouseDown(e);
+						handleResizeVerticalMouseDown(e);
 					}}
 				/>
 				<div
 					className='peek-window-resize bottom-right'
 					onMouseDown={(e) => {
-						handleResizeRightMouseDown(e);
-						handleResizeBottomMouseDown(e);
+						handleResizeHorizontalMouseDown(e);
+						handleResizeVerticalMouseDown(e);
 					}}
 				/>
 			</div>
@@ -361,12 +318,51 @@ const handleDrop = (selection, dataTransfer, isInternal, editorStateRef, setEdit
 	console.log('dataTransfer: ', dataTransfer);
 	console.log('isInternal: ', isInternal);
 
-	const text = dataTransfer.data.getData('text');
-	console.log('text:', text);
 	const imageBlockKey = dataTransfer.data.getData('image-block-key');
-	console.log('imageBlockKey:', imageBlockKey);
 	const imageStartOffset = dataTransfer.data.getData('image-start-offset');
-	console.log('imageStartOffset:', imageStartOffset);
+	if (!imageBlockKey) {
+		console.log('returning without doing anything');
+		return;
+	}
+
+	const contentState = editorStateRef.current.getCurrentContent();
+	const origBlock = contentState.getBlockForKey(imageBlockKey);
+	console.log('origBlock:', origBlock);
+	const entityKey = origBlock.getEntityAt(imageStartOffset);
+	console.log('entityKey:', entityKey);
+
+	const newSelectionState = SelectionState.createEmpty();
+	const removeSelectionState = newSelectionState.merge({
+		anchorKey: imageBlockKey, // Starting position
+		anchorOffset: Number(imageStartOffset), // How much to adjust from the starting position
+		focusKey: imageBlockKey, // Ending position
+		focusOffset: Number(imageStartOffset) + 1, // How much to adjust from the ending position.
+	});
+	console.log('removeSelectionState:', removeSelectionState);
+
+	const contentStateBeforeInsert = Modifier.removeRange(
+		contentState,
+		removeSelectionState,
+		'forward'
+	);
+
+	// Insert the character with the image entity at the end of the block
+	const contentStateWithImage = Modifier.insertText(
+		contentStateBeforeInsert,
+		selection,
+		' ',
+		undefined,
+		entityKey
+	);
+
+	const newEditorState = EditorState.push(
+		editorStateRef.current,
+		contentStateWithImage,
+		'apply-entity'
+	);
+	console.log('newEditorState:', newEditorState);
+	setEditorState(newEditorState);
+	console.log('setEditorState:', setEditorState);
 
 	// Ensure a valid move
 	// Get the old entity key
