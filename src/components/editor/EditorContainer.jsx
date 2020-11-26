@@ -46,7 +46,7 @@ import {
 } from './editorFunctions';
 import { LinkDestBlock } from './decorators/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
-import { handleDrop } from './decorators/ImageDecorator';
+import { handleDraftImageDrop } from './decorators/ImageDecorator';
 
 import EditorFindReplace from './EditorFindReplace';
 
@@ -89,40 +89,6 @@ const blockStyleFn = (block) => {
 	return '';
 };
 
-// const MyCustomBlock = (props) => {
-//   console.log(props);
-
-// 	return <div className='new-link-destination'>{props.children}</div>;
-// };
-
-// const customBlockRenderMap = Immutable.Map({
-// 	'link-destination': {
-// 		element: 'div',
-// 		wrapper: <MyCustomBlock />,
-// 	},
-// });
-// const blockRenderMap = DefaultDraftBlockRenderMap.merge(customBlockRenderMap);
-
-// const blockRendererFn = (contentBlock) => {
-// 	const type = contentBlock.getType();
-// 	const entity = contentBlock.getEntityAt(0);
-// 	if (entity) {
-// 		console.log('entity: ', entity);
-// 		// console.log('entity type: ', entity.get('type'));
-// 	}
-// 	// LINK-DEST
-// 	if (type === 'link-destination') {
-// 		console.log('rendering the destination block');
-// 		return {
-// 			component: LinkDestBlock,
-// 			editable: true,
-// 			// props: {
-// 			//   foo: 'bar',
-// 			// },
-// 		};
-// 	}
-// };
-
 //
 //
 // COMPONENT
@@ -140,6 +106,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		editorArchives,
 		setEditorArchives,
 		setEditorStateRef,
+		mediaStructure,
+		setMediaStructure,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
 	const {
@@ -272,7 +240,13 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// Provides the additional editorState and setEditorState props to handleDrop
 	const wrappedHandleDrop = (selection, dataTransfer, isInternal) => {
-		handleDrop(selection, dataTransfer, isInternal, editorStateRef, setEditorState);
+		return handleDraftImageDrop(
+			selection,
+			dataTransfer,
+			isInternal,
+			mediaStructure,
+			setMediaStructure
+		);
 	};
 
 	// Process the key presses
