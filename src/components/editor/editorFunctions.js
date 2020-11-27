@@ -20,6 +20,8 @@ import { FindReplaceDecorator } from './decorators/FindReplaceDecorator';
 import { ImageDecorator } from './decorators/ImageDecorator';
 import { CompoundDecorator } from './decorators/CompoundDecorator';
 
+import { IMAGE_CHAR } from './decorators/ImageDecorator';
+
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
 		contentBlock.findEntityRanges((character) => {
@@ -32,22 +34,9 @@ function getEntityStrategy(type) {
 	};
 }
 
-// function hashtagStrategy(contentBlock, callback, contentState) {
-// 	findWithRegex(HASHTAG_REGEX, contentBlock, callback);
-// }
-
-// function findWithRegex(regex, contentBlock, callback) {
-// 	const text = contentBlock.getText();
-// 	let matchArr, start;
-// 	while ((matchArr = regex.exec(text)) !== null) {
-// 		start = matchArr.index;
-// 		callback(start, start + matchArr[0].length);
-// 	}
-// }
-
 const buildFindWithRegexFunction = (findTextArray, findRegisterRef, editorStateRef) => {
 	var regexMetachars = /[(){[*+?.\\^$|]/g;
-	// Escape regex metacharacters in the tags
+	// Escape regex metacharacters in the text
 	for (var i = 0; i < findTextArray.length; i++) {
 		findTextArray[i] = findTextArray[i].replace(regexMetachars, '\\$&');
 	}
@@ -59,7 +48,7 @@ const buildFindWithRegexFunction = (findTextArray, findRegisterRef, editorStateR
 		// 	return;
 		// }
 
-		const text = contentBlock.getText();
+		let text = contentBlock.getText();
 		const blockKey = contentBlock.getKey();
 
 		if (findRegisterRef) {
@@ -133,7 +122,7 @@ export const generateDecorators = (
 			component: HighlightTagDecorator,
 		});
 	}
-	console.log('find text inside the decorator: ', findText);
+
 	if (findText) {
 		decoratorArray.push({
 			strategy: findSearchKeyword(findText, findRegisterRef, editorStateRef),
@@ -564,14 +553,24 @@ export const insertImageEntity = (imageId, imageUseId, editorState, setEditorSta
 	const blockKey = selectionState.getStartKey();
 
 	// Apply the linkId as an entity to the selection
-	const contentStateWithEntity = contentState.createEntity('IMAGE', 'IMMUTABLE', {
-		imageId,
-		imageUseId,
+	// const contentStateWithEntity = contentState.createEntity('IMAGE', 'IMMUTABLE', {
+	// 	imageId,
+	// 	imageUseId,
+	// });
+	// const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+
+	// EVENTUALLY need to get the existing data and add the new image to it
+	const newBlockData = new Map({
+		images: [
+			{
+				imageId,
+				imageUseId,
+			},
+		],
 	});
-	const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
 
 	// Select the end of the block
-	const block = contentStateWithEntity.getBlockForKey(blockKey);
+	// const block = contentStateWithEntity.getBlockForKey(blockKey);
 	const newSelectionState = SelectionState.createEmpty();
 	const blockEndSelectionState = newSelectionState.merge({
 		anchorKey: blockKey, // Starting position
@@ -583,15 +582,24 @@ export const insertImageEntity = (imageId, imageUseId, editorState, setEditorSta
 	});
 
 	// Insert the character with the image entity at the end of the block
-	const contentStateWithImage = Modifier.insertText(
-		contentStateWithEntity,
+	const contentStateWithImage = Modifier.mergeBlockData(
+		contentState,
 		blockEndSelectionState,
-		' ',
-		undefined,
-		entityKey
+		newBlockData
 	);
+	// const contentStateWithImage = Modifier.insertText(
+	// 	contentStateWithEntity,
+	// 	blockEndSelectionState,
+	// 	IMAGE_CHAR,
+	// 	undefined,
+	// 	entityKey
+	// );
 
-	const newEditorState = EditorState.push(editorState, contentStateWithImage, 'apply-entity');
+	const newEditorState = EditorState.push(
+		editorState,
+		contentStateWithImage,
+		'change-block-data'
+	);
 	setEditorState(newEditorState);
 };
 

@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect, useRef, useMemo } from 'react';
-import { EditorState, Modifier, SelectionState } from 'draft-js';
+import { EditorState, Modifier, SelectionState, EditorBlock } from 'draft-js';
+import { Map } from 'immutable';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../contexts/settingsContext';
@@ -8,8 +9,9 @@ import { ImageIcon } from '../../../assets/svg/ImageIcon.js';
 
 const MIN_WIDTH = 50;
 const MIN_HEIGHT = 50;
+const IMAGE_CHAR = ' ';
 
-// PROPS INCLUDE
+// * * * DECORATOR * * *
 // blockKey: BlockNodeKey,
 // children?: Array<React.Node>,
 // contentState: ContentState,
@@ -27,24 +29,24 @@ const MIN_HEIGHT = 50;
 // offsetKey: string,
 // start: number,
 
-// Get the entity key from the block at "start"
-// Add {blockKey, start, end} to an array
-// From our starting block (decorator block), if end is length, check next block
-// If contains entity, add to the END of the array and check the next block. Repeat.
-// From starting block, if start is 0, check the block before to see if it has that key
-// If so, add {blockKey, start, end} to the START of the array as well
+// * * * BLOCK * * *
+// block: ContentBlock {_map: Map, __ownerID: undefined}
+// blockProps: undefined
+// blockStyleFn: block => {…}
+// contentState: ContentState {_map: Map, __ownerID: undefined}
+// customStyleFn: undefined
+// customStyleMap: {BOLD: {…}, CODE: {…}, ITALIC: {…}, STRIKETHROUGH: {…}, UNDERLINE: {…}, …}
+// decorator: CompositeDraftDecorator {_decorators: Array(2)}
+// direction: "LTR"
+// forceSelection: true
+// offsetKey: "ah7m4-0-0"
+// preventScroll: undefined
+// selection: SelectionState {_map: Map, __ownerID: undefined}
+// tree: List
 
-// SOURCE LINK
-const ImageDecorator = ({
-	children,
-	blockKey,
-	entityKey,
-	contentState,
-	start,
-	end,
-	decoratedText,
-	childDecorator = {},
-}) => {
+const ImageDecorator = (props) => {
+	const { block } = props;
+
 	// CONTEXT
 	const { editorMaxWidth, editorPadding } = useContext(SettingsContext).editorSettings;
 	const {
@@ -73,11 +75,12 @@ const ImageDecorator = ({
 
 	// On load (or decorator change - overwriting parts of links does this), grab the Image IDs
 	useEffect(() => {
-		let { imageId, imageUseId } = getImageIds(entityKey, contentState, blockKey, start);
-
-		setImageId(imageId);
-		setImageUseId(imageUseId);
-	}, [entityKey, project]);
+		const imagesArray = block.getData().get('images', []);
+		if (imagesArray.length) {
+			setImageId(imagesArray[0].imageId);
+			setImageUseId(imagesArray[0].imageUseId);
+		}
+	}, [block]);
 
 	// Calculate the page width
 	useEffect(() => {
@@ -109,13 +112,10 @@ const ImageDecorator = ({
 		}
 
 		const reposition = mediaStructure[imageId].uses[imageUseId].reposition;
-		console.log('reposition:', reposition);
 
-		if (reposition && reposition.destBlockKey && reposition.destOffset && repositionX) {
+		if (reposition && reposition.destBlockKey && repositionX) {
+			setRepositionX(null);
 			console.log('repositionX:', repositionX);
-			console.log('reposition.destOffset:', reposition.destOffset);
-			console.log('reposition.destBlockKey:', reposition.destBlockKey);
-			console.log('should call the handleDrop function');
 
 			// *** Update float left/right
 			const docWidth = document.body.clientWidth;
@@ -130,6 +130,7 @@ const ImageDecorator = ({
 			let left = leftIsPinned ? leftNav * rootSize : 0;
 			let right = rightIsPinned ? docWidth - rightNav * rootSize : docWidth;
 			let center = (left + right) / 2;
+			console.log('center:', center);
 
 			let floatDirection = repositionX < center ? 'left' : 'right';
 			const newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
@@ -140,61 +141,75 @@ const ImageDecorator = ({
 				...prev,
 				float: floatDirection,
 			}));
-			// if (repositionX < center) {
-			//   floatDirection = 'left'
-			// 	console.log('congrats! float left');
-			// } else {
-			//   floatDirection = right
-			// 	console.log('bummer, still floating right');
-			// }
 
 			// *** Move the image ***
 			const contentState = editorStateRef.current.getCurrentContent();
-			const origBlock = contentState.getBlockForKey(blockKey);
-			const entityKey = origBlock.getEntityAt(start);
+			const blockKey = block.getKey();
+
+			// If not changing blocks, we're finished.
+			if (reposition.destBlockKey === blockKey) {
+				return;
+			}
 
 			// Select the original image location
 			const newSelectionState = SelectionState.createEmpty();
 			const removeSelectionState = newSelectionState.merge({
 				anchorKey: blockKey, // Starting position
-				anchorOffset: start, // How much to adjust from the starting position
+				anchorOffset: 0, // How much to adjust from the starting position
 				focusKey: blockKey, // Ending position
-				focusOffset: start + 1, // How much to adjust from the ending position.
+				focusOffset: 0, // How much to adjust from the ending position.
 			});
 
-			// Remove the original image
-			const contentStateBeforeInsert = Modifier.removeRange(
+			// Remove the original image from the block data array
+			const origBlockData = block.getData();
+			let imagesArray = origBlockData.get('images', []);
+			const origImageIndex = imagesArray.findIndex(
+				(item) => item.imageId === imageId && item.imageUseId === imageUseId
+			);
+			imagesArray.splice(origImageIndex, 1);
+			const origBlockDataToInsert = origBlockData.set('images', imagesArray);
+
+			// Update the block data to remove the image
+			const contentStateBeforeInsert = Modifier.setBlockData(
 				contentState,
 				removeSelectionState,
-				'forward'
+				origBlockDataToInsert
 			);
 
+			// Update the new block meta data with the additional image
+			const newBlock = contentStateBeforeInsert.getBlockForKey(reposition.destBlockKey);
+			const newBlockData = newBlock.getData();
+			let newImagesArray = newBlockData.get('images', []);
+			newImagesArray.push({
+				imageId,
+				imageUseId,
+			});
+			const newBlockDataToInsert = newBlockData.set('images', newImagesArray);
+
+			// Select the new block
 			const insertSelectionState = newSelectionState.merge({
 				anchorKey: reposition.destBlockKey, // Starting position
-				anchorOffset: reposition.destOffset, // How much to adjust from the starting position
+				anchorOffset: 0, // How much to adjust from the starting position
 				focusKey: reposition.destBlockKey, // Ending position
-				focusOffset: reposition.destOffset, // How much to adjust from the ending position.
+				focusOffset: 0, // How much to adjust from the ending position.
 			});
 
-			// Insert the repositioned image entity
-			const contentStateWithImage = Modifier.insertText(
+			// Update the block data to insert the new image
+			const contentStateAfterInsert = Modifier.mergeBlockData(
 				contentStateBeforeInsert,
 				insertSelectionState,
-				' ',
-				undefined,
-				entityKey
+				newBlockDataToInsert
 			);
 
 			const newEditorState = EditorState.push(
 				editorStateRef.current,
-				contentStateWithImage,
-				'apply-entity'
+				contentStateAfterInsert,
+				'change-block-data'
 			);
 
-			setRepositionX(null);
 			setEditorStateRef.current(newEditorState);
 		}
-	}, [repositionX, blockKey, start, mediaStructure]);
+	}, [repositionX, block, mediaStructure]);
 
 	// Synchronize the displayData back to the mediaStructure
 	useEffect(() => {
@@ -216,7 +231,9 @@ const ImageDecorator = ({
 
 	// Setting the image URL
 	useEffect(() => {
-		setImageUrl('file://' + project.tempPath + `/media/media${imageId}.jpeg`);
+		if (imageId !== null) {
+			setImageUrl('file://' + project.tempPath + `/media/media${imageId}.jpeg`);
+		}
 	}, [imageId, project]);
 
 	// Set image styles
@@ -235,9 +252,9 @@ const ImageDecorator = ({
 			newStyle.width = Math.ceil(pageWidth * 0.5) + 'px';
 		}
 
-		if (disable) {
-			newStyle.display = 'none';
-		}
+		// if (disable) {
+		// 	newStyle.display = 'none';
+		// }
 
 		setStyle(newStyle);
 	}, [displayData, pageWidth, disable]);
@@ -340,53 +357,6 @@ const ImageDecorator = ({
 		e.dataTransfer.setData('image-id', imageId);
 		e.dataTransfer.setData('image-use-id', imageUseId);
 
-		// const originalX = e.clientX;
-		// const docWidth = document.body.clientWidth;
-		// console.log('docWidth:', docWidth);
-		// const { leftNav, leftIsPinned, rightNav, rightIsPinned } = editorStyles;
-		// console.log('editorStyles:', editorStyles);
-		// const rootSize = Number(
-		// 	window
-		// 		.getComputedStyle(document.querySelector(':root'))
-		// 		.getPropertyValue('font-size')
-		// 		.replace('px', '')
-		// );
-
-		// let left = leftIsPinned ? leftNav * rootSize : 0;
-		// console.log('left:', left);
-		// let right = rightIsPinned ? docWidth - rightNav * rootSize : docWidth;
-		// console.log('right:', right);
-		// let center = (left + right) / 2;
-		// console.log('center:', center);
-
-		// const calculateImageRepositionFloat = (e) => {
-		// 	console.log('mouseup event: ', e);
-
-		// 	let validDrop = false;
-		// 	for (let element of e.path) {
-		// 		console.log('classList: ', element.classList);
-		// 		if (element.classList.contains('DraftEditor-root')) {
-		// 			validDrop = true;
-		// 			break;
-		// 		}
-		// 	}
-
-		// 	if (validDrop) {
-		// 		// do the drop stuff
-		// 		console.log('valid drop!');
-		// 		if (originalX + e.offsetX < center) {
-		// 			console.log('congrats! float left');
-		// 		} else {
-		// 			console.log('bummer, still floating right');
-		// 		}
-		// 	}
-
-		// 	// Remove the current event listner.
-		// 	document.removeEventListener('mouseup', calculateImageRepositionFloat);
-		// };
-
-		// document.addEventListener('mouseup', calculateImageRepositionFloat);
-
 		// Event listener for mouse up
 		// Only fire once
 		// Check if inside the editor container
@@ -399,56 +369,66 @@ const ImageDecorator = ({
 		// img.src = base64Icon;
 		// e.dataTransfer.setDragImage(createImageSVGElement(), 12, 12);
 
-		setDisable(true);
+		setRepositionX(null);
+		// setDisable(true);
 	};
+
+	console.log('left: ', imgRef.current ? imgRef.current.getBoundingClientRect().left : '');
 
 	return (
 		!!imageUrl && (
-			<div
-				className='decorator-image-wrapper'
-				style={displayData.float ? { float: displayData.float } : {}}>
-				<img
-					ref={imgRef}
-					className='decorator-image'
-					src={imageUrl}
-					style={style}
-					onDragStart={handleDragStart}
-					onDragEnd={(e) => {
-						for (let element of e.nativeEvent.path) {
-							if (element.classList.contains('DraftEditor-root')) {
-								setRepositionX(e.clientX);
-								break;
+			<div>
+				<div
+					className='decorator-image-wrapper'
+					style={displayData.float ? { float: displayData.float } : {}}
+					contentEditable={false}>
+					<img
+						ref={imgRef}
+						className='decorator-image'
+						src={imageUrl}
+						style={style}
+						onDragStart={handleDragStart}
+						onDragEnd={(e) => {
+							e.persist();
+							for (let element of e.nativeEvent.path) {
+								if (element.classList.contains('DraftEditor-root')) {
+									console.log('e: ', e);
+									console.log('e.nativeEvent: ', e.nativeEvent);
+									setRepositionX(e.clientX);
+									break;
+								}
 							}
-						}
-						setDisable(false);
-					}}
-				/>
-				<div
-					className='peek-window-resize left'
-					onMouseDown={handleResizeHorizontalMouseDown}
-				/>
-				<div
-					className='peek-window-resize right'
-					onMouseDown={handleResizeHorizontalMouseDown}
-				/>
-				<div
-					className='peek-window-resize bottom'
-					onMouseDown={handleResizeVerticalMouseDown}
-				/>
-				<div
-					className='peek-window-resize bottom-left'
-					onMouseDown={(e) => {
-						handleResizeHorizontalMouseDown(e);
-						handleResizeVerticalMouseDown(e);
-					}}
-				/>
-				<div
-					className='peek-window-resize bottom-right'
-					onMouseDown={(e) => {
-						handleResizeHorizontalMouseDown(e);
-						handleResizeVerticalMouseDown(e);
-					}}
-				/>
+							// setDisable(false);
+						}}
+					/>
+					<div
+						className='peek-window-resize left'
+						onMouseDown={handleResizeHorizontalMouseDown}
+					/>
+					<div
+						className='peek-window-resize right'
+						onMouseDown={handleResizeHorizontalMouseDown}
+					/>
+					<div
+						className='peek-window-resize bottom'
+						onMouseDown={handleResizeVerticalMouseDown}
+					/>
+					<div
+						className='peek-window-resize bottom-left'
+						onMouseDown={(e) => {
+							handleResizeHorizontalMouseDown(e);
+							handleResizeVerticalMouseDown(e);
+						}}
+					/>
+					<div
+						className='peek-window-resize bottom-right'
+						onMouseDown={(e) => {
+							handleResizeHorizontalMouseDown(e);
+							handleResizeVerticalMouseDown(e);
+						}}
+					/>
+				</div>
+				<EditorBlock {...props} />
 			</div>
 		)
 	);
@@ -477,19 +457,20 @@ const handleDraftImageDrop = (
 	mediaStructure,
 	setMediaStructure
 ) => {
-	const destOffset = selection.getStartOffset();
 	const destBlockKey = selection.getStartKey();
 
 	const imageId = dataTransfer.data.getData('image-id');
 	const imageUseId = dataTransfer.data.getData('image-use-id');
 
-	const newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
-	newMediaStructure[imageId].uses[imageUseId].reposition = {
-		destOffset,
-		destBlockKey,
-	};
+	if (imageId !== undefined) {
+		const newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
+		newMediaStructure[imageId].uses[imageUseId].reposition = {
+			destBlockKey,
+		};
 
-	setMediaStructure(newMediaStructure);
+		setMediaStructure(newMediaStructure);
+		return 'handled';
+	}
 };
 
 // const createImageSVGElement = () => {
@@ -519,4 +500,4 @@ const handleDraftImageDrop = (
 // 	return svg;
 // };
 
-export { ImageDecorator, handleDraftImageDrop };
+export { ImageDecorator, handleDraftImageDrop, IMAGE_CHAR };

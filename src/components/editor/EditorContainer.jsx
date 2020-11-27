@@ -46,7 +46,7 @@ import {
 } from './editorFunctions';
 import { LinkDestBlock } from './decorators/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
-import { handleDraftImageDrop } from './decorators/ImageDecorator';
+import { handleDraftImageDrop, ImageDecorator } from './decorators/ImageDecorator';
 
 import EditorFindReplace from './EditorFindReplace';
 
@@ -171,6 +171,16 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				};
 			}
 		}
+
+		const imagesArray = contentBlock.getData().get('images', []);
+		if (imagesArray.length) {
+			return {
+				component: ImageDecorator,
+				editable: true,
+			};
+		}
+
+		// At the end of this, if not rendering in a custom block, then check if images in the block
 	}, []);
 
 	// Make setEditorState available in the context
