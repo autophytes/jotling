@@ -38,10 +38,12 @@ const LeftNavContextProvider = (props) => {
 	const [hoverDestLinkId, setHoverDestLinkId] = useState(null);
 	const [syncLinkIdList, setSyncLinkIdList] = useState([]);
 	const [uploadImageUrl, setUploadImageUrl] = useState('');
+	const [cleanupQueue, setCleanupQueue] = useState([]);
 
 	// REFS
 	const linkStructureRef = useRef(linkStructure);
 	const docStructureRef = useRef(docStructure);
+	const mediaStructureRef = useRef(mediaStructure);
 	const editorStateRef = useRef(null);
 	const navDataRef = useRef(navData);
 	const setEditorStateRef = useRef(null);
@@ -54,6 +56,11 @@ const LeftNavContextProvider = (props) => {
 	useEffect(() => {
 		docStructureRef.current = docStructure;
 	}, [docStructure]);
+
+	useEffect(() => {
+		mediaStructureRef.current = mediaStructure;
+		console.log('mediaStructure in context:', mediaStructure);
+	}, [mediaStructure]);
 
 	useEffect(() => {
 		navDataRef.current = navData;
@@ -132,7 +139,10 @@ const LeftNavContextProvider = (props) => {
 				uploadImageUrl,
 				setUploadImageUrl,
 				mediaStructure,
+				mediaStructureRef,
 				setMediaStructure,
+				cleanupQueue,
+				setCleanupQueue,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

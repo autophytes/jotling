@@ -172,7 +172,7 @@ export const deleteDocument = (origDocStructure, origLinkStructure, docId, origN
 	}
 
 	// Tell electron to delete the file
-	ipcRenderer.invoke('delete-doc', origNavData.currentTempPath, deleteItem.fileName);
+	ipcRenderer.invoke('delete-file', origNavData.currentTempPath, 'docs', deleteItem.fileName);
 
 	return {
 		docStructure,

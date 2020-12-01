@@ -213,6 +213,20 @@ const AppMgmt = () => {
 		}
 	}, [linkStructure, linkStructureLoaded, project]);
 
+	// Saves the mediaStructure after every change
+	useEffect(() => {
+		if (mediaStructureLoaded) {
+			ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath,
+				project.jotsPath,
+				'mediaStructure.json',
+				mediaStructure
+			);
+			console.log('Saving link structure.');
+		}
+	}, [mediaStructure, mediaStructureLoaded, project]);
+
 	// Registers ipcRenderer listeners
 	useEffect(() => {
 		// Registers the ipcRenderer listeners
@@ -239,22 +253,28 @@ const AppMgmt = () => {
 
 		// Save Project and Quit - queues EditorContainer to request a save and quit
 		ipcRenderer.on('request-save-and-quit', (event, shouldSave) => {
-			setSaveProject({ command: 'save', options: { shouldQuit: true } });
+			setSaveProject({ command: 'save', options: { shouldQuit: true, shouldCleanup: true } });
 		});
 
 		// Save Project and Close - queues EditorContainer to request a save and quit
 		ipcRenderer.on('request-save-and-close', (event, shouldSave) => {
-			setSaveProject({ command: 'save', options: { shouldClose: true } });
+			setSaveProject({ command: 'save', options: { shouldClose: true, shouldCleanup: true } });
 		});
 
 		// Save Project and Create New - queues EditorContainer to request a save and create new
 		ipcRenderer.on('request-save-and-create-new', (event, shouldSave) => {
-			setSaveProject({ command: 'save', options: { shouldCreateNew: true } });
+			setSaveProject({
+				command: 'save',
+				options: { shouldCreateNew: true, shouldCleanup: true },
+			});
 		});
 
 		// Save Project and Open - queues EditorContainer to request a save and open another project
 		ipcRenderer.on('request-save-and-open', (event, shouldSave, openJotsPath) => {
-			setSaveProject({ command: 'save', options: { shouldOpen: true, openJotsPath } });
+			setSaveProject({
+				command: 'save',
+				options: { shouldOpen: true, openJotsPath, shouldCleanup: true },
+			});
 		});
 
 		// Save Project and Open - queues EditorContainer to request a save and open another project

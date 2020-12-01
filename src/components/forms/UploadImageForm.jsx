@@ -163,6 +163,7 @@ const UploadImageForm = () => {
 				insertImageEntity(newId, 1, editorStateRef.current, setEditorStateRef.current);
 
 				setMediaStructure(newMediaStructure);
+				console.log('newMediaStructure in uploadImageForm:', newMediaStructure);
 				setUploadImageUrl(false);
 			}
 		};

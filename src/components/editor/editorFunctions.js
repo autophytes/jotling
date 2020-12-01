@@ -17,10 +17,8 @@ import { findAllDocsInFolder } from '../navs/navFunctions';
 import { LinkSourceDecorator, LinkDestDecorator } from './decorators/LinkDecorators';
 import { HighlightTagDecorator } from './decorators/HighlightTagDecorator';
 import { FindReplaceDecorator } from './decorators/FindReplaceDecorator';
-import { ImageDecorator } from './decorators/ImageDecorator';
+import { BlockImageContainer } from './decorators/BlockImageContainer';
 import { CompoundDecorator } from './decorators/CompoundDecorator';
-
-import { IMAGE_CHAR } from './decorators/ImageDecorator';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
@@ -112,7 +110,7 @@ export const generateDecorators = (
 		},
 		{
 			strategy: getEntityStrategy('IMAGE'),
-			component: ImageDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+			component: BlockImageContainer, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
 		},
 	];
 
@@ -146,7 +144,7 @@ export const defaultDecorator = new CompositeDecorator([
 	},
 	{
 		strategy: getEntityStrategy('IMAGE'),
-		component: ImageDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+		component: BlockImageContainer, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
 	},
 ]);
 
@@ -552,48 +550,31 @@ export const insertImageEntity = (imageId, imageUseId, editorState, setEditorSta
 	const selectionState = editorState.getSelection();
 	const blockKey = selectionState.getStartKey();
 
-	// Apply the linkId as an entity to the selection
-	// const contentStateWithEntity = contentState.createEntity('IMAGE', 'IMMUTABLE', {
-	// 	imageId,
-	// 	imageUseId,
-	// });
-	// const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-
-	// EVENTUALLY need to get the existing data and add the new image to it
-	const newBlockData = new Map({
-		images: [
-			{
-				imageId,
-				imageUseId,
-			},
-		],
+	// Add the image to the block metadata
+	const block = contentState.getBlockForKey(blockKey);
+	const blockData = block.getData();
+	let blockImageArray = blockData.get('images', []);
+	blockImageArray.push({
+		imageId,
+		imageUseId,
 	});
+	const newBlockData = blockData.set('images', blockImageArray);
 
 	// Select the end of the block
-	// const block = contentStateWithEntity.getBlockForKey(blockKey);
 	const newSelectionState = SelectionState.createEmpty();
 	const blockEndSelectionState = newSelectionState.merge({
 		anchorKey: blockKey, // Starting position
 		anchorOffset: 0, // How much to adjust from the starting position
-		// anchorOffset: block.getLength(), // How much to adjust from the starting position
 		focusKey: blockKey, // Ending position
 		focusOffset: 0, // How much to adjust from the ending position.
-		// focusOffset: block.getLength(), // How much to adjust from the ending position.
 	});
 
 	// Insert the character with the image entity at the end of the block
-	const contentStateWithImage = Modifier.mergeBlockData(
+	const contentStateWithImage = Modifier.setBlockData(
 		contentState,
 		blockEndSelectionState,
 		newBlockData
 	);
-	// const contentStateWithImage = Modifier.insertText(
-	// 	contentStateWithEntity,
-	// 	blockEndSelectionState,
-	// 	IMAGE_CHAR,
-	// 	undefined,
-	// 	entityKey
-	// );
 
 	const newEditorState = EditorState.push(
 		editorState,

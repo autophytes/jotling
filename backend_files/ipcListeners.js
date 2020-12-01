@@ -344,8 +344,8 @@ const renameDocListener = () => {
 };
 
 const deleteDocListener = () => {
-	ipcMain.handle('delete-doc', (e, projectTempPath, fileName) => {
-		const filePath = path.join(projectTempPath, 'docs', fileName);
+	ipcMain.handle('delete-file', (e, projectTempPath, folderName, fileName) => {
+		const filePath = path.join(projectTempPath, folderName, fileName);
 
 		fs.unlink(filePath, (err) => {
 			if (err) {

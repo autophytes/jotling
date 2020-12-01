@@ -141,7 +141,10 @@ const EditorSettings = () => {
 		const rootElement = document.querySelector(':root');
 		rootElement.style.setProperty('--color-primary', color.hex);
 
-		let newRgb = color.rgb ? color.rgb : `${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`;
+		let newRgb =
+			typeof color.rgb === 'string'
+				? color.rgb
+				: `${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`;
 		rootElement.style.setProperty('--color-primary-rgb', newRgb);
 		setPrimaryColor(color.hex);
 	};

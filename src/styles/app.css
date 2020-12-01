@@ -1647,10 +1647,11 @@ input[type='number']::-webkit-outer-spin-button {
 .decorator-image {
 	display: block;
 	cursor: move;
+	/* box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */
 }
 
 .decorator-image-wrapper {
-	margin: 0 4px 0 4px;
+	margin: 0px 6px 0px 6px;
 	padding: 0;
 	position: relative;
 	float: right;

@@ -43,10 +43,12 @@ import {
 	updateLinkEntities,
 	hasSelectionStartEntity,
 	insertTextWithEntity,
+	insertImageEntity,
 } from './editorFunctions';
+import { cleanupJpeg } from '../appFunctions';
 import { LinkDestBlock } from './decorators/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
-import { handleDraftImageDrop, ImageDecorator } from './decorators/ImageDecorator';
+import { handleDraftImageDrop, BlockImageContainer } from './decorators/BlockImageContainer';
 
 import EditorFindReplace from './EditorFindReplace';
 
@@ -108,6 +110,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setEditorStateRef,
 		mediaStructure,
 		setMediaStructure,
+		cleanupQueue,
+		setCleanupQueue,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
 	const {
@@ -175,7 +179,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		const imagesArray = contentBlock.getData().get('images', []);
 		if (imagesArray.length) {
 			return {
-				component: ImageDecorator,
+				component: BlockImageContainer,
 				editable: true,
 			};
 		}
@@ -207,6 +211,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// Handle shortcut keys. Using their default function right now.
 	const customKeyBindingFn = (e) => {
+		console.log('customKeyBindFn');
 		if (e.keyCode === 9 /* TAB */) {
 			// NOTE: this just handles indenting list items, not indenting paragraphs.
 			const newEditorState = RichUtils.onTab(e, editorState, 8);
@@ -453,6 +458,34 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		[project.tempPath]
 	);
 
+	const runCleanup = useCallback(async () => {
+		let newMediaStructure;
+
+		for (let item of cleanupQueue) {
+			if (item.type === 'jpeg') {
+				newMediaStructure = await cleanupJpeg(
+					item,
+					newMediaStructure ? newMediaStructure : mediaStructure,
+					project.tempPath
+				);
+			}
+			// process each type of cleanup action
+			// maybe initialize a copy of the appropriate "structure" if needed
+			// and use that (vs undefined) as a flag for setting at the end?
+		}
+
+		// Save the mediaStructure to file
+		if (newMediaStructure) {
+			await ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath,
+				project.jotsPath,
+				'mediaStructure.json',
+				newMediaStructure
+			);
+		}
+	}, [cleanupQueue, setCleanupQueue, mediaStructure, project]);
+
 	// Saves the current file and calls the main process to save the project
 	const saveFileAndProject = useCallback(
 		async (saveProject) => {
@@ -461,6 +494,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			const currentContent = editorStateRef.current.getCurrentContent();
 			const rawContent = convertToRaw(currentContent);
 			console.log('editorContainer options: ', options);
+
+			// Cleanup (remove) files before save. Currently not updating the currentContent.
+			if (options.shouldCleanup) {
+				await runCleanup();
+			}
 
 			// Save the current document
 			let response = await ipcRenderer.invoke(
@@ -488,7 +526,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				}
 			}
 		},
-		[project, navData.currentDoc]
+		[project, navData.currentDoc, runCleanup]
 	);
 
 	// Monitors for needing to save the current file and then whole project
