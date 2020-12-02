@@ -147,6 +147,7 @@ const EditorNav = React.memo(
 				const reader = new FileReader();
 				reader.addEventListener('load', () => setUploadImageUrl(reader.result));
 				reader.readAsDataURL(e.target.files[0]);
+				document.getElementById('file-upload-input').value = '';
 			}
 		};
 

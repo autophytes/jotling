@@ -1,15 +1,16 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { EditorState, Modifier, SelectionState } from 'draft-js';
+import { EditorState, Modifier, SelectionState, EditorBlock } from 'draft-js';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 const MIN_WIDTH = 50;
 const MIN_HEIGHT = 50;
 
-const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
+const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 	// STATE
 	const [displayData, setDisplayData] = useState({});
 	const [repositionX, setRepositionX] = useState(null);
+	const [repositionOffset, setRepositionOffset] = useState(0);
 	const [style, setStyle] = useState({ maxWidth: '100%' });
 	const [imageUrl, setImageUrl] = useState(null);
 	const [isFocused, setIsFocused] = useState(false);
@@ -25,6 +26,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 		editorStyles,
 		cleanupQueue,
 		setCleanupQueue,
+		isImageSelectedRef,
 	} = useContext(LeftNavContext);
 
 	// REF
@@ -58,6 +60,9 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 			console.log('imageId:', imageId);
 			console.log('mediaStructureRef.current:', mediaStructureRef.current);
 			let data = mediaStructure[imageId].uses[imageUseId];
+			if (!data.float) {
+				data.float = 'right';
+			}
 
 			setDisplayData(data);
 		}
@@ -70,6 +75,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 			maxWidth: '100%',
 			// padding: '2px',
 			display: 'block',
+			position: 'relative',
 		};
 
 		if (displayData.resize && displayData.resize.width) {
@@ -115,7 +121,9 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 
 		if (reposition && reposition.destBlockKey && repositionX) {
 			setRepositionX(null);
+			setRepositionOffset(0);
 			console.log('repositionX:', repositionX);
+			console.log('repositionOffset: ', repositionOffset);
 
 			// *** Update float left/right
 			const docWidth = document.body.clientWidth;
@@ -132,7 +140,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 			let center = (left + right) / 2;
 			console.log('center:', center);
 
-			let floatDirection = repositionX < center ? 'left' : 'right';
+			let floatDirection = repositionX - repositionOffset < center ? 'left' : 'right';
 			const newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
 			delete newMediaStructure[imageId].uses[imageUseId].reposition;
 			newMediaStructure[imageId].uses[imageUseId].float = floatDirection;
@@ -191,7 +199,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 
 			setEditorStateRef.current(newEditorState);
 		}
-	}, [repositionX, block, mediaStructure]);
+	}, [repositionX, repositionOffset, block, mediaStructure]);
 
 	// RESIZE LEFT
 	const handleResizeLeftMouseDown = (e) => {
@@ -324,6 +332,9 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 	const handleDragStart = (e) => {
 		// Set the drop type (not sure if working - logging the dataTransfer still seems empty)
 		e.dataTransfer.dropEffect = 'move';
+		console.log('start X: ', e.clientX);
+		const target = e.target.getBoundingClientRect();
+		const leftOffset = e.clientX - target.left;
 
 		// Store the data for the image to move
 		e.dataTransfer.setData('image-id', imageId);
@@ -336,24 +347,25 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 		// e.dataTransfer.setDragImage(createImageSVGElement(), 12, 12);
 
 		setRepositionX(null);
+		setRepositionOffset(leftOffset);
 		// setDisable(true);
 	};
 
+	// Remove focus if clicking outside the image
 	const handleExternalClicks = (e) => {
-		console.log(imgContainerRef.current.contains(e.target));
-
-		if (!imgContainerRef.current.contains(e.target)) {
+		if (imgContainerRef.current && !imgContainerRef.current.contains(e.target)) {
+			isImageSelectedRef.current = false;
 			window.removeEventListener('click', handleExternalClicks);
 			window.removeEventListener('keyup', handleImageDelete);
 			setIsFocused(false);
 		}
 	};
 
+	// Delete image
 	const handleImageDelete = (e) => {
 		console.log('keycode', e.keyCode);
 		if (e.keyCode === 8 || e.keyCode === 46) {
-			e.preventDefault();
-			e.stopPropagation();
+			isImageSelectedRef.current = false;
 			window.removeEventListener('click', handleExternalClicks);
 			window.removeEventListener('keyup', handleImageDelete);
 
@@ -394,14 +406,11 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 		}
 	};
 
+	// Focus on the image on click
 	const handleFocusClick = (e) => {
 		if (!isFocused) {
 			setIsFocused(true);
-			imgRef.current.focus();
-			e.preventDefault();
-			e.stopPropagation();
-			e.persist();
-			console.log('e: ', e);
+			isImageSelectedRef.current = true;
 
 			window.addEventListener('click', handleExternalClicks);
 			window.addEventListener('keyup', handleImageDelete);
@@ -411,6 +420,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 	// Clean up the listeners on unmount
 	useEffect(() => {
 		return () => {
+			isImageSelectedRef.current = false;
 			window.removeEventListener('click', handleExternalClicks);
 			window.removeEventListener('keyup', handleImageDelete);
 		};
@@ -420,7 +430,16 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 		!!imageUrl && (
 			<div
 				className='decorator-image-wrapper'
-				style={displayData.float ? { float: displayData.float } : {}}
+				style={
+					displayData.float && block.getLength()
+						? {
+								float: displayData.float,
+								...(displayData.float === 'right'
+									? { marginRight: '0' }
+									: { marginLeft: '0' }),
+						  }
+						: { marginBottom: '1rem', marginLeft: '0' }
+				}
 				contentEditable={false}
 				ref={imgContainerRef}>
 				<img
@@ -433,6 +452,8 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 						e.persist();
 						for (let element of e.nativeEvent.path) {
 							if (element.classList.contains('DraftEditor-root')) {
+								e.persist();
+								console.log(e);
 								setRepositionX(e.clientX);
 								break;
 							}
@@ -466,6 +487,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block }) => {
 						handleResizeVerticalMouseDown(e);
 					}}
 				/>
+				{/* {!block.getLength() && <EditorBlock {...allProps} />} */}
 			</div>
 		)
 	);

@@ -112,6 +112,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setMediaStructure,
 		cleanupQueue,
 		setCleanupQueue,
+		isImageSelectedRef,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
 	const {
@@ -212,6 +213,13 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// Handle shortcut keys. Using their default function right now.
 	const customKeyBindingFn = (e) => {
 		console.log('customKeyBindFn');
+		if (e.keyCode === 8 || e.keyCode === 46) {
+			// Don't backspace/delete if image selected. We'll delete the image instead.
+			if (isImageSelectedRef.current) {
+				return 'handled-in-binding-fn';
+			}
+		}
+
 		if (e.keyCode === 9 /* TAB */) {
 			// NOTE: this just handles indenting list items, not indenting paragraphs.
 			const newEditorState = RichUtils.onTab(e, editorState, 8);

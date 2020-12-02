@@ -48,6 +48,7 @@ const LeftNavContextProvider = (props) => {
 	const navDataRef = useRef(navData);
 	const setEditorStateRef = useRef(null);
 	const scrollToLinkIdRef = useRef(null);
+	const isImageSelectedRef = useRef(false);
 
 	useEffect(() => {
 		linkStructureRef.current = linkStructure;
@@ -143,6 +144,7 @@ const LeftNavContextProvider = (props) => {
 				setMediaStructure,
 				cleanupQueue,
 				setCleanupQueue,
+				isImageSelectedRef,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

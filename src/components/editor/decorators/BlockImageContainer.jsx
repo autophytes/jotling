@@ -29,26 +29,11 @@ const BlockImageContainer = (props) => {
 
 	// CONTEXT
 	const { editorMaxWidth, editorPadding } = useContext(SettingsContext).editorSettings;
-	const {
-		editorStateRef,
-		setEditorStateRef,
-		project,
-		mediaStructure,
-		setMediaStructure,
-		editorStyles,
-	} = useContext(LeftNavContext);
+	const { mediaStructure } = useContext(LeftNavContext);
 
 	// STATE
-
-	const [imageId, setImageId] = useState(null);
-	const [imageUseId, setImageUseId] = useState(null);
 	const [imageArray, setImageArray] = useState([]);
-	const [displayData, setDisplayData] = useState({});
-	const [style, setStyle] = useState({ maxWidth: '100%' });
 	const [pageWidth, setPageWidth] = useState(null);
-
-	// TESTING
-	const [disable, setDisable] = useState(false);
 
 	// On load (or decorator change - overwriting parts of links does this), grab the Image IDs
 	useEffect(() => {
@@ -74,7 +59,7 @@ const BlockImageContainer = (props) => {
 	}, [editorMaxWidth, editorPadding]);
 
 	return (
-		<div>
+		<div style={block.getLength() ? {} : { display: 'flex', alignItems: 'flex-start' }}>
 			{console.log('imageArray: ', imageArray)}
 			{imageArray.map((item) =>
 				mediaStructure[item.imageId] ? (
@@ -84,6 +69,7 @@ const BlockImageContainer = (props) => {
 						imageId={item.imageId}
 						imageUseId={item.imageUseId}
 						block={block}
+						allProps={props}
 					/>
 				) : (
 					false
@@ -91,6 +77,7 @@ const BlockImageContainer = (props) => {
 			)}
 
 			<EditorBlock {...props} />
+			{/* {!!block.getLength() && <EditorBlock {...props} />} */}
 		</div>
 	);
 
