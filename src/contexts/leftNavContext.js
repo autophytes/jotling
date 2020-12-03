@@ -37,7 +37,7 @@ const LeftNavContextProvider = (props) => {
 	const [hoverSourceLinkId, setHoverSourceLinkId] = useState(null);
 	const [hoverDestLinkId, setHoverDestLinkId] = useState(null);
 	const [syncLinkIdList, setSyncLinkIdList] = useState([]);
-	const [uploadImageUrl, setUploadImageUrl] = useState('');
+	const [showUploadImage, setShowUploadImage] = useState(false);
 	const [cleanupQueue, setCleanupQueue] = useState([]);
 
 	// REFS
@@ -137,8 +137,8 @@ const LeftNavContextProvider = (props) => {
 				setHoverDestLinkId,
 				syncLinkIdList,
 				setSyncLinkIdList,
-				uploadImageUrl,
-				setUploadImageUrl,
+				showUploadImage,
+				setShowUploadImage,
 				mediaStructure,
 				mediaStructureRef,
 				setMediaStructure,

@@ -65,7 +65,7 @@ const AppMgmt = () => {
 		setEditorStateRef,
 		linkStructureRef,
 		setSyncLinkIdList,
-		uploadImageUrl,
+		showUploadImage,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -401,7 +401,7 @@ const AppMgmt = () => {
 			{peekWindowLinkId !== null && <PeekDocument />}
 			{showEditorSettings && <EditorSettings />}
 			<HiddenContextMenu />
-			{uploadImageUrl && <UploadImageForm />}
+			{showUploadImage && <UploadImageForm />}
 		</>
 	);
 };

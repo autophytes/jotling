@@ -1,9 +1,10 @@
 import React from 'react';
 
-const PlusSVG = () => {
+const PlusSVG = ({ style }) => {
 	return (
 		<svg
 			// height='448pt'
+			style={style}
 			viewBox='0 0 448 448'
 			// width='448pt'
 			// xmlns='http://www.w3.org/2000/svg'

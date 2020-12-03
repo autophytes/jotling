@@ -107,8 +107,7 @@ const EditorNav = React.memo(
 			setDisplayLinkPopper,
 			linkStructure,
 			setLinkStructure,
-			uploadImageUrl,
-			setUploadImageUrl,
+			setShowUploadImage,
 		} = useContext(LeftNavContext);
 		const { editorSettings } = useContext(SettingsContext);
 
@@ -141,15 +140,6 @@ const EditorNav = React.memo(
 			setHoverRegionLeft(newLeftOffset);
 			setHoverRegionRight(newRightOffset);
 		}, [editorStyles, editorSettings]);
-
-		const onSelectFile = (e) => {
-			if (e.target.files && e.target.files.length > 0) {
-				const reader = new FileReader();
-				reader.addEventListener('load', () => setUploadImageUrl(reader.result));
-				reader.readAsDataURL(e.target.files[0]);
-				document.getElementById('file-upload-input').value = '';
-			}
-		};
 
 		return (
 			<>
@@ -352,20 +342,9 @@ const EditorNav = React.memo(
 							{editorStyles.showAllTags ? <EyeSVG /> : <EyeHideSVG />}
 						</button>
 
-						{/* Insert Image */}
-						{/* NEED TO CLEAR THE FILE WHEN CLOSING THE MODAL */}
-						<input
-							type='file'
-							name='file'
-							id='file-upload-input'
-							className='hide-input-button'
-							accept='image/*'
-							// value={uploadImageUrl}
-							onChange={onSelectFile}
-						/>
-						<label htmlFor='file-upload-input' className='nav-button'>
+						<button className='nav-button' onClick={() => setShowUploadImage(true)}>
 							<ImageSVG />
-						</label>
+						</button>
 
 						{/* Add Tag Popper */}
 						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function

@@ -83,7 +83,8 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 		} else if (displayData.resize && displayData.resize.height) {
 			newStyle.height = displayData.resize.height.toString() + 'px';
 		} else {
-			newStyle.width = Math.ceil(pageWidth * 0.5) + 'px';
+			newStyle.maxWidth = Math.ceil(pageWidth * 0.5) + 'px';
+			newStyle.maxHeight = '30vh';
 		}
 
 		if (isFocused) {

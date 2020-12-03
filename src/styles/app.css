@@ -1570,6 +1570,14 @@ input[type='number']::-webkit-outer-spin-button {
 	box-shadow: 0 6px 9px -2px rgba(0, 0, 0, 0.2), 0 3px 6px -2px rgba(0, 0, 0, 0.12);
 }
 
+.submit-button.disabled,
+.submit-button.disabled:hover {
+	background-color: #ccc;
+	box-shadow: none;
+	transform: none;
+	cursor: default;
+}
+
 .delete-modal-body {
 	margin: 2rem 1rem 1rem 1rem;
 	font-size: 1.1rem;
@@ -1658,4 +1666,63 @@ input[type='number']::-webkit-outer-spin-button {
 	max-width: 100%;
 	/* max-height: 25%; */
 	z-index: 10;
+}
+
+.upload-new-image-row {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	margin-bottom: 1.25rem;
+	overflow-y: scroll;
+	max-height: 40vh;
+}
+
+.upload-new-image {
+	max-width: 13rem;
+	max-height: 7rem;
+	margin-bottom: 1rem;
+	margin-right: 1rem;
+	border-radius: 0.25rem;
+	user-select: none;
+	border: 1px solid #999;
+	cursor: pointer;
+}
+
+.upload-new-image:hover:not(.selected) {
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.upload-new-image.selected {
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.5);
+}
+
+.upload-new-image.add-image {
+	height: 7rem;
+	width: 9rem;
+	background-color: var(--color-primary);
+	padding: 1rem;
+	border: none;
+	box-shadow: 0 6px 9px -2px rgba(0, 0, 0, 0.2), 0 3px 6px -2px rgba(0, 0, 0, 0.12);
+	position: relative;
+
+	cursor: pointer;
+	color: white;
+	text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+	font-weight: bold;
+	font-size: 1.3rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+.upload-new-image.add-image svg {
+	fill: rgba(0, 0, 0, 0.1);
+	position: absolute;
+	width: 8rem;
+	height: 6rem;
+	top: 0.5rem;
+	left: 0.5rem;
+	z-index: 1;
 }
