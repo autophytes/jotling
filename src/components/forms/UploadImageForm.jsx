@@ -107,7 +107,9 @@ const UploadImageForm = () => {
 							<img
 								src={item.url}
 								key={item.imageId}
-								className={'upload-new-image ' + (activeImgId === item.url ? 'selected' : '')}
+								className={
+									'upload-new-image ' + (activeImgId === item.imageId ? 'selected' : '')
+								}
 								onClick={() => setActiveImgId(item.imageId)}
 								draggable={false}
 							/>
