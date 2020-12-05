@@ -43,7 +43,7 @@ import {
 	updateLinkEntities,
 	hasSelectionStartEntity,
 	insertTextWithEntity,
-	insertImageEntity,
+	insertImageBlockData,
 } from './editorFunctions';
 import { cleanupJpeg } from '../appFunctions';
 import { LinkDestBlock } from './decorators/LinkDecorators';

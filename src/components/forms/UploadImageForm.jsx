@@ -1,24 +1,40 @@
 import React, { useContext, useEffect, useState } from 'react';
 import ImageSVG from '../../assets/svg/ImageSVG';
+import PlusSVG from '../../assets/svg/PlusSVG';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
 import PopupModal from '../containers/PopupModal';
+import { insertImageBlockData } from '../editor/editorFunctions';
 import UploadImageFormCrop from './UploadImageFormCrop';
 
 const UploadImageForm = () => {
 	const [uploadImageUrl, setUploadImageUrl] = useState(false);
 	const [showChooseImageModal, setShowChooseImageModal] = useState(true);
 	const [imageList, setImageList] = useState([]);
-	const [activeImgUrl, setActiveImgUrl] = useState('');
+	const [activeImgId, setActiveImgId] = useState('');
 
-	const { setShowUploadImage, mediaStructure, project } = useContext(LeftNavContext);
+	const {
+		setShowUploadImage,
+		mediaStructure,
+		setMediaStructure,
+		project,
+		editorStateRef,
+		setEditorStateRef,
+		navData,
+	} = useContext(LeftNavContext);
 
 	// Build the list of imageURLs
 	useEffect(() => {
 		const tempPath = project.tempPath;
-		const newImageList = Object.keys(mediaStructure).map(
-			(imageId) => `file://${tempPath}/media/media${imageId}.jpeg`
-		);
+		const newImageList = Object.keys(mediaStructure).map((imageId) => ({
+			url: `file://${tempPath}/media/media${imageId}.jpeg`,
+			imageId: imageId,
+		}));
+
+		// if (!newImageList.length) {
+		// 	document.getElementById('file-upload-input').click();
+		// }
+
 		setImageList(newImageList);
 	}, []);
 
@@ -34,13 +50,40 @@ const UploadImageForm = () => {
 		}
 	};
 
+	// Add the previously uploaded image to the selected block and the mediaStructure
+	const handleSubmit = () => {
+		const useIds = Object.keys(mediaStructure[activeImgId].uses).map((item) => Number(item));
+		console.log('useIds:', useIds);
+		const newUseId = useIds.length ? Math.max(...useIds) + 1 : 1;
+		console.log('newUseId:', newUseId);
+
+		// Add the file to the mediaStructure
+		let newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
+		newMediaStructure[activeImgId].uses = {
+			...newMediaStructure[activeImgId].uses,
+			[newUseId]: {
+				sourceDoc: navData.currentDoc,
+			},
+		};
+
+		insertImageBlockData(
+			activeImgId,
+			newUseId,
+			editorStateRef.current,
+			setEditorStateRef.current
+		);
+
+		setMediaStructure(newMediaStructure);
+		setShowUploadImage(false);
+	};
+
 	return (
 		<>
 			{showChooseImageModal && (
 				<PopupModal
 					setDisplayModal={setShowUploadImage}
-					width={imageList.length > 1 ? '60rem' : null}>
-					<h2 className='popup-modal-title'>Upload New Image</h2>
+					width={imageList.length > 2 ? '60rem' : '42rem'}>
+					<h2 className='popup-modal-title'>Select Image</h2>
 					<hr className='modal-form-hr' />
 
 					{/* Insert Image */}
@@ -55,24 +98,25 @@ const UploadImageForm = () => {
 						/>
 						<label htmlFor='file-upload-input' className='upload-new-image add-image'>
 							<ImageSVG />
-							<span style={{ zIndex: 2 }}>Upload New Image </span>
+							{/* <PlusSVG style={{fill: 'white'}}/> */}
+							<span style={{ zIndex: 2 }}>+</span>
 						</label>
 
 						{/* Display the available images */}
-						{imageList.map((imgUrl) => (
+						{imageList.map((item) => (
 							<img
-								src={imgUrl}
-								key={imgUrl}
-								className={'upload-new-image ' + (activeImgUrl === imgUrl ? 'selected' : '')}
-								onClick={() => setActiveImgUrl(imgUrl)}
+								src={item.url}
+								key={item.imageId}
+								className={'upload-new-image ' + (activeImgId === item.url ? 'selected' : '')}
+								onClick={() => setActiveImgId(item.imageId)}
 								draggable={false}
 							/>
 						))}
 					</div>
 
 					<button
-						className={'submit-button ' + (activeImgUrl ? '' : 'disabled')}
-						onClick={() => console.log('submitted!')}>
+						className={'submit-button ' + (activeImgId ? '' : 'disabled')}
+						onClick={handleSubmit}>
 						Submit
 					</button>
 				</PopupModal>

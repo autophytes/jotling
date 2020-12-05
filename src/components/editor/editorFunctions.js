@@ -545,7 +545,7 @@ export const createTagLink = (
 };
 
 // Insert an image into a document
-export const insertImageEntity = (imageId, imageUseId, editorState, setEditorState) => {
+export const insertImageBlockData = (imageId, imageUseId, editorState, setEditorState) => {
 	const contentState = editorState.getCurrentContent();
 	const selectionState = editorState.getSelection();
 	const blockKey = selectionState.getStartKey();
@@ -553,7 +553,7 @@ export const insertImageEntity = (imageId, imageUseId, editorState, setEditorSta
 	// Add the image to the block metadata
 	const block = contentState.getBlockForKey(blockKey);
 	const blockData = block.getData();
-	let blockImageArray = blockData.get('images', []);
+	let blockImageArray = [...blockData.get('images', [])];
 	blockImageArray.push({
 		imageId,
 		imageUseId,
@@ -573,6 +573,53 @@ export const insertImageEntity = (imageId, imageUseId, editorState, setEditorSta
 	const contentStateWithImage = Modifier.setBlockData(
 		contentState,
 		blockEndSelectionState,
+		newBlockData
+	);
+
+	const newEditorState = EditorState.push(
+		editorState,
+		contentStateWithImage,
+		'change-block-data'
+	);
+	setEditorState(newEditorState);
+};
+
+// Update the metadata of an image in a block
+export const updateImageBlockData = (
+	imageId,
+	imageUseId,
+	editorState,
+	setEditorState,
+	blockKey,
+	imageData
+) => {
+	const contentState = editorState.getCurrentContent();
+
+	// Get the block image metadata
+	const block = contentState.getBlockForKey(blockKey);
+	const blockData = block.getData();
+	let blockImageArray = [...blockData.get('images', [])];
+
+	// Update the image data in the block
+	let imageIndex = blockImageArray.findIndex(
+		(item) => imageId === item.imageId && imageUseId == item.imageUseId
+	);
+	blockImageArray.splice(imageIndex, 1, imageData);
+	const newBlockData = blockData.set('images', blockImageArray);
+
+	// Select the end of the block
+	const newSelectionState = SelectionState.createEmpty();
+	const selectionState = newSelectionState.merge({
+		anchorKey: blockKey, // Starting position
+		anchorOffset: 0, // How much to adjust from the starting position
+		focusKey: blockKey, // Ending position
+		focusOffset: 0, // How much to adjust from the ending position.
+	});
+
+	// Insert the character with the image entity at the end of the block
+	const contentStateWithImage = Modifier.setBlockData(
+		contentState,
+		selectionState,
 		newBlockData
 	);
 

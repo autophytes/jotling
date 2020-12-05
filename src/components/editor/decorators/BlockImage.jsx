@@ -1,6 +1,8 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { EditorState, Modifier, SelectionState, EditorBlock } from 'draft-js';
 
+import { updateImageBlockData } from '../editorFunctions';
+
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 const MIN_WIDTH = 50;
@@ -8,12 +10,14 @@ const MIN_HEIGHT = 50;
 
 const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 	// STATE
-	const [displayData, setDisplayData] = useState({});
+	const [displayData, setDisplayData] = useState(null);
 	const [repositionX, setRepositionX] = useState(null);
 	const [repositionOffset, setRepositionOffset] = useState(0);
-	const [style, setStyle] = useState({ maxWidth: '100%' });
+	const [imageStyle, setImageStyle] = useState({ display: 'none' });
+	const [wrapperStyle, setWrapperStyle] = useState({ display: 'none' });
 	const [imageUrl, setImageUrl] = useState(null);
 	const [isFocused, setIsFocused] = useState(false);
+	const [blockKey, setBlockKey] = useState(block.getKey());
 
 	// CONTEXT
 	const {
@@ -21,7 +25,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 		setEditorStateRef,
 		project,
 		mediaStructure,
-		mediaStructureRef,
 		setMediaStructure,
 		editorStyles,
 		cleanupQueue,
@@ -54,63 +57,99 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 		}
 	}, []);
 
-	// Load the displayData from our mediaStructure
+	// Load the displayData from the block metadata
 	useEffect(() => {
 		if (imageId && imageUseId) {
-			console.log('imageId:', imageId);
-			console.log('mediaStructureRef.current:', mediaStructureRef.current);
-			let data = mediaStructure[imageId].uses[imageUseId];
-			if (!data.float) {
-				data.float = 'right';
+			// Get the resize/float data from the block
+			const blockData = block.getData();
+			let blockImageArray = blockData.get('images', []);
+			let imageData = blockImageArray.find(
+				(item) => item.imageId === imageId && item.imageUseId === imageUseId
+			);
+
+			if (JSON.stringify(imageData) !== JSON.stringify(displayData)) {
+				console.log('JSON.stringify(displayData):', JSON.stringify(displayData));
+				console.log('JSON.stringify(imageData):', JSON.stringify(imageData));
+				console.log('UPDATING DISPLAY DATA');
+				setDisplayData(imageData);
 			}
 
-			setDisplayData(data);
+			// Merge the two sources
+			// data.resize = imageData.resize;
+			// imageData.float = imageData.float ? imageData.float : 'right';
 		}
-		// Deliberately not monitor mediaStructure, only do this on load
-	}, [imageId, imageUseId]);
+		// Deliberately not monitor the block, only do this on load
+	}, [imageId, imageUseId, block, displayData]);
 
 	// Set image styles
 	useEffect(() => {
-		let newStyle = {
-			maxWidth: '100%',
-			// padding: '2px',
-			display: 'block',
-			position: 'relative',
-		};
+		if (displayData) {
+			let newStyle = {
+				maxWidth: '100%',
+				// padding: '2px',
+				display: 'block',
+				position: 'relative',
+			};
 
-		if (displayData.resize && displayData.resize.width) {
-			newStyle.width = displayData.resize.width.toString() + 'px';
-		} else if (displayData.resize && displayData.resize.height) {
-			newStyle.height = displayData.resize.height.toString() + 'px';
-		} else {
-			newStyle.maxWidth = Math.ceil(pageWidth * 0.5) + 'px';
-			newStyle.maxHeight = '30vh';
+			if (displayData.resize && displayData.resize.width) {
+				newStyle.width = displayData.resize.width.toString() + 'px';
+			} else if (displayData.resize && displayData.resize.height) {
+				newStyle.height = displayData.resize.height.toString() + 'px';
+			} else {
+				newStyle.maxWidth = Math.ceil(pageWidth * 0.5) + 'px';
+				newStyle.maxHeight = '30vh';
+			}
+
+			if (isFocused) {
+				newStyle.boxShadow = '0 0 0 3px rgba(var(--color-primary-rgb), 0.3)';
+			}
+
+			setImageStyle(newStyle);
 		}
-
-		if (isFocused) {
-			newStyle.boxShadow = '0 0 0 3px rgba(var(--color-primary-rgb), 0.3)';
-		}
-
-		setStyle(newStyle);
 	}, [displayData, pageWidth, isFocused]);
 
-	// Synchronize the displayData back to the mediaStructure
+	// Sets the styles for the image wrapper
 	useEffect(() => {
-		if (displayData.resize) {
-			setMediaStructure((prev) => ({
-				...prev,
-				[imageId]: {
-					...prev[imageId],
-					uses: {
-						...prev[imageId].uses,
-						[imageUseId]: {
-							...displayData,
-						},
-					},
-				},
-			}));
+		if (displayData) {
+			let newWrapperStyle = {};
+
+			if (block.getLength()) {
+				newWrapperStyle.float = displayData.float ? displayData.float : 'right';
+
+				if (newWrapperStyle.float === 'right') {
+					newWrapperStyle.marginRight = '0';
+				} else {
+					newWrapperStyle.marginLeft = '0';
+				}
+			} else {
+				newWrapperStyle.marginBottom = '1rem';
+				newWrapperStyle.marginLeft = '0';
+			}
+
+			setWrapperStyle(newWrapperStyle);
 		}
-	}, [displayData, imageId, imageUseId]);
+	}, [displayData, block]);
+
+	// Pull the blockKey
+	useEffect(() => {
+		if (block.getKey() !== blockKey) {
+			setBlockKey(block.getKey());
+		}
+	}, [block, blockKey]);
+
+	// Synchronize the displayData back to the block metadata
+	// useEffect(() => {
+	// 	if (displayData && (displayData.resize || displayData.float)) {
+	// 		updateImageBlockData(
+	// 			imageId,
+	// 			imageUseId,
+	// 			editorStateRef.current,
+	// 			setEditorStateRef.current,
+	// 			block.getKey(),
+	// 			displayData
+	// 		);
+	// 	}
+	// }, [displayData, imageId, imageUseId, blockKey]);
 
 	// If repositioning the image, update the mediaStructure and move the image
 	useEffect(() => {
@@ -139,14 +178,12 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 			let left = leftIsPinned ? leftNav * rootSize : 0;
 			let right = rightIsPinned ? docWidth - rightNav * rootSize : docWidth;
 			let center = (left + right) / 2;
-			console.log('center:', center);
 
 			let floatDirection = repositionX - repositionOffset < center ? 'left' : 'right';
 			const newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
 			delete newMediaStructure[imageId].uses[imageUseId].reposition;
-			newMediaStructure[imageId].uses[imageUseId].float = floatDirection;
+			// newMediaStructure[imageId].uses[imageUseId].float = floatDirection;
 			setMediaStructure(newMediaStructure);
-			console.log('newMediaStructure in blockImage repositioning:', newMediaStructure);
 			setDisplayData((prev) => ({
 				...prev,
 				float: floatDirection,
@@ -154,10 +191,20 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 
 			// *** Move the image ***
 			const contentState = editorStateRef.current.getCurrentContent();
-			const blockKey = block.getKey();
 
 			// If not changing blocks, we're finished.
 			if (reposition.destBlockKey === blockKey) {
+				updateImageBlockData(
+					imageId,
+					imageUseId,
+					editorStateRef.current,
+					setEditorStateRef.current,
+					blockKey,
+					{
+						...displayData,
+						float: floatDirection,
+					}
+				);
 				return;
 			}
 
@@ -170,10 +217,10 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 			// Update the new block meta data with the additional image
 			const newBlock = contentStateBeforeInsert.getBlockForKey(reposition.destBlockKey);
 			const newBlockData = newBlock.getData();
-			let newImagesArray = newBlockData.get('images', []);
+			let newImagesArray = [...newBlockData.get('images', [])];
 			newImagesArray.push({
-				imageId,
-				imageUseId,
+				...displayData,
+				float: floatDirection,
 			});
 			const newBlockDataToInsert = newBlockData.set('images', newImagesArray);
 
@@ -186,7 +233,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 			});
 
 			// Update the block data to insert the new image
-			const contentStateAfterInsert = Modifier.mergeBlockData(
+			const contentStateAfterInsert = Modifier.setBlockData(
 				contentStateBeforeInsert,
 				insertSelectionState,
 				newBlockDataToInsert
@@ -200,7 +247,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 
 			setEditorStateRef.current(newEditorState);
 		}
-	}, [repositionX, repositionOffset, block, mediaStructure]);
+	}, [repositionX, repositionOffset, block, mediaStructure, displayData]);
 
 	// RESIZE LEFT
 	const handleResizeLeftMouseDown = (e) => {
@@ -225,6 +272,21 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 			window.removeEventListener('mouseup', handleResizeLeftMouseUp);
 
 			const newWidth = Math.max(MIN_WIDTH, startWidth - (e.clientX - initialX));
+
+			updateImageBlockData(
+				imageId,
+				imageUseId,
+				editorStateRef.current,
+				setEditorStateRef.current,
+				block.getKey(),
+				{
+					...displayData,
+					resize: {
+						width: newWidth,
+						height: null,
+					},
+				}
+			);
 
 			setDisplayData((prev) => ({
 				...prev,
@@ -263,6 +325,21 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 			window.removeEventListener('mouseup', handleResizeRightMouseUp);
 
 			const newWidth = Math.max(MIN_WIDTH, startWidth + (e.clientX - initialX));
+
+			updateImageBlockData(
+				imageId,
+				imageUseId,
+				editorStateRef.current,
+				setEditorStateRef.current,
+				block.getKey(),
+				{
+					...displayData,
+					resize: {
+						width: newWidth,
+						height: null,
+					},
+				}
+			);
 
 			setDisplayData((prev) => ({
 				...prev,
@@ -313,6 +390,21 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 			const newHeight = Math.min(
 				Math.max(MIN_HEIGHT, startHeight + (e.clientY - initialY)),
 				maxHeight
+			);
+
+			updateImageBlockData(
+				imageId,
+				imageUseId,
+				editorStateRef.current,
+				setEditorStateRef.current,
+				block.getKey(),
+				{
+					...displayData,
+					resize: {
+						height: newHeight,
+						width: null,
+					},
+				}
 			);
 
 			// setContainerHeight(newHeight);
@@ -431,23 +523,14 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 		!!imageUrl && (
 			<div
 				className='decorator-image-wrapper'
-				style={
-					displayData.float && block.getLength()
-						? {
-								float: displayData.float,
-								...(displayData.float === 'right'
-									? { marginRight: '0' }
-									: { marginLeft: '0' }),
-						  }
-						: { marginBottom: '1rem', marginLeft: '0' }
-				}
+				style={wrapperStyle}
 				contentEditable={false}
 				ref={imgContainerRef}>
 				<img
 					ref={imgRef}
 					className='decorator-image'
 					src={imageUrl}
-					style={style}
+					style={imageStyle}
 					onDragStart={handleDragStart}
 					onDragEnd={(e) => {
 						e.persist();
@@ -488,6 +571,17 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 						handleResizeVerticalMouseDown(e);
 					}}
 				/>
+
+				{/* Image Resize Squares */}
+				{isFocused && (
+					<>
+						<div className='image-resize-handle left vcenter' />
+						<div className='image-resize-handle left bottom' />
+						<div className='image-resize-handle hcenter bottom' />
+						<div className='image-resize-handle right bottom' />
+						<div className='image-resize-handle right vcenter' />
+					</>
+				)}
 				{/* {!block.getLength() && <EditorBlock {...allProps} />} */}
 			</div>
 		)
@@ -508,7 +602,7 @@ const removeImageFromBlockData = (blockKey, block, imageId, imageUseId, contentS
 
 	// Remove the original image from the block data array
 	const origBlockData = block.getData();
-	let imagesArray = origBlockData.get('images', []);
+	let imagesArray = [...origBlockData.get('images', [])];
 	const origImageIndex = imagesArray.findIndex(
 		(item) => item.imageId === imageId && item.imageUseId === imageUseId
 	);

@@ -5,7 +5,7 @@ import { LeftNavContext } from '../../contexts/leftNavContext';
 
 import PopupModal from '../containers/PopupModal';
 
-import { insertImageEntity } from '../editor/editorFunctions';
+import { insertImageBlockData } from '../editor/editorFunctions';
 
 import ReactCrop from 'react-image-crop';
 
@@ -149,7 +149,7 @@ const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 					},
 				};
 
-				insertImageEntity(newId, 1, editorStateRef.current, setEditorStateRef.current);
+				insertImageBlockData(newId, 1, editorStateRef.current, setEditorStateRef.current);
 
 				setMediaStructure(newMediaStructure);
 				console.log('newMediaStructure in uploadImageFormCrop:', newMediaStructure);
