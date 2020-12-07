@@ -9,7 +9,10 @@ export const cleanupJpeg = async (image, mediaStructure, tempPath) => {
 	console.log('cleaning up the jpeg');
 
 	if (mediaStructure[imageId] && mediaStructure[imageId].uses) {
-		if (Object.keys(mediaStructure[imageId].uses).length < 2) {
+		if (
+			Object.keys(mediaStructure[imageId].uses).length < 2 &&
+			mediaStructure[imageId].uses[imageUseId]
+		) {
 			// If this is the last use of the image, delete the imageFile
 			deleteImageFile = true;
 			delete newMediaStructure[imageId];

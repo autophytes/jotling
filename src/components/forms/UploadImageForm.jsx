@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import ImageSVG from '../../assets/svg/ImageSVG';
 import PlusSVG from '../../assets/svg/PlusSVG';
 
@@ -8,11 +8,16 @@ import { insertImageBlockData } from '../editor/editorFunctions';
 import UploadImageFormCrop from './UploadImageFormCrop';
 
 const UploadImageForm = () => {
+	// STATE
 	const [uploadImageUrl, setUploadImageUrl] = useState(false);
 	const [showChooseImageModal, setShowChooseImageModal] = useState(true);
 	const [imageList, setImageList] = useState([]);
 	const [activeImgId, setActiveImgId] = useState('');
 
+	// REFS
+	const imageInputRef = useRef(null);
+
+	// CONTEXT
 	const {
 		setShowUploadImage,
 		mediaStructure,
@@ -91,16 +96,19 @@ const UploadImageForm = () => {
 						<input
 							type='file'
 							name='file'
+							ref={imageInputRef}
 							id='file-upload-input'
 							className='hide-input-button'
 							accept='image/*'
 							onChange={onSelectFile}
 						/>
-						<label htmlFor='file-upload-input' className='upload-new-image add-image'>
+						<div
+							className='upload-new-image add-image'
+							onClick={() => imageInputRef.current.click()}>
 							<ImageSVG />
 							{/* <PlusSVG style={{fill: 'white'}}/> */}
 							<span style={{ zIndex: 2 }}>+</span>
-						</label>
+						</div>
 
 						{/* Display the available images */}
 						{imageList.map((item) => (

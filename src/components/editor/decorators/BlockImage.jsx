@@ -27,8 +27,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 		mediaStructure,
 		setMediaStructure,
 		editorStyles,
-		cleanupQueue,
-		setCleanupQueue,
 		isImageSelectedRef,
 	} = useContext(LeftNavContext);
 
@@ -43,20 +41,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 		}
 	}, [imageId, project]);
 
-	// Remove if in cleanupQueue
-	useEffect(() => {
-		const cleanupMatch = cleanupQueue.findIndex(
-			(item) =>
-				item.type === 'jpeg' && item.imageId === imageId && item.imageUseId === imageUseId
-		);
-
-		if (cleanupMatch !== -1) {
-			let newCleanupQueue = [...cleanupQueue];
-			newCleanupQueue.splice(cleanupMatch, 1);
-			setCleanupQueue(newCleanupQueue);
-		}
-	}, []);
-
 	// Load the displayData from the block metadata
 	useEffect(() => {
 		if (imageId && imageUseId) {
@@ -68,9 +52,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 			);
 
 			if (JSON.stringify(imageData) !== JSON.stringify(displayData)) {
-				console.log('JSON.stringify(displayData):', JSON.stringify(displayData));
-				console.log('JSON.stringify(imageData):', JSON.stringify(imageData));
-				console.log('UPDATING DISPLAY DATA');
 				setDisplayData(imageData);
 			}
 
@@ -461,15 +442,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 			isImageSelectedRef.current = false;
 			window.removeEventListener('click', handleExternalClicks);
 			window.removeEventListener('keyup', handleImageDelete);
-
-			setCleanupQueue((prev) => [
-				...prev,
-				{
-					type: 'jpeg',
-					imageId: imageId,
-					imageUseId: imageUseId,
-				},
-			]);
 
 			// Select the original image location
 			const contentState = editorStateRef.current.getCurrentContent();
