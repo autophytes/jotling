@@ -169,8 +169,8 @@ li .public-DraftStyleDefault-block {
 .editor-nav {
 	background-color: white;
 	position: sticky;
-	top: calc(var(--top-nav-height) + 20px);
-	transform: translateY(-20px);
+	top: calc(var(--top-nav-height) + 2rem);
+	transform: translateY(-2rem);
 	/* We transform -20px to cover the hover region */
 	font-family: 'Source Sans Pro', 'Trebuchet MS', sans-serif;
 	min-height: var(--top-nav-height);
@@ -190,7 +190,7 @@ li .public-DraftStyleDefault-block {
 
 .editor-nav-hover-region {
 	position: sticky;
-	height: 20px;
+	height: 2rem;
 	width: 100%;
 	z-index: 2;
 	/* background-color: red; */
@@ -247,7 +247,7 @@ li .public-DraftStyleDefault-block {
 }
 
 .side-nav-hover-region:not(:hover) + .side-nav {
-	transition-delay: 750ms;
+	transition-delay: 500ms;
 }
 
 .editor-nav-hover-region:not(:hover) + .editor-nav {
@@ -296,7 +296,7 @@ li .public-DraftStyleDefault-block {
 	right: -1px;
 	cursor: ew-resize;
 	height: 100%;
-	width: 3px;
+	width: 5px;
 	flex-shrink: 0;
 	display: flex;
 	flex-direction: column;
@@ -304,10 +304,10 @@ li .public-DraftStyleDefault-block {
 	user-select: none;
 }
 .vertical-rule-drag-region.left {
-	right: -1px;
+	right: -2px;
 }
 .vertical-rule-drag-region.right {
-	left: -1px;
+	left: -2px;
 }
 
 .vertical-rule.vr-left-nav {
@@ -319,7 +319,7 @@ li .public-DraftStyleDefault-block {
 
 .side-nav-hover-region {
 	position: fixed;
-	width: 20px;
+	width: 2.5rem;
 	height: 100%;
 	z-index: 2;
 	/* background-color: red; */
@@ -375,7 +375,7 @@ li .public-DraftStyleDefault-block {
 
 .editor-nav.hidden {
 	/* transform: translateY(calc(var(--top-nav-height) / -2)); */
-	transform: translateY(calc(-105% - 20px));
+	transform: translateY(calc(-105% - 2rem));
 	opacity: 0;
 }
 
@@ -389,7 +389,7 @@ li .public-DraftStyleDefault-block {
 
 .editor-nav-hover-region:hover + .editor-nav.hidden,
 .editor-nav.hidden:hover {
-	transform: translateY(-20px);
+	transform: translateY(-2rem);
 	opacity: 1;
 }
 /* .side-nav.left-nav.hidden:hover,
