@@ -8,6 +8,8 @@ const AddLinkPopper = ({
 	leftOffset = 0,
 	rightOffset = 0,
 	isContentRendered = true,
+	additionalClass = '',
+	additionalArrowClass = '',
 }) => {
 	// REFS
 	const popperElement = useRef(null);
@@ -36,21 +38,6 @@ const AddLinkPopper = ({
 			},
 		],
 	});
-
-	// Add listener to stop text blur on
-	// NOTE: this didn't stop the selection text blur, but we probably should :)
-	// useEffect(() => {
-	// 	console.log('blur being stopped??');
-	// 	const handleStopBlur = (e) => {
-	// 		e.preventDefault();
-	// 	};
-
-	// 	document.addEventListener('mousedown', handleStopBlur);
-
-	// 	return () => {
-	// 		document.removeEventListener('mousedown', handleStopBlur);
-	// 	};
-	// }, []);
 
 	// NEED TO UPDATE - close function
 	// Closes the popper if clicking outside the popper or hitting escape
@@ -86,11 +73,15 @@ const AddLinkPopper = ({
 			style={styles.popper}
 			{...attributes.popper}
 			id='link-popper-element'>
-			<div className='link-popper' style={{ minWidth: minWidth }}>
+			<div className={`link-popper ${additionalClass}`} style={{ minWidth: minWidth }}>
 				{/* PASS THROUGH CHILDREN */}
 				{children}
 
-				<div ref={arrowElement} className='link-popper-arrow' style={styles.arrow} />
+				<div
+					ref={arrowElement}
+					className={`link-popper-arrow ${additionalArrowClass}`}
+					style={styles.arrow}
+				/>
 			</div>
 		</div>
 	);

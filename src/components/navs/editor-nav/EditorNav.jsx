@@ -1,16 +1,14 @@
-import React, { useState, useCallback, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 // import { getSelectedBlocksMetadata } from 'draftjs-utils';
-import { ipcRenderer } from 'electron';
 
 import AddToWikiPopper from './AddToWikiPopper';
 import InlineStyleButton from './InlineStyleButton';
+import ColorPickerPopper from './ColorPickerPopper';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../contexts/settingsContext';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
-import IncreaseFontSizeSVG from '../../../assets/svg/editor/IncreaseFontSizeSVG';
-import DecreaseFontSizeSVG from '../../../assets/svg/editor/DecreaseFontSizeSVG';
 import BoldSVG from '../../../assets/svg/editor/BoldSVG';
 import ItalicSVG from '../../../assets/svg/editor/ItalicSVG';
 import UnderlineSVG from '../../../assets/svg/editor/UnderlineSVG';
@@ -19,14 +17,12 @@ import SubscriptSVG from '../../../assets/svg/editor/SubscriptSVG';
 import SuperscriptSVG from '../../../assets/svg/editor/SuperscriptSVG';
 import HighlightSVG from '../../../assets/svg/editor/HighlightSVG';
 import TextColorSVG from '../../../assets/svg/editor/TextColorSVG';
-// import FillColorSVG from '../../../assets/svg/editor/FillColorSVG';
 import ListBulletSVG from '../../../assets/svg/editor/ListBulletSVG';
 import ListNumberSVG from '../../../assets/svg/editor/ListNumberSVG';
 import AlignLeftSVG from '../../../assets/svg/editor/AlignLeftSVG';
 import AlignCenterSVG from '../../../assets/svg/editor/AlignCenterSVG';
 import AlignRightSVG from '../../../assets/svg/editor/AlignRightSVG';
 import AlignJustifySVG from '../../../assets/svg/editor/AlignJustifySVG';
-import LineSpacingSVG from '../../../assets/svg/editor/LineSpacingSVG';
 import SpellcheckSVG from '../../../assets/svg/editor/SpellcheckSVG';
 import ChainSVG from '../../../assets/svg/ChainSVG';
 import EyeSVG from '../../../assets/svg/EyeSVG';
@@ -98,6 +94,7 @@ const EditorNav = React.memo(
 		const [hoverRegionLeft, setHoverRegionLeft] = useState(0);
 		const [hoverRegionRight, setHoverRegionRight] = useState(0);
 		const [blockType, setBlockType] = useState('unstyled');
+		const [showColorPicker, setShowColorPicker] = useState('');
 
 		// CONTEXT
 		const {
@@ -110,6 +107,10 @@ const EditorNav = React.memo(
 			setShowUploadImage,
 		} = useContext(LeftNavContext);
 		const { editorSettings } = useContext(SettingsContext);
+
+		// REFS
+		const highlightColorRef = useRef(null);
+		const textColorRef = useRef(null);
 
 		// TEMPORARY. Cleans up old projects that still have docTags.
 		useEffect(() => {
@@ -259,12 +260,33 @@ const EditorNav = React.memo(
 					</span>
 
 					<span className='editor-nav-subsection'>
-						<button className='nav-button' onClick={() => saveFile()}>
+						{/* Highlight Color */}
+						<button
+							className='nav-button'
+							onClick={() => setShowColorPicker('highlight')}
+							ref={highlightColorRef}>
 							<HighlightSVG />
 						</button>
-						<button className='nav-button' onClick={() => loadFile()}>
+						{/* {showColorPicker === 'highlight' && (
+							<ColorPickerPopper
+								referenceElement={highlightColorRef}
+								closeFn={() => setShowColorPicker('')}
+							/>
+						)} */}
+
+						{/* Text Color */}
+						<button
+							className='nav-button'
+							onClick={() => setShowColorPicker('text')}
+							ref={textColorRef}>
 							<TextColorSVG />
 						</button>
+						{/* {showColorPicker === 'text' && (
+							<ColorPickerPopper
+								referenceElement={textColorRef}
+								closeFn={() => setShowColorPicker('')}
+							/>
+						)} */}
 
 						<button
 							className='nav-button'

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TextColorSVG = () => {
+const TextColorSVG = ({ color }) => {
 	return (
 		<svg
 			// xmlns='http://www.w3.org/2000/svg'
@@ -14,7 +14,7 @@ const TextColorSVG = () => {
 			// xml:space='preserve'
 		>
 			<g style={{ opacity: '0.36' }}>
-				<rect y='394.667' width='512' height='85.333' />
+				<rect y='394.667' width='512' height='85.333' style={color ? { fill: color } : {}} />
 			</g>
 
 			<g>

@@ -12,7 +12,7 @@ const UploadImageForm = () => {
 	const [uploadImageUrl, setUploadImageUrl] = useState(false);
 	const [showChooseImageModal, setShowChooseImageModal] = useState(true);
 	const [imageList, setImageList] = useState([]);
-	const [activeImgId, setActiveImgId] = useState('');
+	const [activeImgId, setActiveImgId] = useState(0);
 
 	// REFS
 	const imageInputRef = useRef(null);
@@ -33,12 +33,8 @@ const UploadImageForm = () => {
 		const tempPath = project.tempPath;
 		const newImageList = Object.keys(mediaStructure).map((imageId) => ({
 			url: `file://${tempPath}/media/media${imageId}.jpeg`,
-			imageId: imageId,
+			imageId: Number(imageId),
 		}));
-
-		// if (!newImageList.length) {
-		// 	document.getElementById('file-upload-input').click();
-		// }
 
 		setImageList(newImageList);
 	}, []);

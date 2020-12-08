@@ -468,12 +468,15 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		let newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
 		let usedDocuments = {};
 
+		console.log('mediaStructure: ', mediaStructure);
+
 		// Loop through each image instance in the media structure and organize by source document
 		for (let imageId in mediaStructure) {
 			for (let imageUseId in mediaStructure[imageId].uses) {
+				console.log('imageUseId to add to usedDocuments: ', imageUseId);
 				const source = mediaStructure[imageId].uses[imageUseId].sourceDoc;
 
-				if (!usedDocuments.hasOwnProperty('source')) {
+				if (!usedDocuments.hasOwnProperty(source)) {
 					usedDocuments[source] = {};
 				}
 
@@ -485,7 +488,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			}
 		}
 
-		console.log('usedDocuments: ', usedDocuments);
+		console.log('usedDocuments[doc5.json]: ', { ...usedDocuments['doc5.json'] });
 
 		// Check editorArchives for everything except hte current document. Use the editorState for that.
 

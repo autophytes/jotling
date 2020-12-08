@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ItalicSVG = () => {
+const HighlightSVG = ({ color }) => {
 	return (
 		<svg
 			// xmlns='http://www.w3.org/2000/svg'
@@ -19,10 +19,10 @@ const ItalicSVG = () => {
 			</g>
 
 			<g style={{ opacity: '0.36' }}>
-				<rect y='426.64' width='512' height='85.333' />
+				<rect y='426.64' width='512' height='85.333' style={color ? { fill: color } : {}} />
 			</g>
 		</svg>
 	);
 };
 
-export default ItalicSVG;
+export default HighlightSVG;
