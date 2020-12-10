@@ -14,6 +14,7 @@ const AddLinkPopper = ({
 	// REFS
 	const popperElement = useRef(null);
 	const arrowElement = useRef(null);
+	const closeFnRef = useRef(closeFn);
 
 	// STATE
 	const [minWidth, setMinWidth] = useState(0);
@@ -39,6 +40,11 @@ const AddLinkPopper = ({
 		],
 	});
 
+	// Update the closeFnRef so the event handlers get the current function
+	useEffect(() => {
+		closeFnRef.current = closeFn;
+	}, [closeFn]);
+
 	// NEED TO UPDATE - close function
 	// Closes the popper if clicking outside the popper or hitting escape
 	useEffect(() => {
@@ -48,7 +54,7 @@ const AddLinkPopper = ({
 				e.stopPropagation();
 				console.log('propagation is being stopped!!');
 
-				closeFn();
+				closeFnRef.current();
 			}
 		};
 

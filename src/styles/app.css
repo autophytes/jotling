@@ -23,17 +23,25 @@ html,
 	--color-background: white;
 }
 
+/* FONTS - THESE WORK, BUT VARIANTS NEED TO BE ADDED FOR BOLD OR THE BOLD TEXT MESSES UP */
+
 /* @font-face {
 	font-family: 'PT Serif';
-	src: url('/static/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype');
+	src: url('/src/assets/fonts/PT_Serif/PTSerif-Regular.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
 }
 @font-face {
 	font-family: 'Lato';
-	src: url('/static/fonts/Lato/Lato-Regular.ttf') format('truetype');
+	src: url('/src/assets/fonts/Lato/Lato-Regular.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
 }
 @font-face {
 	font-family: 'Source Sans Pro';
-	src: url('/static/fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf') format('truetype');
+	src: url('/src/assets/fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
 } */
 
 hr {
@@ -592,7 +600,7 @@ button.file-nav:focus {
 
 .nav-button {
 	outline: none;
-	border-radius: 0.25rem;
+	border-radius: 0.2rem;
 	padding: 2px 3px 2px 3px;
 	margin: 0 0.2rem;
 	cursor: pointer;
@@ -674,6 +682,18 @@ button.file-nav:focus {
 	margin-left: 0.25rem;
 	border-left: 1px solid #444;
 }
+
+.nav-button.expand-nav-button {
+	margin-left: 0;
+	padding-left: 2px;
+	padding-right: 2px;
+	height: calc(4px + 1rem);
+}
+
+.nav-button.expand-nav-button svg {
+	width: 0.5rem;
+}
+
 /* .nav-button.add-file-button .file-or-folder > svg {
 
 } */
@@ -844,9 +864,10 @@ input[type='number']::-webkit-outer-spin-button {
 	/* pointer-events: none; */
 	pointer-events: auto;
 	animation: pop-upwards 180ms forwards linear;
-	animation-delay: 0.2s;
+	/* animation-delay: 0.2s; */
+	animation-delay: 0s;
 	animation-iteration-count: 1;
-	transition: opacity 0s linear 0.2s;
+	/* transition: opacity 0s linear 0.2s; */
 
 	/* z-index: 2; */
 }
@@ -939,9 +960,14 @@ input[type='number']::-webkit-outer-spin-button {
 	/* bottom: 0; */
 	width: 10px;
 	height: 10px;
-	background-image: linear-gradient(-45deg, #4e4e4e, #4e4e4e 60%, rgba(85, 85, 85, 0) 60%);
-	transform: rotate(45deg);
+	/* background-image: linear-gradient(-45deg, #4e4e4e, #4e4e4e 60%, rgba(85, 85, 85, 0) 60%); */
 
+	transform: rotate(45deg);
+	background-color: white;
+
+	border: none;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+	border-right: 1px solid rgba(0, 0, 0, 0.15);
 	/* background-color: white; */
 	/* box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1); */
 }
@@ -952,25 +978,34 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 #link-popper-element[data-popper-placement^='bottom'] .link-popper-arrow:after {
-	background-image: linear-gradient(135deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%);
+	/* background-image: linear-gradient(135deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%); */
 	/* transform: rotate(-45deg); */
+	border: none;
+	border-top: 1px solid rgba(0, 0, 0, 0.15);
+	border-left: 1px solid rgba(0, 0, 0, 0.15);
 }
 #link-popper-element[data-popper-placement^='left'] .link-popper-arrow {
 	right: 0px;
 }
 
 #link-popper-element[data-popper-placement^='left'] .link-popper-arrow:after {
-	background-image: linear-gradient(225deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%);
+	/* background-image: linear-gradient(225deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%); */
 	top: 0px;
 	right: -5px;
+	border: none;
+	border-top: 1px solid rgba(0, 0, 0, 0.15);
+	border-right: 1px solid rgba(0, 0, 0, 0.15);
 }
 #link-popper-element[data-popper-placement^='right'] .link-popper-arrow {
 	left: 0px;
 }
 #link-popper-element[data-popper-placement^='right'] .link-popper-arrow:after {
-	background-image: linear-gradient(45deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%);
+	/* background-image: linear-gradient(45deg, #555555, #555555 60%, rgba(85, 85, 85, 0) 60%); */
 	top: 0px;
 	left: -5px;
+	border: none;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+	border-left: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 /* .link-source-decorator:hover, */
@@ -1434,9 +1469,9 @@ input[type='number']::-webkit-outer-spin-button {
 	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
 }
 
-.accent-color-swatch-picker {
+/* .accent-color-swatch-picker {
 	margin: 0.75rem;
-}
+} */
 
 .accent-color-swatch-picker input {
 	width: 100% !important;

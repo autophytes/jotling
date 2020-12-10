@@ -28,6 +28,7 @@ import ChainSVG from '../../../assets/svg/ChainSVG';
 import EyeSVG from '../../../assets/svg/EyeSVG';
 import EyeHideSVG from '../../../assets/svg/EyeHideSVG';
 import ImageSVG from '../../../assets/svg/ImageSVG';
+import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
 
 // AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
 // unstyled
@@ -106,7 +107,13 @@ const EditorNav = React.memo(
 			setLinkStructure,
 			setShowUploadImage,
 		} = useContext(LeftNavContext);
-		const { editorSettings } = useContext(SettingsContext);
+		const {
+			editorSettings,
+			highlightColor,
+			setHighlightColor,
+			textColor,
+			setTextColor,
+		} = useContext(SettingsContext);
 
 		// REFS
 		const highlightColorRef = useRef(null);
@@ -261,32 +268,46 @@ const EditorNav = React.memo(
 
 					<span className='editor-nav-subsection'>
 						{/* Highlight Color */}
+						<button className='nav-button' style={{ marginRight: 0 }}>
+							<HighlightSVG color={highlightColor.color} />
+						</button>
 						<button
-							className='nav-button'
+							className='nav-button expand-nav-button'
 							onClick={() => setShowColorPicker('highlight')}
 							ref={highlightColorRef}>
-							<HighlightSVG />
+							<CaratDownSVG />
 						</button>
-						{/* {showColorPicker === 'highlight' && (
+						{showColorPicker === 'highlight' && (
 							<ColorPickerPopper
-								referenceElement={highlightColorRef}
+								referenceElement={highlightColorRef.current}
 								closeFn={() => setShowColorPicker('')}
+								colorObj={highlightColor}
+								setColorObj={setHighlightColor}
 							/>
-						)} */}
+						)}
 
 						{/* Text Color */}
 						<button
 							className='nav-button'
+							style={{ marginRight: 0 }}
 							onClick={() => setShowColorPicker('text')}
 							ref={textColorRef}>
-							<TextColorSVG />
+							<TextColorSVG color={textColor.color} />
 						</button>
-						{/* {showColorPicker === 'text' && (
+						<button
+							className='nav-button expand-nav-button'
+							onClick={() => setShowColorPicker('text')}
+							ref={textColorRef}>
+							<CaratDownSVG />
+						</button>
+						{showColorPicker === 'text' && (
 							<ColorPickerPopper
-								referenceElement={textColorRef}
+								referenceElement={textColorRef.current}
 								closeFn={() => setShowColorPicker('')}
+								colorObj={textColor}
+								setColorObj={setTextColor}
 							/>
-						)} */}
+						)}
 
 						<button
 							className='nav-button'

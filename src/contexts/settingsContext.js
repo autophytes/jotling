@@ -26,6 +26,15 @@ const SettingsContextProvider = (props) => {
 		primaryColorRgb: '0, 149, 255',
 		primaryColorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
 	});
+	const [highlightColor, setHighlightColor] = useState({
+		color: '#0095ff',
+		colorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
+	});
+	console.log('highlightColor: ', highlightColor);
+	const [textColor, setTextColor] = useState({
+		color: '#0095ff',
+		colorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
+	});
 	const [showEditorSettings, setShowEditorSettings] = useState(false);
 	const [fontList, setFontList] = useState([]);
 	const [lineHeight, setLineHeight] = useState(1.15);
@@ -121,6 +130,10 @@ const SettingsContextProvider = (props) => {
 				setFontSize,
 				fontSettings,
 				setFontSettings,
+				highlightColor,
+				setHighlightColor,
+				textColor,
+				setTextColor,
 			}}>
 			{props.children}
 		</SettingsContext.Provider>

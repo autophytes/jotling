@@ -18,9 +18,9 @@ const HighlightSVG = ({ color }) => {
 				<path d='M441.707,56.08L391.893,6.267c-8.32-8.32-21.867-8.32-30.187,0L320,47.973l80,80l41.707-41.707     C450.027,77.947,450.027,64.4,441.707,56.08z' />
 			</g>
 
-			<g style={{ opacity: '0.36' }}>
-				<rect y='426.64' width='512' height='85.333' style={color ? { fill: color } : {}} />
-			</g>
+			{/* <g style={{ opacity: '0.36' }}> */}
+			<rect y='426.64' width='512' height='85.333' style={color ? { fill: color } : {}} />
+			{/* </g> */}
 		</svg>
 	);
 };
