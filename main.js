@@ -131,15 +131,17 @@ app.on('ready', () => {
 		let destFilePath = path.join(docsPath, `Between Worlds - Development.jots`);
 		// let destFilePath = path.join(docsPath, `Between Worlds - ${uuidv4()}.jots`);
 
-		fs.copyFile(origFilePath, destFilePath, (err) => {
-			if (err) throw err;
-			console.log('Created a new Between Worlds test project.');
-		});
+		if (fs.existsSync(origFilePath)) {
+			fs.copyFile(origFilePath, destFilePath, (err) => {
+				if (err) throw err;
+				console.log('Created a new Between Worlds test project.');
+			});
 
-		afterOpenCallback = () => {
-			openProject(destFilePath);
-			return true;
-		};
+			afterOpenCallback = () => {
+				openProject(destFilePath);
+				return true;
+			};
+		}
 	}
 
 	mainWindow = createWindow(dev, afterOpenCallback);
