@@ -129,7 +129,6 @@ app.on('ready', () => {
 		let docsPath = app.getPath('documents');
 		let origFilePath = path.join(docsPath, 'Between Worlds - Template.jots');
 		let destFilePath = path.join(docsPath, `Between Worlds - Development.jots`);
-		// let destFilePath = path.join(docsPath, `Between Worlds - ${uuidv4()}.jots`);
 
 		if (fs.existsSync(origFilePath)) {
 			fs.copyFile(origFilePath, destFilePath, (err) => {

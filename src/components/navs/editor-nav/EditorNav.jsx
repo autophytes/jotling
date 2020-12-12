@@ -83,7 +83,14 @@ const MAX_RECENT_FONTS = 5;
 
 // COMPONENT
 const EditorNav = React.memo(
-	({ spellCheck, toggleSpellCheck, currentAlignment, currentStyles, currentBlockType }) => {
+	({
+		spellCheck,
+		toggleSpellCheck,
+		currentAlignment,
+		currentStyles,
+		currentBlockType,
+		editorRef,
+	}) => {
 		// STATE
 		const [pinNav, setPinNav] = useState(true);
 		const [hoverRegionLeft, setHoverRegionLeft] = useState(0);
@@ -231,6 +238,7 @@ const EditorNav = React.memo(
 						<button
 							className='nav-button'
 							style={{ marginRight: 0 }}
+							onMouseDown={(e) => e.preventDefault()}
 							onClick={(e) => {
 								toggleTextCustomStyle(
 									e,
@@ -245,6 +253,7 @@ const EditorNav = React.memo(
 						</button>
 						<button
 							className='nav-button expand-nav-button'
+							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => setShowColorPicker('highlight')}
 							ref={highlightColorRef}>
 							<CaratDownSVG />
@@ -262,6 +271,7 @@ const EditorNav = React.memo(
 						<button
 							className='nav-button'
 							style={{ marginRight: 0 }}
+							onMouseDown={(e) => e.preventDefault()}
 							onClick={(e) => {
 								toggleTextCustomStyle(
 									e,
@@ -277,6 +287,7 @@ const EditorNav = React.memo(
 						</button>
 						<button
 							className='nav-button expand-nav-button'
+							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => setShowColorPicker('text')}
 							ref={textColorRef}>
 							<CaratDownSVG />
@@ -350,19 +361,23 @@ const EditorNav = React.memo(
 							<ChainSVG />
 						</button>
 
-						{/* Show / Hide Links */}
+						{/* Show / Hide Keys/Links */}
 						<button
 							className={'nav-button' + (editorStyles.showAllTags ? ' active' : '')}
-							onMouseDown={() =>
+							onMouseDown={(e) => {
+								e.preventDefault();
 								setEditorStyles({
 									...editorStyles,
 									showAllTags: !editorStyles.showAllTags,
-								})
-							}>
+								});
+							}}>
 							{editorStyles.showAllTags ? <EyeSVG /> : <EyeHideSVG />}
 						</button>
 
-						<button className='nav-button' onClick={() => setShowUploadImage(true)}>
+						<button
+							className='nav-button'
+							onMouseDown={(e) => e.preventDefault()}
+							onClick={() => setShowUploadImage(true)}>
 							<ImageSVG />
 						</button>
 

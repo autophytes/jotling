@@ -668,9 +668,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						currentAlignment,
 						spellCheck,
 						toggleSpellCheck,
-						saveFile,
-						loadFile,
-						editorContainerRef,
+						editorRef,
 					}}
 				/>
 				<div className='editor-top-padding' />
