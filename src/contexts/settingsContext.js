@@ -17,6 +17,16 @@ const defaultSettings = {
 	lineHeight: 1.15,
 };
 
+const defaultHighlightColor = {
+	color: '#fdffb6',
+	colorList: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#bdb2ff'],
+};
+
+const defaultTextColor = {
+	color: '#212529',
+	colorList: ['#212529', '#066600', '#010866', '#410F70', '#660200', '#664200'],
+};
+
 const SettingsContextProvider = (props) => {
 	// STATE
 	const [editorSettings, setEditorSettings] = useState({
@@ -26,15 +36,8 @@ const SettingsContextProvider = (props) => {
 		primaryColorRgb: '0, 149, 255',
 		primaryColorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
 	});
-	const [highlightColor, setHighlightColor] = useState({
-		color: '#0095ff',
-		colorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
-	});
-	console.log('highlightColor: ', highlightColor);
-	const [textColor, setTextColor] = useState({
-		color: '#0095ff',
-		colorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
-	});
+	const [highlightColor, setHighlightColor] = useState(defaultHighlightColor);
+	const [textColor, setTextColor] = useState(defaultTextColor);
 	const [showEditorSettings, setShowEditorSettings] = useState(false);
 	const [fontList, setFontList] = useState([]);
 	const [lineHeight, setLineHeight] = useState(1.15);
@@ -74,9 +77,11 @@ const SettingsContextProvider = (props) => {
 	// Initialize the values from electron-store
 	useEffect(() => {
 		let newEditorSettings = { ...editorSettings };
+		let newHighlightColor = { ...highlightColor };
+		let newTextColor = { ...textColor };
 
 		for (let prop in editorSettings) {
-			let newValue = store.get(`settings.${prop}`, null);
+			let newValue = store.get(`editorSettings.${prop}`, null);
 			if (newValue !== null) {
 				newEditorSettings[prop] = newValue;
 			} else {
@@ -84,20 +89,42 @@ const SettingsContextProvider = (props) => {
 			}
 		}
 
+		// for (let prop in highlightColor) {
+		// 	let newValue = store.get(`highlightColor.${prop}`, null);
+		// 	if (newValue !== null) {
+		// 		newHighlightColor[prop] = newValue;
+		// 	}
+		// }
+
+		// for (let prop in textColor) {
+		// 	let newValue = store.get(`textColor.${prop}`, null);
+		// 	if (newValue !== null) {
+		// 		newTextColor[prop] = newValue;
+		// 	}
+		// }
+
 		// Load in our primary color
 		const rootElement = document.querySelector(':root');
 		rootElement.style.setProperty('--color-primary', newEditorSettings.primaryColor);
 		rootElement.style.setProperty('--color-primary-rgb', newEditorSettings.primaryColorRgb);
 
 		setEditorSettings(newEditorSettings);
+		setHighlightColor(newHighlightColor);
+		setTextColor(newTextColor);
 	}, []);
 
 	// Synchronize the editorSettings electron-store
 	useEffect(() => {
 		for (let prop in editorSettings) {
-			store.set(`settings.${prop}`, editorSettings[prop]);
+			store.set(`editorSettings.${prop}`, editorSettings[prop]);
 		}
-	}, [editorSettings]);
+		for (let prop in highlightColor) {
+			store.set(`highlightColor.${prop}`, highlightColor[prop]);
+		}
+		for (let prop in textColor) {
+			store.set(`textColor.${prop}`, textColor[prop]);
+		}
+	}, [editorSettings, highlightColor, textColor]);
 
 	// Load available fonts
 	useEffect(() => {

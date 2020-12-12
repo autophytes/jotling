@@ -30,6 +30,12 @@ import EyeHideSVG from '../../../assets/svg/EyeHideSVG';
 import ImageSVG from '../../../assets/svg/ImageSVG';
 import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
 
+import {
+	toggleBlockType,
+	toggleTextAlign,
+	toggleTextCustomStyle,
+} from '../../editor/editorStyleFunctions';
+
 // AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
 // unstyled
 // paragraph
@@ -77,24 +83,12 @@ const MAX_RECENT_FONTS = 5;
 
 // COMPONENT
 const EditorNav = React.memo(
-	({
-		toggleBlockType,
-		toggleBlockStyle,
-		toggleInlineStyle,
-		toggleTextAlign,
-		spellCheck,
-		toggleSpellCheck,
-		saveFile,
-		loadFile,
-		currentAlignment,
-		currentStyles,
-		editorContainerRef,
-	}) => {
+	({ spellCheck, toggleSpellCheck, currentAlignment, currentStyles, currentBlockType }) => {
 		// STATE
 		const [pinNav, setPinNav] = useState(true);
 		const [hoverRegionLeft, setHoverRegionLeft] = useState(0);
 		const [hoverRegionRight, setHoverRegionRight] = useState(0);
-		const [blockType, setBlockType] = useState('unstyled');
+
 		const [showColorPicker, setShowColorPicker] = useState('');
 
 		// CONTEXT
@@ -103,9 +97,12 @@ const EditorNav = React.memo(
 			setEditorStyles,
 			displayLinkPopper,
 			setDisplayLinkPopper,
+			setDocStructure,
 			linkStructure,
 			setLinkStructure,
 			setShowUploadImage,
+			editorStateRef,
+			setEditorStateRef,
 		} = useContext(LeftNavContext);
 		const {
 			editorSettings,
@@ -118,6 +115,20 @@ const EditorNav = React.memo(
 		// REFS
 		const highlightColorRef = useRef(null);
 		const textColorRef = useRef(null);
+
+		// Curried toggleTextAlign function
+		const wrappedToggleTextAlign = (newAlignment) => (e) =>
+			toggleTextAlign(
+				e,
+				newAlignment,
+				currentAlignment,
+				editorStateRef.current,
+				setEditorStateRef.current
+			);
+
+		// Curried toggleBlockType function
+		const wrappedToggleBlockType = (newBlockType) => (e) =>
+			toggleBlockType(e, newBlockType, editorStateRef.current, setEditorStateRef.current);
 
 		// TEMPORARY. Cleans up old projects that still have docTags.
 		useEffect(() => {
@@ -171,11 +182,8 @@ const EditorNav = React.memo(
 						</button>
 
 						<select
-							value={blockType}
-							onChange={(e) => {
-								toggleBlockType(e, e.target.value);
-								setBlockType(e.target.value);
-							}}>
+							value={currentBlockType}
+							onChange={(e) => wrappedToggleBlockType(e.target.value)(e)}>
 							{BLOCK_TYPES.map((item, i) => {
 								return (
 									<option key={i} value={item.style}>
@@ -185,71 +193,24 @@ const EditorNav = React.memo(
 							})}
 						</select>
 
-						{/* <input
-							type='number'
-							min='0'
-							max='999'
-							value={fontSize}
-							onChange={(e) => setFontSize(e.target.value)}
-							style={{ marginLeft: '0.5rem' }}
-						/>
-						<button
-							className='nav-button'
-							onClick={() => increaseDecreaseFontSize('decrease')}
-							style={{ marginRight: '0' }}>
-							<DecreaseFontSizeSVG />
-						</button>
-						<button
-							className='nav-button'
-							onClick={() => increaseDecreaseFontSize('increase')}
-							style={{ marginLeft: '0' }}>
-							<IncreaseFontSizeSVG />
-						</button>
-
-						<input
-							type='number'
-							min='0'
-							max='10'
-							step='0.1'
-							value={lineHeight}
-							onChange={(e) => setLineHeight(e.target.value)}
-							style={{ marginLeft: '0.5rem' }}
-						/>
-						<button className='nav-button' disabled>
-							<LineSpacingSVG />
-						</button> */}
-
-						<InlineStyleButton
-							currentStyles={currentStyles}
-							toggleFn={toggleInlineStyle}
-							style='BOLD'>
+						<InlineStyleButton currentStyles={currentStyles} style='BOLD'>
 							<BoldSVG />
 						</InlineStyleButton>
 
-						<InlineStyleButton
-							currentStyles={currentStyles}
-							toggleFn={toggleInlineStyle}
-							style='ITALIC'>
+						<InlineStyleButton currentStyles={currentStyles} style='ITALIC'>
 							<ItalicSVG />
 						</InlineStyleButton>
 
-						<InlineStyleButton
-							currentStyles={currentStyles}
-							toggleFn={toggleInlineStyle}
-							style='UNDERLINE'>
+						<InlineStyleButton currentStyles={currentStyles} style='UNDERLINE'>
 							<UnderlineSVG />
 						</InlineStyleButton>
 
-						<InlineStyleButton
-							currentStyles={currentStyles}
-							toggleFn={toggleInlineStyle}
-							style='STRIKETHROUGH'>
+						<InlineStyleButton currentStyles={currentStyles} style='STRIKETHROUGH'>
 							<StrikethroughSVG />
 						</InlineStyleButton>
 
 						<InlineStyleButton
 							currentStyles={currentStyles}
-							toggleFn={toggleInlineStyle}
 							style='SUBSCRIPT'
 							injectStyle={{ paddingTop: '5px' }}
 							removeStyle='SUPERSCRIPT'>
@@ -258,7 +219,6 @@ const EditorNav = React.memo(
 
 						<InlineStyleButton
 							currentStyles={currentStyles}
-							toggleFn={toggleInlineStyle}
 							style='SUPERSCRIPT'
 							injectStyle={{ paddingBottom: '5px' }}
 							removeStyle='SUBSCRIPT'>
@@ -268,7 +228,19 @@ const EditorNav = React.memo(
 
 					<span className='editor-nav-subsection'>
 						{/* Highlight Color */}
-						<button className='nav-button' style={{ marginRight: 0 }}>
+						<button
+							className='nav-button'
+							style={{ marginRight: 0 }}
+							onClick={(e) => {
+								toggleTextCustomStyle(
+									e,
+									highlightColor.color,
+									'highlight',
+									editorStateRef.current,
+									setEditorStateRef.current,
+									setDocStructure
+								);
+							}}>
 							<HighlightSVG color={highlightColor.color} />
 						</button>
 						<button
@@ -290,7 +262,16 @@ const EditorNav = React.memo(
 						<button
 							className='nav-button'
 							style={{ marginRight: 0 }}
-							onClick={() => setShowColorPicker('text')}
+							onClick={(e) => {
+								toggleTextCustomStyle(
+									e,
+									textColor.color,
+									'textColor',
+									editorStateRef.current,
+									setEditorStateRef.current,
+									setDocStructure
+								);
+							}}
 							ref={textColorRef}>
 							<TextColorSVG color={textColor.color} />
 						</button>
@@ -310,46 +291,42 @@ const EditorNav = React.memo(
 						)}
 
 						<button
-							className='nav-button'
-							onMouseDown={(e) => toggleBlockType(e, 'unordered-list-item')}>
+							className={
+								'nav-button' + (currentBlockType === 'unordered-list-item' ? ' active' : '')
+							}
+							onMouseDown={wrappedToggleBlockType('unordered-list-item')}>
 							<ListBulletSVG />
 						</button>
 
 						<button
-							className='nav-button'
-							onMouseDown={(e) => toggleBlockType(e, 'ordered-list-item')}>
+							className={
+								'nav-button' + (currentBlockType === 'ordered-list-item' ? ' active' : '')
+							}
+							onMouseDown={wrappedToggleBlockType('ordered-list-item')}>
 							<ListNumberSVG />
 						</button>
 
 						<button
 							className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
-							onMouseDown={(e) => {
-								toggleTextAlign(e, 'left', currentAlignment);
-							}}>
+							onMouseDown={wrappedToggleTextAlign('left')}>
 							<AlignLeftSVG />
 						</button>
 
 						<button
 							className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
-							onMouseDown={(e) => {
-								toggleTextAlign(e, 'center', currentAlignment);
-							}}>
+							onMouseDown={wrappedToggleTextAlign('center')}>
 							<AlignCenterSVG />
 						</button>
 
 						<button
 							className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
-							onMouseDown={(e) => {
-								toggleTextAlign(e, 'right', currentAlignment);
-							}}>
+							onMouseDown={wrappedToggleTextAlign('right')}>
 							<AlignRightSVG />
 						</button>
 
 						<button
 							className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
-							onMouseDown={(e) => {
-								toggleTextAlign(e, 'justify', currentAlignment);
-							}}>
+							onMouseDown={wrappedToggleTextAlign('justify')}>
 							<AlignJustifySVG />
 						</button>
 

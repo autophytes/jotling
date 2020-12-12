@@ -38,6 +38,7 @@ const LeftNavContextProvider = (props) => {
 	const [hoverDestLinkId, setHoverDestLinkId] = useState(null);
 	const [syncLinkIdList, setSyncLinkIdList] = useState([]);
 	const [showUploadImage, setShowUploadImage] = useState(false);
+	const [customStyles, setCustomStyles] = useState(null);
 
 	// REFS
 	const linkStructureRef = useRef(linkStructure);
@@ -94,6 +95,36 @@ const LeftNavContextProvider = (props) => {
 		store.set(`editorStyles.rightNav`, editorStyles.rightNav);
 	}, [editorStyles]);
 
+	// Synchronize customStyles with the property in the docStructure
+	useEffect(() => {
+		let newCustomStyles = docStructure.customStyles;
+
+		if (!newCustomStyles || !Object.keys(newCustomStyles).length) {
+			return;
+		}
+
+		console.log('docStructure changed, new customStyles');
+
+		// Update customStyles if something has changed
+		setCustomStyles((prev) => {
+			for (let styleType in newCustomStyles) {
+				if (
+					!prev ||
+					!prev[styleType] ||
+					prev[styleType].length !== newCustomStyles[styleType].length
+				) {
+					return newCustomStyles;
+				}
+				if (!prev[styleType].every((v, i) => v === newCustomStyles[styleType][i])) {
+					return newCustomStyles;
+				}
+			}
+
+			console.log('just returned previous custom style');
+			return prev;
+		});
+	}, [docStructure]);
+
 	// Resets the width of the side nav bars
 	const resetNavWidth = useCallback(
 		(whichNav) => {
@@ -142,6 +173,7 @@ const LeftNavContextProvider = (props) => {
 				mediaStructureRef,
 				setMediaStructure,
 				isImageSelectedRef,
+				customStyles,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

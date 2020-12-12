@@ -22,26 +22,36 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 // offsetKey: string,
 // start: number,
 
-const FindReplaceDecorator = ({ children, decoratedText, blockKey, start, end, childDecorator={} }) => {
-
-  // STATE
+const FindReplaceDecorator = ({
+	children,
+	decoratedText,
+	blockKey,
+	start,
+	end,
+	childDecorator = {},
+}) => {
+	// STATE
 	const [isCurrentResult, setIsCurrentResult] = useState(false);
-  const [prev, setPrev] = useState({});
-  
-  // CHILD DECORATOR
-  let {currentIndex, getNextComponentIndex, getComponentForIndex, getComponentProps} = childDecorator;
-  const [componentIndex, setComponentIndex] = useState(-1);
-  useEffect(() => {
-    if (getNextComponentIndex) {
-      const newComponentIndex = getNextComponentIndex(currentIndex);
-      setComponentIndex(newComponentIndex);
-    }
-  }, [getNextComponentIndex, currentIndex]);
-  const Component = useMemo(() => 
-    componentIndex !== -1 ?
-      getComponentForIndex(componentIndex) :
-      null
-  ,[componentIndex, getComponentForIndex]);
+	const [prev, setPrev] = useState({});
+
+	// CHILD DECORATOR
+	let {
+		currentIndex,
+		getNextComponentIndex,
+		getComponentForIndex,
+		getComponentProps,
+	} = childDecorator;
+	const [componentIndex, setComponentIndex] = useState(-1);
+	useEffect(() => {
+		if (getNextComponentIndex) {
+			const newComponentIndex = getNextComponentIndex(currentIndex);
+			setComponentIndex(newComponentIndex);
+		}
+	}, [getNextComponentIndex, currentIndex]);
+	const Component = useMemo(
+		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
+		[componentIndex, getComponentForIndex]
+	);
 
 	// CONTEXT
 	const {
@@ -105,24 +115,27 @@ const FindReplaceDecorator = ({ children, decoratedText, blockKey, start, end, c
 				});
 			}
 		}
-  }, [isCurrentResult]);
+	}, [isCurrentResult]);
 
 	return (
 		<span
 			ref={decoratorRef}
-			style={{ backgroundColor: isCurrentResult ? '#FFA500' : '#FFFF00' }}>
-
-			{Component ? 
-        <Component {...getComponentProps(componentIndex)}
-          childDecorator={{
-            currentIndex: componentIndex,
-            getNextComponentIndex,
-            getComponentForIndex,
-            getComponentProps
-          }}
-        /> : 
-        children
-      }
+			className={`find-highlight-${isCurrentResult ? 'orange' : 'yellow'}`}
+			// style={{ backgroundColor: isCurrentResult ? '#FFA500' : '#FFFF00' }}
+		>
+			{Component ? (
+				<Component
+					{...getComponentProps(componentIndex)}
+					childDecorator={{
+						currentIndex: componentIndex,
+						getNextComponentIndex,
+						getComponentForIndex,
+						getComponentProps,
+					}}
+				/>
+			) : (
+				children
+			)}
 		</span>
 	);
 };

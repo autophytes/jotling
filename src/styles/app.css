@@ -243,7 +243,7 @@ li .public-DraftStyleDefault-block {
 	flex-direction: row;
 	justify-content: stretch;
 	align-items: center;
-	padding: 0.25rem 0.5rem;
+	padding: 0.25rem 0.75rem;
 	font-size: 0.95rem;
 	z-index: 3;
 
@@ -1162,6 +1162,14 @@ input[type='number']::-webkit-outer-spin-button {
 .find-container-replace-button:focus {
 	outline: none;
 	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);
+}
+
+.find-highlight-yellow * {
+	background-color: #ffff00;
+}
+
+.find-highlight-orange * {
+	background-color: #ffa500;
 }
 
 /* ::-webkit-scrollbar-track {

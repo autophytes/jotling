@@ -16,35 +16,34 @@ import { SettingsContext } from '../../contexts/settingsContext';
 import {
 	Editor,
 	EditorState,
-	ContentState,
-	CompositeDecorator,
 	SelectionState,
 	RichUtils,
 	Modifier,
 	getDefaultKeyBinding,
-	KeyBindingUtil,
 	convertToRaw,
 	convertFromRaw,
-	DefaultDraftBlockRenderMap,
 } from 'draft-js';
-import { setBlockData, getSelectedBlocksMetadata } from 'draftjs-utils';
+import {
+	setBlockData,
+	getSelectedBlocksMetadata,
+	getSelectionCustomInlineStyle,
+} from 'draftjs-utils';
 
 import EditorNav from '../navs/editor-nav/EditorNav';
 
-import { defaultText } from './defaultText';
 import {
 	spaceToAutoList,
 	enterToUnindentList,
 	doubleDashToLongDash,
 } from './KeyBindFunctions';
+import { updateLinkEntities } from './editorFunctions';
 import {
-	defaultDecorator,
-	generateDecoratorWithTagHighlights,
-	updateLinkEntities,
-	hasSelectionStartEntity,
-	insertTextWithEntity,
-	insertImageBlockData,
-} from './editorFunctions';
+	defaultCustomStyleMap,
+	blockStyleFn,
+	updateCustomStyleMap,
+} from './editorStyleFunctions';
+import { updateAllBlocks } from '../../utils/draftUtils';
+
 import { cleanupJpeg } from '../appFunctions';
 import { LinkDestBlock } from './decorators/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
@@ -54,42 +53,7 @@ import EditorFindReplace from './EditorFindReplace';
 
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
 
-const { hasCommandModifier } = KeyBindingUtil;
-
 // I can add custom inline styles. { Keyword: CSS property }
-const customStyleMap = {
-	STRIKETHROUGH: {
-		textDecoration: 'line-through',
-	},
-	SUBSCRIPT: {
-		// LINE HEIGHT ISSUES. FIX LATER.
-		verticalAlign: 'sub',
-		fontSize: '60%',
-	},
-	SUPERSCRIPT: {
-		// LINE HEIGHT ISSUES. FIX LATER.
-		verticalAlign: 'super',
-		fontSize: '60%',
-	},
-};
-
-// Applies classes to certain blocks
-const blockStyleFn = (block) => {
-	// If the block data for a text-align property, add a class
-	const blockData = block.getData();
-	if (blockData) {
-		let blockClass = '';
-
-		const blockAlignment = blockData.get('text-align');
-		if (blockAlignment) {
-			blockClass = `${blockAlignment}-aligned-block`;
-		}
-
-		return blockClass;
-	}
-
-	return '';
-};
 
 //
 //
@@ -111,6 +75,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		mediaStructure,
 		setMediaStructure,
 		isImageSelectedRef,
+		customStyles,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
 	const {
@@ -130,11 +95,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	}, [editorState]);
 
 	// STATE
-	const [styleToRemove, setStyleToRemove] = useState('');
 	const [spellCheck, setSpellCheck] = useState(false);
 	const [style, setStyle] = useState({});
 	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
+	const [currentBlockType, setCurrentBlockType] = useState('unstyled');
 	const [currentAlignment, setCurrentAlignment] = useState('');
+	const [customStyleMap, setCustomStyleMap] = useState(null);
 
 	// QUEUES
 	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
@@ -210,7 +176,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// Handle shortcut keys. Using their default function right now.
 	const customKeyBindingFn = (e) => {
-		console.log('customKeyBindFn');
 		if (e.keyCode === 8 || e.keyCode === 46) {
 			// Don't backspace/delete if image selected. We'll delete the image instead.
 			if (isImageSelectedRef.current) {
@@ -271,12 +236,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	};
 
 	// Process the key presses
-	const handleKeyCommand = useCallback((command, editorState) => {
-		// First, handle commands that happen outside the editor (like saving)
-		if (command === 'myeditor-save') {
-			// Insert code to save the file
-			return 'handled'; // Lets Draft know I've taken care of this one.
-		}
+	const handleKeyCommand = (command, editorState) => {
 		if (command === 'handled-in-binding-fn') {
 			// For instance, I have to handle tab in the binding fn b/c it needs (e)
 			// Otherwise, the browser tries to do things with the commands.
@@ -284,15 +244,23 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 
 		// If not custom handled, use the default handling
-		const newState = RichUtils.handleKeyCommand(editorState, command);
-		if (newState) {
-			setEditorState(newState);
-			console.log('handled in handleKeyCommand');
+		const selectionState = editorState.getSelection();
+		console.log('before utils start: ', selectionState.getStartOffset());
+		console.log('before utils end: ', selectionState.getEndOffset());
+
+		const newEditorState = RichUtils.handleKeyCommand(editorState, command);
+		if (newEditorState) {
+			const newSelectionState = newEditorState.getSelection();
+			console.log('after utils start: ', newSelectionState.getStartOffset());
+			console.log('after utils end: ', newSelectionState.getEndOffset());
+
+			setEditorState(newEditorState);
+			// console.log('handled in handleKeyCommand');
 			return 'handled';
 		}
 
 		return 'not-handled'; // Lets Draft know to try to handle this itself.
-	}, []);
+	};
 
 	const handleBeforeInput = (char, editorState) => {
 		const selection = editorState.getSelection();
@@ -353,22 +321,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		return 'not-handled';
 	};
 
-	// I'll use this and the one below in my EditorNav buttons
-	const toggleBlockType = useCallback((e, blockType) => {
-		e.preventDefault();
-		setEditorState(RichUtils.toggleBlockType(editorStateRef.current, blockType));
-		// editorRef.current.focus();
-	}, []);
-
-	// I'll use this and the one above in my EditorNav buttons
-	const toggleInlineStyle = useCallback((e, inlineStyle, removeStyle) => {
-		!!e && e.preventDefault();
-		setEditorState(RichUtils.toggleInlineStyle(editorStateRef.current, inlineStyle));
-
-		// If there's a style being toggled off, queue it up for removal
-		!!removeStyle && setStyleToRemove(removeStyle);
-	}, []);
-
 	// Toggle spellcheck. If turning it off, have to rerender the editor to remove the lines.
 	const toggleSpellCheck = useCallback(
 		(e) => {
@@ -382,54 +334,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		},
 		[spellCheck]
 	);
-
-	const toggleBlockStyle = useCallback((e, blockStyle) => {
-		e.preventDefault();
-
-		// Gets the starting and ending cursor locations (keys)
-		const anchorKey = editorStateRef.current.getSelection().getAnchorKey();
-		const focusKey = editorStateRef.current.getSelection().getFocusKey();
-
-		// Selects the ending block
-		const focusBlock = editorStateRef.current.getCurrentContent().getBlockForKey(focusKey);
-
-		// Create a new selection state to add our selection to
-		const selectionState = SelectionState.createEmpty();
-		const entireBlockSelectionState = selectionState.merge({
-			anchorKey: anchorKey, // Starting position
-			anchorOffset: 0, // How much to adjust from the starting position
-			focusKey: focusKey, // Ending position
-			focusOffset: focusBlock.getText().length, // How much to adjust from the ending position.
-		});
-
-		// Creates a new EditorState to style
-		const newEditorState = EditorState.forceSelection(
-			editorStateRef.current,
-			entireBlockSelectionState
-		);
-
-		// Sets the editor state to our new
-		setEditorState(RichUtils.toggleInlineStyle(newEditorState, blockStyle));
-	}, []);
-
-	// Handles Text Alignment
-	const toggleTextAlign = useCallback((e, newAlignment, currentAlignment) => {
-		e.preventDefault();
-
-		if (currentAlignment !== newAlignment) {
-			setEditorState(setBlockData(editorStateRef.current, { 'text-align': newAlignment }));
-		} else {
-			setEditorState(setBlockData(editorStateRef.current, { 'text-align': undefined }));
-		}
-	}, []);
-
-	// Removes queued up styles to remove
-	useEffect(() => {
-		if (styleToRemove !== '') {
-			toggleInlineStyle(null, styleToRemove);
-			setStyleToRemove('');
-		}
-	}, [styleToRemove]);
 
 	// Sets editor styles
 	useEffect(() => {
@@ -446,6 +350,26 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 		setStyle(newStyles);
 	}, [editorSettings, lineHeight, fontSize, fontSettings]);
+
+	// Updates the customStyleMap
+	useEffect(() => {
+		console.log('customStyles changed');
+		if (customStyles) {
+			console.log('updating the style map');
+			setCustomStyleMap(updateCustomStyleMap(customStyles));
+			editorRef.current.forceUpdate();
+		}
+	}, [customStyles]);
+
+	// Forces all blocks to update with the updated customStyleMap
+	useEffect(() => {
+		const newCurrentContent = updateAllBlocks(editorStateRef.current);
+
+		const newEditorState = EditorState.set(editorStateRef.current, {
+			currentContent: newCurrentContent,
+		});
+		setEditorState(newEditorState);
+	}, [customStyleMap]);
 
 	// Saves current document file
 	const saveFile = useCallback(
@@ -647,11 +571,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		loadFileFromSave();
 	}, [editorRef, navData, project.tempPath, updateLinkEntities, linkStructureRef, decorator]);
 
-	// ISSUE
-	// When switching between files, sometimes the original file gets overwritten with the new.
-	// I think this is an editorArchives thing?
-	// I should just totally disable the decorator for the time being and see if it still happens.
-
 	// Loading the new current document
 	useEffect(() => {
 		if (navData.currentDoc !== prev.doc || navData.currentTempPath !== prev.tempPath) {
@@ -690,20 +609,29 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 	}, [editorStateRef, editorRef, navData, setNavData, prev, loadFile, linkStructureRef]);
 
-	// As we type, updates alignment/styles to pass down to the editorNav. We do it here
+	// As we type, updates alignment/styles/type to pass down to the editorNav. We do it here
 	// instead of there to prevent unnecessary renders.
 	useEffect(() => {
 		const newCurrentStyles = editorState.getCurrentInlineStyle();
 		const newCurrentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
 
+		const selectionState = editorState.getSelection();
+		const currentBlockKey = selectionState.getStartKey();
+		const block = editorState.getCurrentContent().getBlockForKey(currentBlockKey);
+		const newCurrentBlockType = block.getType();
+
 		if (!Immutable.is(newCurrentStyles, currentStyles)) {
 			setCurrentStyles(newCurrentStyles);
+		}
+
+		if (newCurrentBlockType !== currentBlockType) {
+			setCurrentBlockType(newCurrentBlockType);
 		}
 
 		if (newCurrentAlignment !== currentAlignment) {
 			setCurrentAlignment(newCurrentAlignment);
 		}
-	}, [editorState, currentStyles, currentAlignment]);
+	}, [editorState, currentStyles, currentAlignment, currentBlockType]);
 
 	// Scroll to the previous position or to the top on document load
 	useLayoutEffect(() => {
@@ -717,6 +645,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			}
 		}
 	}, [navData, editorArchives, shouldResetScroll]);
+
+	// console.log('data: ', editorState.getCurrentContent().getFirstBlock().getData());
 
 	return (
 		<main
@@ -734,11 +664,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				<EditorNav
 					{...{
 						currentStyles,
+						currentBlockType,
 						currentAlignment,
-						toggleBlockType,
-						toggleBlockStyle,
-						toggleInlineStyle,
-						toggleTextAlign,
 						spellCheck,
 						toggleSpellCheck,
 						saveFile,
@@ -758,7 +685,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						handleKeyCommand={handleKeyCommand}
 						handleBeforeInput={handleBeforeInput}
 						handleDrop={wrappedHandleDrop}
-						customStyleMap={customStyleMap}
+						customStyleMap={customStyleMap ? customStyleMap : defaultCustomStyleMap}
 						blockStyleFn={blockStyleFn}
 						blockRendererFn={blockRendererFn}
 						// blockRenderMap={blockRenderMap}

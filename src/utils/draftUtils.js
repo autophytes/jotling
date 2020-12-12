@@ -50,3 +50,15 @@ export const getTextSelection = (contentState, selection, blockDelimiter) => {
 
 	return cleanedSelectedText;
 };
+
+// Force an update of all contentBlocks. Returns a new contentState.
+export const updateAllBlocks = (editorState) => {
+	const contentState = editorState.getCurrentContent();
+	const blockMap = contentState.getBlockMap();
+
+	const indented = blockMap.map((blk) => blk.set('depth', blk.getDepth() + 1));
+	const outdented = indented.map((blk) => blk.set('depth', blk.getDepth() - 1));
+	const outdentedContentState = contentState.set('blockMap', outdented);
+
+	return outdentedContentState;
+};
