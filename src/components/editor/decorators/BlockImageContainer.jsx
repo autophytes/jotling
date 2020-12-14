@@ -24,7 +24,7 @@ const IMAGE_CHAR = ' ';
 // selection: SelectionState {_map: Map, __ownerID: undefined}
 // tree: List
 
-const BlockImageContainer = (props) => {
+const BlockImageContainer = React.memo((props) => {
 	const { block } = props;
 
 	// CONTEXT
@@ -60,7 +60,6 @@ const BlockImageContainer = (props) => {
 
 	return (
 		<div style={block.getLength() ? {} : { display: 'flex', alignItems: 'flex-start' }}>
-			{console.log('imageArray: ', imageArray)}
 			{imageArray.map((item) =>
 				mediaStructure[item.imageId] ? (
 					<BlockImage
@@ -75,7 +74,6 @@ const BlockImageContainer = (props) => {
 					false
 				)
 			)}
-
 			<EditorBlock {...props} />
 			{/* {!!block.getLength() && <EditorBlock {...props} />} */}
 		</div>
@@ -83,7 +81,7 @@ const BlockImageContainer = (props) => {
 
 	// For help in getting local images to render in electron:
 	//   https://github.com/electron/electron/issues/23757#issuecomment-640146333
-};
+});
 
 // Gets the Image IDs for the entity
 const getImageIds = (entityKey, contentState, blockKey, start) => {

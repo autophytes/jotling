@@ -261,7 +261,10 @@ const EditorNav = React.memo(
 						{showColorPicker === 'highlight' && (
 							<ColorPickerPopper
 								referenceElement={highlightColorRef.current}
-								closeFn={() => setShowColorPicker('')}
+								closeFn={() => {
+									editorRef.current.focus();
+									setShowColorPicker('');
+								}}
 								colorObj={highlightColor}
 								setColorObj={setHighlightColor}
 							/>
@@ -295,7 +298,10 @@ const EditorNav = React.memo(
 						{showColorPicker === 'text' && (
 							<ColorPickerPopper
 								referenceElement={textColorRef.current}
-								closeFn={() => setShowColorPicker('')}
+								closeFn={() => {
+									editorRef.current.focus();
+									setShowColorPicker('');
+								}}
 								colorObj={textColor}
 								setColorObj={setTextColor}
 							/>

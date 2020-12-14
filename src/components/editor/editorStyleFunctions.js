@@ -177,24 +177,29 @@ export const toggleTextCustomStyle = (
 	const start = selectionState.getStartOffset();
 	const end = selectionState.getEndOffset();
 	const selectedBlocks = getSelectedBlocksList(editorState);
+	console.log('blocks selected: ', selectedBlocks.size);
 	if (selectedBlocks.size > 0) {
+		// Loop through each block
 		for (let i = 0; i < selectedBlocks.size; i += 1) {
+			// If the first block, start at the selection start. Otherwise, 0.
 			let blockStart = i === 0 ? start : 0;
+
+			// If the last block, use the selection end. Otherwise, full block length.
 			let blockEnd =
 				i === selectedBlocks.size - 1 ? end : selectedBlocks.get(i).getText().length;
-			if (blockStart === blockEnd && blockStart === 0) {
-				blockStart = 1;
-				blockEnd = 2;
-			} else if (blockStart === blockEnd) {
-				blockStart -= 1;
-			}
-			for (let j = blockStart; j < blockEnd; j += 1) {
-				const inlineStylesAtOffset = selectedBlocks.get(i).getInlineStyleAt(j).toSet();
-				if (isEntireSelectionCurrentColor && !inlineStylesAtOffset.has(fullStyleName)) {
-					isEntireSelectionCurrentColor = false;
-				}
 
-				inlineStylesAtOffset.forEach((item) => usedStyleSet.add(item));
+			// If selection is collapsed, don't run for block.
+			if (blockStart !== blockEnd) {
+				// Loop through each character
+				for (let j = blockStart; j < blockEnd; j += 1) {
+					const inlineStylesAtOffset = selectedBlocks.get(i).getInlineStyleAt(j).toSet();
+					// At first character that doesn't have the style, enable adding the new color
+					if (isEntireSelectionCurrentColor && !inlineStylesAtOffset.has(fullStyleName)) {
+						isEntireSelectionCurrentColor = false;
+					}
+
+					inlineStylesAtOffset.forEach((item) => usedStyleSet.add(item));
+				}
 			}
 		}
 	}
@@ -207,7 +212,7 @@ export const toggleTextCustomStyle = (
 		}
 	}
 
-	// Apply the new style
+	// If all characters already have the color, don't apply. Let the remove above clear the color.
 	if (!isEntireSelectionCurrentColor) {
 		contentState = Modifier.applyInlineStyle(
 			contentState,

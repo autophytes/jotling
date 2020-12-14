@@ -498,6 +498,14 @@ export const createTagLink = (
 
 	const contentState = cleanedEditorState.getCurrentContent();
 	const selectionState = cleanedEditorState.getSelection();
+	console.log('selectionState start:', selectionState.getStartOffset());
+	console.log('selectionState end:', selectionState.getEndOffset());
+	console.log('selectionState start:', selectionState.getStartKey());
+	console.log('selectionState end:', selectionState.getEndKey());
+	console.log(
+		'blockContent: ',
+		contentState.getBlockForKey(selectionState.getStartKey()).getText()
+	);
 
 	// Apply the linkId as an entity to the selection
 	const contentStateWithEntity = contentState.createEntity('LINK-SOURCE', 'MUTABLE', {
@@ -517,6 +525,7 @@ export const createTagLink = (
 
 	// Get the selected text to include in the link
 	const selectedText = getTextSelection(contentStateWithLink, selectionState);
+	console.log('selectedText:', selectedText);
 
 	// Updating the linkStructure with the new link
 	let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));

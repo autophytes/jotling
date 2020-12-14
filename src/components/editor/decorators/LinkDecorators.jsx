@@ -166,11 +166,13 @@ const LinkSourceDecorator = ({
 		prevDecoratedText,
 	]);
 
-	const handleHoverStart = () => {
+	const handleHoverStart = (e) => {
+		e.preventDefault();
 		setHoverSourceLinkId(linkId);
 	};
 
-	const handleHoverLeave = () => {
+	const handleHoverLeave = (e) => {
+		e.preventDefault();
 		if (hoverSourceLinkId === linkId) {
 			setHoverSourceLinkId(null);
 		}
@@ -344,11 +346,13 @@ const LinkDestBlock = (props) => {
 		}
 	}, []);
 
-	const handleHoverStart = () => {
+	const handleHoverStart = (e) => {
+		e.preventDefault();
 		setHoverDestLinkId(linkId);
 	};
 
-	const handleHoverLeave = () => {
+	const handleHoverLeave = (e) => {
+		e.preventDefault();
 		if (hoverDestLinkId === linkId) {
 			setHoverDestLinkId(null);
 		}
