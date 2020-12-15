@@ -6,6 +6,8 @@ _Once this has a solid core set of features, I'll have full builds available for
 
 <img src="https://user-images.githubusercontent.com/54632192/101993168-85065100-3c86-11eb-970a-a24862d766eb.png" alt="Jotling Screenshot" width="75%" height="auto">
 
+**_Build notes:_** To build the project, run `npm run build`. Once this is finished, `yarn dist` will run electron-builder to create the distributable files. I believe `npm run dist` would work as well, but electron-builder recommends running with yarn to avoid some potential issues.
+
 If you want to pop in and chat while I'm working on the project, you can find me at www.twitch.tv/autophytes most mornings (6:30 – 8:30am EST weekdays, later on Saturdays). Come say hi!
 
 While I want everyone to be able to toy with the project and poke around in the code, note that this _isn't an open source project_. Just something I'm building in my free time and wanted anyone interested to be able to explore. All rights reserved, use at your own risk, and all that other good jazz :tada: :grin: :tada:

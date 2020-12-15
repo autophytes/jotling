@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { usePopper } from 'react-popper';
 
-const AddLinkPopper = ({
+const PopperContainer = ({
 	referenceElement,
 	closeFn,
 	children,
@@ -93,4 +93,4 @@ const AddLinkPopper = ({
 	);
 };
 
-export default AddLinkPopper;
+export default PopperContainer;

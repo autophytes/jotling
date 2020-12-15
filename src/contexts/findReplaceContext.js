@@ -205,6 +205,7 @@ const FindReplaceContextProvider = (props) => {
 				replaceAllCharacterOffsetRef,
 				updateFindIndex,
 				contextEditorRef,
+				setTotalMatches, // DELETE
 				// queueIncrement,
 			}}>
 			{props.children}

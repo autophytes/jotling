@@ -35,6 +35,8 @@ const BlockImageContainer = React.memo((props) => {
 	const [imageArray, setImageArray] = useState([]);
 	const [pageWidth, setPageWidth] = useState(null);
 
+	console.log('blockImageContainer rerendered');
+
 	// On load (or decorator change - overwriting parts of links does this), grab the Image IDs
 	useEffect(() => {
 		const newImageArray = block.getData().get('images', []);
@@ -59,7 +61,8 @@ const BlockImageContainer = React.memo((props) => {
 	}, [editorMaxWidth, editorPadding]);
 
 	return (
-		<div style={block.getLength() ? {} : { display: 'flex', alignItems: 'flex-start' }}>
+		// <div style={block.getLength() ? {} : { display: 'flex', alignItems: 'flex-start' }}>
+		<>
 			{imageArray.map((item) =>
 				mediaStructure[item.imageId] ? (
 					<BlockImage
@@ -70,13 +73,12 @@ const BlockImageContainer = React.memo((props) => {
 						block={block}
 						allProps={props}
 					/>
-				) : (
-					false
-				)
+				) : null
 			)}
 			<EditorBlock {...props} />
 			{/* {!!block.getLength() && <EditorBlock {...props} />} */}
-		</div>
+			{/* </div> */}
+		</>
 	);
 
 	// For help in getting local images to render in electron:

@@ -60,7 +60,7 @@ const AppMgmt = () => {
 		navDataRef,
 		setEditorArchives,
 		peekWindowLinkId,
-		setDisplayLinkPopper,
+		setDisplayWikiPopper,
 		editorStateRef,
 		setEditorStateRef,
 		linkStructureRef,
@@ -290,7 +290,7 @@ const AppMgmt = () => {
 
 		ipcRenderer.on('insert-link', (event) => {
 			if (document.getSelection().toString().length) {
-				setDisplayLinkPopper(true);
+				setDisplayWikiPopper(true);
 			}
 		});
 
@@ -366,7 +366,7 @@ const AppMgmt = () => {
 
 		ipcRenderer.on('request-context-button', (event) => {
 			if (document.getSelection().toString().length) {
-				setDisplayLinkPopper(true);
+				setDisplayWikiPopper(true);
 			}
 		});
 

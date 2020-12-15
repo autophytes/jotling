@@ -33,7 +33,7 @@ const LeftNavContextProvider = (props) => {
 	const [editorArchives, setEditorArchives] = useState({});
 	const [scrollToLinkId, setScrollToLinkId] = useState(null);
 	const [peekWindowLinkId, setPeekWindowLinkId] = useState(null);
-	const [displayLinkPopper, setDisplayLinkPopper] = useState(false);
+	const [displayWikiPopper, setDisplayWikiPopper] = useState(false);
 	const [hoverSourceLinkId, setHoverSourceLinkId] = useState(null);
 	const [hoverDestLinkId, setHoverDestLinkId] = useState(null);
 	const [syncLinkIdList, setSyncLinkIdList] = useState([]);
@@ -159,8 +159,8 @@ const LeftNavContextProvider = (props) => {
 				setEditorStateRef,
 				peekWindowLinkId,
 				setPeekWindowLinkId,
-				displayLinkPopper,
-				setDisplayLinkPopper,
+				displayWikiPopper,
+				setDisplayWikiPopper,
 				hoverSourceLinkId,
 				setHoverSourceLinkId,
 				hoverDestLinkId,

@@ -15,7 +15,7 @@ import { findAllDocsInFolder } from '../navFunctions';
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
 
-const AddLinkPopper = ({ setDisplayLinkPopper }) => {
+const AddLinkPopper = ({ setDisplayWikiPopper }) => {
 	// REFS
 	const popperInputRef = useRef(null);
 
@@ -124,7 +124,7 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 
 	return (
 		<PopperContainer
-			closeFn={() => setDisplayLinkPopper(false)}
+			closeFn={() => setDisplayWikiPopper(false)}
 			isContentRendered={!!allTags.length}
 			{...{
 				leftOffset,
@@ -170,7 +170,7 @@ const AddLinkPopper = ({ setDisplayLinkPopper }) => {
 									setLinkStructure,
 									setSyncLinkIdList
 								);
-								setDisplayLinkPopper(false);
+								setDisplayWikiPopper(false);
 							}}>
 							{item}
 						</button>

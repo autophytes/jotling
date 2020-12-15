@@ -6,6 +6,7 @@ import React, {
 	useRef,
 	useLayoutEffect,
 } from 'react';
+import { EditorState } from 'draft-js';
 
 import PopperVerticalContainer from '../../containers/PopperVerticalContainer';
 import { LinkSelectionRangeRef } from './LinkSelectionRangeRef';
@@ -50,7 +51,7 @@ const sentenceBreakingPunctuation = [
 	'_',
 ];
 
-const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
+const AddToWikiPopper = () => {
 	// STATE
 	const [leftOffset, setLeftOffset] = useState(0);
 	const [rightOffset, setRightOffset] = useState(0);
@@ -69,15 +70,47 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 		navData,
 		editorStyles,
 		editorStateRef,
+		setEditorStateRef,
 		docStructureRef,
 		linkStructureRef,
 		setDocStructure,
 		setNavData,
-		setEditorStateRef,
 		setLinkStructure,
 		setSyncLinkIdList,
+		displayWikiPopper,
+		setDisplayWikiPopper,
 	} = useContext(LeftNavContext);
 	const { editorSettings } = useContext(SettingsContext);
+
+	// Fix issue where selection is messed up when an image is in the block
+	useEffect(() => {
+		const currentSelection = editorStateRef.current.getSelection();
+
+		console.log(
+			'after document.getSelection().toString(): ',
+			document.getSelection().toString()
+		);
+
+		console.log('in popper currentSelection start:', currentSelection.getStartOffset());
+		console.log('in popper currentSelection end:', currentSelection.getEndOffset());
+		console.log('in popper currentSelection start:', currentSelection.getStartKey());
+		console.log('in popper currentSelection end:', currentSelection.getEndKey());
+
+		if (
+			currentSelection.getStartOffset() !== displayWikiPopper.getStartOffset() ||
+			currentSelection.getEndOffset() !== displayWikiPopper.getEndOffset() ||
+			currentSelection.getStartKey() !== displayWikiPopper.getStartKey() ||
+			currentSelection.getEndKey() !== displayWikiPopper.getEndKey()
+		) {
+			console.log('forcing the selection State update');
+			const newEditorState = EditorState.forceSelection(
+				editorStateRef.current,
+				displayWikiPopper
+			);
+			setEditorStateRef.current(newEditorState);
+			editorStateRef.current(newEditorState);
+		}
+	}, []);
 
 	// Initial rebuild of referenceElement
 	useEffect(() => {
@@ -155,7 +188,7 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 						setLinkStructure,
 						setSyncLinkIdList
 					);
-					setDisplayLinkPopper(false);
+					setDisplayWikiPopper(false);
 				};
 			}
 		},
@@ -194,7 +227,7 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 						);
 
 						// Then create the link
-						setDisplayLinkPopper(false);
+						setDisplayWikiPopper(false);
 				  }
 				: undefined;
 		},
@@ -340,7 +373,7 @@ const AddToWikiPopper = ({ setDisplayLinkPopper }) => {
 
 	return (
 		<PopperVerticalContainer
-			closeFn={() => setDisplayLinkPopper(false)}
+			closeFn={() => setDisplayWikiPopper(false)}
 			{...{
 				leftOffset,
 				rightOffset,

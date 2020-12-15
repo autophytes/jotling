@@ -7,6 +7,7 @@ import ColorPickerPopper from './ColorPickerPopper';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../contexts/settingsContext';
+import { FindReplaceContext } from '../../../contexts/findReplaceContext';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import BoldSVG from '../../../assets/svg/editor/BoldSVG';
@@ -102,14 +103,15 @@ const EditorNav = React.memo(
 		const {
 			editorStyles,
 			setEditorStyles,
-			displayLinkPopper,
-			setDisplayLinkPopper,
+			displayWikiPopper,
+			setDisplayWikiPopper,
 			setDocStructure,
 			linkStructure,
 			setLinkStructure,
 			setShowUploadImage,
 			editorStateRef,
 			setEditorStateRef,
+			setHoverDestLinkId,
 		} = useContext(LeftNavContext);
 		const {
 			editorSettings,
@@ -118,6 +120,7 @@ const EditorNav = React.memo(
 			textColor,
 			setTextColor,
 		} = useContext(SettingsContext);
+		const { setTotalMatches } = useContext(FindReplaceContext);
 
 		// REFS
 		const highlightColorRef = useRef(null);
@@ -360,8 +363,33 @@ const EditorNav = React.memo(
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={(e) => {
 								e.stopPropagation();
+
+								// const contentState = editorStateRef.current.getCurrentContent();
+								// console.log(
+								// 	'blockContent: ',
+								// 	contentState.getBlockForKey(selectionState.getStartKey()).getText()
+								// );
+
 								if (document.getSelection().toString().length) {
-									setDisplayLinkPopper(true);
+									console.log(
+										'document.getSelection().toString(): ',
+										document.getSelection().toString()
+									);
+
+									const selectionState = editorStateRef.current.getSelection();
+									console.log('selectionState start:', selectionState.getStartOffset());
+									console.log('selectionState end:', selectionState.getEndOffset());
+									console.log('selectionState start:', selectionState.getStartKey());
+									console.log('selectionState end:', selectionState.getEndKey());
+
+									setDisplayWikiPopper(true);
+									// setTotalMatches((prev) => {
+									// 	if (prev) {
+									// 		return prev + 1;
+									// 	} else {
+									// 		return 1;
+									// 	}
+									// });
 								}
 							}}>
 							<ChainSVG />
@@ -390,7 +418,7 @@ const EditorNav = React.memo(
 						{/* Add Tag Popper */}
 						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
                 to close the popper. This can later be used for confirmation messages and things like that. */}
-						{displayLinkPopper && <AddToWikiPopper {...{ setDisplayLinkPopper }} />}
+						{displayWikiPopper && <AddToWikiPopper />}
 					</span>
 				</nav>
 			</>

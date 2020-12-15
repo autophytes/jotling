@@ -182,9 +182,10 @@ const LeftNav = () => {
 
 					<LeftNavContent />
 
+					{/* Potentially show some document statistics down here */}
 					<div className='left-nav-footer'>
-						<p>497 words</p>
-						<p>49% today's goal</p>
+						{/* <p>497 words</p>
+						<p>49% today's goal</p> */}
 					</div>
 				</div>
 				<div className={'vertical-rule vr-left-nav' + (isResizing ? ' primary-color' : '')} />
