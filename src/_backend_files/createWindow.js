@@ -7,8 +7,8 @@ const {
 	checkShouldCloseMainWindow,
 	setShouldCloseMainWindow,
 	checkIsQuitting,
-} = require('../backend_files/ipcListeners');
-const { requestSaveAndClose } = require('../backend_files/fileFunctions');
+} = require('./ipcListeners');
+const { requestSaveAndClose } = require('./fileFunctions');
 const contextMenu = require('./createContextMenu');
 
 function createWindow(dev, callbackFunction) {
@@ -43,7 +43,7 @@ function createWindow(dev, callbackFunction) {
 	} else {
 		indexPath = url.format({
 			protocol: 'file:',
-			pathname: path.join(__dirname, '../build', 'index.html'),
+			pathname: path.join(__dirname, '../../build', 'index.html'),
 			slashes: true,
 		});
 	}
@@ -104,7 +104,7 @@ function createWindow(dev, callbackFunction) {
 		// If the callback returned true, it created a project and we don't need to here
 		if (!projectAlreadyCreated) {
 			// Load the default project files
-			const { createTempProjectOnStartup } = require('../backend_files/fileFunctions');
+			const { createTempProjectOnStartup } = require('./fileFunctions');
 			createTempProjectOnStartup();
 		}
 	});

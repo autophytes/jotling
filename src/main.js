@@ -4,16 +4,16 @@
 require('v8-compile-cache'); // Speeds up boot time
 const { app, BrowserWindow, protocol } = require('electron');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
+// const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 
 const {
 	registerHandlers,
 	checkShouldQuitApp,
 	setIsQuitting,
-} = require('./backend_files/ipcListeners');
-const { requestSaveAndQuit, openProject } = require('./backend_files/fileFunctions');
-const { createWindow } = require('./backend_files/createWindow');
+} = require('./_backend_files/ipcListeners');
+const { requestSaveAndQuit, openProject } = require('./_backend_files/fileFunctions');
+const { createWindow } = require('./_backend_files/createWindow');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -72,7 +72,7 @@ if (process.platform === 'win32') {
 // createNewProject();
 
 // Register after createWindow is defined so it can be imported in registerMenu
-const { registerMenu } = require('./backend_files/menu');
+const { registerMenu } = require('./_backend_files/menu');
 
 // Open a file with Jotling (opening a .jots file)
 app.on('open-file', (e, jotsPath) => {
