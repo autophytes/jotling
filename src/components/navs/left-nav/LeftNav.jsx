@@ -103,6 +103,7 @@ const LeftNav = () => {
 						<div className='add-file-folder-wrapper'>
 							<button
 								className='nav-button add-file-button'
+								title='Insert Document'
 								onClick={() => handleAddFile('doc')}>
 								<span className='plus-sign'>
 									<PlusSVG />
@@ -111,6 +112,7 @@ const LeftNav = () => {
 							</button>
 							<button
 								className='nav-button add-file-button'
+								title='Insert Folder'
 								onClick={() => handleAddFile('folder')}>
 								<span className='plus-sign'>
 									<PlusSVG />
@@ -120,6 +122,7 @@ const LeftNav = () => {
 						</div>
 						<button
 							className={'nav-button' + (pinNav ? ' active' : '')}
+							title='Pin Document Navigation'
 							onMouseUp={() => {
 								setPinNav(!pinNav);
 								setEditorStyles({ ...editorStyles, leftIsPinned: !pinNav });
@@ -133,6 +136,7 @@ const LeftNav = () => {
 							className={
 								'nav-section-tab first' + (navData.currentTab === 'draft' ? ' active' : '')
 							}
+							title='Manuscript'
 							onClick={() =>
 								setNavData({
 									...navData,
@@ -146,6 +150,7 @@ const LeftNav = () => {
 							className={
 								'nav-section-tab' + (navData.currentTab === 'research' ? ' active' : '')
 							}
+							title='Planning'
 							onClick={() =>
 								setNavData({
 									...navData,
@@ -159,6 +164,7 @@ const LeftNav = () => {
 							className={
 								'nav-section-tab last' + (navData.currentTab === 'pages' ? ' active' : '')
 							}
+							title='Wikis'
 							onClick={() =>
 								setNavData({
 									...navData,

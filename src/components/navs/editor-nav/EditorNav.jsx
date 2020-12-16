@@ -186,6 +186,7 @@ const EditorNav = React.memo(
 					<span className='editor-nav-subsection'>
 						<button
 							className={'nav-button' + (pinNav ? ' active' : '')}
+							title='Pin Editor Tools'
 							style={{ marginRight: '0.5rem' }}
 							onMouseUp={() => setPinNav(!pinNav)}>
 							<PushpinSVG />
@@ -240,6 +241,7 @@ const EditorNav = React.memo(
 						{/* Highlight Color */}
 						<button
 							className='nav-button'
+							title='Highlight Text'
 							style={{ marginRight: 0 }}
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={(e) => {
@@ -256,6 +258,7 @@ const EditorNav = React.memo(
 						</button>
 						<button
 							className='nav-button expand-nav-button'
+							title='Choose Highlight Color'
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => setShowColorPicker('highlight')}
 							ref={highlightColorRef}>
@@ -276,6 +279,7 @@ const EditorNav = React.memo(
 						{/* Text Color */}
 						<button
 							className='nav-button'
+							title='Text Color'
 							style={{ marginRight: 0 }}
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={(e) => {
@@ -293,6 +297,7 @@ const EditorNav = React.memo(
 						</button>
 						<button
 							className='nav-button expand-nav-button'
+							title='Choose Text Color'
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => setShowColorPicker('text')}
 							ref={textColorRef}>
@@ -314,6 +319,7 @@ const EditorNav = React.memo(
 							className={
 								'nav-button' + (currentBlockType === 'unordered-list-item' ? ' active' : '')
 							}
+							title='Bulleted List'
 							onMouseDown={wrappedToggleBlockType('unordered-list-item')}>
 							<ListBulletSVG />
 						</button>
@@ -322,30 +328,35 @@ const EditorNav = React.memo(
 							className={
 								'nav-button' + (currentBlockType === 'ordered-list-item' ? ' active' : '')
 							}
+							title='Numbered List'
 							onMouseDown={wrappedToggleBlockType('ordered-list-item')}>
 							<ListNumberSVG />
 						</button>
 
 						<button
 							className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
+							title='Align Left'
 							onMouseDown={wrappedToggleTextAlign('left')}>
 							<AlignLeftSVG />
 						</button>
 
 						<button
 							className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
+							title='Align Center'
 							onMouseDown={wrappedToggleTextAlign('center')}>
 							<AlignCenterSVG />
 						</button>
 
 						<button
 							className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
+							title='Align Right'
 							onMouseDown={wrappedToggleTextAlign('right')}>
 							<AlignRightSVG />
 						</button>
 
 						<button
 							className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
+							title='Justify Text'
 							onMouseDown={wrappedToggleTextAlign('justify')}>
 							<AlignJustifySVG />
 						</button>
@@ -354,12 +365,14 @@ const EditorNav = React.memo(
 
 						<button
 							className={'nav-button' + (spellCheck ? ' active' : '')}
+							title='Toggle Spellcheck'
 							onMouseDown={(e) => toggleSpellCheck(e)}>
 							<SpellcheckSVG />
 						</button>
 
 						<button
 							className='nav-button'
+							title='Add to Wiki'
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={(e) => {
 								e.stopPropagation();
@@ -398,6 +411,7 @@ const EditorNav = React.memo(
 						{/* Show / Hide Keys/Links */}
 						<button
 							className={'nav-button' + (editorStyles.showAllTags ? ' active' : '')}
+							title='Show Wiki Links'
 							onMouseDown={(e) => {
 								e.preventDefault();
 								setEditorStyles({
@@ -410,6 +424,7 @@ const EditorNav = React.memo(
 
 						<button
 							className='nav-button'
+							title='Insert Image'
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => setShowUploadImage(true)}>
 							<ImageSVG />

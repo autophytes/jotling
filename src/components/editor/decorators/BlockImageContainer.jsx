@@ -24,12 +24,13 @@ const IMAGE_CHAR = ' ';
 // selection: SelectionState {_map: Map, __ownerID: undefined}
 // tree: List
 
-const BlockImageContainer = React.memo((props) => {
+const BlockImageContainer = (props) => {
 	const { block } = props;
 
 	// CONTEXT
 	const { editorMaxWidth, editorPadding } = useContext(SettingsContext).editorSettings;
-	const { mediaStructure } = useContext(LeftNavContext);
+	// NOTE: monitoring LeftNavContext in this component messes up the selection if the user
+	// selects the entire block (triple clicks) that the image is in.
 
 	// STATE
 	const [imageArray, setImageArray] = useState([]);
@@ -61,29 +62,25 @@ const BlockImageContainer = React.memo((props) => {
 	}, [editorMaxWidth, editorPadding]);
 
 	return (
-		// <div style={block.getLength() ? {} : { display: 'flex', alignItems: 'flex-start' }}>
-		<>
-			{imageArray.map((item) =>
-				mediaStructure[item.imageId] ? (
-					<BlockImage
-						key={`${item.imageId}_${item.imageUseId}`}
-						pageWidth={pageWidth}
-						imageId={item.imageId}
-						imageUseId={item.imageUseId}
-						block={block}
-						allProps={props}
-					/>
-				) : null
-			)}
+		<div style={block.getLength() ? {} : { display: 'flex', alignItems: 'flex-start' }}>
+			{imageArray.map((item) => (
+				<BlockImage
+					key={`${item.imageId}_${item.imageUseId}`}
+					pageWidth={pageWidth}
+					imageId={item.imageId}
+					imageUseId={item.imageUseId}
+					block={block}
+					allProps={props}
+				/>
+			))}
 			<EditorBlock {...props} />
 			{/* {!!block.getLength() && <EditorBlock {...props} />} */}
-			{/* </div> */}
-		</>
+		</div>
 	);
 
 	// For help in getting local images to render in electron:
 	//   https://github.com/electron/electron/issues/23757#issuecomment-640146333
-});
+};
 
 // Gets the Image IDs for the entity
 const getImageIds = (entityKey, contentState, blockKey, start) => {

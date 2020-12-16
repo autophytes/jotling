@@ -96,20 +96,20 @@ const AddToWikiPopper = () => {
 		console.log('in popper currentSelection start:', currentSelection.getStartKey());
 		console.log('in popper currentSelection end:', currentSelection.getEndKey());
 
-		if (
-			currentSelection.getStartOffset() !== displayWikiPopper.getStartOffset() ||
-			currentSelection.getEndOffset() !== displayWikiPopper.getEndOffset() ||
-			currentSelection.getStartKey() !== displayWikiPopper.getStartKey() ||
-			currentSelection.getEndKey() !== displayWikiPopper.getEndKey()
-		) {
-			console.log('forcing the selection State update');
-			const newEditorState = EditorState.forceSelection(
-				editorStateRef.current,
-				displayWikiPopper
-			);
-			setEditorStateRef.current(newEditorState);
-			editorStateRef.current(newEditorState);
-		}
+		// if (
+		// 	currentSelection.getStartOffset() !== displayWikiPopper.getStartOffset() ||
+		// 	currentSelection.getEndOffset() !== displayWikiPopper.getEndOffset() ||
+		// 	currentSelection.getStartKey() !== displayWikiPopper.getStartKey() ||
+		// 	currentSelection.getEndKey() !== displayWikiPopper.getEndKey()
+		// ) {
+		// 	console.log('forcing the selection State update');
+		// 	const newEditorState = EditorState.forceSelection(
+		// 		editorStateRef.current,
+		// 		displayWikiPopper
+		// 	);
+		// 	setEditorStateRef.current(newEditorState);
+		// 	editorStateRef.current(newEditorState);
+		// }
 	}, []);
 
 	// Initial rebuild of referenceElement
