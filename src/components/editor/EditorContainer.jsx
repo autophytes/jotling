@@ -41,13 +41,18 @@ import {
 	defaultCustomStyleMap,
 	blockStyleFn,
 	updateCustomStyleMap,
+	extendedBlockRenderMap,
 } from './editorStyleFunctions';
 import { updateAllBlocks } from '../../utils/draftUtils';
+import { findFileTab } from '../../utils/utils';
 
 import { cleanupJpeg } from '../appFunctions';
-import { LinkDestBlock } from './decorators/LinkDecorators';
+import { LinkDestBlock } from './editorComponents/LinkDecorators';
 import { useDecorator } from './editorCustomHooks';
-import { handleDraftImageDrop, BlockImageContainer } from './decorators/BlockImageContainer';
+import {
+	handleDraftImageDrop,
+	BlockImageContainer,
+} from './editorComponents/BlockImageContainer';
 
 import EditorFindReplace from './EditorFindReplace';
 
@@ -76,6 +81,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setMediaStructure,
 		isImageSelectedRef,
 		customStyles,
+		docStructureRef,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
 	const {
@@ -244,16 +250,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 
 		// If not custom handled, use the default handling
-		const selectionState = editorState.getSelection();
-		console.log('before utils start: ', selectionState.getStartOffset());
-		console.log('before utils end: ', selectionState.getEndOffset());
-
 		const newEditorState = RichUtils.handleKeyCommand(editorState, command);
 		if (newEditorState) {
-			const newSelectionState = newEditorState.getSelection();
-			console.log('after utils start: ', newSelectionState.getStartOffset());
-			console.log('after utils end: ', newSelectionState.getEndOffset());
-
 			setEditorState(newEditorState);
 			// console.log('handled in handleKeyCommand');
 			return 'handled';
@@ -586,7 +584,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					},
 				});
 			}
-			// setNavData({ ...navData, reloadCurrentDoc: false });
 
 			// Check for existing editorState and load from that if available
 			if (editorArchives.hasOwnProperty(navData.currentDoc)) {
@@ -608,6 +605,25 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			}
 		}
 	}, [editorStateRef, editorRef, navData, setNavData, prev, loadFile, linkStructureRef]);
+
+	// Update the tab the open document is in
+	useEffect(() => {
+		const fileTab = findFileTab(
+			docStructureRef.current,
+			'doc',
+			Number(navData.currentDoc.slice(3, -5))
+		);
+		setNavData((prev) => {
+			if (prev.currentDocTab === fileTab) {
+				return prev;
+			}
+
+			return {
+				...prev,
+				currentDocTab: fileTab,
+			};
+		});
+	}, [navData]);
 
 	// As we type, updates alignment/styles/type to pass down to the editorNav. We do it here
 	// instead of there to prevent unnecessary renders.
@@ -686,7 +702,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						customStyleMap={customStyleMap ? customStyleMap : defaultCustomStyleMap}
 						blockStyleFn={blockStyleFn}
 						blockRendererFn={blockRendererFn}
-						// blockRenderMap={blockRenderMap}
+						blockRenderMap={extendedBlockRenderMap}
 						// plugins={[inlineToolbarPlugin]}
 						spellCheck={spellCheck}
 						key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.

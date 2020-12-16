@@ -4,7 +4,9 @@ _Once this has a solid core set of features, I'll have full builds available for
 
 **The primary aim of this project** is to help novelists capture and organize all of the information they're creating around the different entities in their world - characters, locations, nations, magic systems, etc. Each item will have a Wiki that information is linked to and organized inside. Fleshing out this system is what I'm currently plugging away on.
 
-<img src="https://user-images.githubusercontent.com/54632192/101993168-85065100-3c86-11eb-970a-a24862d766eb.png" alt="Jotling Screenshot" width="75%" height="auto">
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/54632192/101993168-85065100-3c86-11eb-970a-a24862d766eb.png" alt="Jotling Screenshot" width="85%" height="auto">
+</p>
 
 **_Build notes:_** To build the project, run `npm run build`. Once this is finished, `yarn dist` will run electron-builder to create the distributable files. I believe `npm run dist` would work as well, but electron-builder recommends running with yarn to avoid some potential issues.
 

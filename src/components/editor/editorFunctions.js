@@ -14,11 +14,11 @@ import { setBlockData } from 'draftjs-utils';
 import { getTextSelection } from '../../utils/draftUtils';
 import { findAllDocsInFolder } from '../navs/navFunctions';
 
-import { LinkSourceDecorator, LinkDestDecorator } from './decorators/LinkDecorators';
-import { HighlightTagDecorator } from './decorators/HighlightTagDecorator';
-import { FindReplaceDecorator } from './decorators/FindReplaceDecorator';
-import { BlockImageContainer } from './decorators/BlockImageContainer';
-import { CompoundDecorator } from './decorators/CompoundDecorator';
+import { LinkSourceDecorator, LinkDestDecorator } from './editorComponents/LinkDecorators';
+import { HighlightTagDecorator } from './editorComponents/HighlightTagDecorator';
+import { FindReplaceDecorator } from './editorComponents/FindReplaceDecorator';
+import { BlockImageContainer } from './editorComponents/BlockImageContainer';
+import { CompoundDecorator } from './editorComponents/CompoundDecorator';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
@@ -280,11 +280,6 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 				ContentState.createFromBlockArray(newBlockMap.toArray()),
 				'split-block'
 			);
-
-			// TO-DO
-			// This createTagDestLink needs to be outside the loop, and it needs to be selecting from the
-			//   start of the first block (and offset) to the ending offset of the final block.
-			//   This is the only place this function is used, so we can customize it.
 		}
 
 		// Apply the LINK-DEST entity to the new block
@@ -303,13 +298,11 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		// Otherwise we'll have a blank block remaining
 		let anchorOffset = linkData.startOffset;
 		let anchorKey = linkData.startBlockKey;
-		console.log('anchorKey:', anchorKey);
 		if (structureContent === '') {
 			const block = linkContentState.getBlockForKey(linkData.endBlockKey);
 			const prevBlock = linkContentState.getBlockBefore(linkData.endBlockKey);
 			if (block.getLength() === linkData.endOffset && prevBlock) {
 				anchorKey = prevBlock.getKey();
-				console.log('anchorKey:', anchorKey);
 				anchorOffset = prevBlock.getLength();
 			}
 		}
@@ -324,11 +317,6 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 		if (structureContent === '') {
 			const block = linkContentState.getBlockForKey(linkData.endBlockKey);
-			console.log('block length: ', block.getLength());
-			console.log('endOffset: ', linkData.endOffset);
-			console.log('text: ', block.getText());
-			console.log('last char: ', block.getText()[linkData.endOffset]);
-
 			linkContentState = Modifier.removeRange(linkContentState, linkSelectionState, 'forward');
 
 			// The rest of the code is only relevant if we aren't deleting the block.
@@ -369,20 +357,6 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 	// Push the new content block into the editorState
 	newEditorState = EditorState.push(newEditorState, linkContentState, 'insert-characters');
-
-	// X. Pull the relevant tags from docTags
-	// X. Pull all the link ids to those tags from tagLinks
-	// X. Compare that to our linkIdArray
-	// X. Insert any links that aren't already in the page
-	//   x. insert our entity for the link
-	//     https://jsfiddle.net/levsha/2op5cyxm/ - create block and add link
-	//   a. Insert before the last empty block our content from the link and the new entity
-	// 5. NEXT  -  Update any links where there is no alias in the linkStructure and the content doesn't match
-	//       TO-DO - see the notes on line 145. Need to add the entity to the entire selection, not each block individually.
-	// 6. Eventually, any changes we make to content with entities, we need to sync back to linkStructure
-
-	// block.getData() might give us a map with the metadata we need
-	// There's the possibility we may have a duplicate issue eventually. If so, use Map to remove duplicates.
 
 	return newEditorState;
 };

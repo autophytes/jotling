@@ -1824,3 +1824,14 @@ input[type='number']::-webkit-outer-spin-button {
 .image-resize-handle.bottom {
 	bottom: -5px;
 }
+
+.wiki-section-title {
+	font-size: 1.5rem;
+	font-weight: bold;
+	margin-bottom: 2rem;
+	margin-top: 2.5rem;
+}
+
+.wiki-section-title span {
+	border-bottom: 3px solid var(--color-primary);
+}

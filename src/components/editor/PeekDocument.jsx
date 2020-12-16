@@ -10,7 +10,7 @@ import React, {
 import { LeftNavContext } from '../../contexts/leftNavContext';
 
 import ResizableWindow from '../containers/ResizableWindow';
-import { generatePeekDecorator } from './decorators/PeekDocumentDecorators';
+import { generatePeekDecorator } from './editorComponents/PeekDocumentDecorators';
 import { findTitleForGivenDocFileName } from '../../utils/utils';
 
 import { Editor, EditorState } from 'draft-js';
