@@ -590,7 +590,7 @@ export const updateImageBlockData = (
 	blockImageArray.splice(imageIndex, 1, imageData);
 	const newBlockData = blockData.set('images', blockImageArray);
 
-	// Select the end of the block
+	// Select the end(beginning?) of the block
 	const newSelectionState = SelectionState.createEmpty();
 	const selectionState = newSelectionState.merge({
 		anchorKey: blockKey, // Starting position
@@ -946,4 +946,87 @@ export const selectionInMiddleOfLink = (editorState) => {
 	}
 
 	return false;
+};
+
+// Insert a new section title into a Wiki page
+export const insertNewSection = (editorState, setEditorState) => {
+	const contentState = editorState.getCurrentContent();
+	const selectionState = editorState.getSelection();
+	const startBlockKey = selectionState.getStartKey();
+	let insertBefore = true;
+
+	// Check if we need to insert the section AFTER the current block
+	if (selectionState.isCollapsed()) {
+		const start = selectionState.getStartOffset();
+		const block = contentState.getBlockForKey(startBlockKey);
+
+		if (start === block.getLength()) {
+			insertBefore = false;
+		}
+	}
+
+	let sectionBlockKey, contentWithSection;
+	if (insertBefore) {
+		// Select the start of the block
+		const emptySelectionState = SelectionState.createEmpty();
+		const beginningSelectionState = emptySelectionState.merge({
+			anchorKey: startBlockKey,
+			anchorOffset: 0,
+			focusKey: startBlockKey,
+			focusOffset: 0,
+		});
+
+		// The new section block will have kept the old block key
+		const splitContentState = Modifier.splitBlock(contentState, beginningSelectionState);
+		sectionBlockKey = startBlockKey;
+
+		// Migrate data from the old block the new block below it
+		const origBlockData = splitContentState.getBlockForKey(sectionBlockKey).getData();
+		const origBlockKey = splitContentState.getBlockAfter(sectionBlockKey).getKey();
+		const origBlockSelectionState = emptySelectionState.merge({
+			anchorKey: origBlockKey,
+			anchorOffset: 0,
+			focusKey: origBlockKey,
+			focusOffset: 0,
+		});
+		contentWithSection = Modifier.setBlockData(
+			splitContentState,
+			origBlockSelectionState,
+			origBlockData
+		);
+	} else {
+		contentWithSection = Modifier.splitBlock(contentState, selectionState);
+		sectionBlockKey = contentWithSection.getKeyAfter(startBlockKey);
+	}
+
+	// Change the new block type to wiki-section
+	const emptySelectionState = SelectionState.createEmpty();
+	const sectionSelectionState = emptySelectionState.merge({
+		anchorKey: sectionBlockKey,
+		anchorOffset: 0,
+		focusKey: sectionBlockKey,
+		focusOffset: 0,
+	});
+
+	// Create and set new block data saying the block is new
+	const newBlockData = new Map({
+		wikiSection: {
+			isNew: true,
+		},
+	});
+	const contentWithBlockData = Modifier.setBlockData(
+		contentWithSection,
+		sectionSelectionState,
+		newBlockData
+	);
+
+	// Changing the block type
+	const finalContentState = Modifier.setBlockType(
+		contentWithBlockData,
+		sectionSelectionState,
+		'wiki-section'
+	);
+
+	const newEditorState = EditorState.push(editorState, finalContentState, 'split-block');
+	setEditorState(newEditorState);
 };

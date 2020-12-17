@@ -68,16 +68,16 @@ const create = (win, options) => {
 					target.session.addWordToSpellCheckerDictionary(props.misspelledWord);
 				},
 			}),
-			lookUpSelection: decorateMenuItem({
-				id: 'lookUpSelection',
-				label: 'Look Up “{selection}”',
-				visible: process.platform === 'darwin' && hasText && !isLink,
-				click() {
-					if (process.platform === 'darwin') {
-						webContents(win).showDefinitionForSelection();
-					}
-				},
-			}),
+			// lookUpSelection: decorateMenuItem({
+			// 	id: 'lookUpSelection',
+			// 	label: 'Look Up “{selection}”',
+			// 	visible: process.platform === 'darwin' && hasText && !isLink,
+			// 	click() {
+			// 		if (process.platform === 'darwin') {
+			// 			webContents(win).showDefinitionForSelection();
+			// 		}
+			// 	},
+			// }),
 			searchWithGoogle: decorateMenuItem({
 				id: 'searchWithGoogle',
 				label: '&Search with Google',
@@ -392,8 +392,8 @@ const create = (win, options) => {
 			...dictionarySuggestions,
 			defaultActions.separator(),
 			defaultActions.learnSpelling(),
-			defaultActions.separator(),
-			options.showLookUpSelection !== false && defaultActions.lookUpSelection(),
+			// defaultActions.separator(),
+			// options.showLookUpSelection !== false && defaultActions.lookUpSelection(),
 			defaultActions.separator(),
 			options.showSearchWithGoogle !== false && defaultActions.searchWithGoogle(),
 			defaultActions.separator(),

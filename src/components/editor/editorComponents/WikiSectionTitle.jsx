@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 
+import { LeftNavContext } from '../../../contexts/leftNavContext';
 // PROPS
 // children: [{…}]
 // data-offset-key: "637j0-0-0"
@@ -16,6 +17,12 @@ const WikiSectionTitle = (props) => {
 	const [blockKey, setBlockKey] = useState(null);
 	console.log('MyCustomBlock hath rendered.');
 	console.log(props);
+
+	const { docStructureRef, setDocStructure } = useContext(LeftNavContext);
+
+	useEffect(() => {
+		console.log('props.children changed!');
+	}, [props.children]);
 
 	// Load the blockKey
 	const dataOffsetKey = props['data-offset-key'];

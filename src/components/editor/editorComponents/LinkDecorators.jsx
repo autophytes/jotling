@@ -367,7 +367,7 @@ const LinkDestBlock = (props) => {
 			style={{ position: 'relative' }}
 			onMouseEnter={handleHoverStart}
 			onMouseLeave={handleHoverLeave}>
-			<div className='peek-wrapper'>
+			<div className='peek-wrapper' contentEditable={false}>
 				<button
 					className='peek-destination-decorator'
 					onClick={() => setPeekWindowLinkId(linkId)}>

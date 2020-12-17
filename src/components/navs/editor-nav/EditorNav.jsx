@@ -30,12 +30,15 @@ import EyeSVG from '../../../assets/svg/EyeSVG';
 import EyeHideSVG from '../../../assets/svg/EyeHideSVG';
 import ImageSVG from '../../../assets/svg/ImageSVG';
 import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
+import InsertSectionSVG from '../../../assets/svg/editor/InsertSectionSVG';
 
 import {
 	toggleBlockType,
 	toggleTextAlign,
 	toggleTextCustomStyle,
 } from '../../editor/editorStyleFunctions';
+
+import { insertNewSection } from '../../editor/editorFunctions';
 
 // AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
 // unstyled
@@ -366,6 +369,15 @@ const EditorNav = React.memo(
 							title='Justify Text'
 							onMouseDown={wrappedToggleTextAlign('justify')}>
 							<AlignJustifySVG />
+						</button>
+
+						<button
+							className='nav-button'
+							title='Insert Section'
+							onMouseDown={() =>
+								insertNewSection(editorStateRef.current, setEditorStateRef.current)
+							}>
+							<InsertSectionSVG />
 						</button>
 
 						<div className='editor-nav-vertical-rule' />
