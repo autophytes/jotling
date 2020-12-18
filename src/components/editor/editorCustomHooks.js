@@ -1,5 +1,9 @@
 import { useEffect, useState, useContext, useCallback, useRef } from 'react';
-import { defaultDecorator, generateDecorators, findVisibleBlocks } from './editorFunctions';
+import {
+	defaultCompositeDecorator,
+	generateDecorators,
+	findVisibleBlocks,
+} from './editorFunctions';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
 import { FindReplaceContext } from '../../contexts/findReplaceContext';
@@ -16,7 +20,7 @@ import { FindReplaceContext } from '../../contexts/findReplaceContext';
 
 export const useDecorator = (currentDoc, editorRef) => {
 	const [showAllTags, setShowAllTags] = useState(false);
-	const [decorator, setDecorator] = useState(defaultDecorator);
+	const [decorator, setDecorator] = useState(defaultCompositeDecorator);
 	const [needToClearFind, setNeedToClearFind] = useState(false);
 
 	const queuedUpdate = useRef(null);
@@ -75,7 +79,7 @@ export const useDecorator = (currentDoc, editorRef) => {
 			// Delay the update of the rest of the search results
 			queueDecoratorUpdate(currentDoc, showAllTags, findText);
 		} else {
-			setDecorator(defaultDecorator);
+			setDecorator(defaultCompositeDecorator);
 		}
 	}, [showAllTags, currentDoc, findText, queueDecoratorUpdate, needToClearFind]);
 

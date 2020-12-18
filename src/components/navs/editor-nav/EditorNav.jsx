@@ -74,7 +74,7 @@ const BLOCK_TYPES = [
 	// { label: 'UL', style: 'unordered-list-item' },
 	// { label: 'OL', style: 'ordered-list-item' },
 	{ label: 'Code', style: 'code-block' },
-	{ label: 'Section', style: 'wiki-section', tab: 'pages' },
+	// { label: 'Section', style: 'wiki-section', tab: 'pages' },
 ];
 
 const INLINE_STYLES = [
@@ -200,18 +200,11 @@ const EditorNav = React.memo(
 						<select
 							value={currentBlockType}
 							onChange={(e) => wrappedToggleBlockType(e.target.value)(e)}>
-							{BLOCK_TYPES.map((item, i) => {
-								// Certain block types are only options on certain tabs.
-								if (item.tab && navData.currentDocTab !== item.tab) {
-									return null;
-								}
-
-								return (
-									<option key={i} value={item.style}>
-										{item.label}
-									</option>
-								);
-							})}
+							{BLOCK_TYPES.map((item, i) => (
+								<option key={i} value={item.style}>
+									{item.label}
+								</option>
+							))}
 						</select>
 
 						<InlineStyleButton currentStyles={currentStyles} style='BOLD'>

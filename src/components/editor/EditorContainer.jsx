@@ -41,13 +41,14 @@ import {
 	defaultCustomStyleMap,
 	blockStyleFn,
 	updateCustomStyleMap,
-	extendedBlockRenderMap,
+	// extendedBlockRenderMap,
 } from './editorStyleFunctions';
 import { updateAllBlocks } from '../../utils/draftUtils';
 import { findFileTab } from '../../utils/utils';
 
 import { cleanupJpeg } from '../appFunctions';
 import { LinkDestBlock } from './editorComponents/LinkDecorators';
+import { WikiSectionTitle } from './editorComponents/WikiSectionTitle';
 import { useDecorator } from './editorCustomHooks';
 import {
 	handleDraftImageDrop,
@@ -135,6 +136,13 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	);
 
 	const blockRendererFn = useCallback((contentBlock) => {
+		if (contentBlock.getType() === 'wiki-section') {
+			return {
+				component: WikiSectionTitle,
+				editable: true,
+			};
+		}
+
 		const entityKey = contentBlock.getEntityAt(0);
 		if (entityKey) {
 			const contentState = editorStateRef.current.getCurrentContent();
@@ -702,7 +710,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						customStyleMap={customStyleMap ? customStyleMap : defaultCustomStyleMap}
 						blockStyleFn={blockStyleFn}
 						blockRendererFn={blockRendererFn}
-						blockRenderMap={extendedBlockRenderMap}
+						// blockRenderMap={extendedBlockRenderMap}
 						// plugins={[inlineToolbarPlugin]}
 						spellCheck={spellCheck}
 						key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.

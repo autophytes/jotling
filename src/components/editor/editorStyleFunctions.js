@@ -8,7 +8,7 @@ import {
 } from 'draft-js';
 import Immutable from 'immutable';
 
-import WikiSectionTitle from './editorComponents/WikiSectionTitle';
+import { WikiSectionTitle } from './editorComponents/WikiSectionTitle';
 
 import { setBlockData, getSelectedBlocksList } from 'draftjs-utils';
 
@@ -29,13 +29,13 @@ export const defaultCustomStyleMap = {
 };
 
 // Define our custom blocks and merge with the default blocks
-const blockRenderMap = Immutable.Map({
-	'wiki-section': {
-		element: 'div',
-		wrapper: <WikiSectionTitle />,
-	},
-});
-export const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(blockRenderMap);
+// const blockRenderMap = Immutable.Map({
+// 	'wiki-section': {
+// 		element: 'div',
+// 		wrapper: <WikiSectionTitle />,
+// 	},
+// });
+// export const extendedBlockRenderMap = DefaultDraftBlockRenderMap.merge(blockRenderMap);
 
 // Add custom style properties to the customStyleMap
 export const updateCustomStyleMap = (customStyles) => {

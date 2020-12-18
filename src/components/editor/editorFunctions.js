@@ -19,6 +19,7 @@ import { HighlightTagDecorator } from './editorComponents/HighlightTagDecorator'
 import { FindReplaceDecorator } from './editorComponents/FindReplaceDecorator';
 import { BlockImageContainer } from './editorComponents/BlockImageContainer';
 import { CompoundDecorator } from './editorComponents/CompoundDecorator';
+import { WikiSectionDecorator } from './editorComponents/WikiSectionTitle';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
@@ -29,6 +30,14 @@ function getEntityStrategy(type) {
 			}
 			return contentState.getEntity(entityKey).getType() === type;
 		}, callback);
+	};
+}
+
+function getBlockStrategy(blockType) {
+	return function (contentBlock, callback, contentState) {
+		if (contentBlock.getType() === blockType) {
+			callback(0, contentBlock.getLength());
+		}
 	};
 }
 
@@ -90,6 +99,25 @@ const findSearchKeyword = (findText, findRegisterRef, editorStateRef) => {
 	return buildFindWithRegexFunction([findText], findRegisterRef, editorStateRef);
 };
 
+const defaultDecorator = [
+	{
+		strategy: getEntityStrategy('LINK-SOURCE'),
+		component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+	},
+	{
+		strategy: getEntityStrategy('LINK-DEST'),
+		component: LinkDestDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+	},
+	{
+		strategy: getEntityStrategy('IMAGE'),
+		component: BlockImageContainer, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
+	},
+	{
+		strategy: getBlockStrategy('wiki-section'),
+		component: WikiSectionDecorator,
+	},
+];
+
 export const generateDecorators = (
 	docStructure,
 	currentDoc,
@@ -99,20 +127,7 @@ export const generateDecorators = (
 	editorStateRef
 	// visibleBlockKeys
 ) => {
-	let decoratorArray = [
-		{
-			strategy: getEntityStrategy('LINK-SOURCE'),
-			component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
-		},
-		{
-			strategy: getEntityStrategy('LINK-DEST'),
-			component: LinkDestDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
-		},
-		{
-			strategy: getEntityStrategy('IMAGE'),
-			component: BlockImageContainer, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
-		},
-	];
+	let decoratorArray = [...defaultDecorator];
 
 	if (showAllTags) {
 		decoratorArray.push({
@@ -132,21 +147,7 @@ export const generateDecorators = (
 	// return new CompositeDecorator(decoratorArray);
 };
 
-export const defaultDecorator = new CompositeDecorator([
-	// export const defaultDecorator = new CompoundDecorator([
-	{
-		strategy: getEntityStrategy('LINK-SOURCE'),
-		component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
-	},
-	{
-		strategy: getEntityStrategy('LINK-DEST'),
-		component: LinkDestDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
-	},
-	{
-		strategy: getEntityStrategy('IMAGE'),
-		component: BlockImageContainer, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
-	},
-]);
+export const defaultCompositeDecorator = new CompositeDecorator(defaultDecorator);
 
 // NEW FUNCTION
 // editorState, linkStructure, navData.currentDoc
