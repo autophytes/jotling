@@ -180,6 +180,7 @@ const EditorNav = React.memo(
 				<div className='editor-nav-hover-region' />
 				<nav
 					className={'editor-nav' + (pinNav ? '' : ' hidden')}
+					onMouseDown={(e) => e.preventDefault()}
 					// style={{
 					// 	maxWidth: `calc(100% - ${
 					// 		(editorStyles.leftIsPinned ? editorStyles.leftNav : 0) +
@@ -199,6 +200,10 @@ const EditorNav = React.memo(
 
 						<select
 							value={currentBlockType}
+							onMouseDown={(e) => {
+								e.stopPropagation();
+								console.log('moused down');
+							}}
 							onChange={(e) => wrappedToggleBlockType(e.target.value)(e)}>
 							{BLOCK_TYPES.map((item, i) => (
 								<option key={i} value={item.style}>
@@ -365,11 +370,14 @@ const EditorNav = React.memo(
 						</button>
 
 						<button
-							className='nav-button'
+							className={'nav-button' + (navData.currentDocTab !== 'pages' ? ' disabled' : '')}
 							title='Insert Section'
-							onMouseDown={() =>
-								insertNewSection(editorStateRef.current, setEditorStateRef.current)
-							}>
+							onMouseDown={(e) => {
+								e.preventDefault();
+								if (navData.currentDocTab === 'pages') {
+									insertNewSection(editorStateRef.current, setEditorStateRef.current);
+								}
+							}}>
 							<InsertSectionSVG />
 						</button>
 
@@ -408,13 +416,6 @@ const EditorNav = React.memo(
 									console.log('selectionState end:', selectionState.getEndKey());
 
 									setDisplayWikiPopper(true);
-									// setTotalMatches((prev) => {
-									// 	if (prev) {
-									// 		return prev + 1;
-									// 	} else {
-									// 		return 1;
-									// 	}
-									// });
 								}
 							}}>
 							<ChainSVG />

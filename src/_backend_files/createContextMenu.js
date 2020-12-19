@@ -333,7 +333,10 @@ const create = (win, options) => {
 				id: 'addLink',
 				label: browserParams.hasLink ? 'Add to Different Wiki' : 'Add to Wiki',
 				visible: browserParams.type === 'document-text',
-				enabled: !browserParams.hasLinkDest && !browserParams.inMiddleOfLink,
+				enabled:
+					!browserParams.hasLinkDest &&
+					!browserParams.inMiddleOfLink &&
+					!browserParams.hasWikiSection,
 				click() {
 					webContents(win).send('insert-link');
 				},

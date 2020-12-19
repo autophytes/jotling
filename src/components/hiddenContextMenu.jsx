@@ -3,7 +3,11 @@ import { remote, ipcRenderer } from 'electron';
 
 import { LeftNavContext } from '../contexts/leftNavContext';
 
-import { selectionHasEntityType, selectionInMiddleOfLink } from './editor/editorFunctions';
+import {
+	selectionContainsBlockType,
+	selectionHasEntityType,
+	selectionInMiddleOfLink,
+} from './editor/editorFunctions';
 
 const HiddenContextMenu = () => {
 	const [browserParams, setBrowserParams] = useState(null);
@@ -75,6 +79,10 @@ const HiddenContextMenu = () => {
 					const selection = editorStateRef.current.getSelection();
 					if (!selection.isCollapsed()) {
 						const hasLinkDest = selectionHasEntityType(editorStateRef.current, 'LINK-DEST');
+						const hasWikiSection = selectionContainsBlockType(
+							editorStateRef.current,
+							'wiki-section'
+						);
 
 						// No insert/remove link options if selecting a destination link
 						const hasLinkSource = selectionHasEntityType(
@@ -92,6 +100,7 @@ const HiddenContextMenu = () => {
 							type: 'document-text',
 							hasLink: hasLinkSource,
 							hasLinkDest: hasLinkDest,
+							hasWikiSection: hasWikiSection,
 							inMiddleOfLink: inMiddleOfLink,
 						};
 					}

@@ -608,7 +608,11 @@ button.file-nav:focus {
 	align-items: center;
 }
 
-.nav-button:hover {
+.nav-button.disabled {
+	cursor: default;
+}
+
+.nav-button:not(.disabled):hover {
 	background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -617,6 +621,10 @@ button.file-nav:focus {
 .nav-section-tab > svg {
 	width: 1rem;
 	fill: #555;
+}
+
+.nav-button.disabled > svg {
+	fill: #aaa;
 }
 
 .nav-section-tab.active > svg {

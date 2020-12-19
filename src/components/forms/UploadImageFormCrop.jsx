@@ -111,9 +111,7 @@ const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 		// e.stopPropagation();
 		// e.preventDefault();
 		const mediaIds = Object.keys(mediaStructure).map((item) => Number(item));
-		console.log('mediaIds:', mediaIds);
 		const newId = mediaIds.length ? Math.max(...mediaIds) + 1 : 1;
-		console.log('newId:', newId);
 		const fileName = `media${newId}.jpeg`;
 		// console.log(croppedImgBlob);
 

@@ -245,7 +245,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			dataTransfer,
 			isInternal,
 			mediaStructure,
-			setMediaStructure
+			setMediaStructure,
+			editorStateRef
 		);
 	};
 
@@ -257,9 +258,20 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			return 'handled';
 		}
 
+		console.log('command: ', command);
+
+		// backspace, split-block, delete
+		// if (['backspace', 'split-block', 'delete'].includes(command)) {
+		// 	const selectionState = editorState.getSelection();
+		// 	if (!selectionState.isCollapsed()) {
+		// 	}
+		// }
+		// On any of these 3, if our selection ends with a new line character, remove from selection
+
 		// If not custom handled, use the default handling
 		const newEditorState = RichUtils.handleKeyCommand(editorState, command);
 		if (newEditorState) {
+			console.log('handle key command handled it');
 			setEditorState(newEditorState);
 			// console.log('handled in handleKeyCommand');
 			return 'handled';
@@ -271,6 +283,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const handleBeforeInput = (char, editorState) => {
 		const selection = editorState.getSelection();
 
+		// If selection !collapsed && last character is newLine, remove from selection
+
+		console.log('char: ', char);
+
+		// If we're typing at the end of a line and inside a link, continue that link
 		if (selection.isCollapsed()) {
 			const contentState = editorState.getCurrentContent();
 			const blockKey = selection.getStartKey();

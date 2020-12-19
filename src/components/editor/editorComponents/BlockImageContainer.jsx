@@ -100,14 +100,17 @@ const handleDraftImageDrop = (
 	dataTransfer,
 	isInternal,
 	mediaStructure,
-	setMediaStructure
+	setMediaStructure,
+	editorStateRef
 ) => {
 	const destBlockKey = selection.getStartKey();
+	const currentContent = editorStateRef.current.getCurrentContent();
+	const blockType = currentContent.getBlockForKey(destBlockKey).getType();
 
 	const imageId = dataTransfer.data.getData('image-id');
 	const imageUseId = dataTransfer.data.getData('image-use-id');
 
-	if (imageId !== undefined) {
+	if (imageId !== undefined && blockType !== 'wiki-section') {
 		const newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
 		newMediaStructure[imageId].uses[imageUseId].reposition = {
 			destBlockKey,

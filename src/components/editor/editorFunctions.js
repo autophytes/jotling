@@ -10,7 +10,7 @@ import {
 	Modifier,
 	RichUtils,
 } from 'draft-js';
-import { setBlockData } from 'draftjs-utils';
+import { setBlockData, getSelectedBlocksList } from 'draftjs-utils';
 import { getTextSelection } from '../../utils/draftUtils';
 import { findAllDocsInFolder } from '../navs/navFunctions';
 
@@ -54,6 +54,11 @@ const buildFindWithRegexFunction = (findTextArray, findRegisterRef, editorStateR
 		// if (visibleBlockKeys && !visibleBlockKeys.includes(contentBlock.getKey())) {
 		// 	return;
 		// }
+
+		// Don't run on wiki-section blocks
+		if (contentBlock.getType() === 'wiki-section') {
+			return;
+		}
 
 		let text = contentBlock.getText();
 		const blockKey = contentBlock.getKey();
@@ -530,12 +535,63 @@ export const createTagLink = (
 
 // Insert an image into a document
 export const insertImageBlockData = (imageId, imageUseId, editorState, setEditorState) => {
-	const contentState = editorState.getCurrentContent();
+	let contentState = editorState.getCurrentContent();
 	const selectionState = editorState.getSelection();
-	const blockKey = selectionState.getStartKey();
+	let blockKey = selectionState.getStartKey();
+	let block = contentState.getBlockForKey(blockKey);
+
+	// If block is a wiki-section, find the first block that isn't
+	let isBlockWikiSection = block.getType() === 'wiki-section';
+	if (isBlockWikiSection) {
+		// Check the block after
+		const blockAfter = contentState.getBlockAfter(blockKey);
+		if (blockAfter && blockAfter.getType() !== 'wiki-section') {
+			block = blockAfter;
+			blockKey = blockAfter.getKey();
+			isBlockWikiSection = false;
+		}
+
+		// Check the block before
+		const blockBefore = contentState.getBlockBefore(blockKey);
+		if (isBlockWikiSection && blockBefore && blockBefore.getType() !== 'wiki-section') {
+			block = blockBefore;
+			blockKey = blockBefore.getKey();
+			isBlockWikiSection = false;
+		}
+
+		// If neither the block before or after can get the image, create a new one
+		if (isBlockWikiSection) {
+			// Lets grab the initial selection state and reset it when we're done
+			const emptySelectionState = SelectionState.createEmpty();
+			const splitBlockSelectionState = emptySelectionState.merge({
+				anchorKey: blockKey, // Starting block (position is the start)
+				anchorOffset: block.getLength(), // How much to adjust from the starting position
+				focusKey: blockKey, // Ending position (position is the start)
+				focusOffset: block.getLength(),
+			});
+
+			// Create the new block
+			const newContentState = Modifier.splitBlock(contentState, splitBlockSelectionState);
+			const newBlockForImage = newContentState.getBlockAfter(blockKey);
+			const newBlockSelectionState = emptySelectionState.merge({
+				anchorKey: newBlockForImage.getKey(), // Starting block (position is the start)
+				anchorOffset: 0, // How much to adjust from the starting position
+				focusKey: newBlockForImage.getKey(), // Ending position (position is the start)
+				focusOffset: 0,
+			});
+
+			// Update the content state with the new block, set to an unstyled type
+			contentState = Modifier.setBlockType(
+				newContentState,
+				newBlockSelectionState,
+				'unstyled'
+			);
+			block = newBlockForImage;
+			blockKey = newBlockForImage.getKey();
+		}
+	}
 
 	// Add the image to the block metadata
-	const block = contentState.getBlockForKey(blockKey);
 	const blockData = block.getData();
 	let blockImageArray = [...blockData.get('images', [])];
 	blockImageArray.push({
@@ -909,6 +965,7 @@ export const selectionHasEntityType = (editorState, entityType) => {
 	return false;
 };
 
+// Checks if selection is inside a LINK-SOURCE
 export const selectionInMiddleOfLink = (editorState) => {
 	const currentContent = editorState.getCurrentContent();
 	const selection = editorState.getSelection();
@@ -949,25 +1006,49 @@ export const selectionInMiddleOfLink = (editorState) => {
 	return false;
 };
 
+// Returns true if a selected block matches the block type
+export const selectionContainsBlockType = (editorState, blockType) => {
+	const selectedBlocks = getSelectedBlocksList(editorState);
+	if (selectedBlocks.size > 0) {
+		// Loop through each block
+		for (let i = 0; i < selectedBlocks.size; i += 1) {
+			if (selectedBlocks.get(i).getType() === blockType) {
+				return true;
+			}
+		}
+	}
+	return false;
+};
+
 // Insert a new section title into a Wiki page
 export const insertNewSection = (editorState, setEditorState) => {
 	const contentState = editorState.getCurrentContent();
 	const selectionState = editorState.getSelection();
 	const startBlockKey = selectionState.getStartKey();
+	const startBlock = contentState.getBlockForKey(startBlockKey);
 	let insertBefore = true;
+	let useCurrentBlock = selectionState.isCollapsed() && startBlock.getLength() === 0;
 
 	// Check if we need to insert the section AFTER the current block
 	if (selectionState.isCollapsed()) {
 		const start = selectionState.getStartOffset();
-		const block = contentState.getBlockForKey(startBlockKey);
 
-		if (start === block.getLength()) {
+		if (start === startBlock.getLength()) {
 			insertBefore = false;
 		}
 	}
 
+	// If an empty block is selected, convert that block instead
 	let sectionBlockKey, contentWithSection;
-	if (insertBefore) {
+
+	// If we're USING THE SELECTED block as a wiki-section
+	if (useCurrentBlock) {
+		sectionBlockKey = startBlockKey;
+		contentWithSection = contentState;
+	}
+
+	// If instead we're INSERTING a new block BEFORE to use as a wiki-section
+	if (insertBefore && !useCurrentBlock) {
 		// Select the start of the block
 		const emptySelectionState = SelectionState.createEmpty();
 		const beginningSelectionState = emptySelectionState.merge({
@@ -995,7 +1076,10 @@ export const insertNewSection = (editorState, setEditorState) => {
 			origBlockSelectionState,
 			origBlockData
 		);
-	} else {
+	}
+
+	// If instead we're INSERTING a new block AFTER to use as a wiki-section
+	if (!insertBefore && !useCurrentBlock) {
 		contentWithSection = Modifier.splitBlock(contentState, selectionState);
 		sectionBlockKey = contentWithSection.getKeyAfter(startBlockKey);
 	}
@@ -1022,12 +1106,31 @@ export const insertNewSection = (editorState, setEditorState) => {
 	);
 
 	// Changing the block type
-	const finalContentState = Modifier.setBlockType(
+	const contentWithBlockType = Modifier.setBlockType(
 		contentWithBlockData,
 		sectionSelectionState,
 		'wiki-section'
 	);
 
-	const newEditorState = EditorState.push(editorState, finalContentState, 'split-block');
-	setEditorState(newEditorState);
+	// Adds default text
+	const defaultText = 'Section Title';
+	const contentWithDefaultText = Modifier.insertText(
+		contentWithBlockType,
+		sectionSelectionState,
+		defaultText
+	);
+
+	// Push the new block onto the editorState
+	const newEditorState = EditorState.push(editorState, contentWithDefaultText, 'split-block');
+
+	// Select the text in the new section title
+	const finalSelectionState = emptySelectionState.merge({
+		anchorKey: sectionBlockKey,
+		anchorOffset: 0,
+		focusKey: sectionBlockKey,
+		focusOffset: defaultText.length,
+	});
+	const finalEditorState = EditorState.forceSelection(newEditorState, finalSelectionState);
+
+	setEditorState(finalEditorState);
 };
