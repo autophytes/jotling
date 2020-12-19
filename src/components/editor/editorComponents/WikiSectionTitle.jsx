@@ -96,10 +96,7 @@ import {
 } from '../../../utils/utils';
 
 export const WikiSectionDecorator = ({ children, decoratedText, blockKey, contentState }) => {
-	console.log('blockKey:', blockKey);
-	console.log('decoratedText:', decoratedText);
 	const [synced, setSynced] = useState({ key: blockKey, text: decoratedText });
-	console.log('synced:', synced);
 
 	const {
 		docStructureRef,
@@ -109,41 +106,40 @@ export const WikiSectionDecorator = ({ children, decoratedText, blockKey, conten
 		setEditorStateRef,
 	} = useContext(LeftNavContext);
 
+	// Sync our wiki-section changes to the docStructure
 	useEffect(() => {
+		// Grab the blockData to see if the wiki-section is new
 		const block = contentState.getBlockForKey(blockKey);
 		const blockData = block.getData();
 		const wikiSectionData = blockData.get('wikiSection', { isNew: false });
-		console.log('wikiSectionData:', wikiSectionData);
 
+		// If changes need to be synced
 		if (decoratedText !== synced.text || blockKey !== synced.key || wikiSectionData.isNew) {
 			const { currentDoc, currentDocTab } = navDataRef.current;
 			const docId = currentDoc ? Number(currentDoc.slice(3, -5)) : 0;
 
+			// Find the children array that contains our document
 			const filePath = findFilePath(docStructureRef.current[currentDocTab], '', 'doc', docId);
 			const childrenPath = filePath + (filePath ? '/' : '') + 'children';
-			console.log('filePath:', filePath);
-
 			let childrenArray = retrieveContentAtPropertyPath(
 				childrenPath,
 				docStructureRef.current[currentDocTab]
 			);
-			console.log('childrenArray:', childrenArray);
 
+			// Grab the individual document
 			const docIndex = childrenArray.findIndex(
 				(item) => item.type === 'doc' && item.id === docId
 			);
 			const docObject = childrenArray[docIndex];
-			console.log('docObject:', docObject);
 
 			let docSections = docObject.sections ? [...docObject.sections] : [];
-			console.log('docSections:', docSections);
 			const newSectionObject = {
 				key: blockKey,
 				text: decoratedText,
 			};
 
+			// Either insert or update the wiki-section in the section array
 			const sectionIndex = docSections.findIndex((item) => item.key == blockKey);
-			console.log('sectionIndex:', sectionIndex);
 			// Update the previous entry if it exists
 			if (sectionIndex !== -1) {
 				docSections[sectionIndex] = {
@@ -154,7 +150,6 @@ export const WikiSectionDecorator = ({ children, decoratedText, blockKey, conten
 				// If the array is empty, just push the new object onto it
 			} else if (docSections.length === 0) {
 				docSections.push(newSectionObject);
-				console.log('docSections:', docSections);
 
 				// Insert the new object into the correct section order
 			} else {
@@ -179,8 +174,6 @@ export const WikiSectionDecorator = ({ children, decoratedText, blockKey, conten
 				...docObject,
 				sections: docSections,
 			};
-			console.log('newDocObject:', newDocObject);
-
 			childrenArray[docIndex] = newDocObject;
 
 			// Set the doc in the tab
@@ -190,6 +183,7 @@ export const WikiSectionDecorator = ({ children, decoratedText, blockKey, conten
 				docStructureRef.current[currentDocTab]
 			);
 
+			// This prevents this useEffect from rerunning
 			setSynced(newSectionObject);
 
 			// Update the doc structure with the new tab
@@ -198,23 +192,23 @@ export const WikiSectionDecorator = ({ children, decoratedText, blockKey, conten
 				[currentDocTab]: docStructureTab,
 			});
 
-			// If it was NEW, update the block data
+			// If the wiki-section is NEW, update the block data
 			if (wikiSectionData.isNew) {
-				const newWikiSectionData = {
-					...wikiSectionData,
-					isNew: false,
-				};
-
+				// Create the updated blockData
+				const newWikiSectionData = { ...wikiSectionData, isNew: false };
 				const newBlockData = blockData.set('wikiSection', newWikiSectionData);
-				// Select the end of the block
+
+				// Select the block to update the data for
 				const newSelectionState = SelectionState.createEmpty();
 				const sectionSelectionState = newSelectionState.merge({
-					anchorKey: blockKey, // Starting position
-					anchorOffset: 0, // How much to adjust from the starting position
-					focusKey: blockKey, // Ending position
-					focusOffset: 0, // How much to adjust from the ending position.
+					anchorKey: blockKey,
+					anchorOffset: 0,
+					focusKey: blockKey,
+					focusOffset: block.getLength(), // Without this and hasFocus, typing a new title will reset
+					hasFocus: true, // ...the focus after typing the first character, moving it to the start.
 				});
 
+				// Update the block data and set the editorState
 				const newContentState = Modifier.mergeBlockData(
 					contentState,
 					sectionSelectionState,
@@ -225,7 +219,6 @@ export const WikiSectionDecorator = ({ children, decoratedText, blockKey, conten
 					newContentState,
 					'change-block-data'
 				);
-
 				setEditorStateRef.current(newEditorState);
 			}
 		}

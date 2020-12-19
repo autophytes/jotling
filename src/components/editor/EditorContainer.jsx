@@ -36,7 +36,7 @@ import {
 	enterToUnindentList,
 	doubleDashToLongDash,
 } from './KeyBindFunctions';
-import { updateLinkEntities } from './editorFunctions';
+import { removeEndingNewline, updateLinkEntities } from './editorFunctions';
 import {
 	defaultCustomStyleMap,
 	blockStyleFn,
@@ -134,6 +134,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		},
 		[editorRef, editorState]
 	);
+
+	// Sets the editorState
+	const handleEditorStateChange = (editorState) => {
+		// Cleans up selectionState before setting the editorState
+		setEditorState(removeEndingNewline(editorState));
+	};
 
 	const blockRendererFn = useCallback((contentBlock) => {
 		if (contentBlock.getType() === 'wiki-section') {
@@ -282,6 +288,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	const handleBeforeInput = (char, editorState) => {
 		const selection = editorState.getSelection();
+		console.log('selection:', selection.serialize());
 
 		// If selection !collapsed && last character is newLine, remove from selection
 
@@ -336,6 +343,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				style,
 				startEntityKey
 			);
+
+			console.log('handleBeforeInput - continuing link');
 			const newEditorState = EditorState.push(editorState, newContent, 'insert-characters');
 			setEditorState(newEditorState);
 			return 'handled';
@@ -718,7 +727,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					style={{ padding: `0 ${editorSettings.editorPadding}rem` }}>
 					<Editor
 						editorState={editorState}
-						onChange={setEditorState}
+						onChange={handleEditorStateChange}
 						ref={editorRef}
 						keyBindingFn={customKeyBindingFn}
 						handleKeyCommand={handleKeyCommand}

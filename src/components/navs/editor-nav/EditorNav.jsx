@@ -376,6 +376,8 @@ const EditorNav = React.memo(
 								e.preventDefault();
 								if (navData.currentDocTab === 'pages') {
 									insertNewSection(editorStateRef.current, setEditorStateRef.current);
+									// editorRef.current.focus();
+									// setTimeout(() => editorRef.current.focus(), 0);
 								}
 							}}>
 							<InsertSectionSVG />

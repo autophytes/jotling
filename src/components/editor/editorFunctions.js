@@ -1024,6 +1024,7 @@ export const selectionContainsBlockType = (editorState, blockType) => {
 export const insertNewSection = (editorState, setEditorState) => {
 	const contentState = editorState.getCurrentContent();
 	const selectionState = editorState.getSelection();
+	console.log('inserting new section: ', selectionState.serialize());
 	const startBlockKey = selectionState.getStartKey();
 	const startBlock = contentState.getBlockForKey(startBlockKey);
 	let insertBefore = true;
@@ -1129,8 +1130,52 @@ export const insertNewSection = (editorState, setEditorState) => {
 		anchorOffset: 0,
 		focusKey: sectionBlockKey,
 		focusOffset: defaultText.length,
+		hasFocus: true,
 	});
+
 	const finalEditorState = EditorState.forceSelection(newEditorState, finalSelectionState);
+	console.log(
+		'editorState to set in insertSection: ',
+		finalEditorState.getSelection().serialize()
+	);
+	// const finalEditorState = newEditorState;
 
 	setEditorState(finalEditorState);
+};
+
+// Check if the selectionState ends on a newline character
+export const removeEndingNewline = (editorState) => {
+	console.log('setEditorState selection: ', editorState.getSelection().serialize());
+
+	// Only check if we need to update the selection if the selection isn't collapsed
+	if (!editorState.getSelection().isCollapsed()) {
+		const selectionState = editorState.getSelection();
+		const start = selectionState.getStartOffset();
+		const end = selectionState.getEndOffset();
+
+		// If the start and end are 0, we need to update the end
+		if (
+			start === 0 &&
+			end === 0 &&
+			selectionState.getStartKey() !== selectionState.getEndKey()
+		) {
+			const endKey = selectionState.getEndKey();
+			const newEndBlock = editorState.getCurrentContent().getBlockBefore(endKey);
+			const newEndKey = newEndBlock.getKey();
+
+			// Select the block to update the data for
+			const emptySelectionState = SelectionState.createEmpty();
+			const newSelectionState = emptySelectionState.merge({
+				anchorKey: selectionState.getStartKey(),
+				anchorOffset: 0,
+				focusKey: newEndKey,
+				focusOffset: newEndBlock.getLength(),
+			});
+
+			console.log('Updated selection - removed newline character from end.');
+			return EditorState.forceSelection(editorState, newSelectionState);
+		}
+	}
+
+	return editorState;
 };
