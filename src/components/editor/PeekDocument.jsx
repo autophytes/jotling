@@ -27,7 +27,7 @@ const PeekDocument = () => {
 
 	// CONTEXT
 	const {
-		editorArchives,
+		editorArchivesRef,
 		linkStructureRef,
 		peekWindowLinkId,
 		setPeekWindowLinkId,
@@ -60,19 +60,19 @@ const PeekDocument = () => {
 
 	// Generate our editorState to view in the peek window
 	useEffect(() => {
-		if (documentName && editorArchives[documentName]) {
-			console.log(editorArchives[documentName]);
+		if (documentName && editorArchivesRef.current[documentName]) {
+			console.log(editorArchivesRef.current[documentName]);
 
 			const sourceEntityKey = linkStructureRef.current.links[peekWindowLinkId].sourceEntityKey;
 			const decorator = generatePeekDecorator(sourceEntityKey);
 
 			let newEditorState = EditorState.createWithContent(
-				editorArchives[documentName].editorState.getCurrentContent(),
+				editorArchivesRef.current[documentName].editorState.getCurrentContent(),
 				decorator
 			);
 			setEditorState(newEditorState);
 		}
-	}, [documentName, editorArchives, peekWindowLinkId]);
+	}, [documentName, peekWindowLinkId]);
 
 	// Scroll to our matching link
 	useLayoutEffect(() => {

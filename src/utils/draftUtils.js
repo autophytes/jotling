@@ -62,3 +62,32 @@ export const updateAllBlocks = (editorState) => {
 
 	return outdentedContentState;
 };
+
+// Returns an array of the blockKeys in the selection
+export const getBlockKeysForSelection = (editorState) => {
+	const selection = editorState.getSelection();
+	const startKey = selection.getStartKey();
+	const endKey = selection.getEndKey();
+	let keyArray = [startKey];
+
+	// If start and end are the same, just return the start
+	if (startKey === endKey) {
+		return keyArray;
+	}
+
+	const contentState = editorState.getCurrentContent();
+	let iterateKey = startKey;
+	// Loop from the start until we find the endKey
+	while (iterateKey !== endKey) {
+		iterateKey = contentState.getKeyAfter(iterateKey);
+		keyArray.push(iterateKey);
+	}
+
+	return keyArray;
+};
+
+// Returns an array of all blockKeys in the contentState
+export const getAllBlockKeys = (contentState) => {
+	const blockArray = contentState.getBlocksAsArray();
+	return blockArray.map((item) => item.getKey());
+};

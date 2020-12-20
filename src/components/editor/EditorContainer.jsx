@@ -36,7 +36,12 @@ import {
 	enterToUnindentList,
 	doubleDashToLongDash,
 } from './KeyBindFunctions';
-import { removeEndingNewline, updateLinkEntities } from './editorFunctions';
+import {
+	checkCommandForUpdateWordCount,
+	removeEndingNewline,
+	updateLinkEntities,
+	updateWordCount,
+} from './editorFunctions';
 import {
 	defaultCustomStyleMap,
 	blockStyleFn,
@@ -56,6 +61,7 @@ import {
 } from './editorComponents/BlockImageContainer';
 
 import EditorFindReplace from './EditorFindReplace';
+import { StatsContext } from '../../contexts/statsContext';
 
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
 
@@ -75,7 +81,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		linkStructureRef,
 		editorStateRef,
 		editorStyles,
-		editorArchives,
+		editorArchivesRef,
 		setEditorArchives,
 		setEditorStateRef,
 		mediaStructure,
@@ -93,6 +99,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		fontSize,
 		fontSettings,
 	} = useContext(SettingsContext);
+	const { setDocWordCountObj, finalizeDocWordCount, initializeDocWordCount } = useContext(
+		StatsContext
+	);
 
 	// EDITOR STATE
 	const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -258,21 +267,23 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// Process the key presses
 	const handleKeyCommand = (command, editorState) => {
+		console.log('command: ', command);
+
 		if (command === 'handled-in-binding-fn') {
 			// For instance, I have to handle tab in the binding fn b/c it needs (e)
 			// Otherwise, the browser tries to do things with the commands.
 			return 'handled';
 		}
 
-		console.log('command: ', command);
-
-		// backspace, split-block, delete
-		// if (['backspace', 'split-block', 'delete'].includes(command)) {
-		// 	const selectionState = editorState.getSelection();
-		// 	if (!selectionState.isCollapsed()) {
-		// 	}
-		// }
-		// On any of these 3, if our selection ends with a new line character, remove from selection
+		// Check if we need to update the word count. If so, pass through the update option.
+		const updateWordCountOption = checkCommandForUpdateWordCount(command);
+		if (updateWordCountOption) {
+			console.log('calling updateWordCount with command: ', updateWordCountOption);
+			setTimeout(() =>
+				updateWordCount(editorStateRef, editorState, setDocWordCountObj, updateWordCountOption)
+			);
+			// Note that this isn't "handling" the command, just scheduling a background update.
+		}
 
 		// If not custom handled, use the default handling
 		const newEditorState = RichUtils.handleKeyCommand(editorState, command);
@@ -288,11 +299,13 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	const handleBeforeInput = (char, editorState) => {
 		const selection = editorState.getSelection();
-		console.log('selection:', selection.serialize());
 
-		// If selection !collapsed && last character is newLine, remove from selection
-
-		console.log('char: ', char);
+		// Update the word count after each space
+		if (char === ' ') {
+			// Timeout to delay until after update.
+			// Let's us use the selection before to check the updated editorState.
+			setTimeout(() => updateWordCount(editorStateRef, editorState, setDocWordCountObj));
+		}
 
 		// If we're typing at the end of a line and inside a link, continue that link
 		if (selection.isCollapsed()) {
@@ -456,7 +469,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			let currentEditorState =
 				navData.currentDoc === source
 					? editorStateRef.current
-					: editorArchives[source].editorState;
+					: editorArchivesRef.current[source].editorState;
 
 			// Loop through each block
 			if (currentEditorState) {
@@ -503,7 +516,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				newMediaStructure
 			);
 		}
-	}, [mediaStructure, project, editorArchives, editorStateRef, navData]);
+	}, [mediaStructure, project, editorStateRef, navData]);
 
 	// Saves the current file and calls the main process to save the project
 	const saveFileAndProject = useCallback(
@@ -564,64 +577,68 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				return;
 			}
 
+			// Flag that we've updated the file
+			setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
+
+			// Load the file from the hard drive
 			const loadedFile = await ipcRenderer.invoke(
 				'read-single-document',
 				project.tempPath,
 				'docs/' + navData.currentDoc
 			);
-
 			const fileContents = loadedFile.fileContents;
 
-			// If the file isn't empty
-			if (!!fileContents && Object.keys(fileContents).length !== 0) {
+			let newEditorState;
+			// If the file isn't empty, load into editorState. Otherwise, create an empty editorState.
+			if (fileContents && Object.keys(fileContents).length) {
 				const newContentState = convertFromRaw(loadedFile.fileContents);
-				const newEditorState = EditorState.createWithContent(newContentState, decorator);
-
-				// Synchronizing links to this page
-				const editorStateWithLinks = updateLinkEntities(
-					newEditorState,
-					linkStructureRef.current,
-					navData.currentDoc
-				);
-				console.log('about to set editorState inside LOADFILE');
-				setEditorState(editorStateWithLinks);
+				newEditorState = EditorState.createWithContent(newContentState, decorator);
 			} else {
-				// Synchronizing links to this page
-				const newEditorState = EditorState.createEmpty(decorator);
-				const editorStateWithLinks = updateLinkEntities(
-					newEditorState,
-					linkStructureRef.current,
-					navData.currentDoc
-				);
-				setEditorState(editorStateWithLinks);
+				newEditorState = EditorState.createEmpty(decorator);
 			}
+
+			// Synchronizing links to this page
+			const editorStateWithLinks = updateLinkEntities(
+				newEditorState,
+				linkStructureRef.current,
+				navData.currentDoc
+			);
+
+			setEditorState(editorStateWithLinks);
+			initializeDocWordCount(editorStateWithLinks);
+
 			setShouldResetScroll(true);
-			setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
-			console.log('setting editorState inside LOADFILE');
-			// editorRef.current.focus();
+			console.log('Setting editorState inside loadFile.');
 		};
+
 		loadFileFromSave();
-	}, [editorRef, navData, project.tempPath, updateLinkEntities, linkStructureRef, decorator]);
+	}, [navData, project.tempPath, updateLinkEntities, decorator]);
 
 	// Loading the new current document
 	useEffect(() => {
 		if (navData.currentDoc !== prev.doc || navData.currentTempPath !== prev.tempPath) {
+			// Update the session word count
+			finalizeDocWordCount(editorStateRef.current);
+
 			// If the previous doc changed and we didn't open a new project, save.
 			if (prev.doc !== '' && navData.currentTempPath === prev.tempPath) {
 				saveFile(prev.doc); // PROBLEM: saving after we've loaded the new project
 				// Archive the editorState
-				setEditorArchives({
-					...editorArchives,
+				setEditorArchives((previous) => ({
+					...previous,
 					[prev.doc]: {
 						editorState: editorStateRef.current,
 						scrollY: window.scrollY,
 					},
-				});
+				}));
 			}
 
 			// Check for existing editorState and load from that if available
-			if (editorArchives.hasOwnProperty(navData.currentDoc)) {
-				const newEditorState = editorArchives[navData.currentDoc].editorState;
+			if (editorArchivesRef.current.hasOwnProperty(navData.currentDoc)) {
+				// Flag that we've updated the file
+				setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
+
+				const newEditorState = editorArchivesRef.current[navData.currentDoc].editorState;
 				console.log('navData.currentDoc:', navData.currentDoc);
 
 				// TO-DO: Check for new links to add before setting the editor state
@@ -631,9 +648,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					navData.currentDoc
 				);
 
+				console.log('Setting editorState from editorArchives.');
+
 				setEditorState(editorStateWithLinks);
+				initializeDocWordCount(editorStateWithLinks);
 				setShouldResetScroll(true);
-				setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
 			} else {
 				loadFile();
 			}
@@ -686,15 +705,18 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// Scroll to the previous position or to the top on document load
 	useLayoutEffect(() => {
 		if (shouldResetScroll) {
-			if (editorArchives[navData.currentDoc] && editorArchives[navData.currentDoc].scrollY) {
-				window.scrollTo(0, editorArchives[navData.currentDoc].scrollY);
+			if (
+				editorArchivesRef.current[navData.currentDoc] &&
+				editorArchivesRef.current[navData.currentDoc].scrollY
+			) {
+				window.scrollTo(0, editorArchivesRef.current[navData.currentDoc].scrollY);
 				setShouldResetScroll(false);
 			} else {
 				window.scrollTo(0, 0);
 				setShouldResetScroll(false);
 			}
 		}
-	}, [navData, editorArchives, shouldResetScroll]);
+	}, [navData, shouldResetScroll]);
 
 	// console.log('data: ', editorState.getCurrentContent().getFirstBlock().getData());
 

@@ -19,6 +19,7 @@ import {
 } from '../../../utils/utils';
 
 import { addFile } from '../navFunctions';
+import LeftNavStats from './LeftNavStats';
 
 const LeftNav = () => {
 	const {
@@ -190,6 +191,7 @@ const LeftNav = () => {
 
 					{/* Potentially show some document statistics down here */}
 					<div className='left-nav-footer'>
+						<LeftNavStats />
 						{/* <p>497 words</p>
 						<p>49% today's goal</p> */}
 					</div>

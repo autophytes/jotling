@@ -11,7 +11,11 @@ import {
 	RichUtils,
 } from 'draft-js';
 import { setBlockData, getSelectedBlocksList } from 'draftjs-utils';
-import { getTextSelection } from '../../utils/draftUtils';
+import {
+	getAllBlockKeys,
+	getBlockKeysForSelection,
+	getTextSelection,
+} from '../../utils/draftUtils';
 import { findAllDocsInFolder } from '../navs/navFunctions';
 
 import { LinkSourceDecorator, LinkDestDecorator } from './editorComponents/LinkDecorators';
@@ -1145,8 +1149,6 @@ export const insertNewSection = (editorState, setEditorState) => {
 
 // Check if the selectionState ends on a newline character
 export const removeEndingNewline = (editorState) => {
-	console.log('setEditorState selection: ', editorState.getSelection().serialize());
-
 	// Only check if we need to update the selection if the selection isn't collapsed
 	if (!editorState.getSelection().isCollapsed()) {
 		const selectionState = editorState.getSelection();
@@ -1178,4 +1180,132 @@ export const removeEndingNewline = (editorState) => {
 	}
 
 	return editorState;
+};
+
+// IDEA: We could possibly batch the updates and always update the whole doc after a 1sec delay
+
+export const updateWordCount = (
+	editorStateRef,
+	origEditorState,
+	setDocWordCountObj,
+	option
+) => {
+	const contentState = editorStateRef.current.getCurrentContent();
+	let keyArray = [];
+
+	// Start with all blockKeys in the selection. All options except 'update-all' start from this.
+	if (option !== 'update-all') {
+		keyArray = getBlockKeysForSelection(origEditorState);
+	}
+
+	// Handle any options we were passed
+	if (option) {
+		const origContentState = origEditorState.getCurrentContent();
+		const origSelection = origEditorState.getSelection();
+		let extraKey = null;
+
+		if (option === 'add-block-to-end') {
+			// Check block after too (needed if deleting at end of block)
+			extraKey = origContentState.getKeyAfter(origSelection.getEndKey());
+		}
+		if (option === 'add-block-to-start') {
+			// Check block before too (needed if backspacing at start of block)
+			extraKey = origContentState.getKeyBefore(origSelection.getStartKey());
+		}
+		if (option === 'add-new-end-block') {
+			// Check if the new ending block was newly created (split-block)
+			extraKey = contentState.getKeyBefore(editorStateRef.current.getSelection().getEndKey());
+		}
+		if (option === 'update-all') {
+			// Check all unique block keys from before and after the change
+			let allOrigBlocks = getAllBlockKeys(origContentState);
+			let allNewBlocks = getAllBlockKeys(contentState);
+
+			keyArray = Array.from(new Set([...allOrigBlocks, ...allNewBlocks]));
+		}
+
+		// If we added a key, push it to the array
+		if (extraKey) {
+			keyArray.push(extraKey);
+		}
+	}
+
+	// Find the word count for each blockKey
+	let newWordCountObj = {};
+	for (let blockKey of keyArray) {
+		let words = countWordsInBlock(contentState.getBlockForKey(blockKey));
+		newWordCountObj[blockKey] = words;
+	}
+
+	setDocWordCountObj((prev) => ({
+		...prev,
+		...newWordCountObj,
+	}));
+};
+
+// Get the total word count of the current document
+export const getEditorStateWordCount = (editorState) => {
+	const contentState = editorState.getCurrentContent();
+	const keyArray = getAllBlockKeys(contentState);
+
+	// Find the word count for each blockKey
+	let newWordCountObj = {};
+	for (let blockKey of keyArray) {
+		let words = countWordsInBlock(contentState.getBlockForKey(blockKey));
+		newWordCountObj[blockKey] = words;
+	}
+
+	return newWordCountObj;
+};
+
+// Counts the words in an individual block. Used in updateWordCount.
+const countWordsInBlock = (block) => {
+	// If block no longer exists, return 0;
+	if (!block) {
+		return 0;
+	}
+
+	let blockText = block.getText();
+
+	// Trim off ending spaces
+	while (blockText.slice(-1) === ' ') {
+		console.log('trimmed an ending space');
+		blockText = blockText.slice(0, -1);
+	}
+
+	// Count the space chunks (multiple spaces counts as 1) in the block
+	let spaces = 0;
+	for (let i in blockText) {
+		if (blockText[i] === ' ' && i && blockText[i - 1] !== ' ') {
+			spaces++;
+		}
+	}
+
+	// Add 1 to represent the first word of the block.
+	if (blockText.length) {
+		spaces++;
+	}
+
+	return spaces;
+};
+
+// Check the editor keyCommand to see if and how to update the word count.
+export const checkCommandForUpdateWordCount = (command) => {
+	const updateCommandOptions = [
+		{ array: ['delete', 'delete-word'], option: 'add-block-to-end' },
+		{
+			array: ['backspace', 'backspace-word', 'backspace-to-start-of-line'],
+			option: 'add-block-to-start',
+		},
+		// { array: ['undo', 'redo'], option: 'update-all' }, // Undo not triggering, redo can wait
+		{ array: ['split-block'], option: 'add-new-end-block' },
+	];
+
+	for (let item of updateCommandOptions) {
+		if (item.array.includes(command)) {
+			return item.option;
+		}
+	}
+
+	return null;
 };

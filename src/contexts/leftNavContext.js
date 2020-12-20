@@ -46,6 +46,7 @@ const LeftNavContextProvider = (props) => {
 	const docStructureRef = useRef(docStructure);
 	const mediaStructureRef = useRef(mediaStructure);
 	const editorStateRef = useRef(null);
+	const editorArchivesRef = useRef(editorArchives);
 	const navDataRef = useRef(navData);
 	const setEditorStateRef = useRef(null);
 	const scrollToLinkIdRef = useRef(null);
@@ -67,6 +68,10 @@ const LeftNavContextProvider = (props) => {
 	useEffect(() => {
 		navDataRef.current = navData;
 	}, [navData]);
+
+	useEffect(() => {
+		editorArchivesRef.current = editorArchives;
+	}, [editorArchives]);
 
 	// Initialize the left and right nav width from electron-store
 	useEffect(() => {
@@ -150,8 +155,8 @@ const LeftNavContextProvider = (props) => {
 				editorStyles,
 				setEditorStyles,
 				resetNavWidth,
-				editorArchives,
 				setEditorArchives,
+				editorArchivesRef, // Nothing should monitor editorArchives
 				linkStructureRef,
 				editorStateRef,
 				scrollToLinkId,
