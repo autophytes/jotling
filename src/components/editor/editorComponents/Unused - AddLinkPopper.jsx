@@ -2,15 +2,15 @@ import React, { useContext, useState, useEffect, useRef, useLayoutEffect } from 
 import { usePopper } from 'react-popper';
 
 import PopperContainer from '../../containers/PopperContainer';
-import { LinkSelectionRangeRef } from './LinkSelectionRangeRef';
+import { LinkSelectionRangeRef } from '../../navs/editor-nav/LinkSelectionRangeRef';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../contexts/settingsContext';
 
 import EllipsisSVG from '../../../assets/svg/EllipsisSVG';
 
-import { createTagLink, selectionHasEntityType } from '../../editor/editorFunctions';
-import { findAllDocsInFolder } from '../navFunctions';
+import { createTagLink, selectionHasEntityType } from '../editorFunctions';
+import { findAllDocsInFolder } from '../../navs/navFunctions';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();

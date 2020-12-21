@@ -59,13 +59,16 @@ const PopperVerticalContainer = ({
 		const handleEscapePopper = (e) => {
 			if (e.keyCode === 27) {
 				e.stopPropagation();
+				console.log('escape key - closing popper');
 				closeFn();
 			}
 		};
 
 		const handleExternalClickPopper = (e) => {
 			if (!popperElementRef.current.contains(e.target)) {
+				console.log('e.target: ', e.target);
 				e.stopPropagation();
+				console.log('external click - closing popper');
 				closeFn();
 			}
 		};

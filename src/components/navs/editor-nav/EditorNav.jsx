@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 // import { getSelectedBlocksMetadata } from 'draftjs-utils';
 
-import AddToWikiPopper from './AddToWikiPopper';
+import AddToWikiPopper from './AddToWiki/AddToWikiPopper';
 import InlineStyleButton from './InlineStyleButton';
 import ColorPickerPopper from './ColorPickerPopper';
 
