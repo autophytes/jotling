@@ -156,7 +156,8 @@ const AddToWikiPopper = () => {
 				// 	navData.currentDoc,
 				// 	setEditorStateRef.current,
 				// 	setLinkStructure,
-				// 	setSyncLinkIdList
+				// 	setSyncLinkIdList,
+				//  initialSectionKey
 				// );
 				// setDisplayWikiPopper(false);
 				// setShowPickFolder(false);
@@ -297,10 +298,11 @@ const AddToWikiPopper = () => {
 		}, 0);
 	}, []);
 
+	// Reposition the popper when changing sections we're viewing
 	useLayoutEffect(() => {
 		setShouldUpdatePopper(true);
 		console.log('should have fired the popper update');
-	}, [showPickFolder]);
+	}, [showPickFolder, showPickSection]);
 
 	return (
 		<PopperVerticalContainer
@@ -386,7 +388,7 @@ const AddToWikiPopper = () => {
 				)}
 
 				{/* Pick Section - in an existing wiki */}
-				{showPickSection && <PickSection {...{ selectedDocId }} />}
+				{showPickSection && <PickSection {...{ selectedDocId, setShowPickSection }} />}
 			</div>
 		</PopperVerticalContainer>
 	);

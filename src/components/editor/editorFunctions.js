@@ -170,6 +170,9 @@ export const defaultCompositeDecorator = new CompositeDecorator(defaultDecorator
 //   If aliased, we will sever the link and leave it as orphaned instead.
 //   If orphaned, remove that link and add a separate inline button notification of the severed link.
 
+// UPDATE: if ##topOfPage, insert as first block. ##bottomOfPage is last block.
+// Otherwise, insert after the block key in the initialSectionKey
+
 export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	let contentState = editorState.getCurrentContent();
 	let blockArray = contentState.getBlocksAsArray();
@@ -267,6 +270,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		// multiple blocks.
 
 		const linkContentArray = linkStructure.links[linkId].content.split('\n');
+		const sectionKey = linkStructure.links[linkId].initialSectionKey;
 		const blockKeys = [];
 
 		for (let content of linkContentArray) {
@@ -282,12 +286,28 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 				characterList: List(Repeat(CharacterMetadata.create(), content.length)),
 			});
 
-			const newBlockMap = newContentState.getBlockMap().set(newBlockKey, newBlock);
+			let newBlockArray = newContentState.getBlocksAsArray();
+
+			// Insert the link at the top of the page
+			if (sectionKey === '##topOfPage') {
+				newBlockArray.unshift(newBlock);
+			} else {
+				const blockIndex = newBlockArray.findIndex((item) => item.getKey === sectionKey);
+				if (blockIndex !== -1) {
+					// If we found a matching section block key, insert afterwards
+					newBlockArray.splice(blockIndex + 1, 0, newBlock);
+				} else {
+					// Otherwise, push to the end of the page
+					newBlockArray.push(newBlock);
+				}
+			}
+
+			// const newBlockMap = newContentState.getBlockMap().set(newBlockKey, newBlock);
 
 			// Push the new content block into the editorState
 			newEditorState = EditorState.push(
 				newEditorState,
-				ContentState.createFromBlockArray(newBlockMap.toArray()),
+				ContentState.createFromBlockArray(newBlockArray),
 				'split-block'
 			);
 		}
@@ -466,7 +486,8 @@ export const createTagLink = (
 	currentDoc,
 	setEditorState,
 	setLinkStructure,
-	setSyncLinkIdList
+	setSyncLinkIdList,
+	initialSectionKey
 ) => {
 	// Clear out any existing links in the selection
 	const cleanedEditorState = removeLinkSourceFromSelection(
@@ -525,7 +546,10 @@ export const createTagLink = (
 		content: selectedText, // Selected text
 		alias: null,
 		sourceEntityKey: entityKey,
+		initialSectionKey: initialSectionKey,
 	};
+
+	console.log('new link: ', newLinkStructure.links[newLinkId]);
 
 	// Updating the linkStructure with the keyword the link is using
 	if (!newLinkStructure.docLinks.hasOwnProperty(currentDoc)) {
