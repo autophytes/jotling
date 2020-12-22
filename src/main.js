@@ -4,7 +4,6 @@
 require('v8-compile-cache'); // Speeds up boot time
 const { app, BrowserWindow, protocol } = require('electron');
 const fs = require('fs');
-// const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 
 const {

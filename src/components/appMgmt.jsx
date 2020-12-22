@@ -19,20 +19,15 @@ import { removeLinkSourceFromSelection } from './editor/editorFunctions';
 import {
 	addFile,
 	moveDocToTrash,
-	deleteFolder,
 	restoreDocument,
 	restoreFolder,
 	moveFolderToTrash,
 } from './navs/navFunctions';
 
-import Store from 'electron-store';
-import Mousetrap from 'mousetrap';
 import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
 import HiddenContextMenu from './hiddenContextMenu';
 import UploadImageForm from './forms/UploadImageForm';
-
-// import ReactResizeDetector from 'react-resize-detector';
 
 // Create main App component
 const AppMgmt = () => {
