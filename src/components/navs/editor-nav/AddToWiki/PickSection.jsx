@@ -10,6 +10,7 @@ import BackArrowSVG from '../../../../assets/svg/BackArrowSVG';
 
 const PickSection = ({ selectedDocId, setShowPickSection }) => {
 	const [newSectionName, setNewSectionName] = useState('New Section');
+	const [showPickSectionLocation, setShowPickSectionLocation] = useState(false);
 	const [sections, setSections] = useState([]);
 
 	const {
@@ -23,7 +24,7 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 		setSyncLinkIdList,
 	} = useContext(LeftNavContext);
 
-	const handleSectionClick = (initialSectionKey) => {
+	const handleSectionClick = (initialSectionKey, insertSectionOption) => {
 		createTagLink(
 			selectedDocId,
 			editorStateRef,
@@ -32,11 +33,19 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 			setEditorStateRef.current,
 			setLinkStructure,
 			setSyncLinkIdList,
-			initialSectionKey
+			initialSectionKey,
+			insertSectionOption
 		);
 		setDisplayWikiPopper(false);
 	};
 
+	const handleNewSectionEnter = (e) => {
+		if (e.key === 'Enter' || e.keyCode === 27) {
+			setShowPickSectionLocation(true);
+		}
+	};
+
+	// Build the array of sections to list out
 	useEffect(() => {
 		const filePath = findFilePath(docStructureRef.current.pages, '', 'doc', selectedDocId);
 		const childrenPath = filePath + (filePath ? '/' : '') + 'children';
@@ -50,8 +59,8 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 		);
 
 		let newSections = docObj.sections ? docObj.sections : [];
-		newSections.unshift({ key: '##topOfPage', text: 'Top of Page', isItalic: true });
-		newSections.push({ key: '##bottomOfPage', text: 'Bottom of Page', isItalic: true });
+		newSections.unshift({ key: '##topOfPage', text: 'Top of Page', isSpecial: true });
+		newSections.push({ key: '##bottomOfPage', text: 'Bottom of Page', isSpecial: true });
 		console.log('newSections:', newSections);
 
 		setSections(newSections);
@@ -60,49 +69,84 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 	return (
 		<>
 			<p className='popper-title'>
+				{/* Back Button */}
 				<button
 					onClick={(e) => {
 						setTimeout(() => {
-							setShowPickSection(false);
+							// Change the back button based on whether we're creating a new section
+							showPickSectionLocation
+								? setShowPickSectionLocation(false)
+								: setShowPickSection(false);
 						}, 0);
 					}}
 					className='back-arrow'>
 					<BackArrowSVG />
 				</button>
-				Create Section
+				{/* Title */}
+				{showPickSectionLocation ? 'Section Placement' : 'Create Section'}
 			</p>
-			<div style={{ position: 'relative' }} id='create-new-wiki-input'>
-				<button className='file-nav document add-to-wiki new-wiki'>
-					<div className='svg-wrapper add-to-wiki'>
-						<SectionsSVG />
-					</div>
-					<input
-						type='text'
-						value={newSectionName}
-						autoFocus
-						onChange={(e) => setNewSectionName(e.target.value)}
-						onFocus={(e) => e.target.select()}
-						onKeyUp={() =>
-							console.log('need to create the new section like handleNewWikiEnter')
-						}
-					/>
-				</button>
-			</div>
-			<hr />
 
-			<p className='popper-title'>Select Section</p>
-			{sections.map((item) => (
-				<button
-					className='file-nav document add-to-wiki'
-					style={{ marginBottom: '1px', fontStyle: item.isItalic ? 'italic' : 'normal' }}
-					onClick={() => handleSectionClick(item.key)}
-					key={item.key}>
-					<div className='svg-wrapper add-to-wiki'>
-						<SectionsSVG />
+			{/* New Section Input */}
+			{!showPickSectionLocation && (
+				<>
+					<div style={{ position: 'relative' }} id='create-new-wiki-input'>
+						<button className='file-nav document add-to-wiki new-wiki'>
+							<div className='svg-wrapper add-to-wiki'>
+								<SectionsSVG />
+							</div>
+							<input
+								type='text'
+								value={newSectionName}
+								autoFocus
+								onChange={(e) => setNewSectionName(e.target.value)}
+								onFocus={(e) => e.target.select()}
+								onKeyUp={handleNewSectionEnter}
+							/>
+						</button>
 					</div>
-					<span>{item.text}</span>
-				</button>
-			))}
+					<hr />
+				</>
+			)}
+
+			{showPickSectionLocation ? (
+				<>
+					{/* Choose a location to insert the new section */}
+					{sections.map((item) => (
+						<button
+							className='file-nav document add-to-wiki'
+							style={{ marginBottom: '1px', fontStyle: item.isSpecial ? 'italic' : 'normal' }}
+							onClick={() =>
+								handleSectionClick('##newSection', {
+									newName: newSectionName,
+									insertBeforeKey: item.key,
+								})
+							}
+							key={item.key}>
+							<div className='svg-wrapper add-to-wiki'>
+								<SectionsSVG />
+							</div>
+							<span>{(item.isSpecial ? '' : 'Before: ') + item.text}</span>
+						</button>
+					))}
+				</>
+			) : (
+				<>
+					{/* Choose the section to insert into */}
+					<p className='popper-title'>Select Section</p>
+					{sections.map((item) => (
+						<button
+							className='file-nav document add-to-wiki'
+							style={{ marginBottom: '1px', fontStyle: item.isItalic ? 'italic' : 'normal' }}
+							onClick={() => handleSectionClick(item.key)}
+							key={item.key}>
+							<div className='svg-wrapper add-to-wiki'>
+								<SectionsSVG />
+							</div>
+							<span>{item.text}</span>
+						</button>
+					))}
+				</>
+			)}
 		</>
 	);
 };

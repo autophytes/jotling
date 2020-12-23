@@ -149,18 +149,6 @@ const AddToWikiPopper = () => {
 					setSelectedDocId(child.id);
 					setShowPickSection(true);
 				});
-				// createTagLink(
-				// 	child.id,
-				// 	editorStateRef,
-				// 	linkStructureRef,
-				// 	navData.currentDoc,
-				// 	setEditorStateRef.current,
-				// 	setLinkStructure,
-				// 	setSyncLinkIdList,
-				//  initialSectionKey
-				// );
-				// setDisplayWikiPopper(false);
-				// setShowPickFolder(false);
 			};
 		}
 	};

@@ -1836,10 +1836,11 @@ input[type='number']::-webkit-outer-spin-button {
 .wiki-section-title {
 	font-size: 1.5rem;
 	font-weight: bold;
-	margin-bottom: 2rem;
-	margin-top: 2.5rem;
+	margin-bottom: 1.5rem;
+	margin-top: 2rem;
 }
 
 .wiki-section-title span {
 	border-bottom: 3px solid var(--color-primary);
+	line-height: 1.5;
 }

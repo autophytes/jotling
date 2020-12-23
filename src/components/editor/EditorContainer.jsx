@@ -38,6 +38,7 @@ import {
 } from './KeyBindFunctions';
 import {
 	checkCommandForUpdateWordCount,
+	checkWikiSectionSplitBlock,
 	removeEndingNewline,
 	updateLinkEntities,
 	updateWordCount,
@@ -283,6 +284,18 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				updateWordCount(editorStateRef, editorState, setDocWordCountObj, updateWordCountOption)
 			);
 			// Note that this isn't "handling" the command, just scheduling a background update.
+		}
+
+		// Handle split-block's manually IF the start/end of a custom block type
+		if (command === 'split-block') {
+			const newEditorState = checkWikiSectionSplitBlock(editorState);
+			if (newEditorState) {
+				console.log('handled with wikiSectionSplitBlock');
+				setEditorState(newEditorState);
+				return 'handled';
+			}
+
+			// Going to have to deal with the link stuff differently (they're entities)
 		}
 
 		// If not custom handled, use the default handling

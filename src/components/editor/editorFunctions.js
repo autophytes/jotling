@@ -270,11 +270,61 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		// multiple blocks.
 
 		const linkContentArray = linkStructure.links[linkId].content.split('\n');
-		const sectionKey = linkStructure.links[linkId].initialSectionKey;
+		let sectionKey = linkStructure.links[linkId].initialSectionKey;
+		const newSectionOptions = linkStructure.links[linkId].newSectionOptions;
+		console.log('sectionKey:', sectionKey);
 		const blockKeys = [];
 
+		let newContentState = newEditorState.getCurrentContent();
+		let newBlockArray = newContentState.getBlocksAsArray();
+
+		// If only 1 block in the array and that block is empty, remove it
+		if (newBlockArray.length === 1 && newBlockArray[0].getLength() === 0) {
+			newBlockArray.pop();
+		}
+
+		// If creating a new section
+		if (newSectionOptions) {
+			// Create the new section block
+			const insertBeforeKey = newSectionOptions.insertBeforeKey;
+			const newSectionBlockKey = genKey();
+			const newSectionBlock = new ContentBlock({
+				key: newSectionBlockKey,
+				type: 'wiki-section',
+				text: newSectionOptions.newName,
+				characterList: List(
+					Repeat(CharacterMetadata.create(), newSectionOptions.newName.length)
+				),
+			});
+
+			// Position the new section block
+			if (insertBeforeKey === '##topOfPage') {
+				newBlockArray.unshift(newSectionBlock);
+			} else {
+				const sectionIndex = newBlockArray.findIndex(
+					(item) => item.getKey() === insertBeforeKey
+				);
+				if (sectionIndex !== -1) {
+					// If we found a matching section block key, insert afterwards
+					newBlockArray.splice(sectionIndex, 0, newSectionBlock);
+				} else {
+					// Otherwise, push to the end of the page
+					newBlockArray.push(newSectionBlock);
+				}
+			}
+
+			// This is now the section we're inserting after
+			sectionKey = newSectionBlockKey;
+		}
+
+		let blockIndex = newBlockArray.findIndex((item) => item.getKey() === sectionKey);
+		let incrementBefore = true;
+		if (sectionKey === '##topOfPage') {
+			blockIndex = 0;
+			incrementBefore = false;
+		}
+
 		for (let content of linkContentArray) {
-			let newContentState = newEditorState.getCurrentContent();
 			const newBlockKey = genKey();
 			blockKeys.push(newBlockKey);
 
@@ -286,31 +336,24 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 				characterList: List(Repeat(CharacterMetadata.create(), content.length)),
 			});
 
-			let newBlockArray = newContentState.getBlocksAsArray();
-
-			// Insert the link at the top of the page
-			if (sectionKey === '##topOfPage') {
-				newBlockArray.unshift(newBlock);
+			// Insert the new link block into the correct section
+			console.log('blockIndex:', blockIndex);
+			if (blockIndex !== -1) {
+				// If we found a matching section block key, insert afterwards
+				newBlockArray.splice(blockIndex + (incrementBefore ? 1 : 0), 0, newBlock);
+				blockIndex++;
 			} else {
-				const blockIndex = newBlockArray.findIndex((item) => item.getKey === sectionKey);
-				if (blockIndex !== -1) {
-					// If we found a matching section block key, insert afterwards
-					newBlockArray.splice(blockIndex + 1, 0, newBlock);
-				} else {
-					// Otherwise, push to the end of the page
-					newBlockArray.push(newBlock);
-				}
+				// Otherwise, push to the end of the page
+				newBlockArray.push(newBlock);
 			}
-
-			// const newBlockMap = newContentState.getBlockMap().set(newBlockKey, newBlock);
-
-			// Push the new content block into the editorState
-			newEditorState = EditorState.push(
-				newEditorState,
-				ContentState.createFromBlockArray(newBlockArray),
-				'split-block'
-			);
 		}
+
+		// Push the new content block into the editorState
+		newEditorState = EditorState.push(
+			newEditorState,
+			ContentState.createFromBlockArray(newBlockArray),
+			'split-block'
+		);
 
 		// Apply the LINK-DEST entity to the new block
 		newEditorState = createTagDestLink(newEditorState, linkId, blockKeys);
@@ -487,7 +530,8 @@ export const createTagLink = (
 	setEditorState,
 	setLinkStructure,
 	setSyncLinkIdList,
-	initialSectionKey
+	initialSectionKey,
+	newSectionOptions
 ) => {
 	// Clear out any existing links in the selection
 	const cleanedEditorState = removeLinkSourceFromSelection(
@@ -503,14 +547,6 @@ export const createTagLink = (
 
 	const contentState = cleanedEditorState.getCurrentContent();
 	const selectionState = cleanedEditorState.getSelection();
-	console.log('selectionState start:', selectionState.getStartOffset());
-	console.log('selectionState end:', selectionState.getEndOffset());
-	console.log('selectionState start:', selectionState.getStartKey());
-	console.log('selectionState end:', selectionState.getEndKey());
-	console.log(
-		'blockContent: ',
-		contentState.getBlockForKey(selectionState.getStartKey()).getText()
-	);
 
 	// Apply the linkId as an entity to the selection
 	const contentStateWithEntity = contentState.createEntity('LINK-SOURCE', 'MUTABLE', {
@@ -546,7 +582,8 @@ export const createTagLink = (
 		content: selectedText, // Selected text
 		alias: null,
 		sourceEntityKey: entityKey,
-		initialSectionKey: initialSectionKey,
+		initialSectionKey: initialSectionKey, // Section to insert the link into
+		newSectionOptions: newSectionOptions, // Options if creating a new section
 	};
 
 	console.log('new link: ', newLinkStructure.links[newLinkId]);
@@ -1332,4 +1369,105 @@ export const checkCommandForUpdateWordCount = (command) => {
 	}
 
 	return null;
+};
+
+// If adding a new line from the start/end of a wiki-section,
+// change the new block to unstyled
+export const checkWikiSectionSplitBlock = (editorState) => {
+	const selection = editorState.getSelection();
+	const currentContent = editorState.getCurrentContent();
+
+	// If selecting the start of the block
+	if (selection.getStartOffset() === 0) {
+		const startBlockKey = selection.getStartKey();
+		const startBlock = currentContent.getBlockForKey(startBlockKey);
+		const blockType = startBlock.getType();
+
+		// And the block type is a wiki-section, then change the first block to unstyled
+		if (blockType === 'wiki-section') {
+			// Split the block
+			let newContentState = Modifier.splitBlock(currentContent, selection);
+
+			// Selecting the block we're going to change the type of
+			const blockToChange = newContentState.getBlockForKey(startBlockKey);
+			const emptySelectionState = SelectionState.createEmpty();
+			const blockToChangeSelection = emptySelectionState.merge({
+				anchorKey: startBlockKey,
+				anchorOffset: 0,
+				focusKey: startBlockKey,
+				focusOffset: blockToChange.getLength(),
+			});
+
+			// Change to unstyled
+			newContentState = Modifier.setBlockType(
+				newContentState,
+				blockToChangeSelection,
+				'unstyled'
+			);
+
+			// Select the final cursor position
+			const newBlockKey = newContentState.getBlockAfter(startBlockKey).getKey();
+			const finalSelection = emptySelectionState.merge({
+				anchorKey: newBlockKey,
+				anchorOffset: 0,
+				focusKey: newBlockKey,
+				focusOffset: 0,
+			});
+
+			// Push the block changes to the editorState
+			const editorStateBeforeSelect = EditorState.push(
+				editorState,
+				newContentState,
+				'split-block'
+			);
+
+			// Force the final selection
+			return EditorState.forceSelection(editorStateBeforeSelect, finalSelection);
+		}
+	}
+
+	// If selecting the end of the block
+	const endBlock = currentContent.getBlockForKey(selection.getEndKey());
+	if (
+		endBlock.getType() === 'wiki-section' &&
+		selection.getEndOffset() === endBlock.getLength()
+	) {
+		const endBlockKey = endBlock.getKey();
+
+		// Split the block
+		let newContentState = Modifier.splitBlock(currentContent, selection);
+
+		// Selecting the block we're going to change the type of
+		const blockToChange = newContentState.getBlockAfter(endBlockKey);
+		const emptySelectionState = SelectionState.createEmpty();
+		const blockToChangeSelection = emptySelectionState.merge({
+			anchorKey: blockToChange.getKey(),
+			anchorOffset: 0,
+			focusKey: blockToChange.getKey(),
+			focusOffset: 0,
+		});
+
+		// Change to unstyled
+		newContentState = Modifier.setBlockType(
+			newContentState,
+			blockToChangeSelection,
+			'unstyled'
+		);
+
+		// Push the block changes to the editorState
+		const editorStateBeforeSelect = EditorState.push(
+			editorState,
+			newContentState,
+			'split-block'
+		);
+
+		// Force the final selection
+		return EditorState.forceSelection(editorStateBeforeSelect, blockToChangeSelection);
+	}
+	// If selecting the end of the block
+	// wiki-section block
+	// If the selection start is at the beginning
+	// The original block needs to be converted to unstyled
+	// or the selection end is at the end
+	// The new block needs to be converted to unstyled
 };

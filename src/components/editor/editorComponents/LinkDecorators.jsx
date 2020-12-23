@@ -415,6 +415,11 @@ const syncLinkStructureOnDelay = ({
 
 		// Queue an update to linkStructure with the updated text
 		const newTimeout = setTimeout(() => {
+			// Make sure the block exists in the current editorState (that we haven't switched pages)
+			if (!editorStateRef.current.getCurrentContent().getBlockForKey(blockKey)) {
+				return;
+			}
+
 			let newEntityContent = getAllEntityContent(editorStateRef, blockKey, start, end);
 
 			let newLinkStructure = { ...linkStructureRef.current };
