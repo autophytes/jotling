@@ -11,16 +11,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-
         include:
           - os: macos-latest
             scout: ls -la
             target: "*.dmg"
-
           - os: ubuntu-latest
             scout: ls -la
             target: "*.AppImage"
-
           - os: windows-latest
             scout: dir
             target: "*.exe"
