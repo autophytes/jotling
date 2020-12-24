@@ -30,8 +30,6 @@ jobs:
         with:
           node-version: 14.x
 
-        # bump the npm version in package.json with each build
-      - run: npm version patch
 
         # run the standard node builds and tests defined in package.json
       - run: npm ci
