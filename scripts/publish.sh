@@ -1,5 +1,6 @@
 #!/bin/bash
 
+npm version minor
 
 PACKAGE_VERSION=$(cat package.json \
   | grep version \
