@@ -36,12 +36,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload the artifacts
-        uses: skx/github-action-publish-binaries@release-1.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          args: 'dist/*'
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./dist/*
+          tag: ${{ github.ref }}
+          overwrite: true
 
   # publish:
   #   needs: build
