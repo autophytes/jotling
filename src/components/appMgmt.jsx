@@ -339,6 +339,13 @@ const AppMgmt = () => {
 			}
 		});
 
+		ipcRenderer.on('rename-file', (event, { id, type }) => {
+			setNavData((prev) => ({
+				...prev,
+				editFile: `${type}-${id}`,
+			}));
+		});
+
 		ipcRenderer.on('restore-doc', (event, { id }) => {
 			restoreDocument(
 				docStructureRef.current,

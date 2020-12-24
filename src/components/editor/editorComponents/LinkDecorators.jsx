@@ -275,17 +275,7 @@ const LinkDestDecorator = ({
 			start,
 			end,
 		});
-	}, [
-		decoratedText,
-		setLinkStructure,
-		linkId,
-		queuedTimeout,
-		linkStructureRef,
-		editorStateRef,
-		blockKey,
-		start,
-		end,
-	]);
+	}, [decoratedText, linkId, queuedTimeout, blockKey, start, end]);
 
 	return (
 		<>

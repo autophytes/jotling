@@ -156,7 +156,8 @@ const NavFolder = ({
 			onDragOver={handleDragOver}
 			onDrop={handleDrop}
 			onClick={() => navData.editFile !== 'folder-' + child.id && handleFolderClick(child.id)}
-			onDoubleClick={() => setNavData({ ...navData, editFile: 'folder-' + child.id })}>
+			// onDoubleClick={() => setNavData({ ...navData, editFile: 'folder-' + child.id })}
+		>
 			<div className='svg-wrapper'>{isOpen ? <FolderOpenSVG /> : <FolderClosedSVG />}</div>
 			{navData.editFile === 'folder-' + child.id ? (
 				<input

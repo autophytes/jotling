@@ -39,12 +39,9 @@ export const WikiSectionTitle = (props) => {
 	// If this title was just added, prompt for the name
 	useEffect(() => {
 		const blockData = block.getData().get('wikiSection', {});
-		console.log('blockData:', blockData);
 		if (blockData.isNew) {
 			setIsEditable(true);
 		}
-
-		console.log('props.children changed!');
 	}, []);
 
 	useEffect(() => {

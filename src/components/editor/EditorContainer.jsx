@@ -63,6 +63,7 @@ import {
 
 import EditorFindReplace from './EditorFindReplace';
 import { StatsContext } from '../../contexts/statsContext';
+import EditorHeader from '../editorHeader/EditorHeader';
 
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
 
@@ -279,7 +280,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		// Check if we need to update the word count. If so, pass through the update option.
 		const updateWordCountOption = checkCommandForUpdateWordCount(command);
 		if (updateWordCountOption) {
-			console.log('calling updateWordCount with command: ', updateWordCountOption);
+			// console.log('calling updateWordCount with command: ', updateWordCountOption);
 			setTimeout(() =>
 				updateWordCount(editorStateRef, editorState, setDocWordCountObj, updateWordCountOption)
 			);
@@ -312,12 +313,30 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	const handleBeforeInput = (char, editorState) => {
 		const selection = editorState.getSelection();
+		const currentContent = editorState.getCurrentContent();
+		const startBlock = currentContent.getBlockForKey(selection.getStartKey());
+		const endBlock = currentContent.getBlockForKey(selection.getEndKey());
+		const isSingleBlockSelection = startBlock.getKey() === endBlock.getKey();
 
 		// Update the word count after each space
 		if (char === ' ') {
 			// Timeout to delay until after update.
 			// Let's us use the selection before to check the updated editorState.
 			setTimeout(() => updateWordCount(editorStateRef, editorState, setDocWordCountObj));
+		}
+
+		if (
+			isSingleBlockSelection &&
+			(selection.getStartOffset() === 0 || selection.getEndOffset() == endBlock.getLength())
+		) {
+			const entityKey = startBlock.getEntityAt(0);
+			const entity = contentState.getEntity(entityKey);
+			const startEntityType = entity ? entity.getType() : '';
+
+			if (startEntityType === 'LINK-DEST') {
+				// TO-DO ! ! !
+				// Then we need to ensure that the new characters that are inserted have the LINK-DEST entity too
+			}
 		}
 
 		// If we're typing at the end of a line and inside a link, continue that link
@@ -756,7 +775,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 						editorRef,
 					}}
 				/>
-				<div className='editor-top-padding' />
+
+				<EditorHeader />
+
 				<div
 					ref={editorPaddingWrapperRef}
 					style={{ padding: `0 ${editorSettings.editorPadding}rem` }}>

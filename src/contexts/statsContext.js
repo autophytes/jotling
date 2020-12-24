@@ -10,9 +10,7 @@ const StatsContextProvider = (props) => {
 	const [origDocWordCountObj, setOrigDocWordCountObj] = useState({});
 	const [docWordCountObj, setDocWordCountObj] = useState({});
 	const [docWordCount, setDocWordCount] = useState(0);
-	console.log('docWordCount:', docWordCount);
 	const [sessionWordCount, setSessionWordCount] = useState(0);
-	console.log('sessionWordCount:', sessionWordCount);
 
 	// Updates the current doc's net word count
 	useEffect(() => {
@@ -24,15 +22,11 @@ const StatsContextProvider = (props) => {
 
 	// Does a final word count on the current doc, then moves the net to the sessionWordCount
 	const finalizeDocWordCount = (editorState) => {
-		console.log('finalizing word count');
 		// Call one final update of the doc word count, return that obj (don't set)
 		const newDocWordCountObj = getEditorStateWordCount(editorState);
-		console.log('newDocWordCountObj (all words in old doc):', newDocWordCountObj);
 
 		const newDocTotal = Object.values(newDocWordCountObj).reduce((acc, val) => acc + val, 0);
-		console.log('newDocTotal:', newDocTotal);
 		const origDocTotal = Object.values(origDocWordCountObj).reduce((acc, val) => acc + val, 0);
-		console.log('origDocTotal:', origDocTotal);
 
 		setSessionWordCount((prev) => prev + (newDocTotal - origDocTotal));
 		setOrigDocWordCountObj({});
@@ -41,14 +35,11 @@ const StatsContextProvider = (props) => {
 
 	// On new document load, set the base and current docWordCountObj's
 	const initializeDocWordCount = (editorState) => {
-		console.log('initializing word count');
 		const newDocWordCountObj = getEditorStateWordCount(editorState);
 
 		setOrigDocWordCountObj(newDocWordCountObj);
 		setDocWordCountObj(newDocWordCountObj);
 	};
-
-	console.log('docWordCountObj: ', docWordCountObj);
 
 	return (
 		<StatsContext.Provider

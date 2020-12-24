@@ -162,7 +162,8 @@ const NavDocument = ({
 			onDragOver={handleDragOver}
 			onDrop={handleDrop}
 			onClick={handleClick}
-			onDoubleClick={() => setNavData({ ...navData, editFile: 'doc-' + child.id })}>
+			// onDoubleClick={() => setNavData({ ...navData, editFile: 'doc-' + child.id })}
+		>
 			<div className='svg-wrapper'>
 				<DocumentSingleSVG />
 			</div>

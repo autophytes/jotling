@@ -1330,7 +1330,7 @@ const countWordsInBlock = (block) => {
 
 	// Trim off ending spaces
 	while (blockText.slice(-1) === ' ') {
-		console.log('trimmed an ending space');
+		// console.log('trimmed an ending space');
 		blockText = blockText.slice(0, -1);
 	}
 

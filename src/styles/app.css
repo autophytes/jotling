@@ -15,7 +15,7 @@ html,
 	--top-nav-height: 2.5rem;
 	--left-nav-width: 12rem;
 	--right-nav-width: 12rem;
-	--color-primary: #0095ff;
+	--color-primary: #29353d;
 	--color-primary-rgb: 0, 149, 255;
 	/* --color-primary-dark: #0d75c8; */
 	--color-delete: #e1342a;
@@ -144,16 +144,37 @@ li .public-DraftStyleDefault-block {
 	padding: 4rem 0;
 	flex-grow: 0;
 }
+
+.editor-header {
+	padding: 2rem 0;
+	flex-grow: 0;
+}
+
+h2.editor-doc-title {
+	margin: 0;
+	text-align: center;
+	margin-bottom: 3rem;
+	font-size: 1.5em;
+	line-height: 1.5em;
+}
+
+.editor-doc-title-edit {
+	display: inline-block;
+	font-size: 1.5em;
+	font-weight: bold;
+	line-height: 1.5em;
+	text-align: center;
+	border: none;
+	width: 100%;
+	color: inherit;
+	padding: 0;
+	margin: 0 auto 3rem auto;
+	outline: none;
+}
+
 .editor-bottom-padding {
 	padding: 4rem 0;
 	flex-grow: 1;
-}
-
-.chapter-title {
-	text-align: center;
-	margin: 4rem 0 5rem 0;
-	font-size: 3rem;
-	flex-grow: 0;
 }
 
 .top-nav {

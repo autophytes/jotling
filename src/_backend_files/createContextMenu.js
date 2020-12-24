@@ -274,6 +274,17 @@ const create = (win, options) => {
 					});
 				},
 			}),
+			renameFile: () => ({
+				id: 'renameFile',
+				label: 'Rename',
+				visible: browserParams.type === 'doc' || browserParams.type === 'folder',
+				click() {
+					webContents(win).send('rename-file', {
+						type: browserParams.type,
+						id: browserParams.id,
+					});
+				},
+			}),
 			moveFolderToTrash: () => ({
 				id: 'moveFolderToTrash',
 				label: 'Move To Trash',
@@ -398,7 +409,7 @@ const create = (win, options) => {
 			// defaultActions.separator(),
 			// options.showLookUpSelection !== false && defaultActions.lookUpSelection(),
 			defaultActions.separator(),
-			options.showSearchWithGoogle !== false && defaultActions.searchWithGoogle(),
+			// options.showSearchWithGoogle !== false && defaultActions.searchWithGoogle(),
 			defaultActions.separator(),
 			defaultActions.cut(),
 			defaultActions.copy(),
@@ -414,7 +425,8 @@ const create = (win, options) => {
 			defaultActions.moveFolderToTrash(),
 			defaultActions.restoreFolder(),
 			defaultActions.deleteFolder(),
-			defaultActions.separator(),
+			defaultActions.separator(), // Using this section for either links / renaming
+			defaultActions.renameFile(), // Renaming leftNav docs/folders
 			defaultActions.addLink(),
 			defaultActions.removeLink(),
 			defaultActions.separator(),
