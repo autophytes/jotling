@@ -36,6 +36,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - run: ls -la
+
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
