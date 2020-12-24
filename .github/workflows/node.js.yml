@@ -15,15 +15,15 @@ jobs:
         include:
           - os: macos-latest
             scout: ls -la
-            target: *.dmg
+            target: "*.dmg"
 
           - os: ubuntu-latest
             scout: ls -la
-            target: *.AppImage
+            target: "*.AppImage"
 
           - os: windows-latest
             scout: dir
-            target: *.exe
+            target: "*.exe"
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14.x
