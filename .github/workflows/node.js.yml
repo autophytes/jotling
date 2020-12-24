@@ -60,5 +60,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./dist/${{ matrix.target }}
           file_glob: true
-          tag: Jotlin-${{ github.run_id }}
+          tag: Jotling-${{ github.run_id }}
           overwrite: true
