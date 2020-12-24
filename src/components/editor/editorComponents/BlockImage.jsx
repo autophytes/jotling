@@ -135,7 +135,13 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 	// If repositioning the image, update the mediaStructure and move the image
 	// Yo binarywarrior76, you're pretty dope. Thanks. 👍
 	useEffect(() => {
-		if (imageId === null || imageUseId === null) {
+		if (
+			imageId === null ||
+			imageUseId === null ||
+			!mediaStructure[imageId] ||
+			!mediaStructure[imageId].uses ||
+			!mediaStructure[imageId].uses[imageUseId]
+		) {
 			return;
 		}
 

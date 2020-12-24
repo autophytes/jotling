@@ -1,7 +1,8 @@
 import React, { createContext, useState, useRef, useEffect } from 'react';
 import { ipcRenderer } from 'electron';
 
-const Store = require('electron-store');
+import Store from 'electron-store';
+// const Store = require('electron-store');
 const store = new Store();
 
 export const SettingsContext = createContext();

@@ -20,7 +20,9 @@ function createWindow(dev, callbackFunction) {
 		show: false,
 		webPreferences: {
 			nodeIntegration: true,
-			webSecurity: false,
+			// contextIsolation: true,
+			// ^ This looks like it's causing problems with webpack-dev-server
+			webSecurity: true, // going to try "true", default was false
 			enableRemoteModule: true, // for electron-store
 			// ^ Will eventually be deprecated, but electron-store currently needs to work
 		},

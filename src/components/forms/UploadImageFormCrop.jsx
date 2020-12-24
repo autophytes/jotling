@@ -43,7 +43,6 @@ const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 	const makeClientCrop = async (crop) => {
 		if (image && crop.width && crop.height) {
 			const newBlob = await getCroppedImg(image, crop, 'newFile.jpeg');
-			console.log('newBlob:', newBlob);
 			setCroppedImgBlob(newBlob);
 		}
 	};

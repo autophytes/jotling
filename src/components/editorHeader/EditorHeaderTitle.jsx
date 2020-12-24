@@ -35,6 +35,7 @@ const EditorHeaderTitle = () => {
 	// Save changes to the document title
 	const saveNewDocName = () => {
 		if (docName === newDocName) {
+			setShowEditTitle(false);
 			return;
 		}
 
@@ -102,7 +103,9 @@ const EditorHeaderTitle = () => {
 					onBlur={saveNewDocName}
 					// onFocus={(e) => e.target.select()}
 					onKeyUp={(e) => {
+						console.log('keyup: ', e);
 						if (e.key === 'Enter' || e.keyCode === 27) {
+							console.log('saving new doc');
 							saveNewDocName();
 						}
 					}}

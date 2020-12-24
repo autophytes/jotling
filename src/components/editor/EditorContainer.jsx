@@ -330,10 +330,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			(selection.getStartOffset() === 0 || selection.getEndOffset() == endBlock.getLength())
 		) {
 			const entityKey = startBlock.getEntityAt(0);
-			const entity = contentState.getEntity(entityKey);
-			const startEntityType = entity ? entity.getType() : '';
+			const entity = currentContent.getEntity(entityKey);
 
-			if (startEntityType === 'LINK-DEST') {
+			if (entity && entity.getType() === 'LINK-DEST') {
 				// TO-DO ! ! !
 				// Then we need to ensure that the new characters that are inserted have the LINK-DEST entity too
 			}
