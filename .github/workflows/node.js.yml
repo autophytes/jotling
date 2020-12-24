@@ -50,6 +50,8 @@ jobs:
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
+        env:
+          VERSION: $VERSION
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./dist/${{ matrix.target }}
