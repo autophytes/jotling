@@ -21,6 +21,8 @@ function createWindow(dev, callbackFunction) {
 		webPreferences: {
 			nodeIntegration: true,
 			webSecurity: false,
+			enableRemoteModule: true, // for electron-store
+			// ^ Will eventually be deprecated, but electron-store currently needs to work
 		},
 	});
 
