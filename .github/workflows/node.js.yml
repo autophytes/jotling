@@ -14,8 +14,16 @@ jobs:
 
         include:
           - os: macos-latest
+            scout: ls -la
+            target: *.dmg
+
           - os: ubuntu-latest
+            scout: ls -la
+            target: *.AppImage
+
           - os: windows-latest
+            scout: dir
+            target: *.exe
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14.x
@@ -36,7 +44,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: ls -la dist/
+      - run: ${{ matrix.scout }} dist/
 
       # - name: Upload binaries to release
       #   uses: svenstaro/upload-release-action@v2
