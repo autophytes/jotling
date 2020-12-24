@@ -44,12 +44,9 @@ jobs:
       #- run: ${{ matrix.scout }} dist/
 
       - name: Export version
-        run: |
-            export PACKAGE_VERSION=$(cat package.json \
-            | grep version \
-            | head -1 \
-            | awk -F: '{ print $2 }' \
-            | sed 's/[",]//g')
+        uses: allenevans/set-env@v2.0.0
+        with:
+          VERSION: $(node -p "require('./package').version")
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
@@ -57,7 +54,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./dist/${{ matrix.target }}
           file_glob: true
-          tag: "Jotlin-$PACKAGE_VERSION"
+          tag: "Jotlin-$VERSION"
           overwrite: true
 
   # publish:
