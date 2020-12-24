@@ -30,12 +30,6 @@ jobs:
         with:
           node-version: 14.x
 
-        # Setup the git credentials for 'npm version <patch>' to work
-      - name: Setup Git
-        uses: oleksiyrudenko/gha-git-credentials@v2-latest
-        with:
-          token: '${{ secrets.GITHUB_TOKEN }}'
-
         # bump the npm version in package.json with each build
       - run: npm version patch
 
