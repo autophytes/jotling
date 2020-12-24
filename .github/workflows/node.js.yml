@@ -49,7 +49,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
+        # upload the binaries as a GitHub release
+        # find the releases per distribution and bundle them under one unique github release
+        # the release owns source code as well as three binaries (defined in matrix above: *.exe, *.AppImage, *.dmg)
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         env:
@@ -58,18 +60,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./dist/${{ matrix.target }}
           file_glob: true
-          tag: Jotlin-${{ GITHUB_RUN_ID }}
+          tag: Jotlin-${{ github.run_id }}
           overwrite: true
-
-  # publish:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Use Node.js 14.x
-  #       uses: actions/setup-node@v1
-  #       with:
-  #         node-version: 14.x
-  #     - name: Release new version
-  #       run: ./scripts/publish.sh
-  #       shell: bash
