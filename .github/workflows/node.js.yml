@@ -1,0 +1,57 @@
+name: Build and publish Jotling
+
+# run this workflow on every push to every branch; for now only master is used
+on: [push]
+
+
+# run one main job on three different operating systems defined in "matrix"
+# every matrix entry gets vars associated with it; in this case the specific binary extension to publish
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: "*.dmg"
+          - os: ubuntu-latest
+            target: "*.AppImage"
+          - os: windows-latest
+            target: "*.exe"
+
+    # the steps define the sequential workflow of the run
+    steps:
+        # checkout the Jotling repo onto the machine
+      - uses: actions/checkout@v2
+
+        # setup nodejs 14.x on every machine
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+
+
+        # run the standard node builds and tests defined in package.json
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test
+
+        # build the binaries for each distribution respectively; electron-builder is used for this
+      - run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+        # upload the binaries as a GitHub release
+        # find the releases per distribution and bundle them under one unique github release
+        # the release owns source code as well as three binaries (defined in matrix above: *.exe, *.AppImage, *.dmg)
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        env:
+          VERSION: $VERSION
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./dist/${{ matrix.target }}
+          file_glob: true
+          tag: Jotling-${{ github.run_id }}
+          overwrite: true
+          
