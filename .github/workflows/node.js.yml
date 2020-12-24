@@ -1,11 +1,11 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+name: Build and publish Jotling
 
-name: Node.js CI
-
+# run this workflow on every push to every branch; for now only master is used
 on: [push]
 
 
+# run one main job on three different operating systems defined in "matrix"
+# every matrix entry gets vars associated with it; in this case the specific binary extension to publish
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -13,40 +13,42 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            scout: ls -la
             target: "*.dmg"
           - os: ubuntu-latest
-            scout: ls -la
             target: "*.AppImage"
           - os: windows-latest
-            scout: dir
             target: "*.exe"
+
+    # the steps define the sequential workflow of the run
     steps:
+        # checkout the Jotling repo onto the machine
       - uses: actions/checkout@v2
+
+        # setup nodejs 14.x on every machine
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
 
+        # Setup the git credentials for 'npm version <patch>' to work
       - name: Setup Git
         uses: oleksiyrudenko/gha-git-credentials@v2-latest
         with:
           token: '${{ secrets.GITHUB_TOKEN }}'
 
+        # bump the npm version in package.json with each build
       - run: npm version patch
+
+        # run the standard node builds and tests defined in package.json
       - run: npm ci
       - run: npm run build --if-present
       - run: npm test
+
+        # build the binaries for each distribution respectively; electron-builder is used for this
       - run: npm run dist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      #- run: ${{ matrix.scout }} dist/
-
-      - name: Export version
-        uses: allenevans/set-env@v2.0.0
-        with:
-          VERSION: $(node -p "require('./package').version")
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
@@ -56,7 +58,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./dist/${{ matrix.target }}
           file_glob: true
-          tag: "Jotlin-$VERSION"
+          tag: Jotlin-${{ GITHUB_RUN_ID }}
           overwrite: true
 
   # publish:
