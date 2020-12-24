@@ -27,12 +27,14 @@ jobs:
         uses: oleksiyrudenko/gha-git-credentials@v2-latest
         with:
           token: '${{ secrets.GITHUB_TOKEN }}'
-          
+
       - run: npm version patch
       - run: npm ci
       - run: npm run build --if-present
       - run: npm test
       - run: npm run dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload the artifacts
         uses: skx/github-action-publish-binaries@release-1.3
