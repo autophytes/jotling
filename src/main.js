@@ -116,10 +116,10 @@ app.on('open-file', (e, jotsPath) => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
 	// Set up local file handling
-	protocol.registerFileProtocol('file', (request, callback) => {
+	protocol.registerFileProtocol('localfile', (request, callback) => {
 		console.log('request:', request);
 		console.log('request.url:', request.url);
-		let pathname = request.url.replace('file:///', '');
+		let pathname = request.url.replace('localfile:///', '');
 		callback(pathname);
 	});
 

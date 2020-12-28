@@ -566,7 +566,6 @@ export const createTagLink = (
 
 	// Get the selected text to include in the link
 	const selectedText = getTextSelection(contentStateWithLink, selectionState);
-	console.log('selectedText:', selectedText);
 
 	// Updating the linkStructure with the new link
 	let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
@@ -585,8 +584,6 @@ export const createTagLink = (
 		initialSectionKey: initialSectionKey, // Section to insert the link into
 		newSectionOptions: newSectionOptions, // Options if creating a new section
 	};
-
-	console.log('new link: ', newLinkStructure.links[newLinkId]);
 
 	// Updating the linkStructure with the keyword the link is using
 	if (!newLinkStructure.docLinks.hasOwnProperty(currentDoc)) {

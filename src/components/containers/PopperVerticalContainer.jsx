@@ -65,7 +65,7 @@ const PopperVerticalContainer = ({
 		};
 
 		const handleExternalClickPopper = (e) => {
-			if (!popperElementRef.current.contains(e.target)) {
+			if (popperElementRef.current && !popperElementRef.current.contains(e.target)) {
 				console.log('e.target: ', e.target);
 				e.stopPropagation();
 				console.log('external click - closing popper');

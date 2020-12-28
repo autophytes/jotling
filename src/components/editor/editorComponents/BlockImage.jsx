@@ -37,7 +37,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 	// Setting the image URL
 	useEffect(() => {
 		if (imageId !== null) {
-			setImageUrl('file://' + project.tempPath + `/media/media${imageId}.jpeg`);
+			setImageUrl('localfile://' + project.tempPath + `/media/media${imageId}.jpeg`);
 		}
 	}, [imageId, project]);
 
@@ -150,8 +150,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 		if (reposition && reposition.destBlockKey && repositionX) {
 			setRepositionX(null);
 			setRepositionOffset(0);
-			console.log('repositionX:', repositionX);
-			console.log('repositionOffset: ', repositionOffset);
 
 			// *** Update float left/right
 			const docWidth = document.body.clientWidth;
@@ -413,7 +411,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 	const handleDragStart = (e) => {
 		// Set the drop type (not sure if working - logging the dataTransfer still seems empty)
 		e.dataTransfer.dropEffect = 'move';
-		console.log('start X: ', e.clientX);
 		const target = e.target.getBoundingClientRect();
 		const leftOffset = e.clientX - target.left;
 
@@ -444,7 +441,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 
 	// Delete image
 	const handleImageDelete = (e) => {
-		console.log('keycode', e.keyCode);
 		if (e.keyCode === 8 || e.keyCode === 46) {
 			isImageSelectedRef.current = false;
 			window.removeEventListener('click', handleExternalClicks);
@@ -516,7 +512,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 						for (let element of e.nativeEvent.path) {
 							if (element.classList.contains('DraftEditor-root')) {
 								e.persist();
-								console.log(e);
 								setRepositionX(e.clientX);
 								break;
 							}

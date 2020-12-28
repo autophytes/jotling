@@ -51,6 +51,7 @@ const PopperContainer = ({
 		const handleEscapePopper = (e) => {
 			console.log('click or keypress triggered');
 			if (!popperElement.current.contains(e.target) || e.keyCode === 27) {
+				console.log('popperElement.current:', popperElement.current);
 				e.stopPropagation();
 				console.log('propagation is being stopped!!');
 

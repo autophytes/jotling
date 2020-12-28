@@ -268,7 +268,10 @@ const EditorNav = React.memo(
 							className='nav-button expand-nav-button'
 							title='Choose Highlight Color'
 							onMouseDown={(e) => e.preventDefault()}
-							onClick={() => setShowColorPicker('highlight')}
+							onClick={(e) => {
+								e.stopPropagation();
+								setShowColorPicker('highlight');
+							}}
 							ref={highlightColorRef}>
 							<CaratDownSVG />
 						</button>
@@ -307,7 +310,10 @@ const EditorNav = React.memo(
 							className='nav-button expand-nav-button'
 							title='Choose Text Color'
 							onMouseDown={(e) => e.preventDefault()}
-							onClick={() => setShowColorPicker('text')}
+							onClick={(e) => {
+								e.stopPropagation();
+								setShowColorPicker('text');
+							}}
 							ref={textColorRef}>
 							<CaratDownSVG />
 						</button>

@@ -1,8 +1,8 @@
 name: Build and publish Jotling
 
 # run this workflow on every push to every branch; for now only master is used
-on: [push]
-
+# on: [push]
+on: workflow_dispatch
 
 # run one main job on three different operating systems defined in "matrix"
 # every matrix entry gets vars associated with it; in this case the specific binary extension to publish
@@ -13,15 +13,15 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            target: "*.dmg"
+            target: '*.dmg'
           - os: ubuntu-latest
-            target: "*.AppImage"
+            target: '*.AppImage'
           - os: windows-latest
-            target: "*.exe"
+            target: '*.exe'
 
     # the steps define the sequential workflow of the run
     steps:
-        # checkout the Jotling repo onto the machine
+      # checkout the Jotling repo onto the machine
       - uses: actions/checkout@v2
 
         # setup nodejs 14.x on every machine
@@ -29,7 +29,6 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-
 
         # run the standard node builds and tests defined in package.json
       - run: npm ci
@@ -54,4 +53,3 @@ jobs:
           file_glob: true
           tag: Jotling-${{ github.run_id }}
           overwrite: true
-          

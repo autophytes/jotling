@@ -313,10 +313,10 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	const handleBeforeInput = (char, editorState) => {
 		const selection = editorState.getSelection();
-		const currentContent = editorState.getCurrentContent();
-		const startBlock = currentContent.getBlockForKey(selection.getStartKey());
-		const endBlock = currentContent.getBlockForKey(selection.getEndKey());
-		const isSingleBlockSelection = startBlock.getKey() === endBlock.getKey();
+		// const currentContent = editorState.getCurrentContent();
+		// const startBlock = currentContent.getBlockForKey(selection.getStartKey());
+		// const endBlock = currentContent.getBlockForKey(selection.getEndKey());
+		// const isSingleBlockSelection = startBlock.getKey() === endBlock.getKey();
 
 		// Update the word count after each space
 		if (char === ' ') {
@@ -325,18 +325,19 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			setTimeout(() => updateWordCount(editorStateRef, editorState, setDocWordCountObj));
 		}
 
-		if (
-			isSingleBlockSelection &&
-			(selection.getStartOffset() === 0 || selection.getEndOffset() == endBlock.getLength())
-		) {
-			const entityKey = startBlock.getEntityAt(0);
-			const entity = currentContent.getEntity(entityKey);
+		// Instead of all of this, let's convert link-dests to block data instead
+		// if (
+		// 	isSingleBlockSelection &&
+		// 	(selection.getStartOffset() === 0 || selection.getEndOffset() == endBlock.getLength())
+		// ) {
+		// 	const entityKey = startBlock.getEntityAt(0);
+		// 	const entity = currentContent.getEntity(entityKey);
 
-			if (entity && entity.getType() === 'LINK-DEST') {
-				// TO-DO ! ! !
-				// Then we need to ensure that the new characters that are inserted have the LINK-DEST entity too
-			}
-		}
+		// 	if (entity && entity.getType() === 'LINK-DEST') {
+		// 		// TO-DO ! ! !
+		// 		// Then we need to ensure that the new characters that are inserted have the LINK-DEST entity too
+		// 	}
+		// }
 
 		// If we're typing at the end of a line and inside a link, continue that link
 		if (selection.isCollapsed()) {

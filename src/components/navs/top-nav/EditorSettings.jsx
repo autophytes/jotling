@@ -263,7 +263,10 @@ const EditorSettings = () => {
 						<div
 							ref={colorSwatchRef}
 							className='accent-color-swatch'
-							onClick={() => setShowAccentPicker(true)}
+							onClick={(e) => {
+								e.stopPropagation();
+								setShowAccentPicker(true);
+							}}
 						/>
 						<button
 							className='editor-settings-reset'
