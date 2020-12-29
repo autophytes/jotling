@@ -1,7 +1,8 @@
-import React, { useContext, useState, useEffect, useRef, useMemo } from 'react';
+import React, { useContext, useState, useEffect, useMemo } from 'react';
 import { EditorBlock } from 'draft-js';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
+import { DecoratorContext } from '../../../contexts/decoratorContext';
 
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
@@ -212,22 +213,20 @@ const LinkSourceDecorator = ({
 const LinkDestDecorator = ({
 	children,
 	blockKey,
-	entityKey,
 	contentState,
-	start,
-	end,
 	decoratedText,
 	childDecorator = {},
 }) => {
 	// CONTEXT
-	const { setLinkStructure, linkStructureRef, editorStyles, editorStateRef } = useContext(
+	const { setLinkStructure, linkStructureRef, editorStyles, setPeekWindowLinkId } = useContext(
 		LeftNavContext
 	);
+	const { hoverDestLinkId, setHoverDestLinkId } = useContext(DecoratorContext);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);
 	const [prevDecoratedText, setPrevDecoratedText] = useState(decoratedText);
-	const [queuedTimeout, setQueuedTimeout] = useState(null);
+	const [isAliased, setIsAliased] = useState(false);
 
 	// CHILD DECORATOR
 	let {
@@ -255,43 +254,73 @@ const LinkDestDecorator = ({
 
 	// On load, grab the entity linkId
 	useEffect(() => {
-		setLinkId(getLinkId(entityKey, contentState, blockKey, start));
+		const block = contentState.getBlockForKey(blockKey);
+		const blockData = block.getData();
+		const linkId = blockData.get('linkDestId');
+		if (linkId) {
+			setLinkId(linkId);
+
+			// Check if the link is aliased
+			if (linkStructureRef.current.links[linkId].alias) {
+				setIsAliased(true);
+			}
+		}
 	}, []);
 
-	// Update our linkStructure with the changes in the link text
+	// Update our linkStructure if the link is alised
 	useEffect(() => {
-		syncLinkStructureOnDelay({
-			linkId,
-			linkPropName: 'alias',
-			prevDecoratedText,
-			decoratedText,
-			queuedTimeout,
-			linkStructureRef,
-			setLinkStructure,
-			setQueuedTimeout,
-			setPrevDecoratedText,
-			editorStateRef,
-			blockKey,
-			start,
-			end,
-		});
-	}, [decoratedText, linkId, queuedTimeout, blockKey, start, end]);
+		if (!isAliased) {
+			if (linkId && prevDecoratedText !== decoratedText) {
+				let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
+				newLinkStructure.links[linkId].alias = true;
+				linkStructureRef.current = newLinkStructure;
+				setIsAliased(true);
+				setLinkStructure(newLinkStructure);
+			}
+		}
+	}, [decoratedText, prevDecoratedText, isAliased, linkId]);
+
+	const handleHoverStart = () => {
+		setHoverDestLinkId(linkId);
+	};
+
+	const handleHoverLeave = () => {
+		if (hoverDestLinkId === linkId) {
+			setHoverDestLinkId(null);
+		}
+	};
 
 	return (
 		<>
-			{Component ? (
-				<Component
-					{...componentProps}
-					childDecorator={{
-						currentIndex: componentIndex,
-						getNextComponentIndex,
-						getComponentForIndex,
-						getComponentProps,
-					}}
-				/>
-			) : (
-				children
-			)}
+			<span
+				className={
+					'link-dest-decorator' +
+					(editorStyles.showAllTags || hoverDestLinkId === linkId ? ' active' : '')
+				}
+				onMouseEnter={handleHoverStart}
+				onMouseLeave={handleHoverLeave}
+				style={{ position: 'relative' }}>
+				{Component ? (
+					<Component
+						{...componentProps}
+						childDecorator={{
+							currentIndex: componentIndex,
+							getNextComponentIndex,
+							getComponentForIndex,
+							getComponentProps,
+						}}
+					/>
+				) : (
+					children
+				)}
+				<div className='peek-wrapper' contentEditable={false}>
+					<button
+						className='peek-destination-decorator'
+						onClick={() => setPeekWindowLinkId(linkId)}>
+						Peek
+					</button>
+				</div>
+			</span>
 		</>
 	);
 };
@@ -310,15 +339,12 @@ const LinkDestDecorator = ({
 // selection: SelectionState {_map: Map, __ownerID: undefined}
 // tree: List
 
+// NOT USING - was causing text issues
 const LinkDestBlock = (props) => {
-	const { block, contentState } = props;
+	const { block } = props;
 
-	const {
-		setPeekWindowLinkId,
-		hoverDestLinkId,
-		setHoverDestLinkId,
-		editorStyles,
-	} = useContext(LeftNavContext);
+	const { setPeekWindowLinkId, editorStyles } = useContext(LeftNavContext);
+	const { hoverDestLinkId, setHoverDestLinkId } = useContext(DecoratorContext);
 
 	const [linkId, setLinkId] = useState(null);
 
@@ -326,23 +352,22 @@ const LinkDestBlock = (props) => {
 		console.log('the LinkDestBlock has changed!');
 	}, [block]);
 
+	// Grabbing the linkId for the block
 	useEffect(() => {
-		const entityKey = block.getEntityAt(0);
-		if (entityKey) {
-			const entity = contentState.getEntity(entityKey);
-			const entityData = entity.get('data');
-			console.log('entity data in LinkDestBlock: ', entityData);
-			setLinkId(entityData.linkId);
+		const blockData = block.getData();
+		const linkId = blockData.get('linkDestId');
+		if (linkId) {
+			setLinkId(linkId);
 		}
 	}, []);
 
-	const handleHoverStart = (e) => {
-		e.preventDefault();
+	const handleHoverStart = () => {
+		console.log('hover start');
 		setHoverDestLinkId(linkId);
 	};
 
-	const handleHoverLeave = (e) => {
-		e.preventDefault();
+	const handleHoverLeave = () => {
+		console.log('hover end');
 		if (hoverDestLinkId === linkId) {
 			setHoverDestLinkId(null);
 		}
@@ -355,8 +380,9 @@ const LinkDestBlock = (props) => {
 				(editorStyles.showAllTags || hoverDestLinkId === linkId ? ' active' : '')
 			}
 			style={{ position: 'relative' }}
-			onMouseEnter={handleHoverStart}
-			onMouseLeave={handleHoverLeave}>
+			// onMouseEnter={handleHoverStart}
+			// onMouseLeave={handleHoverLeave}
+		>
 			<div className='peek-wrapper' contentEditable={false}>
 				<button
 					className='peek-destination-decorator'
@@ -367,6 +393,25 @@ const LinkDestBlock = (props) => {
 			<EditorBlock {...props} />
 		</div>
 	);
+	// return (
+	// 	<div
+	// 		className={
+	// 			'link-dest-decorator' +
+	// 			(editorStyles.showAllTags || hoverDestLinkId === linkId ? ' active' : '')
+	// 		}
+	// 		style={{ position: 'relative' }}
+	// 		onMouseEnter={handleHoverStart}
+	// 		onMouseLeave={handleHoverLeave}>
+	// 		<div className='peek-wrapper' contentEditable={false}>
+	// 			<button
+	// 				className='peek-destination-decorator'
+	// 				onClick={() => setPeekWindowLinkId(linkId)}>
+	// 				Peek
+	// 			</button>
+	// 		</div>
+	// 		<EditorBlock {...props} />
+	// 	</div>
+	// );
 };
 
 // Gets the Link ID for the entity

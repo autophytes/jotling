@@ -140,6 +140,7 @@ const SettingsContextProvider = (props) => {
 	// REFS
 	const editorContainerRef = useRef(null);
 	const editorPaddingWrapperRef = useRef(null);
+	const editorHeaderPaddingWrapperRef = useRef(null);
 
 	return (
 		<SettingsContext.Provider
@@ -150,6 +151,7 @@ const SettingsContextProvider = (props) => {
 				setShowEditorSettings,
 				editorContainerRef,
 				editorPaddingWrapperRef,
+				editorHeaderPaddingWrapperRef,
 				defaultSettings,
 				fontList,
 				lineHeight,

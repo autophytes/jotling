@@ -282,7 +282,7 @@ const AddToWikiPopper = () => {
 	// After load, focuses on the new wiki name
 	useLayoutEffect(() => {
 		setTimeout(() => {
-			newWikiRef.current.focus();
+			newWikiRef.current && newWikiRef.current.focus();
 		}, 0);
 	}, []);
 

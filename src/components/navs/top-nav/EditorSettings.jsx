@@ -27,6 +27,7 @@ const EditorSettings = () => {
 		setShowEditorSettings,
 		editorContainerRef,
 		editorPaddingWrapperRef,
+		editorHeaderPaddingWrapperRef,
 		defaultSettings,
 		fontList,
 		lineHeight,
@@ -91,6 +92,7 @@ const EditorSettings = () => {
 	// Editor Padding Change
 	const handlePaddingChange = (e) => {
 		editorPaddingWrapperRef.current.style.padding = `0 ${e.target.value}rem`;
+		editorHeaderPaddingWrapperRef.current.style.padding = `0 ${e.target.value}rem`;
 		setEditorPadding(e.target.value);
 	};
 

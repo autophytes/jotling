@@ -64,6 +64,7 @@ import {
 import EditorFindReplace from './EditorFindReplace';
 import { StatsContext } from '../../contexts/statsContext';
 import EditorHeader from '../editorHeader/EditorHeader';
+import DecoratorContextProvider from '../../contexts/decoratorContext';
 
 var oneKeyStrokeAgo, twoKeyStrokesAgo;
 
@@ -160,17 +161,14 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			};
 		}
 
-		const entityKey = contentBlock.getEntityAt(0);
-		if (entityKey) {
-			const contentState = editorStateRef.current.getCurrentContent();
-			const entity = contentState.getEntity(entityKey);
-			if (entity.get('type') === 'LINK-DEST') {
-				return {
-					component: LinkDestBlock,
-					editable: true,
-				};
-			}
-		}
+		// NOT USING - was causing text issues
+		// const blockData = contentBlock.getData();
+		// if (blockData.has('linkDestId')) {
+		// 	return {
+		// 		component: LinkDestBlock,
+		// 		editable: true,
+		// 	};
+		// }
 
 		const imagesArray = contentBlock.getData().get('images', []);
 		if (imagesArray.length) {
@@ -781,22 +779,24 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				<div
 					ref={editorPaddingWrapperRef}
 					style={{ padding: `0 ${editorSettings.editorPadding}rem` }}>
-					<Editor
-						editorState={editorState}
-						onChange={handleEditorStateChange}
-						ref={editorRef}
-						keyBindingFn={customKeyBindingFn}
-						handleKeyCommand={handleKeyCommand}
-						handleBeforeInput={handleBeforeInput}
-						handleDrop={wrappedHandleDrop}
-						customStyleMap={customStyleMap ? customStyleMap : defaultCustomStyleMap}
-						blockStyleFn={blockStyleFn}
-						blockRendererFn={blockRendererFn}
-						// blockRenderMap={extendedBlockRenderMap}
-						// plugins={[inlineToolbarPlugin]}
-						spellCheck={spellCheck}
-						key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
-					/>
+					<DecoratorContextProvider>
+						<Editor
+							editorState={editorState}
+							onChange={handleEditorStateChange}
+							ref={editorRef}
+							keyBindingFn={customKeyBindingFn}
+							handleKeyCommand={handleKeyCommand}
+							handleBeforeInput={handleBeforeInput}
+							handleDrop={wrappedHandleDrop}
+							customStyleMap={customStyleMap ? customStyleMap : defaultCustomStyleMap}
+							blockStyleFn={blockStyleFn}
+							blockRendererFn={blockRendererFn}
+							// blockRenderMap={extendedBlockRenderMap}
+							// plugins={[inlineToolbarPlugin]}
+							spellCheck={spellCheck}
+							key={spellCheck} // Forces rerender. Hacky, needs to be replaced. But works well.
+						/>
+					</DecoratorContextProvider>
 				</div>
 
 				<div className='editor-bottom-padding' />

@@ -45,6 +45,15 @@ function getBlockStrategy(blockType) {
 	};
 }
 
+function getBlockDataStrategy(blockDataProp) {
+	return function (contentBlock, callback, contentState) {
+		const blockData = contentBlock.getData();
+		if (blockData.has(blockDataProp)) {
+			callback(0, contentBlock.getLength());
+		}
+	};
+}
+
 const buildFindWithRegexFunction = (findTextArray, findRegisterRef, editorStateRef) => {
 	var regexMetachars = /[(){[*+?.\\^$|]/g;
 	// Escape regex metacharacters in the text
@@ -114,7 +123,7 @@ const defaultDecorator = [
 		component: LinkSourceDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
 	},
 	{
-		strategy: getEntityStrategy('LINK-DEST'),
+		strategy: getBlockDataStrategy('linkDestId'),
 		component: LinkDestDecorator, // CREATE A COMPONENT TO RENDER THE ELEMENT - import to this file too
 	},
 	{
@@ -179,57 +188,46 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 	// Grab all used Link IDs
 	let usedLinkIdArray = [];
-	let nonAliasedEntities = {};
+	let nonAliasedLinks = {};
+
+	// Looping through all blocks' entities to grab the Link IDs
 	for (let block of blockArray) {
-		// Looping through all blocks' entities to grab the Link IDs
-		block.findEntityRanges(
-			(value) => {
-				let entityKey = value.getEntity();
-				if (!entityKey) {
-					return false;
-				}
+		// Get block data
+		const blockData = block.getData();
+		const linkId = blockData.get('linkDestId');
+		console.log('linkId:', linkId);
 
-				let entity = contentState.getEntity(entityKey);
-				if (entity.getType() === 'LINK-DEST') {
-					usedLinkIdArray.push(entity.data.linkId);
-					// Only call the second function for links that are not aliased (which we need to synchronize)
-					if (
-						linkStructure.links[entity.data.linkId] &&
-						linkStructure.links[entity.data.linkId].alias
-					) {
-						return false;
-					}
-					return true;
-				}
+		// Skip this block if no linkDestId
+		if (!linkId) {
+			continue;
+		}
 
-				return false;
-			},
-			(start, end) => {
-				let blockKey = block.getKey();
-				let entityKey = block.getEntityAt(start);
-				let entity = contentState.getEntity(entityKey);
-				let linkId = entity.data.linkId;
+		usedLinkIdArray.push(linkId);
 
-				if (!linkStructure.links[linkId]) {
-				}
+		// If aliased, no need to synchronize
+		if (linkStructure.links[linkId] && linkStructure.links[linkId].alias) {
+			continue;
+		}
 
-				if (!nonAliasedEntities.hasOwnProperty(entityKey)) {
-					nonAliasedEntities[entityKey] = { blockList: [] };
-				}
-				if (!nonAliasedEntities[entityKey].hasOwnProperty('startBlockKey')) {
-					nonAliasedEntities[entityKey].startBlockKey = blockKey;
-					nonAliasedEntities[entityKey].startOffset = start;
-				}
+		// Initialize the nonAliasedLinks
+		if (!nonAliasedLinks.hasOwnProperty(linkId)) {
+			nonAliasedLinks[linkId] = { blockList: [] };
+		}
 
-				nonAliasedEntities[entityKey] = {
-					...nonAliasedEntities[entityKey],
-					linkId,
-					blockList: [...nonAliasedEntities[entityKey].blockList, blockKey],
-					endBlockKey: blockKey,
-					endOffset: end,
-				};
-			}
-		);
+		const blockKey = block.getKey();
+		// If first block for link, add the start info
+		if (!nonAliasedLinks[linkId].hasOwnProperty('startBlockKey')) {
+			nonAliasedLinks[linkId].startBlockKey = blockKey;
+			nonAliasedLinks[linkId].startOffset = 0;
+		}
+
+		// Update the nonAliasedLink entry for each new block that contains the linkId
+		nonAliasedLinks[linkId] = {
+			...nonAliasedLinks[linkId],
+			blockList: [...nonAliasedLinks[linkId].blockList, blockKey],
+			endBlockKey: blockKey,
+			endOffset: block.getLength(),
+		};
 	}
 
 	// Grabbing all links that should be included on the page
@@ -238,11 +236,15 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 	// Comparing the total with the used to find the unused links
 	let unusedLinkIds = [];
+	console.log('usedLinkIdArray: ', usedLinkIdArray);
+	console.log('linksToPage:', linksToPage);
 	for (let linkId of linksToPage) {
 		if (!usedLinkIdArray.includes(linkId)) {
-			unusedLinkIds = [...unusedLinkIds, linkId];
+			unusedLinkIds.push(linkId);
 		}
 	}
+
+	console.log('unusedLinkIds: ', unusedLinkIds);
 
 	// If we have unusedLinkIds, and currently the page just has an empty block, delete that block
 	let newEditorState = editorState;
@@ -264,15 +266,12 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		}
 	}
 
-	// Inserting the unsused links at the bottom of the page
-	for (let linkId of unusedLinkIds) {
-		// If we have a new line character inside our content, we need to break it up into
-		// multiple blocks.
-
+	// Inserting the unsused links
+	for (const linkId of unusedLinkIds) {
+		// New line characters break the content into multiple blocks.
 		const linkContentArray = linkStructure.links[linkId].content.split('\n');
 		let sectionKey = linkStructure.links[linkId].initialSectionKey;
 		const newSectionOptions = linkStructure.links[linkId].newSectionOptions;
-		console.log('sectionKey:', sectionKey);
 		const blockKeys = [];
 
 		let newContentState = newEditorState.getCurrentContent();
@@ -283,7 +282,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			newBlockArray.pop();
 		}
 
-		// If creating a new section
+		// If creating a new Section
 		if (newSectionOptions) {
 			// Create the new section block
 			const insertBeforeKey = newSectionOptions.insertBeforeKey;
@@ -324,6 +323,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			incrementBefore = false;
 		}
 
+		// Create each block for a given link
 		for (let content of linkContentArray) {
 			const newBlockKey = genKey();
 			blockKeys.push(newBlockKey);
@@ -331,13 +331,13 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			// Creating a new block with our link content
 			const newBlock = new ContentBlock({
 				key: newBlockKey,
-				type: 'link-destination',
+				type: 'unstyled',
 				text: content,
 				characterList: List(Repeat(CharacterMetadata.create(), content.length)),
+				data: Map({ linkDestId: linkId }),
 			});
 
 			// Insert the new link block into the correct section
-			console.log('blockIndex:', blockIndex);
 			if (blockIndex !== -1) {
 				// If we found a matching section block key, insert afterwards
 				newBlockArray.splice(blockIndex + (incrementBefore ? 1 : 0), 0, newBlock);
@@ -355,16 +355,18 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			'split-block'
 		);
 
+		// NOTE: no longer needed, applying data directly to the block above
 		// Apply the LINK-DEST entity to the new block
-		newEditorState = createTagDestLink(newEditorState, linkId, blockKeys);
+		// newEditorState = createTagDestLink(newEditorState, linkId, blockKeys);
 	}
 
 	let linkContentState = newEditorState.getCurrentContent();
 
-	for (let entityKey of Object.keys(nonAliasedEntities)) {
-		let linkData = nonAliasedEntities[entityKey];
-		let structureContent = linkStructure.links[linkData.linkId]
-			? linkStructure.links[linkData.linkId].content
+	// Sychronize the existing links on the page (non-aliased)
+	for (const linkId of Object.keys(nonAliasedLinks)) {
+		let linkData = nonAliasedLinks[linkId];
+		let structureContent = linkStructure.links[linkId]
+			? linkStructure.links[linkId].content
 			: '';
 
 		// If removing the whole block, set the selection to the start of the next block
@@ -372,9 +374,8 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		let anchorOffset = linkData.startOffset;
 		let anchorKey = linkData.startBlockKey;
 		if (structureContent === '') {
-			const block = linkContentState.getBlockForKey(linkData.endBlockKey);
 			const prevBlock = linkContentState.getBlockBefore(linkData.endBlockKey);
-			if (block.getLength() === linkData.endOffset && prevBlock) {
+			if (prevBlock) {
 				anchorKey = prevBlock.getKey();
 				anchorOffset = prevBlock.getLength();
 			}
@@ -389,23 +390,20 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		});
 
 		if (structureContent === '') {
-			const block = linkContentState.getBlockForKey(linkData.endBlockKey);
 			linkContentState = Modifier.removeRange(linkContentState, linkSelectionState, 'forward');
 
 			// The rest of the code is only relevant if we aren't deleting the block.
 			continue;
 		}
 
+		// Update the link text
 		linkContentState = Modifier.replaceText(
 			linkContentState,
 			linkSelectionState,
-			structureContent,
-			null,
-			entityKey
+			structureContent
 		);
 
-		const blockList = nonAliasedEntities[entityKey].blockList;
-		// for (let blockKey of blockList) {
+		const blockList = nonAliasedLinks[linkId].blockList;
 		let blockKey = blockList[0];
 		let block = linkContentState.getBlockForKey(blockKey);
 		let blockText = block.getText();
@@ -425,63 +423,10 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			blockText = block.getText();
 			newLineIndex = blockText.lastIndexOf('\n');
 		}
-		// }
 	}
 
 	// Push the new content block into the editorState
 	newEditorState = EditorState.push(newEditorState, linkContentState, 'insert-characters');
-
-	return newEditorState;
-};
-
-// Creating a new destination tag link
-const createTagDestLink = (editorState, linkId, blockKeys) => {
-	const selectionState = editorState.getSelection();
-	const contentState = editorState.getCurrentContent();
-	const endingBlock = contentState.getBlockForKey(blockKeys[blockKeys.length - 1]);
-
-	// Store these to restore the selection at the end
-	const anchorKey = selectionState.getAnchorKey();
-	const anchorOffset = selectionState.getAnchorOffset();
-	const focusKey = selectionState.getFocusKey();
-	const focusOffset = selectionState.getFocusOffset();
-
-	// Selecting the text to apply the entity(link) to
-	const selectionStateForEntity = selectionState.merge({
-		anchorKey: blockKeys[0], // Starting position
-		anchorOffset: 0, // How much to adjust from the starting position
-		focusKey: blockKeys[blockKeys.length - 1], // Ending position
-		focusOffset: endingBlock.getText().length, // How much to adjust from the ending position.
-	});
-
-	// Apply the linkId as an entity to the selection
-	const contentStateWithEntity = contentState.createEntity('LINK-DEST', 'MUTABLE', {
-		linkId: linkId,
-	});
-	const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-	const contentStateWithLink = Modifier.applyEntity(
-		contentStateWithEntity,
-		selectionStateForEntity,
-		entityKey
-	);
-
-	// Restoring the selection to the original selection
-	const restoredSelectionState = selectionState.merge({
-		anchorKey: anchorKey, // Starting block (position is the start)
-		anchorOffset: anchorOffset, // How much to adjust from the starting position
-		focusKey: focusKey, // Ending position (position is the start)
-		focusOffset: focusOffset, // We added the space, so add 1 to this.
-	});
-	const reselectedEditorState = EditorState.forceSelection(
-		editorState,
-		restoredSelectionState
-	);
-
-	const newEditorState = EditorState.push(
-		reselectedEditorState,
-		contentStateWithLink,
-		'apply-entity'
-	);
 
 	return newEditorState;
 };
@@ -543,7 +488,7 @@ export const createTagLink = (
 
 	// Increment the max id by 1, or start at 0
 	let arrayOfLinkIds = Object.keys(linkStructureRef.current.links).map((item) => Number(item));
-	let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 0;
+	let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 1;
 
 	const contentState = cleanedEditorState.getCurrentContent();
 	const selectionState = cleanedEditorState.getSelection();
