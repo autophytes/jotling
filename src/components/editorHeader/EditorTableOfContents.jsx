@@ -54,7 +54,7 @@ const EditorTableOfContents = () => {
 			<div style={{ display: 'flex', alignItems: 'flex-start' }}>
 				<div className='editor-table-contents-wrapper'>
 					{/* Title */}
-					<span className='editor-table-contents-title'>Table of Contents</span>
+					<span className='editor-table-contents-title'>Sections</span>
 
 					{/* Table of Contents */}
 					<Collapse isOpen={!isCollapsed}>

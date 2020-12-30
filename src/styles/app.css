@@ -518,6 +518,13 @@ button.file-nav {
 	cursor: pointer;
 }
 
+.file-nav.folder.title,
+.file-nav.document {
+	margin-left: -0.25rem;
+	padding-left: 0.25rem;
+	padding-right: 0.25rem;
+}
+
 button.file-nav input {
 	font-size: inherit;
 	width: 100%;
@@ -1882,7 +1889,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .editor-table-contents-title {
-	font-size: 0.85em;
+	font-size: 0.9em;
 	line-height: 1em;
 	font-weight: bold;
 	white-space: nowrap;
@@ -1929,6 +1936,7 @@ input[type='number']::-webkit-outer-spin-button {
 	cursor: pointer;
 	border-bottom: 2px solid transparent;
 	color: #777;
+	user-select: none;
 }
 
 .editor-table-contents-expand:hover,

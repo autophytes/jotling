@@ -160,7 +160,7 @@ export const generateDecorators = (
 			component: FindReplaceDecorator,
 		});
 	}
-	// console.log('inside our decorator generating function');
+
 	return new CompoundDecorator(decoratorArray);
 	// return new CompositeDecorator(decoratorArray);
 };
@@ -195,7 +195,6 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		// Get block data
 		const blockData = block.getData();
 		const linkId = blockData.get('linkDestId');
-		console.log('linkId:', linkId);
 
 		// Skip this block if no linkDestId
 		if (!linkId) {
@@ -236,15 +235,11 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 	// Comparing the total with the used to find the unused links
 	let unusedLinkIds = [];
-	console.log('usedLinkIdArray: ', usedLinkIdArray);
-	console.log('linksToPage:', linksToPage);
 	for (let linkId of linksToPage) {
 		if (!usedLinkIdArray.includes(linkId)) {
 			unusedLinkIds.push(linkId);
 		}
 	}
-
-	console.log('unusedLinkIds: ', unusedLinkIds);
 
 	// If we have unusedLinkIds, and currently the page just has an empty block, delete that block
 	let newEditorState = editorState;
@@ -548,55 +543,55 @@ export const insertImageBlockData = (imageId, imageUseId, editorState, setEditor
 	let block = contentState.getBlockForKey(blockKey);
 
 	// If block is a wiki-section, find the first block that isn't
-	let isBlockWikiSection = block.getType() === 'wiki-section';
-	if (isBlockWikiSection) {
-		// Check the block after
-		const blockAfter = contentState.getBlockAfter(blockKey);
-		if (blockAfter && blockAfter.getType() !== 'wiki-section') {
-			block = blockAfter;
-			blockKey = blockAfter.getKey();
-			isBlockWikiSection = false;
-		}
+	// let isBlockWikiSection = block.getType() === 'wiki-section';
+	// if (isBlockWikiSection) {
+	// 	// Check the block after
+	// 	const blockAfter = contentState.getBlockAfter(blockKey);
+	// 	if (blockAfter && blockAfter.getType() !== 'wiki-section') {
+	// 		block = blockAfter;
+	// 		blockKey = blockAfter.getKey();
+	// 		isBlockWikiSection = false;
+	// 	}
 
-		// Check the block before
-		const blockBefore = contentState.getBlockBefore(blockKey);
-		if (isBlockWikiSection && blockBefore && blockBefore.getType() !== 'wiki-section') {
-			block = blockBefore;
-			blockKey = blockBefore.getKey();
-			isBlockWikiSection = false;
-		}
+	// 	// Check the block before
+	// 	const blockBefore = contentState.getBlockBefore(blockKey);
+	// 	if (isBlockWikiSection && blockBefore && blockBefore.getType() !== 'wiki-section') {
+	// 		block = blockBefore;
+	// 		blockKey = blockBefore.getKey();
+	// 		isBlockWikiSection = false;
+	// 	}
 
-		// If neither the block before or after can get the image, create a new one
-		if (isBlockWikiSection) {
-			// Lets grab the initial selection state and reset it when we're done
-			const emptySelectionState = SelectionState.createEmpty();
-			const splitBlockSelectionState = emptySelectionState.merge({
-				anchorKey: blockKey, // Starting block (position is the start)
-				anchorOffset: block.getLength(), // How much to adjust from the starting position
-				focusKey: blockKey, // Ending position (position is the start)
-				focusOffset: block.getLength(),
-			});
+	// 	// If neither the block before or after can get the image, create a new one
+	// 	if (isBlockWikiSection) {
+	// 		// Lets grab the initial selection state and reset it when we're done
+	// 		const emptySelectionState = SelectionState.createEmpty();
+	// 		const splitBlockSelectionState = emptySelectionState.merge({
+	// 			anchorKey: blockKey, // Starting block (position is the start)
+	// 			anchorOffset: block.getLength(), // How much to adjust from the starting position
+	// 			focusKey: blockKey, // Ending position (position is the start)
+	// 			focusOffset: block.getLength(),
+	// 		});
 
-			// Create the new block
-			const newContentState = Modifier.splitBlock(contentState, splitBlockSelectionState);
-			const newBlockForImage = newContentState.getBlockAfter(blockKey);
-			const newBlockSelectionState = emptySelectionState.merge({
-				anchorKey: newBlockForImage.getKey(), // Starting block (position is the start)
-				anchorOffset: 0, // How much to adjust from the starting position
-				focusKey: newBlockForImage.getKey(), // Ending position (position is the start)
-				focusOffset: 0,
-			});
+	// 		// Create the new block
+	// 		const newContentState = Modifier.splitBlock(contentState, splitBlockSelectionState);
+	// 		const newBlockForImage = newContentState.getBlockAfter(blockKey);
+	// 		const newBlockSelectionState = emptySelectionState.merge({
+	// 			anchorKey: newBlockForImage.getKey(), // Starting block (position is the start)
+	// 			anchorOffset: 0, // How much to adjust from the starting position
+	// 			focusKey: newBlockForImage.getKey(), // Ending position (position is the start)
+	// 			focusOffset: 0,
+	// 		});
 
-			// Update the content state with the new block, set to an unstyled type
-			contentState = Modifier.setBlockType(
-				newContentState,
-				newBlockSelectionState,
-				'unstyled'
-			);
-			block = newBlockForImage;
-			blockKey = newBlockForImage.getKey();
-		}
-	}
+	// 		// Update the content state with the new block, set to an unstyled type
+	// 		contentState = Modifier.setBlockType(
+	// 			newContentState,
+	// 			newBlockSelectionState,
+	// 			'unstyled'
+	// 		);
+	// 		block = newBlockForImage;
+	// 		blockKey = newBlockForImage.getKey();
+	// 	}
+	// }
 
 	// Add the image to the block metadata
 	const blockData = block.getData();
@@ -1031,7 +1026,6 @@ export const selectionContainsBlockType = (editorState, blockType) => {
 export const insertNewSection = (editorState, setEditorState) => {
 	const contentState = editorState.getCurrentContent();
 	const selectionState = editorState.getSelection();
-	console.log('inserting new section: ', selectionState.serialize());
 	const startBlockKey = selectionState.getStartKey();
 	const startBlock = contentState.getBlockForKey(startBlockKey);
 	let insertBefore = true;
@@ -1102,20 +1096,20 @@ export const insertNewSection = (editorState, setEditorState) => {
 	});
 
 	// Create and set new block data saying the block is new
-	const newBlockData = new Map({
-		wikiSection: {
-			isNew: true,
-		},
-	});
-	const contentWithBlockData = Modifier.setBlockData(
-		contentWithSection,
-		sectionSelectionState,
-		newBlockData
-	);
+	// const newBlockData = new Map({
+	// 	wikiSection: {
+	// 		isNew: true,
+	// 	},
+	// });
+	// const contentWithBlockData = Modifier.setBlockData(
+	// 	contentWithSection,
+	// 	sectionSelectionState,
+	// 	newBlockData
+	// );
 
 	// Changing the block type
 	const contentWithBlockType = Modifier.setBlockType(
-		contentWithBlockData,
+		contentWithSection,
 		sectionSelectionState,
 		'wiki-section'
 	);
@@ -1141,12 +1135,6 @@ export const insertNewSection = (editorState, setEditorState) => {
 	});
 
 	const finalEditorState = EditorState.forceSelection(newEditorState, finalSelectionState);
-	console.log(
-		'editorState to set in insertSection: ',
-		finalEditorState.getSelection().serialize()
-	);
-	// const finalEditorState = newEditorState;
-
 	setEditorState(finalEditorState);
 };
 
@@ -1272,7 +1260,6 @@ const countWordsInBlock = (block) => {
 
 	// Trim off ending spaces
 	while (blockText.slice(-1) === ' ') {
-		// console.log('trimmed an ending space');
 		blockText = blockText.slice(0, -1);
 	}
 

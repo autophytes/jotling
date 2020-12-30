@@ -1,4 +1,3 @@
-import React from 'react';
 import {
 	RichUtils,
 	EditorState,
@@ -6,9 +5,6 @@ import {
 	Modifier,
 	DefaultDraftBlockRenderMap,
 } from 'draft-js';
-import Immutable from 'immutable';
-
-import { WikiSectionTitle } from './editorComponents/WikiSectionTitle';
 
 import { setBlockData, getSelectedBlocksList } from 'draftjs-utils';
 

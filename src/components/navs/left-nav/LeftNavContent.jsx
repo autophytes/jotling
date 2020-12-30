@@ -1,14 +1,11 @@
 import React, { useCallback, useState, useContext, useEffect } from 'react';
-import NavDocument from './NavDocument';
-import NavFolder from './NavFolder';
-import NavFolderEmpty from './NavFolderEmpty';
-import NavTrash from './NavTrash';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
-import { buildFileStructure } from '../navFunctions';
+import NavTrash from './NavTrash';
+import WikiTemplates from './WikiTemplates';
 
-import Collapse from 'react-css-collapse';
+import { buildFileStructure } from '../navFunctions';
 
 const LeftNavContent = () => {
 	const [openFolders, setOpenFolders] = useState({});
@@ -65,6 +62,9 @@ const LeftNavContent = () => {
 			) : (
 				<></>
 			)}
+
+			<hr />
+			{navData.currentTab === 'pages' && <WikiTemplates />}
 			{docStructure.trash && <NavTrash />}
 		</div>
 	);

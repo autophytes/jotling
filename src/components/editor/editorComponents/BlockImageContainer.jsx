@@ -110,7 +110,8 @@ const handleDraftImageDrop = (
 	const imageId = dataTransfer.data.getData('image-id');
 	const imageUseId = dataTransfer.data.getData('image-use-id');
 
-	if (imageId !== undefined && blockType !== 'wiki-section') {
+	if (imageId !== undefined) {
+		// if (imageId !== undefined && blockType !== 'wiki-section') {
 		const newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
 		newMediaStructure[imageId].uses[imageUseId].reposition = {
 			destBlockKey,

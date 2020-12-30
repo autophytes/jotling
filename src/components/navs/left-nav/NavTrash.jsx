@@ -84,7 +84,6 @@ const NavTrash = () => {
 
 	return (
 		<>
-			<hr />
 			<div className='file-nav folder'>
 				<button className='file-nav folder title' onClick={() => setIsOpen(!isOpen)}>
 					<div className='svg-wrapper'>

@@ -154,12 +154,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	};
 
 	const blockRendererFn = useCallback((contentBlock) => {
-		if (contentBlock.getType() === 'wiki-section') {
-			return {
-				component: WikiSectionTitle,
-				editable: true,
-			};
-		}
+		// if (contentBlock.getType() === 'wiki-section') {
+		// 	return {
+		// 		component: WikiSectionTitle,
+		// 		editable: true,
+		// 	};
+		// }
 
 		// NOT USING - was causing text issues
 		// const blockData = contentBlock.getData();
