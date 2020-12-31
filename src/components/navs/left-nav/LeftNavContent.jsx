@@ -14,54 +14,55 @@ const LeftNavContent = () => {
 	const { docStructure, navData, setNavData } = useContext(LeftNavContext);
 	const { parentFolders } = navData;
 
-	// When opening a new document, open the parent folders of the first document
+	// When resetting the current document, open the parent folders of the first document
 	useEffect(() => {
 		if (parentFolders) {
 			let newOpenFolders = {};
 			for (let folderId of parentFolders) {
 				newOpenFolders[folderId] = true;
 			}
-			setNavData({ ...navData, parentFolders: null });
+			setNavData((prev) => ({ ...prev, parentFolders: null }));
 			setOpenFolders({ ...newOpenFolders });
 		}
-	}, [parentFolders, openFolders, navData]);
+	}, [parentFolders]);
 
 	// Toggles open/close on folders
-	const handleFolderClick = useCallback(
-		(folderId) => {
-			setOpenFolders({ ...openFolders, [folderId]: !openFolders[folderId] });
-			setNavData({ ...navData, lastClicked: { type: 'folder', id: folderId } });
-		},
-		[openFolders, setOpenFolders, navData]
-	);
+	const handleFolderClick = useCallback((folderId) => {
+		setOpenFolders((prev) => ({
+			...prev,
+			[folderId]: !prev[folderId],
+		}));
+		setNavData((prev) => ({
+			...prev,
+			lastClicked: { type: 'folder', id: folderId },
+		}));
+	}, []);
 
 	// Toggles open/close on folders
-	const openCloseFolder = useCallback(
-		(folderId, isOpen) => {
-			if (openFolders[folderId] !== isOpen) {
-				setOpenFolders({ ...openFolders, [folderId]: isOpen });
+	const openCloseFolder = useCallback((folderId, isOpen) => {
+		setOpenFolders((prev) => {
+			if (prev[folderId] !== isOpen) {
+				return { ...prev, [folderId]: isOpen };
 			}
-		},
-		[openFolders, setOpenFolders]
-	);
+			return prev;
+		});
+	}, []);
 
 	return (
 		<div className='left-nav-content'>
-			{Object.keys(docStructure).length ? (
-				buildFileStructure(
-					docStructure[navData.currentTab],
-					'',
-					false,
-					handleFolderClick,
-					openFolders,
-					setOpenFolders,
-					openCloseFolder,
-					currentlyDragging,
-					setCurrentlyDragging
-				)
-			) : (
-				<></>
-			)}
+			{Object.keys(docStructure).length
+				? buildFileStructure(
+						docStructure[navData.currentTab],
+						'',
+						false,
+						handleFolderClick,
+						openFolders,
+						setOpenFolders,
+						openCloseFolder,
+						currentlyDragging,
+						setCurrentlyDragging
+				  )
+				: null}
 
 			<hr />
 			{navData.currentTab === 'pages' && <WikiTemplates />}

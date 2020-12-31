@@ -34,7 +34,6 @@ const PeekDocument = () => {
 		navData,
 		setNavData,
 		setScrollToLinkId,
-		scrollToLinkIdRef,
 		docStructure,
 	} = useContext(LeftNavContext);
 
@@ -111,7 +110,6 @@ const PeekDocument = () => {
 					onClick={() => {
 						setNavData({ ...navData, currentDoc: documentName });
 						setScrollToLinkId(peekWindowLinkId);
-						scrollToLinkIdRef.current = peekWindowLinkId;
 						setPeekWindowLinkId(null);
 					}}>
 					Open Source

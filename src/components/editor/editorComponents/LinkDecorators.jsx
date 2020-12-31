@@ -49,12 +49,10 @@ const LinkSourceDecorator = ({
 		navData,
 		scrollToLinkId,
 		setScrollToLinkId,
-		scrollToLinkIdRef,
-		hoverSourceLinkId,
-		setHoverSourceLinkId,
 		syncLinkIdList,
 		setSyncLinkIdList,
 	} = useContext(LeftNavContext);
+	const { hoverSourceLinkId, setHoverSourceLinkId } = useContext(DecoratorContext);
 
 	// STATE
 	const [linkId, setLinkId] = useState(null);

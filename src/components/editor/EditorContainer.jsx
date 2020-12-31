@@ -16,71 +16,46 @@ import { SettingsContext } from '../../contexts/settingsContext';
 import {
 	Editor,
 	EditorState,
-	SelectionState,
 	RichUtils,
-	Modifier,
 	getDefaultKeyBinding,
-	convertToRaw,
 	convertFromRaw,
 } from 'draft-js';
-import {
-	setBlockData,
-	getSelectedBlocksMetadata,
-	getSelectionCustomInlineStyle,
-} from 'draftjs-utils';
+import { getSelectedBlocksMetadata } from 'draftjs-utils';
 
 import EditorNav from '../navs/editor-nav/EditorNav';
 
+import { updateLinkEntities, updateWordCount } from './editorFunctions';
 import {
 	spaceToAutoList,
 	enterToUnindentList,
 	doubleDashToLongDash,
-} from './KeyBindFunctions';
-import {
-	checkCommandForUpdateWordCount,
 	checkWikiSectionSplitBlock,
+	checkCommandForUpdateWordCount,
 	removeEndingNewline,
-	updateLinkEntities,
-	updateWordCount,
-} from './editorFunctions';
+	continueMultiBlockLinkSource,
+} from './editorInputFunctions';
 import {
 	defaultCustomStyleMap,
 	blockStyleFn,
 	updateCustomStyleMap,
-	// extendedBlockRenderMap,
+	blockRendererFn,
 } from './editorStyleFunctions';
 import { updateAllBlocks } from '../../utils/draftUtils';
-import { findFileTab } from '../../utils/utils';
 
-import { cleanupJpeg } from '../appFunctions';
-import { LinkDestBlock } from './editorComponents/LinkDecorators';
-import { WikiSectionTitle } from './editorComponents/WikiSectionTitle';
 import { useDecorator } from './editorCustomHooks';
-import {
-	handleDraftImageDrop,
-	BlockImageContainer,
-} from './editorComponents/BlockImageContainer';
+import { handleDraftImageDrop } from './editorComponents/BlockImageContainer';
 
 import EditorFindReplace from './EditorFindReplace';
 import { StatsContext } from '../../contexts/statsContext';
 import EditorHeader from '../editorHeader/EditorHeader';
 import DecoratorContextProvider from '../../contexts/decoratorContext';
 
-var oneKeyStrokeAgo, twoKeyStrokesAgo;
-
-// I can add custom inline styles. { Keyword: CSS property }
-
-//
-//
-// COMPONENT
 const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// CONTEXT
 	const {
 		navData,
 		setNavData,
 		project,
-		setProject,
-		setLinkStructure,
 		linkStructureRef,
 		editorStateRef,
 		editorStyles,
@@ -91,7 +66,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setMediaStructure,
 		isImageSelectedRef,
 		customStyles,
-		docStructureRef,
+		saveFile,
+		saveFileAndProject,
 	} = useContext(LeftNavContext);
 	const { showFindReplace } = useContext(FindReplaceContext);
 	const {
@@ -116,36 +92,30 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// STATE
 	const [spellCheck, setSpellCheck] = useState(false);
 	const [style, setStyle] = useState({});
-	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
-	const [currentBlockType, setCurrentBlockType] = useState('unstyled');
-	const [currentAlignment, setCurrentAlignment] = useState('');
 	const [customStyleMap, setCustomStyleMap] = useState(null);
 
 	// QUEUES
 	const [prev, setPrev] = useState({ doc: '', tempPath: '' });
-	const [shouldResetScroll, setShouldResetScroll] = useState(false);
+	const [resetScrollDoc, setResetScrollDoc] = useState(false);
 
 	// REFS
 	const editorRef = useRef(null);
+	const navSettersRef = useRef(null);
 
 	// CUSTOM HOOKS
-	const decorator = useDecorator(prev.doc, editorRef);
+	const decorator = useDecorator(prev.doc, setEditorState);
 	// const decorator = useDecorator();
 
 	// Focuses the editor on click
-	const handleEditorWrapperClick = useCallback(
-		(e) => {
-			// If clicking inside the editor area but outside the
-			//   actual draft-js editor, refocuses on the editor.
-			if (['editor', 'editor-top-padding'].includes(e.target.className)) {
-				editorRef.current.focus();
-			} else if (e.target.className === 'editor-bottom-padding') {
-				const newEditorState = EditorState.moveFocusToEnd(editorState);
-				setEditorState(newEditorState);
-			}
-		},
-		[editorRef, editorState]
-	);
+	const handleEditorWrapperClick = useCallback((e) => {
+		// If clicking inside the editor area but outside the
+		//   actual draft-js editor, refocuses on the editor.
+		if (['editor', 'editor-top-padding'].includes(e.target.className)) {
+			editorRef.current.focus();
+		} else if (e.target.className === 'editor-bottom-padding') {
+			setEditorState((prev) => EditorState.moveFocusToEnd(prev));
+		}
+	}, []);
 
 	// Sets the editorState
 	const handleEditorStateChange = (editorState) => {
@@ -153,122 +123,37 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setEditorState(removeEndingNewline(editorState));
 	};
 
-	const blockRendererFn = useCallback((contentBlock) => {
-		// if (contentBlock.getType() === 'wiki-section') {
-		// 	return {
-		// 		component: WikiSectionTitle,
-		// 		editable: true,
-		// 	};
-		// }
+	// Run on initial load
+	useEffect(() => {
+		// Make setEditorState available in the context
+		setEditorStateRef.current = setEditorState;
 
-		// NOT USING - was causing text issues
-		// const blockData = contentBlock.getData();
-		// if (blockData.has('linkDestId')) {
-		// 	return {
-		// 		component: LinkDestBlock,
-		// 		editable: true,
-		// 	};
-		// }
-
-		const imagesArray = contentBlock.getData().get('images', []);
-		if (imagesArray.length) {
-			return {
-				component: BlockImageContainer,
-				editable: true,
-			};
-		}
-
-		// At the end of this, if not rendering in a custom block, then check if images in the block
+		// Focus on the editor
+		editorRef.current.focus();
 	}, []);
 
-	// Make setEditorState available in the context
-	useEffect(() => {
-		setEditorStateRef.current = setEditorState;
-	}, [setEditorState]);
-
-	// Focus on load
-	useEffect(() => {
-		console.log('focus on load');
-		editorRef.current.focus();
-	}, [editorRef]);
-
-	// Monitor the decorator for changes to update the editorState
-	useEffect(() => {
-		// Need to SET rather than createWithContent to maintain the undo/redo stack
-		console.log('Updating the editor state with a new decorator');
-		let newEditorState = EditorState.set(editorStateRef.current, {
-			decorator: decorator,
-		});
-
-		setEditorState(newEditorState);
-	}, [decorator]);
-
 	// Handle shortcut keys. Using their default function right now.
-	const customKeyBindingFn = (e) => {
-		if (e.keyCode === 8 || e.keyCode === 46) {
-			// Don't backspace/delete if image selected. We'll delete the image instead.
-			if (isImageSelectedRef.current) {
-				return 'handled-in-binding-fn';
-			}
-		}
-
-		if (e.keyCode === 9 /* TAB */) {
-			// NOTE: this just handles indenting list items, not indenting paragraphs.
-			const newEditorState = RichUtils.onTab(e, editorState, 8);
-			if (newEditorState !== editorState) {
-				setEditorState(newEditorState);
-			}
-			twoKeyStrokesAgo = oneKeyStrokeAgo;
-			oneKeyStrokeAgo = e.keyCode;
-			return 'handled-in-binding-fn';
-		}
-		if (e.keyCode === 32 /* SPACE */) {
-			// Auto-converts to lists
-			let returnValue = spaceToAutoList(editorState, setEditorState);
-
-			// If the two previous keystrokes were hyphens
-			if (!returnValue && oneKeyStrokeAgo === 189 && twoKeyStrokesAgo === 189) {
-				returnValue = doubleDashToLongDash(editorState, setEditorState);
-			}
-
-			if (returnValue) {
-				twoKeyStrokesAgo = oneKeyStrokeAgo;
-				oneKeyStrokeAgo = e.keyCode;
-				return returnValue;
-			}
-		}
-		if (e.keyCode === 13 /* ENTER */) {
-			// Un-indents lists
-			const returnValue = enterToUnindentList(editorState, setEditorState);
-
-			if (returnValue) {
-				twoKeyStrokesAgo = oneKeyStrokeAgo;
-				oneKeyStrokeAgo = e.keyCode;
-				return returnValue;
-			}
-		}
-
-		twoKeyStrokesAgo = oneKeyStrokeAgo;
-		oneKeyStrokeAgo = e.keyCode;
-		return getDefaultKeyBinding(e);
+	const wrappedCustomKeyBindingFn = (e) => {
+		return customKeyBindingFn(e, editorStateRef, setEditorState, isImageSelectedRef);
 	};
 
 	// Provides the additional editorState and setEditorState props to handleDrop
-	const wrappedHandleDrop = (selection, dataTransfer, isInternal) => {
-		return handleDraftImageDrop(
-			selection,
-			dataTransfer,
-			isInternal,
-			mediaStructure,
-			setMediaStructure,
-			editorStateRef
-		);
-	};
+	const wrappedHandleDrop = useCallback(
+		(selection, dataTransfer, isInternal) => {
+			return handleDraftImageDrop(
+				selection,
+				dataTransfer,
+				isInternal,
+				mediaStructure,
+				setMediaStructure,
+				editorStateRef
+			);
+		},
+		[mediaStructure]
+	);
 
 	// Process the key presses
-	const handleKeyCommand = (command, editorState) => {
-		console.log('command: ', command);
-
+	const handleKeyCommand = useCallback((command, editorState) => {
 		if (command === 'handled-in-binding-fn') {
 			// For instance, I have to handle tab in the binding fn b/c it needs (e)
 			// Otherwise, the browser tries to do things with the commands.
@@ -307,14 +192,10 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 
 		return 'not-handled'; // Lets Draft know to try to handle this itself.
-	};
+	}, []);
 
 	const handleBeforeInput = (char, editorState) => {
 		const selection = editorState.getSelection();
-		// const currentContent = editorState.getCurrentContent();
-		// const startBlock = currentContent.getBlockForKey(selection.getStartKey());
-		// const endBlock = currentContent.getBlockForKey(selection.getEndKey());
-		// const isSingleBlockSelection = startBlock.getKey() === endBlock.getKey();
 
 		// Update the word count after each space
 		if (char === ' ') {
@@ -323,74 +204,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			setTimeout(() => updateWordCount(editorStateRef, editorState, setDocWordCountObj));
 		}
 
-		// Instead of all of this, let's convert link-dests to block data instead
-		// if (
-		// 	isSingleBlockSelection &&
-		// 	(selection.getStartOffset() === 0 || selection.getEndOffset() == endBlock.getLength())
-		// ) {
-		// 	const entityKey = startBlock.getEntityAt(0);
-		// 	const entity = currentContent.getEntity(entityKey);
-
-		// 	if (entity && entity.getType() === 'LINK-DEST') {
-		// 		// TO-DO ! ! !
-		// 		// Then we need to ensure that the new characters that are inserted have the LINK-DEST entity too
-		// 	}
-		// }
-
 		// If we're typing at the end of a line and inside a link, continue that link
 		if (selection.isCollapsed()) {
-			const contentState = editorState.getCurrentContent();
-			const blockKey = selection.getStartKey();
-			const block = contentState.getBlockForKey(blockKey);
-			const blockLength = block.getLength();
-			const start = Math.max(selection.getStartOffset() - 1, 0);
-
-			// Ensure the character before has an entity
-			// NOTE: may need to do start - 1 (min 0)
-			let startEntityKey = null;
-			if (blockLength) {
-				startEntityKey = block.getEntityAt(start);
-			} else {
-				const prevBlock = contentState.getBlockBefore(blockKey);
-				if (prevBlock) {
-					startEntityKey = prevBlock.getEntityAt(prevBlock.getLength() - 1);
-				}
+			const didHandle = continueMultiBlockLinkSource(editorState, selection, char);
+			if (didHandle === 'handled') {
+				return 'handled';
 			}
-			if (startEntityKey === null) {
-				return 'not-handled';
-			}
-
-			// Ensuring we're typing at the end of the block
-			const selectionEnd = selection.getEndOffset();
-			if (blockLength !== selectionEnd) {
-				return 'not-handled';
-			}
-
-			// Ensure the entity is a link source or dest
-			const entity = contentState.getEntity(startEntityKey);
-			if (entity && !['LINK-SOURCE', 'LINK-DEST'].includes(entity.getType())) {
-				return 'not-handled';
-			}
-
-			// Ensure the next block starts with the same entity
-			const nextBlock = contentState.getBlockAfter(blockKey);
-			if (nextBlock && nextBlock.getEntityAt(0) !== startEntityKey) {
-				return 'not-handled';
-			}
-
-			const style = editorState.getCurrentInlineStyle();
-			const newContent = Modifier.insertText(
-				contentState,
-				selection,
-				char,
-				style,
-				startEntityKey
-			);
-
-			console.log('handleBeforeInput - continuing link');
-			const newEditorState = EditorState.push(editorState, newContent, 'insert-characters');
-			setEditorState(newEditorState);
-			return 'handled';
 		}
 
 		return 'not-handled';
@@ -413,11 +232,18 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// Sets editor styles
 	useEffect(() => {
 		let newStyles = {};
-		!!fontSettings.currentFont &&
-			(newStyles['fontFamily'] = fontSettings.currentFont.toString());
-		!!lineHeight && (newStyles['lineHeight'] = lineHeight + 'em');
-		!!editorSettings.editorMaxWidth &&
-			(newStyles['maxWidth'] = editorSettings.editorMaxWidth + 'rem');
+
+		if (!!fontSettings.currentFont) {
+			newStyles['fontFamily'] = fontSettings.currentFont.toString();
+		}
+
+		if (!!lineHeight) {
+			newStyles['lineHeight'] = lineHeight + 'em';
+		}
+
+		if (!!editorSettings.editorMaxWidth) {
+			newStyles['maxWidth'] = editorSettings.editorMaxWidth + 'rem';
+		}
 
 		if (!!fontSize) {
 			newStyles['fontSize'] = +fontSize;
@@ -438,158 +264,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// Forces all blocks to update with the updated customStyleMap
 	useEffect(() => {
-		const newCurrentContent = updateAllBlocks(editorStateRef.current);
-
-		const newEditorState = EditorState.set(editorStateRef.current, {
-			currentContent: newCurrentContent,
-		});
-		setEditorState(newEditorState);
+		setEditorState((prevEditorState) =>
+			EditorState.set(prevEditorState, {
+				currentContent: updateAllBlocks(prevEditorState),
+			})
+		);
 	}, [customStyleMap]);
-
-	// Saves current document file
-	const saveFile = useCallback(
-		(docName = navData.currentDoc) => {
-			const currentContent = editorStateRef.current.getCurrentContent();
-			const rawContent = convertToRaw(currentContent);
-
-			ipcRenderer.invoke(
-				'save-single-document',
-				project.tempPath, // Must be the root temp path, not a subfolder
-				project.jotsPath,
-				'docs/' + docName, // Saved in the docs folder
-				rawContent
-			);
-		},
-		[project.tempPath]
-	);
-
-	const runCleanup = useCallback(async () => {
-		let newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
-		let usedDocuments = {};
-
-		console.log('mediaStructure: ', mediaStructure);
-
-		// Loop through each image instance in the media structure and organize by source document
-		for (let imageId in mediaStructure) {
-			for (let imageUseId in mediaStructure[imageId].uses) {
-				console.log('imageUseId to add to usedDocuments: ', imageUseId);
-				const source = mediaStructure[imageId].uses[imageUseId].sourceDoc;
-
-				if (!usedDocuments.hasOwnProperty(source)) {
-					usedDocuments[source] = {};
-				}
-
-				// Builds a checklist of images to see if they exist, cleanup if they don't
-				usedDocuments[source][`${imageId}_${imageUseId}`] = {
-					imageId,
-					imageUseId,
-				};
-			}
-		}
-
-		console.log('usedDocuments[doc5.json]: ', { ...usedDocuments['doc5.json'] });
-
-		// Check editorArchives for everything except hte current document. Use the editorState for that.
-
-		// For each document with images, pull the editorState and remove matches from usedDocuments
-		for (let source in usedDocuments) {
-			// If the currentDoc, the editorArchives will not be up to date
-			console.log('source: ', source);
-			console.log('navData.currentDoc === source: ', navData.currentDoc === source);
-			let currentEditorState =
-				navData.currentDoc === source
-					? editorStateRef.current
-					: editorArchivesRef.current[source].editorState;
-
-			// Loop through each block
-			if (currentEditorState) {
-				const contentState = currentEditorState.getCurrentContent();
-				const blockMap = contentState.getBlockMap();
-
-				blockMap.forEach((block) => {
-					let blockData = block.getData();
-					let imageData = blockData.get('images', []);
-
-					// For each image in the block
-					for (let image of imageData) {
-						// Remove it from our checklist
-						delete usedDocuments[source][`${image.imageId}_${image.imageUseId}`];
-
-						// If it was the last image, then stop searching the page
-						if (!Object.keys(usedDocuments[source]).length) {
-							delete usedDocuments[source];
-							return false; // Exits the forEach
-						}
-					}
-				});
-			}
-		}
-
-		// Anything left in usedDocuments needs to be cleaned up
-		for (let sourceObj of Object.values(usedDocuments)) {
-			for (let imageObj of Object.values(sourceObj)) {
-				newMediaStructure = await cleanupJpeg(imageObj, newMediaStructure, project.tempPath);
-			}
-		}
-
-		// process each type of cleanup action
-		// maybe initialize a copy of the appropriate "structure" if needed
-		// and use that (vs undefined) as a flag for setting at the end?
-
-		// Save the mediaStructure to file
-		if (newMediaStructure) {
-			await ipcRenderer.invoke(
-				'save-single-document',
-				project.tempPath,
-				project.jotsPath,
-				'mediaStructure.json',
-				newMediaStructure
-			);
-		}
-	}, [mediaStructure, project, editorStateRef, navData]);
-
-	// Saves the current file and calls the main process to save the project
-	const saveFileAndProject = useCallback(
-		async (saveProject) => {
-			const { command, options } = saveProject;
-			const docName = navData.currentDoc;
-			const currentContent = editorStateRef.current.getCurrentContent();
-			const rawContent = convertToRaw(currentContent);
-			console.log('editorContainer options: ', options);
-
-			// Cleanup (remove) files before save. Currently not updating the currentContent.
-			if (options.shouldCleanup) {
-				await runCleanup();
-			}
-
-			// Save the current document
-			let response = await ipcRenderer.invoke(
-				'save-single-document',
-				project.tempPath, // Must be the root temp path, not a subfolder
-				project.jotsPath,
-				'docs/' + docName, // Saved in the docs folder
-				rawContent
-			);
-
-			if (response) {
-				if (command === 'save-as') {
-					// Leave the jotsPath argument blank to indicate a Save As
-					let { tempPath, jotsPath } = await ipcRenderer.invoke(
-						'save-project',
-						project.tempPath,
-						'',
-						options
-					);
-					// Save the updated path names
-					setProject({ tempPath, jotsPath });
-				} else {
-					// Request a save, don't wait for a response
-					ipcRenderer.invoke('save-project', project.tempPath, project.jotsPath, options);
-				}
-			}
-		},
-		[project, navData.currentDoc, runCleanup]
-	);
 
 	// Monitors for needing to save the current file and then whole project
 	useEffect(() => {
@@ -637,12 +317,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			setEditorState(editorStateWithLinks);
 			initializeDocWordCount(editorStateWithLinks);
 
-			setShouldResetScroll(true);
+			setResetScrollDoc(navData.currentDoc);
 			console.log('Setting editorState inside loadFile.');
 		};
 
 		loadFileFromSave();
-	}, [navData, project.tempPath, updateLinkEntities, decorator]);
+	}, [navData, project.tempPath, decorator]);
 
 	// Loading the new current document
 	useEffect(() => {
@@ -682,73 +362,83 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 				setEditorState(editorStateWithLinks);
 				initializeDocWordCount(editorStateWithLinks);
-				setShouldResetScroll(true);
+				setResetScrollDoc(navData.currentDoc);
 			} else {
 				loadFile();
 			}
 		}
-	}, [editorStateRef, editorRef, navData, setNavData, prev, loadFile, linkStructureRef]);
-
-	// Update the tab the open document is in
-	useEffect(() => {
-		const fileTab = findFileTab(
-			docStructureRef.current,
-			'doc',
-			Number(navData.currentDoc.slice(3, -5))
-		);
-		setNavData((prev) => {
-			if (prev.currentDocTab === fileTab) {
-				return prev;
-			}
-
-			return {
-				...prev,
-				currentDocTab: fileTab,
-			};
-		});
-	}, [navData]);
+	}, [
+		editorStateRef,
+		editorRef,
+		navData,
+		setNavData,
+		prev,
+		loadFile,
+		saveFile,
+		linkStructureRef,
+	]);
 
 	// As we type, updates alignment/styles/type to pass down to the editorNav. We do it here
 	// instead of there to prevent unnecessary renders.
 	useEffect(() => {
-		const newCurrentStyles = editorState.getCurrentInlineStyle();
-		const newCurrentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
+		// Check that the setters are initialized
+		if (!navSettersRef.current) {
+			return;
+		}
 
 		const selectionState = editorState.getSelection();
 		const currentBlockKey = selectionState.getStartKey();
 		const block = editorState.getCurrentContent().getBlockForKey(currentBlockKey);
+
 		const newCurrentBlockType = block.getType();
+		const newCurrentStyles = editorState.getCurrentInlineStyle();
+		const newCurrentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
 
-		if (!Immutable.is(newCurrentStyles, currentStyles)) {
-			setCurrentStyles(newCurrentStyles);
-		}
-
-		if (newCurrentBlockType !== currentBlockType) {
-			setCurrentBlockType(newCurrentBlockType);
-		}
-
-		if (newCurrentAlignment !== currentAlignment) {
-			setCurrentAlignment(newCurrentAlignment);
-		}
-	}, [editorState, currentStyles, currentAlignment, currentBlockType]);
-
-	// Scroll to the previous position or to the top on document load
-	useLayoutEffect(() => {
-		if (shouldResetScroll) {
-			if (
-				editorArchivesRef.current[navData.currentDoc] &&
-				editorArchivesRef.current[navData.currentDoc].scrollY
-			) {
-				window.scrollTo(0, editorArchivesRef.current[navData.currentDoc].scrollY);
-				setShouldResetScroll(false);
+		// Update the styles
+		navSettersRef.current.setCurrentStyles((prev) => {
+			if (!Immutable.is(newCurrentStyles, prev)) {
+				return newCurrentStyles;
 			} else {
+				return prev;
+			}
+		});
+
+		// Update the block type
+		navSettersRef.current.setCurrentBlockType((prev) => {
+			if (newCurrentBlockType !== prev) {
+				return newCurrentBlockType;
+			} else {
+				return prev;
+			}
+		});
+
+		// Update the text alignment
+		navSettersRef.current.setCurrentAlignment((prev) => {
+			if (newCurrentAlignment !== prev) {
+				return newCurrentAlignment;
+			} else {
+				return prev;
+			}
+		});
+	}, [editorState]);
+
+	// When loading a new document, set the scroll position
+	useLayoutEffect(() => {
+		if (resetScrollDoc) {
+			if (
+				editorArchivesRef.current[resetScrollDoc] &&
+				editorArchivesRef.current[resetScrollDoc].scrollY
+			) {
+				// If we have a previously scrolled position, restore the scroll
+				window.scrollTo(0, editorArchivesRef.current[resetScrollDoc].scrollY);
+				setResetScrollDoc(false);
+			} else {
+				// Otherwise, scroll to the top
 				window.scrollTo(0, 0);
-				setShouldResetScroll(false);
+				setResetScrollDoc(false);
 			}
 		}
-	}, [navData, shouldResetScroll]);
-
-	// console.log('data: ', editorState.getCurrentContent().getFirstBlock().getData());
+	}, [resetScrollDoc]);
 
 	return (
 		<main
@@ -765,9 +455,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				{/* // HOVER HERE */}
 				<EditorNav
 					{...{
-						currentStyles,
-						currentBlockType,
-						currentAlignment,
+						navSettersRef,
 						spellCheck,
 						toggleSpellCheck,
 						editorRef,
@@ -784,7 +472,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 							editorState={editorState}
 							onChange={handleEditorStateChange}
 							ref={editorRef}
-							keyBindingFn={customKeyBindingFn}
+							keyBindingFn={wrappedCustomKeyBindingFn}
 							handleKeyCommand={handleKeyCommand}
 							handleBeforeInput={handleBeforeInput}
 							handleDrop={wrappedHandleDrop}
@@ -808,3 +496,55 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 };
 
 export default EditorContainer;
+
+var oneKeyStrokeAgo, twoKeyStrokesAgo;
+const customKeyBindingFn = (e, editorStateRef, setEditorState, isImageSelectedRef) => {
+	const editorState = editorStateRef.current;
+
+	if (e.keyCode === 8 || e.keyCode === 46) {
+		// Don't backspace/delete if image selected. We'll delete the image instead.
+		if (isImageSelectedRef.current) {
+			return 'handled-in-binding-fn';
+		}
+	}
+
+	if (e.keyCode === 9 /* TAB */) {
+		// NOTE: this just handles indenting list items, not indenting paragraphs.
+		const newEditorState = RichUtils.onTab(e, editorState, 8);
+		if (newEditorState !== editorState) {
+			setEditorState(newEditorState);
+		}
+		twoKeyStrokesAgo = oneKeyStrokeAgo;
+		oneKeyStrokeAgo = e.keyCode;
+		return 'handled-in-binding-fn';
+	}
+	if (e.keyCode === 32 /* SPACE */) {
+		// Auto-converts to lists
+		let returnValue = spaceToAutoList(editorState, setEditorState);
+
+		// If the two previous keystrokes were hyphens
+		if (!returnValue && oneKeyStrokeAgo === 189 && twoKeyStrokesAgo === 189) {
+			returnValue = doubleDashToLongDash(editorState, setEditorState);
+		}
+
+		if (returnValue) {
+			twoKeyStrokesAgo = oneKeyStrokeAgo;
+			oneKeyStrokeAgo = e.keyCode;
+			return returnValue;
+		}
+	}
+	if (e.keyCode === 13 /* ENTER */) {
+		// Un-indents lists
+		const returnValue = enterToUnindentList(editorState, setEditorState);
+
+		if (returnValue) {
+			twoKeyStrokesAgo = oneKeyStrokeAgo;
+			oneKeyStrokeAgo = e.keyCode;
+			return returnValue;
+		}
+	}
+
+	twoKeyStrokesAgo = oneKeyStrokeAgo;
+	oneKeyStrokeAgo = e.keyCode;
+	return getDefaultKeyBinding(e);
+};

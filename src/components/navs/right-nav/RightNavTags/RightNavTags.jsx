@@ -26,7 +26,6 @@ const RightNavTags = ({ activeTab }) => {
 		editorStyles,
 		setEditorStyles,
 		setScrollToLinkId,
-		scrollToLinkIdRef,
 		editorStateRef,
 	} = useContext(LeftNavContext);
 	const { editorContainerRef } = useContext(SettingsContext);
@@ -230,7 +229,6 @@ const RightNavTags = ({ activeTab }) => {
 												key={linkId}
 												onClick={() => {
 													setScrollToLinkId(linkId);
-													// scrollToLinkIdRef.current = linkId;
 													handleScrollToLinkId(linkId);
 												}}>
 												{linkStructure.links[linkId].content}

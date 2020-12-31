@@ -7,6 +7,7 @@ import {
 } from 'draft-js';
 
 import { setBlockData, getSelectedBlocksList } from 'draftjs-utils';
+import { BlockImageContainer } from './editorComponents/BlockImageContainer';
 
 export const defaultCustomStyleMap = {
 	STRIKETHROUGH: {
@@ -248,4 +249,30 @@ export const toggleTextCustomStyle = (
 
 	// Remove all highlight styles
 	// Apply the new highlight style
+};
+
+export const blockRendererFn = (contentBlock) => {
+	// if (contentBlock.getType() === 'wiki-section') {
+	// 	return {
+	// 		component: WikiSectionTitle,
+	// 		editable: true,
+	// 	};
+	// }
+
+	// NOT USING - was causing text issues
+	// const blockData = contentBlock.getData();
+	// if (blockData.has('linkDestId')) {
+	// 	return {
+	// 		component: LinkDestBlock,
+	// 		editable: true,
+	// 	};
+	// }
+
+	const imagesArray = contentBlock.getData().get('images', []);
+	if (imagesArray.length) {
+		return {
+			component: BlockImageContainer,
+			editable: true,
+		};
+	}
 };

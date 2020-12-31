@@ -115,7 +115,7 @@ const AppMgmt = () => {
 		const tabList = ['draft', 'pages', 'research'];
 		let response, currentTab;
 		for (let i = 0; i <= tabList.length && !response; i++) {
-			response = findFirstDocInFolder(docStructure[tabList[i]]);
+			response = findFirstDocInFolder(docStructureRef.current[tabList[i]]);
 			if (response) {
 				currentTab = tabList[i];
 			}
@@ -124,31 +124,31 @@ const AppMgmt = () => {
 		// let response = findFirstDocInFolder(newDocStructure[currentTab]);
 		if (response) {
 			// Document was found. Mark the document as the currentDoc.
-			setNavData({
-				...navData,
+			setNavData((prev) => ({
+				...prev,
 				currentTab: currentTab,
 				currentDoc: response.docName,
 				currentTempPath: project.tempPath,
 				lastClicked: { type: 'doc', id: response.docId },
 				parentFolders: response.parentFolders,
-			});
+			}));
 		} else {
 			// No documents found. Reset navData to default.
 			console.log('No document was found in the current tab!');
 			// Only set if currentDoc has contents. Otherwise, changing navData will trigger a recheck.
 			if (navData.currentDoc !== '') {
 				console.log('Resetting navData (currentDoc, currentTab, lastClicked, parentFolders)');
-				setNavData({
-					...navData,
+				setNavData((prev) => ({
+					...prev,
 					currentDoc: '',
 					currentTab: 'draft',
 					currentTempPath: project.tempPath,
 					lastClicked: { type: '', id: '' },
 					parentFolders: [],
-				});
+				}));
 			}
 		}
-	}, [docStructure, navData, setNavData, project]);
+	}, [navData, project]);
 
 	// Once the docStructure has loaded for a new project, load the first document
 	useEffect(() => {
@@ -161,16 +161,6 @@ const AppMgmt = () => {
 	// Loads the document / link structures when the project changes
 	useEffect(() => {
 		if (prevProj !== project.tempPath && project.tempPath) {
-			// Updates the program title with the updated file name
-			if (project.jotsPath) {
-				// Eventually use some sort of project name instead of the .jots file
-				let lastSlash = project.jotsPath.lastIndexOf('/');
-				let projectName = project.jotsPath.slice(lastSlash + 1);
-				document.title = 'Jotling - ' + projectName;
-			} else {
-				document.title = 'Jotling';
-			}
-
 			// Loads the doc structure
 			setEditorArchives({});
 			loadDocStructure({ isNewProject: true });
@@ -179,6 +169,18 @@ const AppMgmt = () => {
 			setPrevProj(project.tempPath);
 		}
 	}, [loadDocStructure, loadMediaStructure, prevProj, project]);
+
+	// Updates the application title when the project changes
+	useEffect(() => {
+		if (project.jotsPath) {
+			// Eventually use some sort of project name instead of the .jots file
+			let lastSlash = project.jotsPath.lastIndexOf('/');
+			let projectName = project.jotsPath.slice(lastSlash + 1);
+			document.title = 'Jotling - ' + projectName;
+		} else {
+			document.title = 'Jotling';
+		}
+	}, [project]);
 
 	// Saves the document map after every change
 	useEffect(() => {

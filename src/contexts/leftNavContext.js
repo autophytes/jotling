@@ -1,7 +1,11 @@
 import React, { createContext, useState, useCallback, useRef, useEffect } from 'react';
+import { convertToRaw } from 'draft-js';
+import { ipcRenderer } from 'electron';
+
+import { cleanupJpeg } from '../components/appFunctions';
 
 import Store from 'electron-store';
-// const Store = require('electron-store');
+import { findFileTab } from '../utils/utils';
 const store = new Store();
 
 export const LeftNavContext = createContext();
@@ -50,7 +54,6 @@ const LeftNavContextProvider = (props) => {
 	const editorArchivesRef = useRef(editorArchives);
 	const navDataRef = useRef(navData);
 	const setEditorStateRef = useRef(null);
-	const scrollToLinkIdRef = useRef(null);
 	const isImageSelectedRef = useRef(false);
 
 	useEffect(() => {
@@ -132,12 +135,170 @@ const LeftNavContextProvider = (props) => {
 		});
 	}, [docStructure]);
 
+	// Update the tab the open document is in
+	useEffect(() => {
+		console.log('docStructureRef.current:', docStructureRef.current);
+		const fileTab = findFileTab(
+			docStructureRef.current,
+			'doc',
+			Number(navData.currentDoc.slice(3, -5))
+		);
+
+		if (fileTab && navData.currentDocTab !== fileTab) {
+			setNavData((prev) => ({
+				...prev,
+				currentDocTab: fileTab,
+			}));
+		}
+	}, [navData]);
+
 	// Resets the width of the side nav bars
 	const resetNavWidth = useCallback(
 		(whichNav) => {
 			setEditorStyles({ ...editorStyles, [whichNav]: DEFAULT_WIDTH });
 		},
 		[editorStyles]
+	);
+
+	// Saves current document file
+	const saveFile = useCallback(
+		(docName = navData.currentDoc) => {
+			const currentContent = editorStateRef.current.getCurrentContent();
+			const rawContent = convertToRaw(currentContent);
+
+			ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath, // Must be the root temp path, not a subfolder
+				project.jotsPath,
+				'docs/' + docName, // Saved in the docs folder
+				rawContent
+			);
+		},
+		[project.tempPath, navData.currentDoc]
+	);
+
+	// Cleans up unused images
+	const runCleanup = useCallback(async () => {
+		let newMediaStructure = JSON.parse(JSON.stringify(mediaStructure));
+		let usedDocuments = {};
+
+		// Loop through each image instance in the media structure and organize by source document
+		for (let imageId in mediaStructure) {
+			for (let imageUseId in mediaStructure[imageId].uses) {
+				const source = mediaStructure[imageId].uses[imageUseId].sourceDoc;
+
+				if (!usedDocuments.hasOwnProperty(source)) {
+					usedDocuments[source] = {};
+				}
+
+				// Builds a checklist of images to see if they exist, cleanup if they don't
+				usedDocuments[source][`${imageId}_${imageUseId}`] = {
+					imageId,
+					imageUseId,
+				};
+			}
+		}
+
+		// Check editorArchives for everything except hte current document. Use the editorState for that.
+
+		// For each document with images, pull the editorState and remove matches from usedDocuments
+		for (let source in usedDocuments) {
+			// If the currentDoc, the editorArchives will not be up to date
+			let currentEditorState =
+				navData.currentDoc === source
+					? editorStateRef.current
+					: editorArchivesRef.current[source].editorState;
+
+			// Loop through each block
+			if (currentEditorState) {
+				const contentState = currentEditorState.getCurrentContent();
+				const blockMap = contentState.getBlockMap();
+
+				blockMap.forEach((block) => {
+					let blockData = block.getData();
+					let imageData = blockData.get('images', []);
+
+					// For each image in the block
+					for (let image of imageData) {
+						// Remove it from our checklist
+						delete usedDocuments[source][`${image.imageId}_${image.imageUseId}`];
+
+						// If it was the last image, then stop searching the page
+						if (!Object.keys(usedDocuments[source]).length) {
+							delete usedDocuments[source];
+							return false; // Exits the forEach
+						}
+					}
+				});
+			}
+		}
+
+		// Anything left in usedDocuments needs to be cleaned up
+		for (let sourceObj of Object.values(usedDocuments)) {
+			for (let imageObj of Object.values(sourceObj)) {
+				newMediaStructure = await cleanupJpeg(imageObj, newMediaStructure, project.tempPath);
+			}
+		}
+
+		// process each type of cleanup action
+		// maybe initialize a copy of the appropriate "structure" if needed
+		// and use that (vs undefined) as a flag for setting at the end?
+
+		// Save the mediaStructure to file
+		if (newMediaStructure) {
+			await ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath,
+				project.jotsPath,
+				'mediaStructure.json',
+				newMediaStructure
+			);
+		}
+	}, [mediaStructure, project, editorStateRef, navData]);
+
+	// Saves the current file and calls the main process to save the project
+	const saveFileAndProject = useCallback(
+		async (saveProject) => {
+			const { command, options } = saveProject;
+			const docName = navData.currentDoc;
+			const currentContent = editorStateRef.current.getCurrentContent();
+			const rawContent = convertToRaw(currentContent);
+			console.log('editorContainer options: ', options);
+
+			// Cleanup (remove) files before save. Currently not updating the currentContent.
+			if (options.shouldCleanup) {
+				await runCleanup();
+			}
+
+			// Save the current document
+			let response = await ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath, // Must be the root temp path, not a subfolder
+				project.jotsPath,
+				'docs/' + docName, // Saved in the docs folder
+				rawContent
+			);
+
+			if (response) {
+				if (command === 'save-as') {
+					// Leave the jotsPath argument blank to indicate a Save As
+					let { tempPath, jotsPath } = await ipcRenderer.invoke(
+						'save-project',
+						project.tempPath,
+						'',
+						options
+					);
+					// Save the updated path names (if the save was not cancelled)
+					if (tempPath && jotsPath) {
+						setProject({ tempPath, jotsPath });
+					}
+				} else {
+					// Request a save, don't wait for a response
+					ipcRenderer.invoke('save-project', project.tempPath, project.jotsPath, options);
+				}
+			}
+		},
+		[project, navData.currentDoc, runCleanup]
 	);
 
 	return (
@@ -162,7 +323,6 @@ const LeftNavContextProvider = (props) => {
 				editorStateRef,
 				scrollToLinkId,
 				setScrollToLinkId,
-				scrollToLinkIdRef,
 				setEditorStateRef,
 				peekWindowLinkId,
 				setPeekWindowLinkId,
@@ -181,6 +341,8 @@ const LeftNavContextProvider = (props) => {
 				setMediaStructure,
 				isImageSelectedRef,
 				customStyles,
+				saveFile,
+				saveFileAndProject,
 			}}>
 			{props.children}
 		</LeftNavContext.Provider>

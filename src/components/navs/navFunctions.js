@@ -671,8 +671,12 @@ export const buildFileStructure = (
 	currentlyDragging,
 	setCurrentlyDragging
 ) => {
+	console.log('buildFileStructure is running');
+
 	return doc.children.map((child) => {
+		// Rendering a document
 		if (child.type === 'doc') {
+			// If rendering the trash area, use the trash document component instead
 			return isTrash ? (
 				<NavDocumentTrash child={child} key={'doc-' + child.id} />
 			) : (
@@ -684,17 +688,23 @@ export const buildFileStructure = (
 				/>
 			);
 		}
+
+		// If rendering a folder
 		if (child.type === 'folder') {
 			const hasChildren = !!doc.folders[child.id]['children'].length;
+
+			// Default folders to open if not already set
 			let isOpen;
 			if (openFolders.hasOwnProperty(child.id)) {
 				isOpen = openFolders[child.id];
 			} else {
-				isOpen = false;
+				isOpen = true;
 				setOpenFolders({ ...openFolders, [child.id]: true });
 			}
+
 			return (
 				<div className='file-nav folder' key={'folder-' + child.id}>
+					{/* Folder Title Button */}
 					{isTrash ? (
 						<NavFolderTrash
 							child={child}
@@ -715,6 +725,7 @@ export const buildFileStructure = (
 						/>
 					)}
 
+					{/* Folder contents area */}
 					<Collapse isOpen={isOpen}>
 						<div className='folder-contents'>
 							{hasChildren ? (

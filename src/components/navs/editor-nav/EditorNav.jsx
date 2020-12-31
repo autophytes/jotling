@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-// import { getSelectedBlocksMetadata } from 'draftjs-utils';
+import Immutable from 'immutable';
 
 import AddToWikiPopper from './AddToWiki/AddToWikiPopper';
 import InlineStyleButton from './InlineStyleButton';
@@ -7,7 +7,6 @@ import ColorPickerPopper from './ColorPickerPopper';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../contexts/settingsContext';
-import { FindReplaceContext } from '../../../contexts/findReplaceContext';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import BoldSVG from '../../../assets/svg/editor/BoldSVG';
@@ -87,379 +86,361 @@ const INLINE_STYLES = [
 const MAX_RECENT_FONTS = 5;
 
 // COMPONENT
-const EditorNav = React.memo(
-	({
-		spellCheck,
-		toggleSpellCheck,
-		currentAlignment,
-		currentStyles,
-		currentBlockType,
-		editorRef,
-	}) => {
-		// STATE
-		const [pinNav, setPinNav] = useState(true);
-		const [hoverRegionLeft, setHoverRegionLeft] = useState(0);
-		const [hoverRegionRight, setHoverRegionRight] = useState(0);
+const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSettersRef }) => {
+	// STATE
+	const [pinNav, setPinNav] = useState(true);
+	// const [hoverRegionLeft, setHoverRegionLeft] = useState(0);
+	// const [hoverRegionRight, setHoverRegionRight] = useState(0);
+	const [showColorPicker, setShowColorPicker] = useState('');
+	const [currentStyles, setCurrentStyles] = useState(Immutable.Set());
+	const [currentBlockType, setCurrentBlockType] = useState('unstyled');
+	const [currentAlignment, setCurrentAlignment] = useState('');
 
-		const [showColorPicker, setShowColorPicker] = useState('');
+	// CONTEXT
+	const {
+		editorStyles,
+		setEditorStyles,
+		displayWikiPopper,
+		setDisplayWikiPopper,
+		setDocStructure,
+		linkStructure,
+		setLinkStructure,
+		setShowUploadImage,
+		editorStateRef,
+		setEditorStateRef,
+		navData,
+	} = useContext(LeftNavContext);
+	const { highlightColor, setHighlightColor, textColor, setTextColor } = useContext(
+		SettingsContext
+	);
 
-		// CONTEXT
-		const {
-			editorStyles,
-			setEditorStyles,
-			displayWikiPopper,
-			setDisplayWikiPopper,
-			setDocStructure,
-			linkStructure,
-			setLinkStructure,
-			setShowUploadImage,
-			editorStateRef,
-			setEditorStateRef,
-			setHoverDestLinkId,
-			navData,
-		} = useContext(LeftNavContext);
-		const {
-			editorSettings,
-			highlightColor,
-			setHighlightColor,
-			textColor,
-			setTextColor,
-		} = useContext(SettingsContext);
-		const { setTotalMatches } = useContext(FindReplaceContext);
+	// REFS
+	const highlightColorRef = useRef(null);
+	const textColorRef = useRef(null);
 
-		// REFS
-		const highlightColorRef = useRef(null);
-		const textColorRef = useRef(null);
-
-		// Curried toggleTextAlign function
-		const wrappedToggleTextAlign = (newAlignment) => (e) =>
-			toggleTextAlign(
-				e,
-				newAlignment,
-				currentAlignment,
-				editorStateRef.current,
-				setEditorStateRef.current
-			);
-
-		// Curried toggleBlockType function
-		const wrappedToggleBlockType = (newBlockType) => (e) =>
-			toggleBlockType(e, newBlockType, editorStateRef.current, setEditorStateRef.current);
-
-		// TEMPORARY. Cleans up old projects that still have docTags.
-		useEffect(() => {
-			if (linkStructure.docTags) {
-				let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
-				delete newLinkStructure.docTags;
-				setLinkStructure(newLinkStructure);
-			}
-		}, [linkStructure]);
-
-		// Calculates the left and right hover region boundaries
-		useEffect(() => {
-			let rootSize = Number(
-				window
-					.getComputedStyle(document.querySelector(':root'))
-					.getPropertyValue('font-size')
-					.replace('px', '')
-			);
-
-			let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
-			let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
-			let maxEditor = editorSettings.editorMaxWidth * rootSize;
-			let windowWidth = window.innerWidth;
-			let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
-			let newLeftOffset = leftNav + gutter / 2;
-			let newRightOffset = rightNav + gutter / 2;
-
-			setHoverRegionLeft(newLeftOffset);
-			setHoverRegionRight(newRightOffset);
-		}, [editorStyles, editorSettings]);
-
-		return (
-			<>
-				<div className='editor-nav-hover-region' />
-				<nav
-					className={'editor-nav' + (pinNav ? '' : ' hidden')}
-					onMouseDown={(e) => e.preventDefault()}
-					// style={{
-					// 	maxWidth: `calc(100% - ${
-					// 		(editorStyles.leftIsPinned ? editorStyles.leftNav : 0) +
-					// 		(editorStyles.rightIsPinned ? editorStyles.rightNav : 0)
-					// 	}rem)`,
-					// }}
-				>
-					{/* <!-- Should most of these be document-wide rather than selection specific? --> */}
-					<span className='editor-nav-subsection'>
-						<button
-							className={'nav-button' + (pinNav ? ' active' : '')}
-							title='Pin Editor Tools'
-							style={{ marginRight: '0.5rem' }}
-							onMouseUp={() => setPinNav(!pinNav)}>
-							<PushpinSVG />
-						</button>
-
-						<select
-							value={currentBlockType}
-							onMouseDown={(e) => {
-								e.stopPropagation();
-								console.log('moused down');
-							}}
-							onChange={(e) => wrappedToggleBlockType(e.target.value)(e)}>
-							{BLOCK_TYPES.map((item, i) => (
-								<option key={i} value={item.style}>
-									{item.label}
-								</option>
-							))}
-						</select>
-
-						<InlineStyleButton currentStyles={currentStyles} style='BOLD'>
-							<BoldSVG />
-						</InlineStyleButton>
-
-						<InlineStyleButton currentStyles={currentStyles} style='ITALIC'>
-							<ItalicSVG />
-						</InlineStyleButton>
-
-						<InlineStyleButton currentStyles={currentStyles} style='UNDERLINE'>
-							<UnderlineSVG />
-						</InlineStyleButton>
-
-						<InlineStyleButton currentStyles={currentStyles} style='STRIKETHROUGH'>
-							<StrikethroughSVG />
-						</InlineStyleButton>
-
-						<InlineStyleButton
-							currentStyles={currentStyles}
-							style='SUBSCRIPT'
-							injectStyle={{ paddingTop: '5px' }}
-							removeStyle='SUPERSCRIPT'>
-							<SubscriptSVG />
-						</InlineStyleButton>
-
-						<InlineStyleButton
-							currentStyles={currentStyles}
-							style='SUPERSCRIPT'
-							injectStyle={{ paddingBottom: '5px' }}
-							removeStyle='SUBSCRIPT'>
-							<SuperscriptSVG />
-						</InlineStyleButton>
-					</span>
-
-					<span className='editor-nav-subsection'>
-						{/* Highlight Color */}
-						<button
-							className='nav-button'
-							title='Highlight Text'
-							style={{ marginRight: 0 }}
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={(e) => {
-								toggleTextCustomStyle(
-									e,
-									highlightColor.color,
-									'highlight',
-									editorStateRef.current,
-									setEditorStateRef.current,
-									setDocStructure
-								);
-							}}>
-							<HighlightSVG color={highlightColor.color} />
-						</button>
-						<button
-							className='nav-button expand-nav-button'
-							title='Choose Highlight Color'
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={(e) => {
-								e.stopPropagation();
-								setShowColorPicker('highlight');
-							}}
-							ref={highlightColorRef}>
-							<CaratDownSVG />
-						</button>
-						{showColorPicker === 'highlight' && (
-							<ColorPickerPopper
-								referenceElement={highlightColorRef.current}
-								closeFn={() => {
-									editorRef.current.focus();
-									setShowColorPicker('');
-								}}
-								colorObj={highlightColor}
-								setColorObj={setHighlightColor}
-							/>
-						)}
-
-						{/* Text Color */}
-						<button
-							className='nav-button'
-							title='Text Color'
-							style={{ marginRight: 0 }}
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={(e) => {
-								toggleTextCustomStyle(
-									e,
-									textColor.color,
-									'textColor',
-									editorStateRef.current,
-									setEditorStateRef.current,
-									setDocStructure
-								);
-							}}
-							ref={textColorRef}>
-							<TextColorSVG color={textColor.color} />
-						</button>
-						<button
-							className='nav-button expand-nav-button'
-							title='Choose Text Color'
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={(e) => {
-								e.stopPropagation();
-								setShowColorPicker('text');
-							}}
-							ref={textColorRef}>
-							<CaratDownSVG />
-						</button>
-						{showColorPicker === 'text' && (
-							<ColorPickerPopper
-								referenceElement={textColorRef.current}
-								closeFn={() => {
-									editorRef.current.focus();
-									setShowColorPicker('');
-								}}
-								colorObj={textColor}
-								setColorObj={setTextColor}
-							/>
-						)}
-
-						<button
-							className={
-								'nav-button' + (currentBlockType === 'unordered-list-item' ? ' active' : '')
-							}
-							title='Bulleted List'
-							onMouseDown={wrappedToggleBlockType('unordered-list-item')}>
-							<ListBulletSVG />
-						</button>
-
-						<button
-							className={
-								'nav-button' + (currentBlockType === 'ordered-list-item' ? ' active' : '')
-							}
-							title='Numbered List'
-							onMouseDown={wrappedToggleBlockType('ordered-list-item')}>
-							<ListNumberSVG />
-						</button>
-
-						<button
-							className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
-							title='Align Left'
-							onMouseDown={wrappedToggleTextAlign('left')}>
-							<AlignLeftSVG />
-						</button>
-
-						<button
-							className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
-							title='Align Center'
-							onMouseDown={wrappedToggleTextAlign('center')}>
-							<AlignCenterSVG />
-						</button>
-
-						<button
-							className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
-							title='Align Right'
-							onMouseDown={wrappedToggleTextAlign('right')}>
-							<AlignRightSVG />
-						</button>
-
-						<button
-							className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
-							title='Justify Text'
-							onMouseDown={wrappedToggleTextAlign('justify')}>
-							<AlignJustifySVG />
-						</button>
-
-						<button
-							className={'nav-button' + (navData.currentDocTab !== 'pages' ? ' disabled' : '')}
-							title='Insert Section'
-							onMouseDown={(e) => {
-								e.preventDefault();
-								if (navData.currentDocTab === 'pages') {
-									insertNewSection(editorStateRef.current, setEditorStateRef.current);
-									// editorRef.current.focus();
-									// setTimeout(() => editorRef.current.focus(), 0);
-								}
-							}}>
-							<InsertSectionSVG />
-						</button>
-
-						<div className='editor-nav-vertical-rule' />
-
-						<button
-							className={'nav-button' + (spellCheck ? ' active' : '')}
-							title='Toggle Spellcheck'
-							onMouseDown={(e) => toggleSpellCheck(e)}>
-							<SpellcheckSVG />
-						</button>
-
-						<button
-							className='nav-button'
-							title='Add to Wiki'
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={(e) => {
-								e.stopPropagation();
-
-								// const contentState = editorStateRef.current.getCurrentContent();
-								// console.log(
-								// 	'blockContent: ',
-								// 	contentState.getBlockForKey(selectionState.getStartKey()).getText()
-								// );
-
-								if (document.getSelection().toString().length) {
-									console.log(
-										'document.getSelection().toString(): ',
-										document.getSelection().toString()
-									);
-
-									const selectionState = editorStateRef.current.getSelection();
-									console.log('selectionState start:', selectionState.getStartOffset());
-									console.log('selectionState end:', selectionState.getEndOffset());
-									console.log('selectionState start:', selectionState.getStartKey());
-									console.log('selectionState end:', selectionState.getEndKey());
-
-									setDisplayWikiPopper(true);
-								}
-							}}>
-							<ChainSVG />
-						</button>
-
-						{/* Show / Hide Keys/Links */}
-						<button
-							className={'nav-button' + (editorStyles.showAllTags ? ' active' : '')}
-							title='Show Wiki Links'
-							onMouseDown={(e) => {
-								e.preventDefault();
-								setEditorStyles({
-									...editorStyles,
-									showAllTags: !editorStyles.showAllTags,
-								});
-							}}>
-							{editorStyles.showAllTags ? <EyeSVG /> : <EyeHideSVG />}
-						</button>
-
-						<button
-							className='nav-button'
-							title='Insert Image'
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={() => setShowUploadImage(true)}>
-							<ImageSVG />
-						</button>
-
-						{/* Add Tag Popper */}
-						{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
-                to close the popper. This can later be used for confirmation messages and things like that. */}
-						{displayWikiPopper && <AddToWikiPopper />}
-					</span>
-				</nav>
-			</>
+	// Curried toggleTextAlign function
+	const wrappedToggleTextAlign = (newAlignment) => (e) =>
+		toggleTextAlign(
+			e,
+			newAlignment,
+			currentAlignment,
+			editorStateRef.current,
+			setEditorStateRef.current
 		);
-	}
-);
+
+	// Curried toggleBlockType function
+	const wrappedToggleBlockType = (newBlockType) => (e) =>
+		toggleBlockType(e, newBlockType, editorStateRef.current, setEditorStateRef.current);
+
+	// Gives the editorContainer access to the setter functions
+	useEffect(() => {
+		navSettersRef.current = {
+			setCurrentStyles,
+			setCurrentBlockType,
+			setCurrentAlignment,
+		};
+	}, []);
+
+	// TEMPORARY. Cleans up old projects that still have docTags.
+	useEffect(() => {
+		if (linkStructure.docTags) {
+			let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
+			delete newLinkStructure.docTags;
+			setLinkStructure(newLinkStructure);
+		}
+	}, [linkStructure]);
+
+	// Calculates the left and right hover region boundaries
+	// useEffect(() => {
+	// 	let rootSize = Number(
+	// 		window
+	// 			.getComputedStyle(document.querySelector(':root'))
+	// 			.getPropertyValue('font-size')
+	// 			.replace('px', '')
+	// 	);
+
+	// 	let leftNav = editorStyles.leftIsPinned ? editorStyles.leftNav * rootSize : 0;
+	// 	let rightNav = editorStyles.rightIsPinned ? editorStyles.rightNav * rootSize : 0;
+	// 	let maxEditor = editorSettings.editorMaxWidth * rootSize;
+	// 	let windowWidth = window.innerWidth;
+	// 	let gutter = Math.max(windowWidth - leftNav - rightNav - maxEditor, 0);
+	// 	let newLeftOffset = leftNav + gutter / 2;
+	// 	let newRightOffset = rightNav + gutter / 2;
+
+	// 	setHoverRegionLeft(newLeftOffset);
+	// 	setHoverRegionRight(newRightOffset);
+	// }, [editorStyles, editorSettings]);
+
+	return (
+		<>
+			<div className='editor-nav-hover-region' />
+			<nav
+				className={'editor-nav' + (pinNav ? '' : ' hidden')}
+				onMouseDown={(e) => e.preventDefault()}>
+				<span className='editor-nav-subsection'>
+					<button
+						className={'nav-button' + (pinNav ? ' active' : '')}
+						title='Pin Editor Tools'
+						style={{ marginRight: '0.5rem' }}
+						onMouseUp={() => setPinNav(!pinNav)}>
+						<PushpinSVG />
+					</button>
+
+					<select
+						value={currentBlockType}
+						onMouseDown={(e) => {
+							e.stopPropagation();
+							console.log('moused down');
+						}}
+						onChange={(e) => wrappedToggleBlockType(e.target.value)(e)}>
+						{BLOCK_TYPES.map((item, i) => (
+							<option key={i} value={item.style}>
+								{item.label}
+							</option>
+						))}
+					</select>
+
+					<InlineStyleButton currentStyles={currentStyles} style='BOLD'>
+						<BoldSVG />
+					</InlineStyleButton>
+
+					<InlineStyleButton currentStyles={currentStyles} style='ITALIC'>
+						<ItalicSVG />
+					</InlineStyleButton>
+
+					<InlineStyleButton currentStyles={currentStyles} style='UNDERLINE'>
+						<UnderlineSVG />
+					</InlineStyleButton>
+
+					<InlineStyleButton currentStyles={currentStyles} style='STRIKETHROUGH'>
+						<StrikethroughSVG />
+					</InlineStyleButton>
+
+					<InlineStyleButton
+						currentStyles={currentStyles}
+						style='SUBSCRIPT'
+						injectStyle={{ paddingTop: '5px' }}
+						removeStyle='SUPERSCRIPT'>
+						<SubscriptSVG />
+					</InlineStyleButton>
+
+					<InlineStyleButton
+						currentStyles={currentStyles}
+						style='SUPERSCRIPT'
+						injectStyle={{ paddingBottom: '5px' }}
+						removeStyle='SUBSCRIPT'>
+						<SuperscriptSVG />
+					</InlineStyleButton>
+				</span>
+
+				<span className='editor-nav-subsection'>
+					{/* Highlight Color */}
+					<button
+						className='nav-button'
+						title='Highlight Text'
+						style={{ marginRight: 0 }}
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={(e) => {
+							toggleTextCustomStyle(
+								e,
+								highlightColor.color,
+								'highlight',
+								editorStateRef.current,
+								setEditorStateRef.current,
+								setDocStructure
+							);
+						}}>
+						<HighlightSVG color={highlightColor.color} />
+					</button>
+					<button
+						className='nav-button expand-nav-button'
+						title='Choose Highlight Color'
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={(e) => {
+							e.stopPropagation();
+							setShowColorPicker('highlight');
+						}}
+						ref={highlightColorRef}>
+						<CaratDownSVG />
+					</button>
+					{showColorPicker === 'highlight' && (
+						<ColorPickerPopper
+							referenceElement={highlightColorRef.current}
+							closeFn={() => {
+								editorRef.current.focus();
+								setShowColorPicker('');
+							}}
+							colorObj={highlightColor}
+							setColorObj={setHighlightColor}
+						/>
+					)}
+
+					{/* Text Color */}
+					<button
+						className='nav-button'
+						title='Text Color'
+						style={{ marginRight: 0 }}
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={(e) => {
+							toggleTextCustomStyle(
+								e,
+								textColor.color,
+								'textColor',
+								editorStateRef.current,
+								setEditorStateRef.current,
+								setDocStructure
+							);
+						}}
+						ref={textColorRef}>
+						<TextColorSVG color={textColor.color} />
+					</button>
+					<button
+						className='nav-button expand-nav-button'
+						title='Choose Text Color'
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={(e) => {
+							e.stopPropagation();
+							setShowColorPicker('text');
+						}}
+						ref={textColorRef}>
+						<CaratDownSVG />
+					</button>
+					{showColorPicker === 'text' && (
+						<ColorPickerPopper
+							referenceElement={textColorRef.current}
+							closeFn={() => {
+								editorRef.current.focus();
+								setShowColorPicker('');
+							}}
+							colorObj={textColor}
+							setColorObj={setTextColor}
+						/>
+					)}
+
+					<button
+						className={
+							'nav-button' + (currentBlockType === 'unordered-list-item' ? ' active' : '')
+						}
+						title='Bulleted List'
+						onMouseDown={wrappedToggleBlockType('unordered-list-item')}>
+						<ListBulletSVG />
+					</button>
+
+					<button
+						className={
+							'nav-button' + (currentBlockType === 'ordered-list-item' ? ' active' : '')
+						}
+						title='Numbered List'
+						onMouseDown={wrappedToggleBlockType('ordered-list-item')}>
+						<ListNumberSVG />
+					</button>
+
+					<button
+						className={'nav-button' + (currentAlignment === 'left' ? ' active' : '')}
+						title='Align Left'
+						onMouseDown={wrappedToggleTextAlign('left')}>
+						<AlignLeftSVG />
+					</button>
+
+					<button
+						className={'nav-button' + (currentAlignment === 'center' ? ' active' : '')}
+						title='Align Center'
+						onMouseDown={wrappedToggleTextAlign('center')}>
+						<AlignCenterSVG />
+					</button>
+
+					<button
+						className={'nav-button' + (currentAlignment === 'right' ? ' active' : '')}
+						title='Align Right'
+						onMouseDown={wrappedToggleTextAlign('right')}>
+						<AlignRightSVG />
+					</button>
+
+					<button
+						className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
+						title='Justify Text'
+						onMouseDown={wrappedToggleTextAlign('justify')}>
+						<AlignJustifySVG />
+					</button>
+
+					<button
+						className={'nav-button' + (navData.currentDocTab !== 'pages' ? ' disabled' : '')}
+						title='Insert Section'
+						onMouseDown={(e) => {
+							e.preventDefault();
+							if (navData.currentDocTab === 'pages') {
+								insertNewSection(editorStateRef.current, setEditorStateRef.current);
+								// editorRef.current.focus();
+								// setTimeout(() => editorRef.current.focus(), 0);
+							}
+						}}>
+						<InsertSectionSVG />
+					</button>
+
+					<div className='editor-nav-vertical-rule' />
+
+					<button
+						className={'nav-button' + (spellCheck ? ' active' : '')}
+						title='Toggle Spellcheck'
+						onMouseDown={(e) => toggleSpellCheck(e)}>
+						<SpellcheckSVG />
+					</button>
+
+					<button
+						className='nav-button'
+						title='Add to Wiki'
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={(e) => {
+							e.stopPropagation();
+
+							if (document.getSelection().toString().length) {
+								console.log(
+									'document.getSelection().toString(): ',
+									document.getSelection().toString()
+								);
+
+								const selectionState = editorStateRef.current.getSelection();
+								console.log('selectionState start:', selectionState.getStartOffset());
+								console.log('selectionState end:', selectionState.getEndOffset());
+								console.log('selectionState start:', selectionState.getStartKey());
+								console.log('selectionState end:', selectionState.getEndKey());
+
+								setDisplayWikiPopper(true);
+							}
+						}}>
+						<ChainSVG />
+					</button>
+
+					{/* Show / Hide Keys/Links */}
+					<button
+						className={'nav-button' + (editorStyles.showAllTags ? ' active' : '')}
+						title='Show Wiki Links'
+						onMouseDown={(e) => {
+							e.preventDefault();
+							setEditorStyles({
+								...editorStyles,
+								showAllTags: !editorStyles.showAllTags,
+							});
+						}}>
+						{editorStyles.showAllTags ? <EyeSVG /> : <EyeHideSVG />}
+					</button>
+
+					<button
+						className='nav-button'
+						title='Insert Image'
+						onMouseDown={(e) => e.preventDefault()}
+						onClick={() => setShowUploadImage(true)}>
+						<ImageSVG />
+					</button>
+
+					{/* Add Tag Popper */}
+					{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
+                to close the popper. This can later be used for confirmation messages and things like that. */}
+					{displayWikiPopper && <AddToWikiPopper />}
+				</span>
+			</nav>
+		</>
+	);
+});
 
 export default EditorNav;

@@ -1,4 +1,5 @@
 import { useEffect, useState, useContext, useCallback, useRef } from 'react';
+import { EditorState } from 'draft-js';
 import {
 	defaultCompositeDecorator,
 	generateDecorators,
@@ -18,16 +19,14 @@ import { FindReplaceContext } from '../../contexts/findReplaceContext';
 // Immediately only searching the on-screen text, then searching the rest?
 // Debounce the decorator updates - make sure the user has paused typing
 
-export const useDecorator = (currentDoc, editorRef) => {
+export const useDecorator = (currentDoc, setEditorState) => {
 	const [showAllTags, setShowAllTags] = useState(false);
 	const [decorator, setDecorator] = useState(defaultCompositeDecorator);
 	const [needToClearFind, setNeedToClearFind] = useState(false);
 
 	const queuedUpdate = useRef(null);
 
-	const { linkStructureRef, docStructureRef, editorStyles, editorStateRef } = useContext(
-		LeftNavContext
-	);
+	const { docStructureRef, editorStyles, editorStateRef } = useContext(LeftNavContext);
 	const { findText, findRegisterRef } = useContext(FindReplaceContext);
 
 	// Break out our showAllTags flag
@@ -62,6 +61,7 @@ export const useDecorator = (currentDoc, editorRef) => {
 		// setQueuedUpdate(newTimeout);
 	}, []);
 
+	// Generate a new decorator whenever any dependencies change
 	useEffect(() => {
 		console.log('updating decorator');
 
@@ -82,6 +82,17 @@ export const useDecorator = (currentDoc, editorRef) => {
 			setDecorator(defaultCompositeDecorator);
 		}
 	}, [showAllTags, currentDoc, findText, queueDecoratorUpdate, needToClearFind]);
+
+	// Monitor the decorator for changes to update the editorState
+	useEffect(() => {
+		// Need to SET rather than createWithContent to maintain the undo/redo stack
+		console.log('Updating the editor state with a new decorator');
+		setEditorState((prev) =>
+			EditorState.set(prev, {
+				decorator: decorator,
+			})
+		);
+	}, [decorator]);
 
 	return decorator;
 };

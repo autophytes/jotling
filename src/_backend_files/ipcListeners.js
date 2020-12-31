@@ -3,7 +3,12 @@ const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
 const tar = require('tar');
-const { createNewProject, openProject, removeOldTempFilesSync } = require('./fileFunctions');
+const {
+	createNewProject,
+	openProject,
+	removeOldTempFilesSync,
+	updateRecentProjects,
+} = require('./fileFunctions');
 // const { getCurrentMainWindow } = require('../main');
 // const { setShouldCloseMainWindow, setShouldQuitApp } = require('../main');
 
@@ -262,7 +267,10 @@ const saveProjectListener = () => {
 					// Cancel the save
 				} else if (projectJotsPath === undefined) {
 					console.log('Save was cancelled.');
-					return;
+					return {
+						tempPath: '',
+						jotsPath: '',
+					};
 				}
 			}
 
@@ -319,6 +327,11 @@ const saveProjectListener = () => {
 
 			if (shouldOpen) {
 				openProject(openJotsPath);
+			}
+
+			if (saveAs) {
+				// Updates recent projects and file menu
+				updateRecentProjects(projectJotsPath);
 			}
 
 			return {

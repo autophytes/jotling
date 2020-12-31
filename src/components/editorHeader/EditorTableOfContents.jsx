@@ -6,6 +6,7 @@ import { findFilePath, retrieveContentAtPropertyPath } from '../../utils/utils';
 
 const EditorTableOfContents = () => {
 	const [isCollapsed, setIsCollapsed] = useState(false);
+	const [isReordering, setIsReordering] = useState(false);
 	const [sections, setSections] = useState([]);
 
 	const { docStructure, navData } = useContext(LeftNavContext);
@@ -54,7 +55,10 @@ const EditorTableOfContents = () => {
 			<div style={{ display: 'flex', alignItems: 'flex-start' }}>
 				<div className='editor-table-contents-wrapper'>
 					{/* Title */}
-					<span className='editor-table-contents-title'>Sections</span>
+					<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+						<span className='editor-table-contents-title'>Sections</span>
+						<span className='editor-table-reorder'>Reorder</span>
+					</div>
 
 					{/* Table of Contents */}
 					<Collapse isOpen={!isCollapsed}>

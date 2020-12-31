@@ -425,4 +425,5 @@ module.exports = {
 	removeOldTempFilesSync,
 	requestShowFindReplace,
 	requestInsertLink,
+	updateRecentProjects,
 };
