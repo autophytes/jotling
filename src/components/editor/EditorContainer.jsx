@@ -381,45 +381,50 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// As we type, updates alignment/styles/type to pass down to the editorNav. We do it here
 	// instead of there to prevent unnecessary renders.
 	useEffect(() => {
-		// Check that the setters are initialized
-		if (!navSettersRef.current) {
-			return;
-		}
-
-		const selectionState = editorState.getSelection();
-		const currentBlockKey = selectionState.getStartKey();
-		const block = editorState.getCurrentContent().getBlockForKey(currentBlockKey);
-
-		const newCurrentBlockType = block.getType();
-		const newCurrentStyles = editorState.getCurrentInlineStyle();
-		const newCurrentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
-
-		// Update the styles
-		navSettersRef.current.setCurrentStyles((prev) => {
-			if (!Immutable.is(newCurrentStyles, prev)) {
-				return newCurrentStyles;
-			} else {
-				return prev;
+		// Async so it doesn't delay the Editor receiving the updated editorState
+		const updateNavIconStates = async () => {
+			// Check that the setters are initialized
+			if (!navSettersRef.current) {
+				return;
 			}
-		});
 
-		// Update the block type
-		navSettersRef.current.setCurrentBlockType((prev) => {
-			if (newCurrentBlockType !== prev) {
-				return newCurrentBlockType;
-			} else {
-				return prev;
-			}
-		});
+			const selectionState = editorState.getSelection();
+			const currentBlockKey = selectionState.getStartKey();
+			const block = editorState.getCurrentContent().getBlockForKey(currentBlockKey);
 
-		// Update the text alignment
-		navSettersRef.current.setCurrentAlignment((prev) => {
-			if (newCurrentAlignment !== prev) {
-				return newCurrentAlignment;
-			} else {
-				return prev;
-			}
-		});
+			const newCurrentBlockType = block.getType();
+			const newCurrentStyles = editorState.getCurrentInlineStyle();
+			const newCurrentAlignment = getSelectedBlocksMetadata(editorState).get('text-align');
+
+			// Update the styles
+			navSettersRef.current.setCurrentStyles((prev) => {
+				if (!Immutable.is(newCurrentStyles, prev)) {
+					return newCurrentStyles;
+				} else {
+					return prev;
+				}
+			});
+
+			// Update the block type
+			navSettersRef.current.setCurrentBlockType((prev) => {
+				if (newCurrentBlockType !== prev) {
+					return newCurrentBlockType;
+				} else {
+					return prev;
+				}
+			});
+
+			// Update the text alignment
+			navSettersRef.current.setCurrentAlignment((prev) => {
+				if (newCurrentAlignment !== prev) {
+					return newCurrentAlignment;
+				} else {
+					return prev;
+				}
+			});
+		};
+
+		updateNavIconStates();
 	}, [editorState]);
 
 	// When loading a new document, set the scroll position

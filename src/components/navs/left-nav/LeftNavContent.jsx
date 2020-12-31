@@ -3,7 +3,7 @@ import React, { useCallback, useState, useContext, useEffect } from 'react';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import NavTrash from './NavTrash';
-import WikiTemplates from './WikiTemplates';
+import WikiTemplatesButton from './WikiTemplatesButton';
 
 import { buildFileStructure } from '../navFunctions';
 
@@ -65,7 +65,7 @@ const LeftNavContent = () => {
 				: null}
 
 			<hr />
-			{navData.currentTab === 'pages' && <WikiTemplates />}
+			{navData.currentTab === 'pages' && <WikiTemplatesButton />}
 			{docStructure.trash && <NavTrash />}
 		</div>
 	);

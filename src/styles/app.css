@@ -1944,3 +1944,40 @@ input[type='number']::-webkit-outer-spin-button {
 	border-bottom: 2px solid var(--color-primary);
 	color: var(--text-color);
 }
+
+.wiki-template-title {
+	font-size: 1.2rem;
+	font-weight: bold;
+	display: flex;
+	align-items: center;
+}
+
+.wiki-template-title > p {
+	margin: 0;
+	color: #444;
+}
+
+.wiki-template-title > svg {
+	width: 1rem;
+	height: 1rem;
+	fill: var(--color-primary);
+	margin-right: 0.5rem;
+}
+
+.wiki-template-section-list {
+	padding: 0.5rem 0 0.5rem 1rem;
+}
+
+.wiki-template-section-row {
+	display: flex;
+	align-items: center;
+}
+
+.wiki-template-section-row > svg {
+	width: 0.9rem;
+	height: 0.9rem;
+}
+
+button.wiki-template-add-section {
+	font-size: 1rem;
+}

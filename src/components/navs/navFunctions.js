@@ -661,7 +661,7 @@ const removeAllLinksRelatedToFile = (linkStructure, fileName) => {
 
 // Loops through the document structure and builds out the file/folder tree
 export const buildFileStructure = (
-	doc,
+	folder,
 	path,
 	isTrash,
 	handleFolderClick,
@@ -673,7 +673,7 @@ export const buildFileStructure = (
 ) => {
 	console.log('buildFileStructure is running');
 
-	return doc.children.map((child) => {
+	return folder.children.map((child) => {
 		// Rendering a document
 		if (child.type === 'doc') {
 			// If rendering the trash area, use the trash document component instead
@@ -691,7 +691,7 @@ export const buildFileStructure = (
 
 		// If rendering a folder
 		if (child.type === 'folder') {
-			const hasChildren = !!doc.folders[child.id]['children'].length;
+			const hasChildren = !!folder.folders[child.id]['children'].length;
 
 			// Default folders to open if not already set
 			let isOpen;
@@ -730,7 +730,7 @@ export const buildFileStructure = (
 						<div className='folder-contents'>
 							{hasChildren ? (
 								buildFileStructure(
-									doc.folders[child.id],
+									folder.folders[child.id],
 									[path, 'folders', child.id].join('/'),
 									isTrash,
 									handleFolderClick,

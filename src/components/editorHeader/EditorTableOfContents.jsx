@@ -57,7 +57,7 @@ const EditorTableOfContents = () => {
 					{/* Title */}
 					<div style={{ display: 'flex', justifyContent: 'space-between' }}>
 						<span className='editor-table-contents-title'>Sections</span>
-						<span className='editor-table-reorder'>Reorder</span>
+						{/* <span className='editor-table-reorder'>Reorder</span> */}
 					</div>
 
 					{/* Table of Contents */}
