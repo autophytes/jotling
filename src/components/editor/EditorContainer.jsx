@@ -19,6 +19,8 @@ import {
 	RichUtils,
 	getDefaultKeyBinding,
 	convertFromRaw,
+	Modifier,
+	SelectionState,
 } from 'draft-js';
 import { getSelectedBlocksMetadata } from 'draftjs-utils';
 
@@ -33,6 +35,10 @@ import {
 	checkCommandForUpdateWordCount,
 	removeEndingNewline,
 	continueMultiBlockLinkSource,
+	handleSelectionChange,
+	fetchCorrectSelection,
+	manuallyHandleReplaceText,
+	shouldSkipEditorState,
 } from './editorInputFunctions';
 import {
 	defaultCustomStyleMap,
@@ -119,6 +125,15 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// Sets the editorState
 	const handleEditorStateChange = (editorState) => {
+		// If manuallyHandleReplaceText runs, we want to skip the editor's late selection
+		if (shouldSkipEditorState()) {
+			console.log('skipping');
+			// setEditorState((prev) => EditorState.forceSelection(prev, prev.getSelection()));
+			return;
+		}
+
+		console.log("didn't skip");
+
 		// Cleans up selectionState before setting the editorState
 		setEditorState(removeEndingNewline(editorState));
 	};
@@ -131,6 +146,14 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		// Focus on the editor
 		editorRef.current.focus();
 	}, []);
+
+	// Registers a listener for selection changes
+	// useEffect(() => {
+	// 	const wrappedHandleSelectionChange = () => handleSelectionChange(editorRef);
+
+	// 	document.addEventListener('selectionchange', wrappedHandleSelectionChange);
+	// 	return () => document.removeEventListener('selectionchange', wrappedHandleSelectionChange);
+	// }, []);
 
 	// Handle shortcut keys. Using their default function right now.
 	const wrappedCustomKeyBindingFn = (e) => {
@@ -153,12 +176,16 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	);
 
 	// Process the key presses
-	const handleKeyCommand = useCallback((command, editorState) => {
+	const handleKeyCommand = useCallback((command, origEditorState) => {
+		console.log('command:', command);
 		if (command === 'handled-in-binding-fn') {
 			// For instance, I have to handle tab in the binding fn b/c it needs (e)
 			// Otherwise, the browser tries to do things with the commands.
 			return 'handled';
 		}
+
+		// Use the DOM selection if necessary
+		const editorState = fetchCorrectSelection(origEditorState, editorRef);
 
 		// Check if we need to update the word count. If so, pass through the update option.
 		const updateWordCountOption = checkCommandForUpdateWordCount(command);
@@ -179,22 +206,49 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				return 'handled';
 			}
 
+			// *** Manually handling split block - break into separate function
+			const selection = editorState.getSelection();
+			let newContentState = Modifier.splitBlock(editorState.getCurrentContent(), selection);
+
+			// Select the final cursor position
+			const newBlockKey = newContentState.getBlockAfter(selection.getStartKey()).getKey();
+			const emptySelectionState = SelectionState.createEmpty();
+			const finalSelection = emptySelectionState.merge({
+				anchorKey: newBlockKey,
+				anchorOffset: 0,
+				focusKey: newBlockKey,
+				focusOffset: 0,
+			});
+
+			// Push the block changes to the editorState
+			const editorStateBeforeSelect = EditorState.push(
+				editorState,
+				newContentState,
+				'split-block'
+			);
+
+			// Force the final selection
+			setEditorState(EditorState.forceSelection(editorStateBeforeSelect, finalSelection));
+			return 'handled';
 			// Going to have to deal with the link stuff differently (they're entities)
 		}
 
 		// If not custom handled, use the default handling
-		const newEditorState = RichUtils.handleKeyCommand(editorState, command);
+		// NOTE: RichUtils only handles backspace/delete if collapsed selection
+		let newEditorState = RichUtils.handleKeyCommand(editorState, command);
 		if (newEditorState) {
 			console.log('handle key command handled it');
 			setEditorState(newEditorState);
-			// console.log('handled in handleKeyCommand');
 			return 'handled';
 		}
 
 		return 'not-handled'; // Lets Draft know to try to handle this itself.
 	}, []);
 
-	const handleBeforeInput = (char, editorState) => {
+	const handleBeforeInput = (char, origEditorState) => {
+		// Use the DOM selection if necessary
+		const editorState = fetchCorrectSelection(origEditorState, editorRef);
+
 		const selection = editorState.getSelection();
 
 		// Update the word count after each space
@@ -210,6 +264,16 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			if (didHandle === 'handled') {
 				return 'handled';
 			}
+		}
+
+		// Draft's selection is messed up on non-collapsed selections on some systems.
+		// Handle inserting the input manually.
+		if (!selection.isCollapsed()) {
+			console.log('about to set the new editorState');
+			setEditorState(manuallyHandleReplaceText(editorState, char));
+
+			console.log('set the new editorState');
+			return 'handled';
 		}
 
 		return 'not-handled';

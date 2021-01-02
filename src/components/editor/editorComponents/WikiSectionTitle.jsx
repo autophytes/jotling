@@ -88,6 +88,10 @@ const updateDocSections = (
 
 	// Find the children array that contains our document
 	const filePath = findFilePath(docStructureRef.current[currentDocTab], '', 'doc', docId);
+	if (typeof filePath !== 'string') {
+		return;
+	}
+
 	const childrenPath = filePath + (filePath ? '/' : '') + 'children';
 	let childrenArray = retrieveContentAtPropertyPath(
 		childrenPath,

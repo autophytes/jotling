@@ -1,5 +1,206 @@
 import { EditorState, SelectionState, Modifier } from 'draft-js';
 
+// let _lastSelection = null;
+
+// // Save document selection changes if not collapsed
+// export const handleSelectionChange = (editorRef) => {
+// 	let selection = document.getSelection();
+// 	console.log('selection:', selection);
+// 	// Note the triple click will need to be handled differently
+// 	// Also ensure we're only registering selection inside the editor
+
+// 	// Note this is a property of the document selection, not the selectionState function
+// 	if (!selection.isCollapsed) {
+// 		// Ensure the selection is in the editor
+// 		if (editorRef.current && editorRef.current.editor.contains(selection.focusNode)) {
+// 			_lastSelection = selection;
+// 		}
+// 	} else {
+// 		_lastSelection = null;
+// 	}
+// };
+
+let skipEditorStatesBeforeMS = null;
+
+// Updates the editorState with the browser's native selection
+export const fetchCorrectSelection = (editorState, editorRef) => {
+	// Fetch the documents native selection
+	const docSelection = document.getSelection();
+	console.log('docSelection:', docSelection);
+
+	// Only modify the editorState if not collapsed and inside the editor
+	if (
+		docSelection.isCollapsed || // Not collapsed
+		!editorRef.current || // No valid editorRef
+		!editorRef.current.editor.contains(docSelection.focusNode) || // Selection not in editor
+		typeof docSelection.focusOffset !== 'number' || // Invalid offset
+		typeof docSelection.anchorOffset !== 'number' // Invalid offset
+	) {
+		return editorState;
+	}
+
+	// Returns the blockKey or FALSE if none found
+	const findParentElementBlockKey = (startElement, initialOffset) => {
+		let blockKey;
+		let element = startElement;
+
+		// Loop through parent nodes until the blockKey is found or no parents
+		while (!blockKey && element) {
+			// If this node doesn't contain the offsetKey (with the blockKey)
+			if (!element.dataset || !element.dataset.offsetKey) {
+				// If this is the last element, stop searching.
+				if (!element.parentElement) {
+					return { key: false, offset: false };
+				}
+
+				// Continue to the next parent
+				element = element.parentElement;
+				continue;
+			}
+
+			// If found an offsetKey, grab the blockKey
+			if (
+				typeof element.dataset.offsetKey === 'string' &&
+				element.dataset.offsetKey.length > 5
+			) {
+				let extraOffset = 0;
+
+				// If this isn't the first child node, the offset will be wrong.
+				if (element.dataset.offsetKey.slice(-4) !== '-0-0') {
+					const parentElement = element.parentElement;
+					const childrenCollection = parentElement.children;
+
+					let foundMatch = false;
+					for (let i = 0; i < childrenCollection.length; i++) {
+						if (childrenCollection.item(i) !== element) {
+							// Until we find the selected element, add the prev. elements length
+							extraOffset += childrenCollection.item(i).innerText
+								? childrenCollection.item(i).innerText.length
+								: 0;
+						} else {
+							foundMatch = true;
+						}
+					}
+
+					if (!foundMatch) {
+						return { key: false, offset: false };
+					}
+				}
+
+				// Return the key and the new offset
+				return {
+					key: element.dataset.offsetKey.slice(0, 5),
+					offset: initialOffset + extraOffset,
+				};
+			} else {
+				// offsetKey didn't contain a valid key
+				return { key: false, offset: false };
+			}
+		}
+	};
+
+	// Find the blockKey. If none found, return the unmodified editorState.
+	const { key: anchorBlockKey, offset: anchorOffset } = findParentElementBlockKey(
+		docSelection.anchorNode,
+		docSelection.anchorOffset
+	);
+	if (!anchorBlockKey) {
+		return editorState;
+	}
+
+	// Find the blockKey. If none found, return the unmodified editorState.
+	const { key: focusBlockKey, offset: focusOffset } = findParentElementBlockKey(
+		docSelection.focusNode,
+		docSelection.focusOffset
+	);
+	if (!focusBlockKey) {
+		return editorState;
+	}
+
+	// Determine if focus is before the anchor (thus, selection is backwards)
+	let isBackward = focusOffset < anchorOffset;
+	if (focusBlockKey !== anchorBlockKey) {
+		const currentContent = editorState.getCurrentContent();
+		const blockArray = currentContent.getBlocksAsArray();
+
+		const focusIndex = blockArray.findIndex((block) => block.getKey() === focusBlockKey);
+		const anchorIndex = blockArray.findIndex((block) => block.getKey() === anchorBlockKey);
+		isBackward = focusIndex < anchorIndex;
+	}
+
+	// Lets grab the initial selection state and reset it when we're done
+	const emptySelectionState = SelectionState.createEmpty();
+	const selectionState = emptySelectionState.merge({
+		anchorKey: anchorBlockKey,
+		anchorOffset: anchorOffset,
+		focusKey: focusBlockKey,
+		focusOffset: focusOffset,
+		hasFocus: true,
+		isBackward: isBackward,
+	});
+
+	const newEditorState = EditorState.acceptSelection(editorState, selectionState);
+	console.log('newEditorState selection:', newEditorState.getSelection());
+	console.log('selectionState:', selectionState);
+
+	return newEditorState;
+};
+
+export const manuallyHandleReplaceText = (editorState, char) => {
+	const currentContent = editorState.getCurrentContent();
+	const selection = editorState.getSelection();
+	const entityKey = currentContent
+		.getBlockForKey(selection.getStartKey())
+		.getEntityAt(selection.getStartOffset());
+	console.log('entityKey:', entityKey);
+
+	const newContentState = Modifier.replaceText(
+		currentContent,
+		selection,
+		char,
+		editorState.getCurrentInlineStyle(),
+		entityKey
+	);
+
+	// Lets grab the initial selection state and reset it when we're done
+	const emptySelectionState = SelectionState.createEmpty();
+	const newSelectionState = emptySelectionState.merge({
+		anchorKey: selection.getAnchorKey(),
+		anchorOffset: selection.getAnchorOffset() + 1,
+		focusKey: selection.getAnchorKey(),
+		focusOffset: selection.getAnchorOffset() + 1,
+	});
+
+	const newEditorState = EditorState.forceSelection(editorState, newSelectionState);
+	console.log('final seleciton state: ', newEditorState.getSelection());
+
+	const finalEditorState = EditorState.push(
+		newEditorState,
+		newContentState,
+		'insert-characters'
+	);
+
+	skipEditorStatesBeforeMS = Date.now();
+	console.log('skipEditorStatesBeforeMS set:', skipEditorStatesBeforeMS);
+
+	return finalEditorState;
+};
+
+// Skip the late selection if we're overriding it
+export const shouldSkipEditorState = () => {
+	if (!skipEditorStatesBeforeMS) {
+		return false;
+	} else {
+		const shouldSkip = Date.now() - skipEditorStatesBeforeMS < 200;
+		console.log(
+			'Date.now() - skipEditorStatesBeforeMS:',
+			Date.now() - skipEditorStatesBeforeMS
+		);
+		skipEditorStatesBeforeMS = null;
+		return shouldSkip;
+	}
+};
+
 // Converts '1. ', '* ', and '- ' to lists
 export const spaceToAutoList = (editorState, setEditorState) => {
 	// EVENTUAL TO-DOs
