@@ -322,3 +322,12 @@ export const findFileTab = (docStructure, fileType, fileId) => {
 		}
 	}
 };
+
+// Reorders the list as the items are being dragged
+export const reorderArray = (list, startIndex, endIndex) => {
+	const result = Array.from(list);
+	const [removed] = result.splice(startIndex, 1);
+	result.splice(endIndex, 0, removed);
+
+	return result;
+};

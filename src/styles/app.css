@@ -20,7 +20,7 @@ html,
 	--color-primary-rgb: 0, 149, 255;
 	/* --color-primary-dark: #0d75c8; */
 	--color-delete: #e1342a;
-	--color-red: #de4b43;
+	/* --color-red: #de4b43; not currently used */
 	--color-background: white;
 	--color-text: #212529;
 }
@@ -1679,7 +1679,7 @@ input[type='number']::-webkit-outer-spin-button {
 	font-size: 1.1rem;
 }
 
-.delete-modal-button-row {
+.modal-button-row {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
@@ -1690,6 +1690,11 @@ input[type='number']::-webkit-outer-spin-button {
 .submit-button.delete-modal-delete {
 	background-color: var(--color-delete);
 	margin-right: 1rem;
+}
+
+.submit-button.submit-button-cancel {
+	background-color: #999;
+	margin-left: 1rem;
 }
 
 .modal-form-hr {
@@ -1945,11 +1950,17 @@ input[type='number']::-webkit-outer-spin-button {
 	color: var(--text-color);
 }
 
+.wiki-template-modal-body {
+	font-size: 1.1rem;
+	padding: 0.25rem 0 0 1.5rem;
+}
+
 .wiki-template-title {
 	font-size: 1.2rem;
 	font-weight: bold;
 	display: flex;
 	align-items: center;
+	user-select: none;
 }
 
 .wiki-template-title > p {
@@ -1971,13 +1982,71 @@ input[type='number']::-webkit-outer-spin-button {
 .wiki-template-section-row {
 	display: flex;
 	align-items: center;
+	margin-bottom: 0.5rem;
 }
 
-.wiki-template-section-row > svg {
-	width: 0.9rem;
-	height: 0.9rem;
+.wiki-template-section-row svg {
+	cursor: pointer;
+	user-select: none;
+}
+
+.wiki-template-section-drag-handle,
+.wiki-template-section-close-handle {
+	display: flex;
+	align-items: center;
+}
+
+.wiki-template-section-drag-handle > svg {
+	width: 1.3rem;
+	height: 1.3rem;
+	margin-right: 0.5rem;
+	cursor: grab;
+}
+
+.wiki-template-section-drag-handle:active > svg {
+	cursor: grabbing;
+}
+
+.wiki-template-section-drag-handle:hover > svg {
+	fill: var(--color-primary);
+}
+
+.wiki-template-section-close-handle > svg {
+	width: 1rem;
+	height: 1rem;
+	margin-left: 0.5rem;
+	fill: #aaa;
+}
+
+.wiki-template-section-close-handle:hover > svg {
+	fill: var(--color-delete);
+}
+
+.wiki-template-section-row > input {
+	font-size: 1rem;
+	padding: 0.1rem 0 0.1rem 0.35rem;
+	border-radius: 3px;
+	border: 1px solid #777;
 }
 
 button.wiki-template-add-section {
+	color: var(--color-text);
 	font-size: 1rem;
+	font-weight: bold;
+	padding: 0.2rem 0.5rem;
+	border-radius: 0.25rem;
+	user-select: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+}
+button.wiki-template-add-section > svg {
+	width: 0.75rem;
+	height: 0.75rem;
+	margin-right: 0.35rem;
+	fill: var(--color-primary);
+}
+
+button.wiki-template-add-section:hover {
+	background-color: rgba(0, 0, 0, 0.1);
 }

@@ -22,7 +22,7 @@ const ConfirmDeleteForm = (props) => {
 
 			<div className='delete-modal-body'>
 				<p>{'Are you sure you want to permanently delete ' + formDeleteItem + '?'}</p>
-				<div className='delete-modal-button-row'>
+				<div className='modal-button-row'>
 					<button
 						className='submit-button delete-modal-delete'
 						onClick={(e) => handleDelete(e)}>

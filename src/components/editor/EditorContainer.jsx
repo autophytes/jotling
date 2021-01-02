@@ -132,8 +132,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			return;
 		}
 
-		console.log("didn't skip");
-
 		// Cleans up selectionState before setting the editorState
 		setEditorState(removeEndingNewline(editorState));
 	};
@@ -147,9 +145,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		editorRef.current.focus();
 	}, []);
 
-	// Registers a listener for selection changes
+	// // Registers a listener for selection changes
 	// useEffect(() => {
-	// 	const wrappedHandleSelectionChange = () => handleSelectionChange(editorRef);
+	// 	const wrappedHandleSelectionChange = (e) => handleSelectionChange(e, editorRef);
 
 	// 	document.addEventListener('selectionchange', wrappedHandleSelectionChange);
 	// 	return () => document.removeEventListener('selectionchange', wrappedHandleSelectionChange);

@@ -33,6 +33,7 @@
 		"font-list": "^1.2.11",
 		"ncp": "^2.0.0",
 		"react": "^17.0.0",
+		"react-beautiful-dnd": "^13.0.0",
 		"react-color": "^2.19.3",
 		"react-css-collapse": "^4.1.0",
 		"react-dom": "^17.0.0",

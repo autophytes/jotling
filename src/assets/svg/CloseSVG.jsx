@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CloseSVG = () => {
+const CloseSVG = ({ className }) => {
 	return (
 		<svg
 			// xmlns='http://www.w3.org/2000/svg'
@@ -11,6 +11,7 @@ const CloseSVG = () => {
 			y='0px'
 			viewBox='0 0 492 492'
 			style={{ enableBackground: 'new 0 0 492 492' }}
+			className={className}
 			// xml:space='preserve'
 			// width='512px'
 			// height='512px'

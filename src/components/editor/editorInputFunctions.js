@@ -2,25 +2,32 @@ import { EditorState, SelectionState, Modifier } from 'draft-js';
 
 // let _lastSelection = null;
 
-// // Save document selection changes if not collapsed
-// export const handleSelectionChange = (editorRef) => {
-// 	let selection = document.getSelection();
-// 	console.log('selection:', selection);
-// 	// Note the triple click will need to be handled differently
-// 	// Also ensure we're only registering selection inside the editor
-
-// 	// Note this is a property of the document selection, not the selectionState function
-// 	if (!selection.isCollapsed) {
-// 		// Ensure the selection is in the editor
-// 		if (editorRef.current && editorRef.current.editor.contains(selection.focusNode)) {
-// 			_lastSelection = selection;
-// 		}
-// 	} else {
-// 		_lastSelection = null;
-// 	}
-// };
-
 let skipEditorStatesBeforeMS = null;
+
+// // Save document selection changes if not collapsed
+// export const handleSelectionChange = (e, editorRef) => {
+// 	console.log('in handleSelectionChange:', Date.now() - skipEditorStatesBeforeMS);
+// 	if (Date.now() - skipEditorStatesBeforeMS < 200) {
+// 		console.log('trying to prevent');
+// 		e.preventDefault();
+// 		skipEditorStatesBeforeMS = null;
+// 	}
+
+// 	// let selection = document.getSelection();
+// 	// console.log('selection:', selection);
+// 	// // Note the triple click will need to be handled differently
+// 	// // Also ensure we're only registering selection inside the editor
+
+// 	// // Note this is a property of the document selection, not the selectionState function
+// 	// if (!selection.isCollapsed) {
+// 	// 	// Ensure the selection is in the editor
+// 	// 	if (editorRef.current && editorRef.current.editor.contains(selection.focusNode)) {
+// 	// 		_lastSelection = selection;
+// 	// 	}
+// 	// } else {
+// 	// 	_lastSelection = null;
+// 	// }
+// };
 
 // Updates the editorState with the browser's native selection
 export const fetchCorrectSelection = (editorState, editorRef) => {
@@ -196,7 +203,7 @@ export const shouldSkipEditorState = () => {
 			'Date.now() - skipEditorStatesBeforeMS:',
 			Date.now() - skipEditorStatesBeforeMS
 		);
-		skipEditorStatesBeforeMS = null;
+		// skipEditorStatesBeforeMS = null;
 		return shouldSkip;
 	}
 };
