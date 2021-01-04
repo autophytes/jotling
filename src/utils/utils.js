@@ -331,3 +331,39 @@ export const reorderArray = (list, startIndex, endIndex) => {
 
 	return result;
 };
+
+// Return first parent folder with the specified prop
+// Used for finding the templateSections when inserting a wiki page
+export const findFirstFileAlongPathWithProp = (
+	currentFolder,
+	filePath,
+	fileType,
+	propName
+) => {
+	let pathArray = filePath.split('/');
+
+	for (let i = pathArray.length; i > 0; i--) {
+		// For each folder, grab the folder's children object
+		let currentFolderId = pathArray[i];
+		console.log('pathArray:', pathArray);
+		let pathSubArray = pathArray.slice(0, i - 1);
+		pathSubArray.push('children');
+		const path = pathSubArray.join('/');
+
+		const childrenArray = retrieveContentAtPropertyPath(path, currentFolder);
+
+		// Not every level has a children object
+		if (childrenArray) {
+			console.log('childrenArray:', childrenArray);
+			const folderObj = childrenArray.find(
+				(item) => item.type === fileType && item.id === Number(currentFolderId)
+			);
+			console.log('currentFolderId:', currentFolderId);
+
+			// Return the first folder with the given prop
+			if (folderObj && folderObj.hasOwnProperty(propName)) {
+				return folderObj;
+			}
+		}
+	}
+};

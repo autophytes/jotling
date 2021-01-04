@@ -11,7 +11,7 @@ const WikiTemplatesButton = () => {
 				<div className='svg-wrapper'>
 					<TemplatesSVG />
 				</div>
-				<span>Templates</span>
+				<span>Wiki Templates</span>
 			</button>
 
 			{showTemplates && <WikiTemplatesForm setDisplayModal={setShowTemplates} />}

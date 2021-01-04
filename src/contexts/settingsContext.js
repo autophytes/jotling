@@ -48,6 +48,7 @@ const SettingsContextProvider = (props) => {
 		recentlyUsedFonts: ['PT Sans'],
 	});
 
+	// Update the CSS with new line heights
 	useEffect(() => {
 		const newStyleSheetRule = `
     .editor h1,
@@ -89,20 +90,6 @@ const SettingsContextProvider = (props) => {
 				newEditorSettings[prop] = defaultSettings[prop];
 			}
 		}
-
-		// for (let prop in highlightColor) {
-		// 	let newValue = store.get(`highlightColor.${prop}`, null);
-		// 	if (newValue !== null) {
-		// 		newHighlightColor[prop] = newValue;
-		// 	}
-		// }
-
-		// for (let prop in textColor) {
-		// 	let newValue = store.get(`textColor.${prop}`, null);
-		// 	if (newValue !== null) {
-		// 		newTextColor[prop] = newValue;
-		// 	}
-		// }
 
 		// Load in our primary color
 		const rootElement = document.querySelector(':root');

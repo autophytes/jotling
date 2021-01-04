@@ -47,6 +47,7 @@ import {
 	blockRendererFn,
 } from './editorStyleFunctions';
 import { updateAllBlocks } from '../../utils/draftUtils';
+import { convertSetterToRefSetter } from '../../utils/contextUtils';
 
 import { useDecorator } from './editorCustomHooks';
 import { handleDraftImageDrop } from './editorComponents/BlockImageContainer';
@@ -89,11 +90,15 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	);
 
 	// EDITOR STATE
-	const [editorState, setEditorState] = useState(EditorState.createEmpty());
+	const [editorState, setEditorStateOrig] = useState(EditorState.createEmpty());
 	// Updates the editorStateRef with the updated editorState
-	useEffect(() => {
-		editorStateRef.current = editorState;
-	}, [editorState]);
+	// useEffect(() => {
+	// 	editorStateRef.current = editorState;
+	// }, [editorState]);
+
+	const setEditorState = useCallback((value) => {
+		convertSetterToRefSetter(editorStateRef, setEditorStateOrig, value);
+	}, []);
 
 	// STATE
 	const [spellCheck, setSpellCheck] = useState(false);
@@ -411,11 +416,13 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
 
 				const newEditorState = editorArchivesRef.current[navData.currentDoc].editorState;
-				console.log('navData.currentDoc:', navData.currentDoc);
+				const editorStateWithDecorator = EditorState.set(newEditorState, {
+					decorator: decorator,
+				});
 
-				// TO-DO: Check for new links to add before setting the editor state
+				// Check for new links to add before setting the editor state
 				const editorStateWithLinks = updateLinkEntities(
-					newEditorState,
+					editorStateWithDecorator,
 					linkStructureRef.current,
 					navData.currentDoc
 				);
@@ -436,6 +443,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		setNavData,
 		prev,
 		loadFile,
+		decorator,
 		saveFile,
 		linkStructureRef,
 	]);

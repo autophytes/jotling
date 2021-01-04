@@ -271,7 +271,7 @@ const LinkDestDecorator = ({
 			if (linkId && prevDecoratedText !== decoratedText) {
 				let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
 				newLinkStructure.links[linkId].alias = true;
-				linkStructureRef.current = newLinkStructure;
+
 				setIsAliased(true);
 				setLinkStructure(newLinkStructure);
 			}
@@ -458,7 +458,7 @@ const syncLinkStructureOnDelay = ({
 			let newLinkStructure = { ...linkStructureRef.current };
 			newLinkStructure.links[linkId][linkPropName] = newEntityContent;
 			// getAllEntityContent(editorStateRef, blockKey, start, end);
-			linkStructureRef.current = newLinkStructure;
+
 			setLinkStructure(newLinkStructure);
 		}, 500);
 

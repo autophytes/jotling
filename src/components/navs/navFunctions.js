@@ -1,11 +1,12 @@
 import React from 'react';
 import { ipcRenderer } from 'electron';
+import { List, Repeat } from 'immutable';
 
 import NavFolder from './left-nav/NavFolder';
 import NavFolderEmpty from './left-nav/NavFolderEmpty';
 import NavDocument from './left-nav/NavDocument';
-
-import Collapse from 'react-css-collapse';
+import NavDocumentTrash from './left-nav/NavDocumentTrash';
+import NavFolderTrash from './left-nav/NavFolderTrash';
 
 import {
 	findFilePath,
@@ -15,11 +16,68 @@ import {
 	deleteObjPropertyAtPropertyPath,
 	findFirstDocInFolder,
 	findFurthestChildrenFolderAlongPath,
+	findFirstFileAlongPathWithProp,
 } from '../../utils/utils';
-import NavDocumentTrash from './left-nav/NavDocumentTrash';
-import NavFolderTrash from './left-nav/NavFolderTrash';
+
 import FolderOpenSVG from '../../assets/svg/FolderOpenSVG';
 import DocumentSingleSVG from '../../assets/svg/DocumentSingleSVG';
+
+import Collapse from 'react-css-collapse';
+import { CharacterMetadata, ContentBlock, ContentState, EditorState, genKey } from 'draft-js';
+
+// If we have sections in the document, initialize the editorState with those sections
+export const initializeDocSections = (
+	docStructure,
+	currentDoc,
+	filePath,
+	setEditorArchives
+) => {
+	// Find the first parent folder with templateSections
+	const folderObj = findFirstFileAlongPathWithProp(
+		docStructure.pages,
+		filePath,
+		'folder',
+		'templateSections'
+	);
+
+	// If no templateSections found, don't initialize the document
+	if (!folderObj) {
+		return;
+	}
+
+	const templateSections = folderObj.templateSections;
+
+	// Build an array of content blocks with the new sections
+	let blockArray = [];
+	for (let sectionName of templateSections) {
+		// Add the wiki-section block
+		blockArray.push(
+			new ContentBlock({
+				key: genKey(),
+				type: 'wiki-section',
+				text: sectionName,
+				characterList: List(Repeat(CharacterMetadata.create(), sectionName.length)),
+			})
+		);
+
+		// Generate two empty blocks
+		blockArray.push(new ContentBlock({ key: genKey(), type: 'unstyled' }));
+		blockArray.push(new ContentBlock({ key: genKey(), type: 'unstyled' }));
+	}
+
+	// Push the new content block into the editorState
+	const newEditorState = EditorState.createWithContent(
+		ContentState.createFromBlockArray(blockArray)
+	);
+
+	// Set in the editorArchives to be loaded from there
+	setEditorArchives((prev) => ({
+		...prev,
+		[currentDoc]: {
+			editorState: newEditorState,
+		},
+	}));
+};
 
 // Inserts a new file/folder into the docStructure
 export const addFile = (
@@ -31,6 +89,7 @@ export const addFile = (
 	lastClickedId,
 	navData,
 	setNavData,
+	setEditorArchives,
 	fileName, // Optional
 	dontOpenFile = false
 ) => {
@@ -110,6 +169,11 @@ export const addFile = (
 	// Will put the file name into edit mode
 	let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
 	if (fileType === 'doc' && !dontOpenFile) {
+		// Initialize sections if needed
+		if (currentTab === 'pages') {
+			initializeDocSections(docStructure, childObject.fileName, filePath, setEditorArchives);
+		}
+
 		setNavData({
 			...navData,
 			editFile: fileName ? '' : newEditFileId,

@@ -175,6 +175,5 @@ const updateDocSections = (
 	// Update the doc structure with the new tab
 	if (shouldUpdateDocStructure) {
 		setDocStructure(newDocStructure);
-		docStructureRef.current = newDocStructure;
 	}
 };

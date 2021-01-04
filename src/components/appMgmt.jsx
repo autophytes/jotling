@@ -313,7 +313,8 @@ const AppMgmt = () => {
 				type,
 				Number(id),
 				navDataRef.current,
-				setNavData
+				setNavData,
+				setEditorArchives
 			);
 		});
 

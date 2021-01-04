@@ -1,11 +1,13 @@
 import React, { createContext, useState, useCallback, useRef, useEffect } from 'react';
-import { convertToRaw } from 'draft-js';
+import { convertToRaw, EditorState } from 'draft-js';
 import { ipcRenderer } from 'electron';
 
 import { cleanupJpeg } from '../components/appFunctions';
 
 import Store from 'electron-store';
 import { findFileTab } from '../utils/utils';
+import { convertSetterToRefSetter } from '../utils/contextUtils';
+
 const store = new Store();
 
 export const LeftNavContext = createContext();
@@ -15,11 +17,11 @@ const DEFAULT_WIDTH = 12;
 
 const LeftNavContextProvider = (props) => {
 	// STATE
-	const [docStructure, setDocStructure] = useState({});
-	const [linkStructure, setLinkStructure] = useState({});
-	const [mediaStructure, setMediaStructure] = useState({});
+	const [docStructure, setDocStructureOrig] = useState({});
+	const [linkStructure, setLinkStructureOrig] = useState({});
+	const [mediaStructure, setMediaStructureOrig] = useState({});
 	const [project, setProject] = useState({ tempPath: '', jotsPath: '' });
-	const [navData, setNavData] = useState({
+	const [navData, setNavDataOrig] = useState({
 		currentDoc: '',
 		currentDocTab: 'draft',
 		currentTempPath: '',
@@ -36,7 +38,7 @@ const LeftNavContextProvider = (props) => {
 		showAllTags: false,
 		showIndTags: [],
 	});
-	const [editorArchives, setEditorArchives] = useState({});
+	const [editorArchives, setEditorArchivesOrig] = useState({});
 	const [scrollToLinkId, setScrollToLinkId] = useState(null);
 	const [peekWindowLinkId, setPeekWindowLinkId] = useState(null);
 	const [displayWikiPopper, setDisplayWikiPopper] = useState(false);
@@ -50,32 +52,31 @@ const LeftNavContextProvider = (props) => {
 	const linkStructureRef = useRef(linkStructure);
 	const docStructureRef = useRef(docStructure);
 	const mediaStructureRef = useRef(mediaStructure);
-	const editorStateRef = useRef(null);
+	const editorStateRef = useRef(EditorState.createEmpty());
 	const editorArchivesRef = useRef(editorArchives);
 	const navDataRef = useRef(navData);
 	const setEditorStateRef = useRef(null);
 	const isImageSelectedRef = useRef(false);
 
-	useEffect(() => {
-		linkStructureRef.current = linkStructure;
-	}, [linkStructure]);
+	const setLinkStructure = (value) => {
+		convertSetterToRefSetter(linkStructureRef, setLinkStructureOrig, value);
+	};
 
-	useEffect(() => {
-		docStructureRef.current = docStructure;
-	}, [docStructure]);
+	const setDocStructure = (value) => {
+		convertSetterToRefSetter(docStructureRef, setDocStructureOrig, value);
+	};
 
-	useEffect(() => {
-		mediaStructureRef.current = mediaStructure;
-		console.log('mediaStructure in context:', mediaStructure);
-	}, [mediaStructure]);
+	const setMediaStructure = (value) => {
+		convertSetterToRefSetter(mediaStructureRef, setMediaStructureOrig, value);
+	};
 
-	useEffect(() => {
-		navDataRef.current = navData;
-	}, [navData]);
+	const setNavData = (value) => {
+		convertSetterToRefSetter(navDataRef, setNavDataOrig, value);
+	};
 
-	useEffect(() => {
-		editorArchivesRef.current = editorArchives;
-	}, [editorArchives]);
+	const setEditorArchives = (value) => {
+		convertSetterToRefSetter(editorArchivesRef, setEditorArchivesOrig, value);
+	};
 
 	// Initialize the left and right nav width from electron-store
 	useEffect(() => {

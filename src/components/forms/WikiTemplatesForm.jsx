@@ -172,7 +172,8 @@ const WikiTemplatesForm = ({ setDisplayModal }) => {
 															{/* Drag Handle */}
 															<div
 																className='wiki-template-section-drag-handle'
-																{...provided.dragHandleProps}>
+																{...provided.dragHandleProps}
+																tabIndex={-1}>
 																<DragSVG />
 															</div>
 

@@ -3,27 +3,20 @@ import React, { useState, useCallback, useContext, useRef, useEffect } from 'rea
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import LeftNavContent from './LeftNavContent';
+import LeftNavStats from './LeftNavStats';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import PlusSVG from '../../../assets/svg/PlusSVG';
-// import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
 import DocumentPagesSVG from '../../../assets/svg/DocumentPagesSVG';
 import LightbulbSVG from '../../../assets/svg/LightbulbSVG';
 import BookDraftSVG from '../../../assets/svg/BookDraftSVG';
 import DocumentSingleSVG from '../../../assets/svg/DocumentSingleSVG';
 import FolderOpenSVG from '../../../assets/svg/FolderOpenSVG';
 
-import {
-	setObjPropertyAtPropertyPath,
-	insertIntoArrayAtPropertyPath,
-} from '../../../utils/utils';
-
 import { addFile } from '../navFunctions';
-import LeftNavStats from './LeftNavStats';
 
 const LeftNav = () => {
 	const {
-		docStructure,
 		setDocStructure,
 		docStructureRef,
 		navData,
@@ -32,6 +25,7 @@ const LeftNav = () => {
 		editorStyles,
 		setEditorStyles,
 		resetNavWidth,
+		setEditorArchives,
 	} = useContext(LeftNavContext);
 	const [pinNav, setPinNav] = useState(true);
 	// const [rootFontSize, setRootFontSize] = useState(18);
@@ -87,7 +81,8 @@ const LeftNav = () => {
 			navDataRef.current.lastClicked.type,
 			navDataRef.current.lastClicked.id,
 			navDataRef.current,
-			setNavData
+			setNavData,
+			setEditorArchives
 		);
 	}, []);
 

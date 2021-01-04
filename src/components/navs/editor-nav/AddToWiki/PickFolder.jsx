@@ -24,6 +24,7 @@ const PickFolder = ({
 		setEditorStateRef,
 		setLinkStructure,
 		setSyncLinkIdList,
+		setEditorArchives,
 	} = useContext(LeftNavContext);
 
 	const handleFolderClick = useCallback(
@@ -43,6 +44,7 @@ const PickFolder = ({
 							child.id,
 							navData,
 							setNavData,
+							setEditorArchives,
 							newWikiName, // TO DO
 							true // don't open the file after creating it
 						);
