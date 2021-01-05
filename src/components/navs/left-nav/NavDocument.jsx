@@ -37,11 +37,14 @@ const NavDocument = ({
 
 	const saveDocNameChange = useCallback(
 		(newName, isBlur) => {
+			console.log('newName:', newName);
 			// If on the wiki tab, pull the page names
 			let wikiNames = [];
 			if (navData.currentTab === 'pages') {
 				const allWikiDocs = findAllDocsInFolder(docStructureRef.current.pages);
-				wikiNames = allWikiDocs.map((item) => item.name.toLowerCase());
+				const filteredDocs = allWikiDocs.filter((item) => item.id !== child.id);
+				wikiNames = filteredDocs.map((item) => item.name.toLowerCase());
+				console.log('wikiNames:', wikiNames);
 			}
 
 			// If the new name is already a wiki page name (if on the wiki tab)

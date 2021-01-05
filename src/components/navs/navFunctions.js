@@ -96,9 +96,6 @@ export const addFile = (
 	// Create a docStructure object for our current tab.
 	// We'll insert our file and overwrite this section of docStructure.
 	let folderStructure = JSON.parse(JSON.stringify(docStructure[currentTab]));
-	console.log('folderStructure:', folderStructure);
-	console.log('docStructure[currentTab]:', docStructure[currentTab]);
-	console.log('currentTab:', currentTab);
 	let maxIds = JSON.parse(JSON.stringify(docStructure.maxIds));
 	// Note the spread operator only performs a shallow copy (nested objects are still refs).
 	//   The JSON method performs a deep copy.
@@ -119,11 +116,26 @@ export const addFile = (
 		}
 	}
 
+	// Choose a unique file name
+	const allDocs = findAllDocsInFolder(docStructure[currentTab]);
+	const usedDocNames = allDocs.map((item) => item.name.toLowerCase());
+	const origFileName = fileName
+		? fileName
+		: fileType === 'doc'
+		? 'New Document'
+		: `New ${fileType}`;
+	fileName = origFileName;
+	let fileNameCounter = 1;
+	while (usedDocNames.includes(fileName.toLowerCase())) {
+		fileName = `${origFileName} ${fileNameCounter}`;
+		fileNameCounter++;
+	}
+
 	// Build the object that will go in 'children' at the path
 	let childObject = {
 		type: fileType,
 		id: maxIds[fileType] + 1,
-		name: fileName ? fileName : fileType === 'Doc' ? 'New Document' : `New ${fileType}`,
+		name: fileName,
 	};
 	if (fileType === 'doc') {
 		childObject.fileName = 'doc' + childObject.id + '.json';
@@ -166,14 +178,14 @@ export const addFile = (
 	);
 	console.log(folderStructure);
 
+	// Initialize sections if needed
+	if (fileType === 'doc' && currentTab === 'pages') {
+		initializeDocSections(docStructure, childObject.fileName, filePath, setEditorArchives);
+	}
+
 	// Will put the file name into edit mode
 	let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);
 	if (fileType === 'doc' && !dontOpenFile) {
-		// Initialize sections if needed
-		if (currentTab === 'pages') {
-			initializeDocSections(docStructure, childObject.fileName, filePath, setEditorArchives);
-		}
-
 		setNavData({
 			...navData,
 			editFile: fileName ? '' : newEditFileId,

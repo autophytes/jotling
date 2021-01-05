@@ -367,7 +367,6 @@ const AddToWikiPopper = () => {
 					<PickFolder
 						{...{
 							newWikiName,
-							showPickFolder,
 							setShowPickFolder,
 							buildAddToWikiStructure,
 							setDisplayWikiPopper,
