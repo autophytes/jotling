@@ -40,7 +40,7 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 	};
 
 	const handleNewSectionEnter = (e) => {
-		if (e.key === 'Enter' || e.keyCode === 27) {
+		if (e.key === 'Enter') {
 			setShowPickSectionLocation(true);
 		}
 	};
@@ -54,9 +54,11 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 			childrenPath,
 			docStructureRef.current.pages
 		);
+		console.log('childrenArray:', childrenArray);
 		const docObj = childrenArray.find(
 			(item) => item.id === selectedDocId && item.type === 'doc'
 		);
+		console.log('docObj:', docObj);
 
 		let newSections = docObj.sections ? docObj.sections : [];
 		newSections.unshift({ key: '##topOfPage', text: 'Top of Page', isSpecial: true });

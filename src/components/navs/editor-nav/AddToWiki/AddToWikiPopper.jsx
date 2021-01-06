@@ -13,8 +13,8 @@ import { LinkSelectionRangeRef } from '../LinkSelectionRangeRef';
 import { LeftNavContext } from '../../../../contexts/leftNavContext';
 import { SettingsContext } from '../../../../contexts/settingsContext';
 
-import { createTagLink, selectionHasEntityType } from '../../../editor/editorFunctions';
-import { buildAddToWikiStructure, findAllDocsInFolder, addFile } from '../../navFunctions';
+import { selectionHasEntityType } from '../../../editor/editorFunctions';
+import { buildAddToWikiStructure, findAllDocsInFolder } from '../../navFunctions';
 import { getTextSelection } from '../../../../utils/draftUtils';
 
 import PickFolder from './PickFolder';

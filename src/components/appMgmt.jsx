@@ -61,6 +61,7 @@ const AppMgmt = () => {
 		linkStructureRef,
 		setSyncLinkIdList,
 		showUploadImage,
+		saveFileRef,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -314,7 +315,8 @@ const AppMgmt = () => {
 				Number(id),
 				navDataRef.current,
 				setNavData,
-				setEditorArchives
+				setEditorArchives,
+				saveFileRef
 			);
 		});
 
@@ -374,18 +376,6 @@ const AppMgmt = () => {
 				setDisplayWikiPopper(true);
 			}
 		});
-
-		// ipcRenderer.on('edit-file-tree', (event, options) => {
-		// 	console.log('received edit-file-tree request');
-		// 	console.log('options: ', options);
-		// 	// Handle the inserts / deletes
-		// });
-
-		// ipcRenderer.on('edit-file-tree', (event, options) => {
-		// 	console.log('received edit-file-tree request');
-		// 	console.log('options: ', options);
-		// 	// Handle the inserts / deletes
-		// });
 	}, []);
 
 	// If no current doc, finds the first document

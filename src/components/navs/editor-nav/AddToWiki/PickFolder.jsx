@@ -1,4 +1,4 @@
-import React, { useContext, useCallback } from 'react';
+import React, { useContext, useCallback, useState } from 'react';
 
 import { LeftNavContext } from '../../../../contexts/leftNavContext';
 
@@ -8,6 +8,7 @@ import FolderOpenSVG from '../../../../assets/svg/FolderOpenSVG';
 import { createTagLink } from '../../../editor/editorFunctions';
 import { addFile } from '../../navFunctions';
 import { findFilePath, findFirstFileAlongPathWithProp } from '../../../../utils/utils';
+import PickSection from './PickSection';
 
 const PickFolder = ({
 	newWikiName,
@@ -15,6 +16,11 @@ const PickFolder = ({
 	buildAddToWikiStructure,
 	setDisplayWikiPopper,
 }) => {
+	const [showPickSection, setShowPickSection] = useState(false);
+	const [selectedFolder, setSelectedFolder] = useState(null);
+	const [templateSections, setTemplateSections] = useState(null);
+	const [docId, setDocId] = useState(null);
+
 	const {
 		docStructureRef,
 		setDocStructure,
@@ -26,18 +32,25 @@ const PickFolder = ({
 		setLinkStructure,
 		setSyncLinkIdList,
 		setEditorArchives,
+		saveFileRef,
 	} = useContext(LeftNavContext);
 
 	const handleFolderClick = useCallback(
 		(child) => {
 			return (e) => {
 				e.preventDefault();
+				e.stopPropagation();
 				console.log('folder: ', child);
 
+				// NEXT: if we get templateSections from either of the options below,
+				// let the user choose the section to insert the new wiki into.
+				// Otherwise, crate the page with no sections screen
+
+				let newTemplateSections;
 				// If this folder itself has sections
 				if (child.templateSections && child.templateSections.length) {
 					// Then use these sections as options for choosing the section to insert below
-					console.log('folder had template sections: ', child.templateSections);
+					newTemplateSections = child.templateSections;
 				} else {
 					// If this folder didn't have template sections, check the parents
 					const folderFilePath = findFilePath(
@@ -46,7 +59,6 @@ const PickFolder = ({
 						'folder',
 						child.id
 					);
-					console.log('folderFilePath:', folderFilePath);
 
 					// Find the first parent folder with templateSections
 					const folderObj = findFirstFileAlongPathWithProp(
@@ -55,7 +67,10 @@ const PickFolder = ({
 						'folder',
 						'templateSections'
 					);
-					console.log('folderParent with templateSections:', folderObj);
+
+					if (folderObj.templateSections.length) {
+						newTemplateSections = folderObj.templateSections;
+					}
 				}
 
 				// Add the file to the given folder
@@ -70,9 +85,23 @@ const PickFolder = ({
 					navData,
 					setNavData,
 					setEditorArchives,
+					saveFileRef,
 					newWikiName,
 					true // don't open the file after creating it
 				);
+
+				// If we have templateSections, choose the section before creating the link
+				if (newTemplateSections && newTemplateSections.length) {
+					setSelectedFolder(child);
+					setTemplateSections(newTemplateSections);
+					setDocId(newDocId);
+					setShowPickSection(true);
+
+					// Don't create the link. We'll do that in PickSection
+					return;
+				}
+
+				// If no templateSections, go ahead and create the link
 
 				// Create the link to the new wiki document
 				createTagLink(
@@ -92,7 +121,7 @@ const PickFolder = ({
 		[navData, newWikiName]
 	);
 
-	return (
+	return !showPickSection ? (
 		<>
 			<div className='popper-title'>
 				<button
@@ -125,6 +154,8 @@ const PickFolder = ({
 				</div>
 			</div>
 		</>
+	) : (
+		<PickSection {...{ selectedDocId: docId, setShowPickSection }} />
 	);
 };
 

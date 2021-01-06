@@ -90,6 +90,7 @@ export const addFile = (
 	navData,
 	setNavData,
 	setEditorArchives,
+	saveFileRef,
 	fileName, // Optional
 	dontOpenFile = false
 ) => {
@@ -180,7 +181,16 @@ export const addFile = (
 
 	// Initialize sections if needed
 	if (fileType === 'doc' && currentTab === 'pages') {
-		initializeDocSections(docStructure, childObject.fileName, filePath, setEditorArchives);
+		// This was expecting us to open the document right away
+		// Instead, we need to save the file in addition to setting the archives && update the docStructure
+		// Return updated child object and update that here before setting docStructure at the bottom
+		initializeDocSections(
+			docStructure,
+			childObject.fileName,
+			filePath,
+			setEditorArchives,
+			saveFileRef
+		);
 	}
 
 	// Will put the file name into edit mode
@@ -864,6 +874,7 @@ export const buildAddToWikiStructure = (
 						}`}
 						style={foldersOnly ? { cursor: 'pointer' } : {}}
 						// onClick={() => foldersOnly && handleFileClick(child)}>
+						onMouseDown={(e) => e.preventDefault()}
 						onClick={handleFileClick(child, foldersOnly)}>
 						<div className='svg-wrapper add-to-wiki'>
 							<FolderOpenSVG />

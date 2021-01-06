@@ -37,6 +37,7 @@ const NavDocument = ({
 
 	const saveDocNameChange = useCallback(
 		(newName, isBlur) => {
+			console.log('isBlur:', isBlur);
 			console.log('newName:', newName);
 			// If on the wiki tab, pull the page names
 			let wikiNames = [];
@@ -65,8 +66,8 @@ const NavDocument = ({
 
 				// If clicking away, disable edit mode
 				if (isBlur) {
-					setNavData({ ...navData, editFile: '' });
 					setFileName(child.name);
+					setNavData({ ...navData, editFile: '' });
 				}
 			} else {
 				// Set the new document name
@@ -179,8 +180,13 @@ const NavDocument = ({
 					onBlur={(e) => saveDocNameChange(e.target.value ? e.target.value : 'Unnamed', true)}
 					onFocus={(e) => e.target.select()}
 					onKeyUp={(e) => {
-						if (e.key === 'Enter' || e.keyCode === 27) {
+						console.log('e:', e);
+						if (e.key === 'Enter') {
 							saveDocNameChange(e.target.value ? e.target.value : 'Unnamed');
+						}
+						if (e.key === 'Escape') {
+							setFileName(child.name);
+							setNavData({ ...navData, editFile: '' });
 						}
 					}}
 				/>

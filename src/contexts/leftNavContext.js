@@ -57,6 +57,7 @@ const LeftNavContextProvider = (props) => {
 	const navDataRef = useRef(navData);
 	const setEditorStateRef = useRef(null);
 	const isImageSelectedRef = useRef(false);
+	const saveFileRef = useRef(null);
 
 	const setLinkStructure = (value) => {
 		convertSetterToRefSetter(linkStructureRef, setLinkStructureOrig, value);
@@ -163,8 +164,10 @@ const LeftNavContextProvider = (props) => {
 
 	// Saves current document file
 	const saveFile = useCallback(
-		(docName = navData.currentDoc) => {
-			const currentContent = editorStateRef.current.getCurrentContent();
+		(docName = navData.currentDoc, editorState) => {
+			const currentContent = editorState
+				? editorState.getCurrentContent()
+				: editorStateRef.current.getCurrentContent();
 			const rawContent = convertToRaw(currentContent);
 
 			ipcRenderer.invoke(
@@ -175,8 +178,12 @@ const LeftNavContextProvider = (props) => {
 				rawContent
 			);
 		},
-		[project.tempPath, navData.currentDoc]
+		[project, navData.currentDoc]
 	);
+
+	useEffect(() => {
+		saveFileRef.current = saveFile;
+	}, [saveFile]);
 
 	// Cleans up unused images
 	const runCleanup = useCallback(async () => {
@@ -343,6 +350,7 @@ const LeftNavContextProvider = (props) => {
 				isImageSelectedRef,
 				customStyles,
 				saveFile,
+				saveFileRef,
 				saveFileAndProject,
 			}}>
 			{props.children}
