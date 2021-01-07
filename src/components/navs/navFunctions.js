@@ -30,7 +30,8 @@ export const initializeDocSections = (
 	docStructure,
 	currentDoc,
 	filePath,
-	setEditorArchives
+	setEditorArchives,
+	saveFileRef
 ) => {
 	// Find the first parent folder with templateSections
 	const folderObj = findFirstFileAlongPathWithProp(
@@ -42,18 +43,26 @@ export const initializeDocSections = (
 
 	// If no templateSections found, don't initialize the document
 	if (!folderObj) {
-		return;
+		return { sections: null };
 	}
 
 	const templateSections = folderObj.templateSections;
 
 	// Build an array of content blocks with the new sections
 	let blockArray = [];
+	let sectionArray = [];
 	for (let sectionName of templateSections) {
+		// Build the array of sections
+		const newBlockKey = genKey();
+		sectionArray.push({
+			key: newBlockKey,
+			text: sectionName,
+		});
+
 		// Add the wiki-section block
 		blockArray.push(
 			new ContentBlock({
-				key: genKey(),
+				key: newBlockKey,
 				type: 'wiki-section',
 				text: sectionName,
 				characterList: List(Repeat(CharacterMetadata.create(), sectionName.length)),
@@ -70,6 +79,9 @@ export const initializeDocSections = (
 		ContentState.createFromBlockArray(blockArray)
 	);
 
+	// Save the file in case we don't open it before closing the project
+	saveFileRef.current(currentDoc, newEditorState);
+
 	// Set in the editorArchives to be loaded from there
 	setEditorArchives((prev) => ({
 		...prev,
@@ -77,6 +89,8 @@ export const initializeDocSections = (
 			editorState: newEditorState,
 		},
 	}));
+
+	return { sections: sectionArray };
 };
 
 // Inserts a new file/folder into the docStructure
@@ -142,6 +156,25 @@ export const addFile = (
 		childObject.fileName = 'doc' + childObject.id + '.json';
 	}
 
+	// Initialize sections if needed
+	if (fileType === 'doc' && currentTab === 'pages') {
+		// This was expecting us to open the document right away
+		// Instead, we need to save the file in addition to setting the archives && update the docStructure
+		// We need the editorArchives set for when we do full project searching
+		// Return updated child object and update that here before setting docStructure at the bottom
+		const { sections } = initializeDocSections(
+			docStructure,
+			childObject.fileName,
+			filePath,
+			setEditorArchives,
+			saveFileRef
+		);
+
+		if (sections && sections.length) {
+			childObject.sections = sections;
+		}
+	}
+
 	// Build the object that will go in 'folders' at the path.
 	if (fileType === 'folder') {
 		let folderObject = { folders: {}, children: [] };
@@ -178,20 +211,6 @@ export const addFile = (
 		insertIndex
 	);
 	console.log(folderStructure);
-
-	// Initialize sections if needed
-	if (fileType === 'doc' && currentTab === 'pages') {
-		// This was expecting us to open the document right away
-		// Instead, we need to save the file in addition to setting the archives && update the docStructure
-		// Return updated child object and update that here before setting docStructure at the bottom
-		initializeDocSections(
-			docStructure,
-			childObject.fileName,
-			filePath,
-			setEditorArchives,
-			saveFileRef
-		);
-	}
 
 	// Will put the file name into edit mode
 	let newEditFileId = fileType + '-' + (maxIds[fileType] + 1);

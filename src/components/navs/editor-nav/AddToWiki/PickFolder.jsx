@@ -60,7 +60,7 @@ const PickFolder = ({
 						child.id
 					);
 
-					// Find the first parent folder with templateSections
+					// Find the first parent folder with templateSections if it exists
 					const folderObj = findFirstFileAlongPathWithProp(
 						docStructureRef.current.pages,
 						folderFilePath,
@@ -68,9 +68,20 @@ const PickFolder = ({
 						'templateSections'
 					);
 
-					if (folderObj.templateSections.length) {
+					if (folderObj && folderObj.templateSections.length) {
 						newTemplateSections = folderObj.templateSections;
 					}
+				}
+
+				// If we have templateSections, choose the section before creating the link
+				if (newTemplateSections && newTemplateSections.length) {
+					setSelectedFolder(child);
+					setTemplateSections(newTemplateSections);
+					// setDocId(newDocId);
+					setShowPickSection(true);
+
+					// Don't create the link. We'll do that in PickSection
+					return;
 				}
 
 				// Add the file to the given folder
@@ -89,19 +100,6 @@ const PickFolder = ({
 					newWikiName,
 					true // don't open the file after creating it
 				);
-
-				// If we have templateSections, choose the section before creating the link
-				if (newTemplateSections && newTemplateSections.length) {
-					setSelectedFolder(child);
-					setTemplateSections(newTemplateSections);
-					setDocId(newDocId);
-					setShowPickSection(true);
-
-					// Don't create the link. We'll do that in PickSection
-					return;
-				}
-
-				// If no templateSections, go ahead and create the link
 
 				// Create the link to the new wiki document
 				createTagLink(
@@ -155,7 +153,7 @@ const PickFolder = ({
 			</div>
 		</>
 	) : (
-		<PickSection {...{ selectedDocId: docId, setShowPickSection }} />
+		<PickSection {...{ setShowPickSection, templateSections, selectedFolder }} />
 	);
 };
 

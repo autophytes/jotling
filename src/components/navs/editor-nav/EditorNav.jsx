@@ -176,7 +176,14 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 			<div className='editor-nav-hover-region' />
 			<nav
 				className={'editor-nav' + (pinNav ? '' : ' hidden')}
-				onMouseDown={(e) => e.preventDefault()}>
+				onMouseDown={(e) => {
+					if (
+						e.target.classList.contains('editor-nav') ||
+						e.target.classList.contains('editor-nav-subsection')
+					) {
+						e.preventDefault();
+					}
+				}}>
 				<span className='editor-nav-subsection'>
 					<button
 						className={'nav-button' + (pinNav ? ' active' : '')}

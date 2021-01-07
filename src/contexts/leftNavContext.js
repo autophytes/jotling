@@ -165,6 +165,7 @@ const LeftNavContextProvider = (props) => {
 	// Saves current document file
 	const saveFile = useCallback(
 		(docName = navData.currentDoc, editorState) => {
+			// potentially set default of editorState to editorStateRef.current
 			const currentContent = editorState
 				? editorState.getCurrentContent()
 				: editorStateRef.current.getCurrentContent();

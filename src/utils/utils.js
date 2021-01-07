@@ -345,7 +345,6 @@ export const findFirstFileAlongPathWithProp = (
 	for (let i = pathArray.length; i > 0; i--) {
 		// For each folder, grab the folder's children object
 		let currentFolderId = pathArray[i];
-		console.log('pathArray:', pathArray);
 		let pathSubArray = pathArray.slice(0, i - 1);
 		pathSubArray.push('children');
 		const path = pathSubArray.join('/');
@@ -354,11 +353,9 @@ export const findFirstFileAlongPathWithProp = (
 
 		// Not every level has a children object
 		if (childrenArray) {
-			console.log('childrenArray:', childrenArray);
 			const folderObj = childrenArray.find(
 				(item) => item.type === fileType && item.id === Number(currentFolderId)
 			);
-			console.log('currentFolderId:', currentFolderId);
 
 			// Return the first folder with the given prop
 			if (folderObj && folderObj.hasOwnProperty(propName)) {

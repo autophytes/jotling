@@ -8,7 +8,12 @@ import { createTagLink } from '../../../editor/editorFunctions';
 import { findFilePath, retrieveContentAtPropertyPath } from '../../../../utils/utils';
 import BackArrowSVG from '../../../../assets/svg/BackArrowSVG';
 
-const PickSection = ({ selectedDocId, setShowPickSection }) => {
+const PickSection = ({
+	selectedDocId,
+	setShowPickSection,
+	templateSections,
+	selectedFolder,
+}) => {
 	const [newSectionName, setNewSectionName] = useState('New Section');
 	const [showPickSectionLocation, setShowPickSectionLocation] = useState(false);
 	const [sections, setSections] = useState([]);
@@ -47,26 +52,41 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 
 	// Build the array of sections to list out
 	useEffect(() => {
-		const filePath = findFilePath(docStructureRef.current.pages, '', 'doc', selectedDocId);
-		const childrenPath = filePath + (filePath ? '/' : '') + 'children';
+		let newSections = [];
 
-		const childrenArray = retrieveContentAtPropertyPath(
-			childrenPath,
-			docStructureRef.current.pages
-		);
-		console.log('childrenArray:', childrenArray);
-		const docObj = childrenArray.find(
-			(item) => item.id === selectedDocId && item.type === 'doc'
-		);
-		console.log('docObj:', docObj);
+		// If we're creating a new wiki and using template sections that aren't in the doc yet
+		if (templateSections) {
+			newSections = templateSections.map((item, i) => ({
+				key: i,
+				text: item,
+				isTemplateSection: true,
+				templateSectionIndex: i,
+			}));
+		} else {
+			// Otherwise, list the sections from the doc
 
-		let newSections = docObj.sections ? docObj.sections : [];
+			// If we aren't listing out
+			const filePath = findFilePath(docStructureRef.current.pages, '', 'doc', selectedDocId);
+			const childrenPath = filePath + (filePath ? '/' : '') + 'children';
+
+			const childrenArray = retrieveContentAtPropertyPath(
+				childrenPath,
+				docStructureRef.current.pages
+			);
+
+			const docObj = childrenArray.find(
+				(item) => item.id === selectedDocId && item.type === 'doc'
+			);
+
+			newSections = docObj.sections ? docObj.sections : [];
+		}
+
 		newSections.unshift({ key: '##topOfPage', text: 'Top of Page', isSpecial: true });
 		newSections.push({ key: '##bottomOfPage', text: 'Bottom of Page', isSpecial: true });
 		console.log('newSections:', newSections);
 
 		setSections(newSections);
-	}, [selectedDocId]);
+	}, [selectedDocId, templateSections]);
 
 	return (
 		<>
@@ -100,6 +120,7 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 								type='text'
 								value={newSectionName}
 								autoFocus
+								spellCheck={false}
 								onChange={(e) => setNewSectionName(e.target.value)}
 								onFocus={(e) => e.target.select()}
 								onKeyUp={handleNewSectionEnter}
@@ -115,6 +136,7 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 					{/* Choose a location to insert the new section */}
 					{sections.map((item) => (
 						<button
+							key={item.key}
 							className='file-nav document add-to-wiki'
 							style={{ marginBottom: '1px', fontStyle: item.isSpecial ? 'italic' : 'normal' }}
 							onClick={() =>
@@ -122,8 +144,7 @@ const PickSection = ({ selectedDocId, setShowPickSection }) => {
 									newName: newSectionName,
 									insertBeforeKey: item.key,
 								})
-							}
-							key={item.key}>
+							}>
 							<div className='svg-wrapper add-to-wiki'>
 								<SectionsSVG />
 							</div>

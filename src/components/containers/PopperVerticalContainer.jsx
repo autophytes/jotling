@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { usePopper } from 'react-popper';
 
 const PopperVerticalContainer = ({
@@ -12,9 +12,6 @@ const PopperVerticalContainer = ({
 }) => {
 	// REFS
 	const popperElementRef = useRef(null);
-
-	// STATE
-	const [minWidth, setMinWidth] = useState(0);
 
 	// POPPER
 	const { styles, attributes, forceUpdate } = usePopper(
