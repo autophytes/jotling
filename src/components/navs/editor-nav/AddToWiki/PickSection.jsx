@@ -3,16 +3,18 @@ import React, { useContext, useEffect, useState } from 'react';
 import { LeftNavContext } from '../../../../contexts/leftNavContext';
 
 import SectionsSVG from '../../../../assets/svg/SectionsSVG';
+import BackArrowSVG from '../../../../assets/svg/BackArrowSVG';
 
 import { createTagLink } from '../../../editor/editorFunctions';
+import { addFile, insertNewDocSection } from '../../navFunctions';
 import { findFilePath, retrieveContentAtPropertyPath } from '../../../../utils/utils';
-import BackArrowSVG from '../../../../assets/svg/BackArrowSVG';
 
 const PickSection = ({
 	selectedDocId,
 	setShowPickSection,
 	templateSections,
 	selectedFolder,
+	newWikiName,
 }) => {
 	const [newSectionName, setNewSectionName] = useState('New Section');
 	const [showPickSectionLocation, setShowPickSectionLocation] = useState(false);
@@ -21,14 +23,19 @@ const PickSection = ({
 	const {
 		setDisplayWikiPopper,
 		docStructureRef,
+		setDocStructure,
 		editorStateRef,
 		linkStructureRef,
 		navData,
+		setNavData,
 		setEditorStateRef,
 		setLinkStructure,
 		setSyncLinkIdList,
+		setEditorArchives,
+		saveFileRef,
 	} = useContext(LeftNavContext);
 
+	// Handle the section click for an already existing wiki page
 	const handleSectionClick = (initialSectionKey, insertSectionOption) => {
 		createTagLink(
 			selectedDocId,
@@ -39,6 +46,87 @@ const PickSection = ({
 			setLinkStructure,
 			setSyncLinkIdList,
 			initialSectionKey,
+			insertSectionOption
+		);
+		setDisplayWikiPopper(false);
+	};
+
+	// Handle the section click when creating a new wiki page too
+	const handleSectionClickNewWiki = (sectionItem, insertSectionOption) => {
+		// Add the file to the given folder
+		// Might need add file to return the file we've created?
+		const { id: newDocId, sections: newSections, editorState } = addFile(
+			'doc',
+			docStructureRef.current,
+			setDocStructure,
+			'pages',
+			selectedFolder.type,
+			selectedFolder.id,
+			navData,
+			setNavData,
+			setEditorArchives,
+			saveFileRef,
+			newWikiName,
+			true // don't open the file after creating it
+		);
+
+		let blockKey = sectionItem.key;
+
+		// Find the actual blockKey in the newSections
+		if (sectionItem.hasOwnProperty('templateSectionIndex')) {
+			blockKey = newSections[sectionItem.templateSectionIndex].key;
+		}
+
+		// When creating a new section, update the key of the element we're inserting before
+		if (insertSectionOption) {
+			// If we have a template index to reference, grab the new section key
+			if (insertSectionOption.section.hasOwnProperty('templateSectionIndex')) {
+				insertSectionOption.insertBeforeKey =
+					newSections[insertSectionOption.section.templateSectionIndex].key;
+			} else {
+				// If it's not already top or bottom, default to bottom
+				if (!['##bottomOfPage', '##topOfPage'].includes(insertSectionOption.insertBeforeKey)) {
+					insertSectionOption.insertBeforeKey = '##bottomOfPage';
+				}
+			}
+
+			// If creating a new section, go ahead and create/sync that here
+			// In this case, we probably need to return the new editorState from the addFile
+			const {
+				blockKey: newSectionBlockKey,
+				editorState: newEditorState,
+			} = insertNewDocSection(
+				editorState,
+				insertSectionOption,
+				setDocStructure,
+				'pages',
+				newDocId
+			);
+
+			// Save the file in case we don't open it before closing the project
+			const newDocFileName = 'doc' + newDocId + '.json';
+			saveFileRef.current(newDocFileName, newEditorState);
+
+			// Set in the editorArchives to be loaded from there
+			setEditorArchives((prev) => ({
+				...prev,
+				[newDocFileName]: {
+					editorState: newEditorState,
+				},
+			}));
+
+			blockKey = newSectionBlockKey;
+		}
+
+		createTagLink(
+			newDocId,
+			editorStateRef, // The source document
+			linkStructureRef,
+			navData.currentDoc,
+			setEditorStateRef.current,
+			setLinkStructure,
+			setSyncLinkIdList,
+			blockKey,
 			insertSectionOption
 		);
 		setDisplayWikiPopper(false);
@@ -59,28 +147,30 @@ const PickSection = ({
 			newSections = templateSections.map((item, i) => ({
 				key: i,
 				text: item,
-				isTemplateSection: true,
+				isTemplateSection: true, // maybe delete
 				templateSectionIndex: i,
 			}));
 		} else {
 			// Otherwise, list the sections from the doc
 
-			// If we aren't listing out
+			// Grab the children array in the folder
 			const filePath = findFilePath(docStructureRef.current.pages, '', 'doc', selectedDocId);
 			const childrenPath = filePath + (filePath ? '/' : '') + 'children';
-
 			const childrenArray = retrieveContentAtPropertyPath(
 				childrenPath,
 				docStructureRef.current.pages
 			);
 
+			// Pull the specified document
 			const docObj = childrenArray.find(
 				(item) => item.id === selectedDocId && item.type === 'doc'
 			);
 
+			// Grab the existing sections off the document
 			newSections = docObj.sections ? docObj.sections : [];
 		}
 
+		// Add the top/bottom special handlers
 		newSections.unshift({ key: '##topOfPage', text: 'Top of Page', isSpecial: true });
 		newSections.push({ key: '##bottomOfPage', text: 'Bottom of Page', isSpecial: true });
 		console.log('newSections:', newSections);
@@ -140,10 +230,16 @@ const PickSection = ({
 							className='file-nav document add-to-wiki'
 							style={{ marginBottom: '1px', fontStyle: item.isSpecial ? 'italic' : 'normal' }}
 							onClick={() =>
-								handleSectionClick('##newSection', {
-									newName: newSectionName,
-									insertBeforeKey: item.key,
-								})
+								templateSections
+									? handleSectionClickNewWiki(item, {
+											newName: newSectionName,
+											insertBeforeKey: item.key,
+											section: item,
+									  })
+									: handleSectionClick('##newSection', {
+											newName: newSectionName,
+											insertBeforeKey: item.key,
+									  })
 							}>
 							<div className='svg-wrapper add-to-wiki'>
 								<SectionsSVG />
@@ -160,7 +256,11 @@ const PickSection = ({
 						<button
 							className='file-nav document add-to-wiki'
 							style={{ marginBottom: '1px', fontStyle: item.isItalic ? 'italic' : 'normal' }}
-							onClick={() => handleSectionClick(item.key)}
+							onClick={() =>
+								templateSections
+									? handleSectionClickNewWiki(item)
+									: handleSectionClick(item.key)
+							}
 							key={item.key}>
 							<div className='svg-wrapper add-to-wiki'>
 								<SectionsSVG />

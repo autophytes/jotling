@@ -153,7 +153,7 @@ const PickFolder = ({
 			</div>
 		</>
 	) : (
-		<PickSection {...{ setShowPickSection, templateSections, selectedFolder }} />
+		<PickSection {...{ setShowPickSection, templateSections, selectedFolder, newWikiName }} />
 	);
 };
 

@@ -26,7 +26,7 @@ import Collapse from 'react-css-collapse';
 import { CharacterMetadata, ContentBlock, ContentState, EditorState, genKey } from 'draft-js';
 
 // If we have sections in the document, initialize the editorState with those sections
-export const initializeDocSections = (
+export const initializeDocWithSections = (
 	docStructure,
 	currentDoc,
 	filePath,
@@ -90,7 +90,69 @@ export const initializeDocSections = (
 		},
 	}));
 
-	return { sections: sectionArray };
+	return { sections: sectionArray, editorState: newEditorState };
+};
+
+// Update an editorState with a new wiki-section inserted in a specific location
+export const insertNewDocSection = (
+	editorState,
+	newSectionOptions,
+	setDocStructure,
+	currentTab,
+	docId
+) => {
+	const currentContent = editorState.getCurrentContent();
+	let newBlockArray = currentContent.getBlocksAsArray();
+
+	// Create the new section block
+	const insertBeforeKey = newSectionOptions.insertBeforeKey;
+	const newSectionBlockKey = genKey();
+	const newSectionBlock = new ContentBlock({
+		key: newSectionBlockKey,
+		type: 'wiki-section',
+		text: newSectionOptions.newName,
+		characterList: List(Repeat(CharacterMetadata.create(), newSectionOptions.newName.length)),
+	});
+	const newEmptyBlock = new ContentBlock({ key: genKey(), type: 'unstyled' });
+
+	// Position the new section block
+	if (insertBeforeKey === '##topOfPage') {
+		newBlockArray.unshift(newEmptyBlock);
+		newBlockArray.unshift(newSectionBlock);
+	} else {
+		const sectionIndex = newBlockArray.findIndex((item) => item.getKey() === insertBeforeKey);
+		if (sectionIndex !== -1) {
+			// If we found a matching section block key, insert afterwards
+			newBlockArray.splice(sectionIndex, 0, newEmptyBlock);
+			newBlockArray.splice(sectionIndex, 0, newSectionBlock);
+		} else {
+			// Otherwise, push to the end of the page
+			newBlockArray.push(newSectionBlock);
+			newBlockArray.push(newEmptyBlock);
+		}
+	}
+
+	let newEditorState = EditorState.push(
+		editorState,
+		ContentState.createFromBlockArray(newBlockArray),
+		'split-block'
+	);
+
+	// 	// Finish tomorrow :(
+
+	// setDocStructure((docStructure) => {
+	// 	let folderStructure = JSON.parse(JSON.stringify(docStructure[currentTab]));
+	// 	const filePath = findFilePath(folderStructure, '', 'doc', docId);
+	// 	const childrenPath = filePath + (filePath === '' ? '' : '/') + 'children';
+
+	// 	const childrenArray = retrieveContentAtPropertyPath(
+	// 		filePath + (filePath === '' ? '' : '/') + 'children',
+	// 		folderStructure
+	// 	);
+
+	// });
+
+	return { blockKey: newSectionBlockKey, editorState: newEditorState };
 };
 
 // Inserts a new file/folder into the docStructure
@@ -157,12 +219,13 @@ export const addFile = (
 	}
 
 	// Initialize sections if needed
+	let newEditorState;
 	if (fileType === 'doc' && currentTab === 'pages') {
 		// This was expecting us to open the document right away
 		// Instead, we need to save the file in addition to setting the archives && update the docStructure
 		// We need the editorArchives set for when we do full project searching
 		// Return updated child object and update that here before setting docStructure at the bottom
-		const { sections } = initializeDocSections(
+		const { sections, editorState } = initializeDocWithSections(
 			docStructure,
 			childObject.fileName,
 			filePath,
@@ -173,6 +236,8 @@ export const addFile = (
 		if (sections && sections.length) {
 			childObject.sections = sections;
 		}
+
+		newEditorState = editorState;
 	}
 
 	// Build the object that will go in 'folders' at the path.
@@ -235,7 +300,7 @@ export const addFile = (
 
 	setDocStructure({ ...docStructure, [currentTab]: folderStructure, maxIds });
 
-	return { id: childObject.id };
+	return { id: childObject.id, sections: childObject.sections, editorState: newEditorState };
 };
 
 // Permanently delete a single document from the trash bin
