@@ -33,7 +33,7 @@ let skipEditorStatesBeforeMS = null;
 export const fetchCorrectSelection = (editorState, editorRef) => {
 	// Fetch the documents native selection
 	const docSelection = document.getSelection();
-	console.log('docSelection:', docSelection);
+	// console.log('docSelection:', docSelection);
 
 	// Only modify the editorState if not collapsed and inside the editor
 	if (

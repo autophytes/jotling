@@ -93,7 +93,8 @@ export const initializeDocWithSections = (
 	return { sections: sectionArray, editorState: newEditorState };
 };
 
-// Update an editorState with a new wiki-section inserted in a specific location
+// Update an editorState && docStructure with a new wiki-section inserted in a specific location
+// Returns the new editorState && blockKey
 export const insertNewDocSection = (
 	editorState,
 	newSectionOptions,
@@ -138,19 +139,51 @@ export const insertNewDocSection = (
 		'split-block'
 	);
 
-	// 	// Finish tomorrow :(
+	// Update the docStructure with the new section
+	setDocStructure((docStructure) => {
+		let folderStructure = JSON.parse(JSON.stringify(docStructure[currentTab]));
 
-	// setDocStructure((docStructure) => {
-	// 	let folderStructure = JSON.parse(JSON.stringify(docStructure[currentTab]));
-	// 	const filePath = findFilePath(folderStructure, '', 'doc', docId);
-	// 	const childrenPath = filePath + (filePath === '' ? '' : '/') + 'children';
+		// Retrieve the array of sections
+		const filePath = findFilePath(folderStructure, '', 'doc', docId);
+		const childrenPath = filePath + (filePath === '' ? '' : '/') + 'children';
+		const childrenArray = retrieveContentAtPropertyPath(childrenPath, folderStructure);
+		const docIndex = childrenArray.findIndex(
+			(item) => item.id === docId && item.type === 'doc'
+		);
+		let docObj = { ...childrenArray[docIndex] };
 
-	// 	const childrenArray = retrieveContentAtPropertyPath(
-	// 		filePath + (filePath === '' ? '' : '/') + 'children',
-	// 		folderStructure
-	// 	);
+		// Update the section array with the new section
+		let sectionArray = [...(docObj.sections ? docObj.sections : [])];
+		const childObj = { key: newSectionBlockKey, text: newSectionOptions.newName };
+		if (insertBeforeKey === '##topOfPage') {
+			sectionArray.unshift(childObj);
+		} else {
+			const sectionIndex = sectionArray.findIndex((item) => item.key === insertBeforeKey);
+			if (sectionIndex !== -1) {
+				sectionArray.splice(sectionIndex, 0, childObj);
+			} else {
+				sectionArray.push(childObj);
+			}
+		}
 
-	// });
+		// Update the doc in the children array
+		docObj.sections = sectionArray;
+		let newChildrenArray = [...childrenArray];
+		newChildrenArray[docIndex] = docObj;
+
+		// Update the children property
+		const newFolderStructure = setObjPropertyAtPropertyPath(
+			childrenPath,
+			newChildrenArray,
+			folderStructure
+		);
+
+		// Return a new docStructure
+		return {
+			...docStructure,
+			[currentTab]: newFolderStructure,
+		};
+	});
 
 	return { blockKey: newSectionBlockKey, editorState: newEditorState };
 };

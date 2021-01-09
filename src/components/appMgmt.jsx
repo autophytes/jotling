@@ -1,6 +1,7 @@
 // Import dependencies
 import React, { useState, useCallback, useEffect, useContext } from 'react';
 import { ipcRenderer } from 'electron';
+import { convertFromRaw, EditorState } from 'draft-js';
 
 import TopNav from './navs/top-nav/TopNav';
 import LeftNav from './navs/left-nav/LeftNav';
@@ -28,6 +29,10 @@ import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
 import HiddenContextMenu from './hiddenContextMenu';
 import UploadImageForm from './forms/UploadImageForm';
+
+// For an example of how we can use web workers. Webpack already configured. Doesn't work with Draft.
+//   https://willowtreeapps.com/ideas/improving-web-app-performance-with-web-worker
+// import ExampleWorker from '../../webWorkers/exampleWorker';
 
 // Create main App component
 const AppMgmt = () => {
@@ -57,6 +62,7 @@ const AppMgmt = () => {
 		peekWindowLinkId,
 		setDisplayWikiPopper,
 		editorStateRef,
+		editorArchivesRef, // TEMPORARY
 		setEditorStateRef,
 		linkStructureRef,
 		setSyncLinkIdList,
@@ -98,7 +104,7 @@ const AppMgmt = () => {
 		);
 		setLinkStructure(newLinkStructure.fileContents);
 		setLinkStructureLoaded(true);
-	}, [setLinkStructure, project.tempPath]);
+	}, [project.tempPath]);
 
 	// Loads the document media structure (function)
 	const loadMediaStructure = useCallback(async () => {
@@ -109,7 +115,20 @@ const AppMgmt = () => {
 		);
 		setMediaStructure(newMediaStructure.fileContents);
 		setMediaStructureLoaded(true);
-	}, [setMediaStructure, project.tempPath]);
+	}, [project.tempPath]);
+
+	// Load an object with all raw document contents
+	const loadAllDocuments = async () => {
+		const newAllDocObj = await ipcRenderer.invoke(
+			'read-all-documents',
+			project.tempPath,
+			'docs'
+		);
+
+		const docArray = Object.keys(newAllDocObj);
+		console.log('calling preload function');
+		preloadEachDocument(docArray, newAllDocObj, setEditorArchives);
+	};
 
 	const resetCurrentDoc = useCallback(() => {
 		// Find the first document in the first tab with contents
@@ -164,9 +183,13 @@ const AppMgmt = () => {
 		if (prevProj !== project.tempPath && project.tempPath) {
 			// Loads the doc structure
 			setEditorArchives({});
+
+			// MOVE THESE DEFS TO A SEPARATE FILE
 			loadDocStructure({ isNewProject: true });
 			loadLinkStructure();
 			loadMediaStructure();
+			loadAllDocuments();
+			console.log('function after loadAllDocuments');
 			setPrevProj(project.tempPath);
 		}
 	}, [loadDocStructure, loadMediaStructure, prevProj, project]);
@@ -402,3 +425,31 @@ const AppMgmt = () => {
 };
 
 export default AppMgmt;
+
+const preloadEachDocument = (docArray, newAllDocObj, setEditorArchives) => {
+	setTimeout(() => {
+		let newDocArray = [...docArray];
+		const docName = newDocArray.pop();
+
+		if (newAllDocObj[docName] && Object.keys(newAllDocObj[docName]).length) {
+			// Convert to a valid editorState
+			const newContentState = convertFromRaw(newAllDocObj[docName]);
+			const newEditorState = EditorState.createWithContent(newContentState);
+
+			setEditorArchives((prev) =>
+				prev[docName]
+					? prev[docName]
+					: {
+							...prev,
+							[docName]: {
+								editorState: newEditorState,
+								scrollY: 0,
+							},
+					  }
+			);
+		}
+
+		// Eventually take in an array of names and call this function recursively for each
+		preloadEachDocument(newDocArray, newAllDocObj, setEditorArchives);
+	}, 0);
+};

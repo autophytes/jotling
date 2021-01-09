@@ -266,7 +266,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		// New line characters break the content into multiple blocks.
 		const linkContentArray = linkStructure.links[linkId].content.split('\n');
 		let sectionKey = linkStructure.links[linkId].initialSectionKey;
-		const newSectionOptions = linkStructure.links[linkId].newSectionOptions;
+		// const newSectionOptions = linkStructure.links[linkId].newSectionOptions;
 		const blockKeys = [];
 
 		let newContentState = newEditorState.getCurrentContent();
@@ -436,8 +436,7 @@ export const createTagLink = (
 	setEditorState,
 	setLinkStructure,
 	setSyncLinkIdList,
-	initialSectionKey,
-	newSectionOptions
+	initialSectionKey
 ) => {
 	// Clear out any existing links in the selection
 	const cleanedEditorState = removeLinkSourceFromSelection(
@@ -488,7 +487,6 @@ export const createTagLink = (
 		alias: null,
 		sourceEntityKey: entityKey,
 		initialSectionKey: initialSectionKey, // Section to insert the link into
-		newSectionOptions: newSectionOptions, // Options if creating a new section
 	};
 
 	// Updating the linkStructure with the keyword the link is using
@@ -1158,4 +1156,3 @@ const countWordsInBlock = (block) => {
 
 	return spaces;
 };
-

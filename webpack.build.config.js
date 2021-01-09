@@ -20,6 +20,11 @@ module.exports = {
 				include: defaultInclude,
 			},
 			{
+				test: /\.js$/,
+				use: [{ loader: 'worker-loader' }, { loader: 'babel-loader' }],
+				include: [path.join(__dirname, 'webWorkers')],
+			},
+			{
 				test: /\.(jpe?g|png|gif)$/,
 				use: [{ loader: 'file-loader?name=img/[name]__[hash:base64:5].[ext]' }],
 				include: defaultInclude,

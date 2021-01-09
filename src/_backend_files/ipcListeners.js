@@ -29,6 +29,7 @@ const registerHandlers = () => {
 	loadFontsListener();
 	saveSingleDocumentListener();
 	readSingleDocumentListener();
+	readAllJsonInFolderListener();
 	saveProjectListener();
 	renameDocListener();
 	deleteDocListener();
@@ -169,6 +170,38 @@ const readSingleDocumentListener = () => {
 				fileContents: {},
 			};
 		}
+	});
+};
+
+// Read all json documents in folder. Return an obj with {docName: docContents}
+const readAllJsonInFolderListener = () => {
+	ipcMain.handle('read-all-documents', (e, projectTempPath, relativeFolderPath) => {
+		// File path to the Documents folder, combined with the folders and file name
+		const fullFolderPath = path.join(projectTempPath, relativeFolderPath);
+
+		// List all json file names
+		const fileArray = fs.readdirSync(fullFolderPath);
+		const jsonFileArray = fileArray.filter((item) => item.slice(-5) === '.json');
+
+		let fileObject = {};
+
+		// Load all files in folder into the fileObject
+		for (let fileName of jsonFileArray) {
+			const filePath = path.join(fullFolderPath, fileName);
+
+			// If it exists, read the file
+			if (fs.existsSync(filePath)) {
+				// Convert to JSON, then save into fileObject
+				let rawData = fs.readFileSync(filePath);
+				let fileContents = JSON.parse(rawData);
+				fileObject[fileName] = fileContents;
+			} else {
+				// If file not found
+				console.warn('file ', fileName, " didn't exist in folder ", relativeFolderPath);
+			}
+		}
+
+		return fileObject;
 	});
 };
 

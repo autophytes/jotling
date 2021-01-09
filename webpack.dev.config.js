@@ -15,6 +15,12 @@ module.exports = {
 				include: defaultInclude,
 			},
 			{
+				test: /\.js$/,
+				use: ['worker-loader', 'babel-loader'],
+				// use: [{ loader: 'worker-loader' }, { loader: 'babel-loader' }],
+				include: [path.join(__dirname, 'webWorkers')],
+			},
+			{
 				test: /\.(js|jsx)$/, // Changed to fix the .jsx entry point problem
 				use: [{ loader: 'babel-loader' }],
 				include: defaultInclude,
