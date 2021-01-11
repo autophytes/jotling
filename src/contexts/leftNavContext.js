@@ -162,13 +162,14 @@ const LeftNavContextProvider = (props) => {
 		[editorStyles]
 	);
 
-	// Saves current document file
+	// Saves current document file and updates the editorArchives.
+	// All 3 arguments are optional.
 	const saveFile = useCallback(
-		(docName = navData.currentDoc, editorState) => {
+		(docName = navData.currentDoc, editorState, scrollY) => {
 			// potentially set default of editorState to editorStateRef.current
-			const currentContent = editorState
-				? editorState.getCurrentContent()
-				: editorStateRef.current.getCurrentContent();
+			const editorStateToSave = editorState ? editorState : editorStateRef.current;
+
+			const currentContent = editorStateToSave.getCurrentContent();
 			const rawContent = convertToRaw(currentContent);
 
 			ipcRenderer.invoke(
@@ -178,6 +179,15 @@ const LeftNavContextProvider = (props) => {
 				'docs/' + docName, // Saved in the docs folder
 				rawContent
 			);
+
+			setEditorArchives((prev) => ({
+				...prev,
+				[docName]: {
+					...prev[docName],
+					editorState: editorStateToSave,
+					...(typeof scrollY !== 'undefined' ? { scrollY } : {}), // Add scroll if available
+				},
+			}));
 		},
 		[project, navData.currentDoc]
 	);
@@ -268,6 +278,7 @@ const LeftNavContextProvider = (props) => {
 	// Saves the current file and calls the main process to save the project
 	const saveFileAndProject = useCallback(
 		async (saveProject) => {
+			console.log('saveProject:', saveProject);
 			const { command, options } = saveProject;
 			const docName = navData.currentDoc;
 			const currentContent = editorStateRef.current.getCurrentContent();
@@ -275,7 +286,7 @@ const LeftNavContextProvider = (props) => {
 			console.log('editorContainer options: ', options);
 
 			// Cleanup (remove) files before save. Currently not updating the currentContent.
-			if (options.shouldCleanup) {
+			if (options && options.shouldCleanup) {
 				await runCleanup();
 			}
 

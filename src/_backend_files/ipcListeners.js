@@ -221,6 +221,21 @@ const saveProjectListener = () => {
 		if (projectTempPath) {
 			console.log('projectJotsPath: ', projectJotsPath);
 
+			if (projectJotsPath && (shouldQuit || shouldClose)) {
+				confirmQuit = dialog.showMessageBoxSync({
+					type: 'question',
+					message: `Are you sure you'd like to quit?`,
+					title: `Confirm Quit`,
+					buttons: [`Don't Quit`, `Quit`],
+					defaultId: 1,
+				});
+
+				if (confirmQuit === 0) {
+					console.log('not quitting');
+					return;
+				}
+			}
+
 			let saveBefore = 1; // 0 means save, 1 means don't save
 			if (!projectJotsPath && !saveAs) {
 				// Tweak the dialog text based on the action we're performing
@@ -239,7 +254,7 @@ const saveProjectListener = () => {
 
 			// If we weren't given a jotsPath, prompt the user for a file name
 			while (!projectJotsPath && saveBefore === 1) {
-				// Asks the user what project to open
+				// Asks the user what to save the project as
 				projectJotsPath = dialog.showSaveDialogSync(mainWindow, {
 					// projectJotsPath = dialog.showSaveDialogSync({
 					title: 'Save As',

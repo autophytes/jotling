@@ -4,7 +4,7 @@ import { SettingsContext } from '../../contexts/settingsContext';
 import EditorHeaderTitle from './EditorHeaderTitle';
 import EditorTableOfContents from './EditorTableOfContents';
 
-const EditorHeader = () => {
+const EditorHeader = ({ editorRef }) => {
 	const [showTable, setShowTable] = useState(false);
 
 	const { navData } = useContext(LeftNavContext);
@@ -24,7 +24,7 @@ const EditorHeader = () => {
 			className='editor-header'
 			ref={editorHeaderPaddingWrapperRef}
 			style={{ padding: `0 ${editorSettings.editorPadding}rem` }}>
-			<EditorHeaderTitle />
+			<EditorHeaderTitle {...{ editorRef }} />
 			{/* Eventually, Table of Contents */}
 			{showTable && <EditorTableOfContents />}
 		</div>

@@ -26,13 +26,7 @@ import Collapse from 'react-css-collapse';
 import { CharacterMetadata, ContentBlock, ContentState, EditorState, genKey } from 'draft-js';
 
 // If we have sections in the document, initialize the editorState with those sections
-export const initializeDocWithSections = (
-	docStructure,
-	currentDoc,
-	filePath,
-	setEditorArchives,
-	saveFileRef
-) => {
+export const initializeDocWithSections = (docStructure, currentDoc, filePath, saveFileRef) => {
 	// Find the first parent folder with templateSections
 	const folderObj = findFirstFileAlongPathWithProp(
 		docStructure.pages,
@@ -82,14 +76,6 @@ export const initializeDocWithSections = (
 	// Save the file in case we don't open it before closing the project
 	saveFileRef.current(currentDoc, newEditorState);
 
-	// Set in the editorArchives to be loaded from there
-	setEditorArchives((prev) => ({
-		...prev,
-		[currentDoc]: {
-			editorState: newEditorState,
-		},
-	}));
-
 	return { sections: sectionArray, editorState: newEditorState };
 };
 
@@ -100,7 +86,8 @@ export const insertNewDocSection = (
 	newSectionOptions,
 	setDocStructure,
 	currentTab,
-	docId
+	docId,
+	saveFileRef
 ) => {
 	const currentContent = editorState.getCurrentContent();
 	let newBlockArray = currentContent.getBlocksAsArray();
@@ -185,6 +172,10 @@ export const insertNewDocSection = (
 		};
 	});
 
+	// Save the updated editorState (which also updates the editorArchives)
+	const docName = `doc${docId}.json`;
+	saveFileRef.current(docName, newEditorState);
+
 	return { blockKey: newSectionBlockKey, editorState: newEditorState };
 };
 
@@ -198,9 +189,8 @@ export const addFile = (
 	lastClickedId,
 	navData,
 	setNavData,
-	setEditorArchives,
 	saveFileRef,
-	fileName, // Optional
+	fileName = undefined, // Optional
 	dontOpenFile = false
 ) => {
 	// Create a docStructure object for our current tab.
@@ -234,10 +224,10 @@ export const addFile = (
 		: fileType === 'doc'
 		? 'New Document'
 		: `New ${fileType}`;
-	fileName = origFileName;
+	let newFileName = origFileName;
 	let fileNameCounter = 1;
-	while (usedDocNames.includes(fileName.toLowerCase())) {
-		fileName = `${origFileName} ${fileNameCounter}`;
+	while (usedDocNames.includes(newFileName.toLowerCase())) {
+		newFileName = `${origFileName} ${fileNameCounter}`;
 		fileNameCounter++;
 	}
 
@@ -245,7 +235,7 @@ export const addFile = (
 	let childObject = {
 		type: fileType,
 		id: maxIds[fileType] + 1,
-		name: fileName,
+		name: newFileName,
 	};
 	if (fileType === 'doc') {
 		childObject.fileName = 'doc' + childObject.id + '.json';
@@ -262,7 +252,6 @@ export const addFile = (
 			docStructure,
 			childObject.fileName,
 			filePath,
-			setEditorArchives,
 			saveFileRef
 		);
 

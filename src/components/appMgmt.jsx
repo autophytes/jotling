@@ -62,7 +62,6 @@ const AppMgmt = () => {
 		peekWindowLinkId,
 		setDisplayWikiPopper,
 		editorStateRef,
-		editorArchivesRef, // TEMPORARY
 		setEditorStateRef,
 		linkStructureRef,
 		setSyncLinkIdList,
@@ -206,7 +205,7 @@ const AppMgmt = () => {
 		}
 	}, [project]);
 
-	// Saves the document map after every change
+	// Saves the docStructure after every change
 	useEffect(() => {
 		if (structureLoaded) {
 			ipcRenderer.invoke(
@@ -220,7 +219,7 @@ const AppMgmt = () => {
 		}
 	}, [docStructure, structureLoaded, project]);
 
-	// Saves the link structure after every change
+	// Saves the linkStructure after every change
 	useEffect(() => {
 		if (linkStructureLoaded) {
 			ipcRenderer.invoke(
@@ -338,7 +337,6 @@ const AppMgmt = () => {
 				Number(id),
 				navDataRef.current,
 				setNavData,
-				setEditorArchives,
 				saveFileRef
 			);
 		});
@@ -450,6 +448,8 @@ const preloadEachDocument = (docArray, newAllDocObj, setEditorArchives) => {
 		}
 
 		// Eventually take in an array of names and call this function recursively for each
-		preloadEachDocument(newDocArray, newAllDocObj, setEditorArchives);
+		if (newDocArray.length) {
+			preloadEachDocument(newDocArray, newAllDocObj, setEditorArchives);
+		}
 	}, 0);
 };

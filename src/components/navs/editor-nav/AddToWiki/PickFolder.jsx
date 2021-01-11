@@ -19,7 +19,6 @@ const PickFolder = ({
 	const [showPickSection, setShowPickSection] = useState(false);
 	const [selectedFolder, setSelectedFolder] = useState(null);
 	const [templateSections, setTemplateSections] = useState(null);
-	const [docId, setDocId] = useState(null);
 
 	const {
 		docStructureRef,
@@ -31,7 +30,6 @@ const PickFolder = ({
 		setEditorStateRef,
 		setLinkStructure,
 		setSyncLinkIdList,
-		setEditorArchives,
 		saveFileRef,
 	} = useContext(LeftNavContext);
 
@@ -95,7 +93,6 @@ const PickFolder = ({
 					child.id,
 					navData,
 					setNavData,
-					setEditorArchives,
 					saveFileRef,
 					newWikiName,
 					true // don't open the file after creating it

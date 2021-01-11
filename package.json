@@ -18,7 +18,8 @@
 		"package": "npm run build",
 		"postpackage": "electron-packager ./ --out=./builds --overwrite",
 		"pack": "electron-builder --dir",
-		"dist": "electron-builder"
+		"dist": "electron-builder",
+		"react-start": "cross-env NODE_ENV=reactdevelopment webpack-dev-server --config=./webpack.dev.react.config.js"
 	},
 	"dependencies": {
 		"@babel/runtime": "^7.12.5",
@@ -46,6 +47,7 @@
 	},
 	"devDependencies": {
 		"@babel/core": "^7.12.10",
+		"@babel/preset-env": "^7.12.11",
 		"@babel/preset-react": "^7.12.10",
 		"babel-loader": "^8.2.2",
 		"babili-webpack-plugin": "^0.1.2",

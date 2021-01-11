@@ -22,7 +22,8 @@ html,
 	--color-delete: #e1342a;
 	/* --color-red: #de4b43; not currently used */
 	--color-background: white;
-	--color-text: #212529;
+	/* --color-text: #212529; */
+	--color-text: #000;
 }
 
 /* FONTS - THESE WORK, BUT VARIANTS NEED TO BE ADDED FOR BOLD OR THE BOLD TEXT MESSES UP */
@@ -148,7 +149,7 @@ li .public-DraftStyleDefault-block {
 }
 
 .editor-header {
-	margin: 2rem 0;
+	margin: 2rem 0 4rem 0;
 	flex-grow: 0;
 }
 
@@ -2003,7 +2004,7 @@ input[type='number']::-webkit-outer-spin-button {
 	cursor: grab;
 }
 
-.wiki-template-section-drag-handle:active > svg {
+.wiki-template-section-drag-handle:active {
 	cursor: grabbing;
 }
 

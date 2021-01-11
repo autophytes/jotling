@@ -25,7 +25,6 @@ const LeftNav = () => {
 		editorStyles,
 		setEditorStyles,
 		resetNavWidth,
-		setEditorArchives,
 		saveFileRef,
 	} = useContext(LeftNavContext);
 	const [pinNav, setPinNav] = useState(true);
@@ -83,7 +82,6 @@ const LeftNav = () => {
 			navDataRef.current.lastClicked.id,
 			navDataRef.current,
 			setNavData,
-			setEditorArchives,
 			saveFileRef
 		);
 	}, []);

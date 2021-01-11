@@ -19,7 +19,16 @@ const HighlightSVG = ({ color }) => {
 			</g>
 
 			{/* <g style={{ opacity: '0.36' }}> */}
-			<rect y='426.64' width='512' height='85.333' style={color ? { fill: color } : {}} />
+			<rect
+				y='406.64'
+				width='512'
+				height='105.333'
+				style={color ? { fill: color } : {}}
+				stroke='black'
+				stroke-width='10'
+				stroke-linecap='square'
+				stroke-opacity='0.5'
+			/>
 			{/* </g> */}
 		</svg>
 	);

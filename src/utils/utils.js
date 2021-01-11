@@ -364,3 +364,6 @@ export const findFirstFileAlongPathWithProp = (
 		}
 	}
 };
+
+const userAgent = navigator.userAgent.toLowerCase();
+export const isInElectron = userAgent.indexOf(' electron/') > -1;

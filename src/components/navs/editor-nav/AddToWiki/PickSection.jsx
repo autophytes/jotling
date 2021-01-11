@@ -31,12 +31,28 @@ const PickSection = ({
 		setEditorStateRef,
 		setLinkStructure,
 		setSyncLinkIdList,
-		setEditorArchives,
+		editorArchivesRef,
 		saveFileRef,
 	} = useContext(LeftNavContext);
 
 	// Handle the section click for an already existing wiki page
-	const handleSectionClick = (initialSectionKey, insertSectionOption) => {
+	const handleSectionClick = (initialSectionKey, insertSectionOptions) => {
+		// If creating a new section
+		if (insertSectionOptions) {
+			// FINISH
+
+			// If creating a new section, go ahead and create/sync that here
+			// In this case, we probably need to return the new editorState from the addFile
+			insertNewDocSection(
+				editorArchivesRef.current[`doc${selectedDocId}.json`].editorState,
+				insertSectionOptions,
+				setDocStructure,
+				'pages',
+				selectedDocId,
+				saveFileRef
+			);
+		}
+
 		createTagLink(
 			selectedDocId,
 			editorStateRef,
@@ -45,14 +61,13 @@ const PickSection = ({
 			setEditorStateRef.current,
 			setLinkStructure,
 			setSyncLinkIdList,
-			initialSectionKey,
-			insertSectionOption
+			initialSectionKey
 		);
 		setDisplayWikiPopper(false);
 	};
 
 	// Handle the section click when creating a new wiki page too
-	const handleSectionClickNewWiki = (sectionItem, insertSectionOption) => {
+	const handleSectionClickNewWiki = (sectionItem, insertSectionOptions) => {
 		// Add the file to the given folder
 		// Might need add file to return the file we've created?
 		const { id: newDocId, sections: newSections, editorState } = addFile(
@@ -64,7 +79,6 @@ const PickSection = ({
 			selectedFolder.id,
 			navData,
 			setNavData,
-			setEditorArchives,
 			saveFileRef,
 			newWikiName,
 			true // don't open the file after creating it
@@ -78,42 +92,30 @@ const PickSection = ({
 		}
 
 		// When creating a new section, update the key of the element we're inserting before
-		if (insertSectionOption) {
+		if (insertSectionOptions) {
 			// If we have a template index to reference, grab the new section key
-			if (insertSectionOption.section.hasOwnProperty('templateSectionIndex')) {
-				insertSectionOption.insertBeforeKey =
-					newSections[insertSectionOption.section.templateSectionIndex].key;
+			if (insertSectionOptions.section.hasOwnProperty('templateSectionIndex')) {
+				insertSectionOptions.insertBeforeKey =
+					newSections[insertSectionOptions.section.templateSectionIndex].key;
 			} else {
 				// If it's not already top or bottom, default to bottom
-				if (!['##bottomOfPage', '##topOfPage'].includes(insertSectionOption.insertBeforeKey)) {
-					insertSectionOption.insertBeforeKey = '##bottomOfPage';
+				if (
+					!['##bottomOfPage', '##topOfPage'].includes(insertSectionOptions.insertBeforeKey)
+				) {
+					insertSectionOptions.insertBeforeKey = '##bottomOfPage';
 				}
 			}
 
 			// If creating a new section, go ahead and create/sync that here
 			// In this case, we probably need to return the new editorState from the addFile
-			const {
-				blockKey: newSectionBlockKey,
-				editorState: newEditorState,
-			} = insertNewDocSection(
+			const { blockKey: newSectionBlockKey } = insertNewDocSection(
 				editorState,
-				insertSectionOption,
+				insertSectionOptions,
 				setDocStructure,
 				'pages',
-				newDocId
+				newDocId,
+				saveFileRef
 			);
-
-			// Save the file in case we don't open it before closing the project
-			const newDocFileName = 'doc' + newDocId + '.json';
-			saveFileRef.current(newDocFileName, newEditorState);
-
-			// Set in the editorArchives to be loaded from there
-			setEditorArchives((prev) => ({
-				...prev,
-				[newDocFileName]: {
-					editorState: newEditorState,
-				},
-			}));
 
 			blockKey = newSectionBlockKey;
 		}
@@ -126,8 +128,7 @@ const PickSection = ({
 			setEditorStateRef.current,
 			setLinkStructure,
 			setSyncLinkIdList,
-			blockKey,
-			insertSectionOption
+			blockKey
 		);
 		setDisplayWikiPopper(false);
 	};

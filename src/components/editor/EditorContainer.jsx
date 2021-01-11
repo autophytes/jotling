@@ -67,7 +67,6 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		editorStateRef,
 		editorStyles,
 		editorArchivesRef,
-		setEditorArchives,
 		setEditorStateRef,
 		mediaStructure,
 		setMediaStructure,
@@ -399,15 +398,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 			// If the previous doc changed and we didn't open a new project, save.
 			if (prev.doc !== '' && navData.currentTempPath === prev.tempPath) {
-				saveFile(prev.doc); // PROBLEM: saving after we've loaded the new project
-				// Archive the editorState
-				setEditorArchives((previous) => ({
-					...previous,
-					[prev.doc]: {
-						editorState: editorStateRef.current,
-						scrollY: window.scrollY,
-					},
-				}));
+				// PROBLEM: saving after we've loaded the new project
+				saveFile(prev.doc, null, window.scrollY);
 			}
 
 			// Check for existing editorState and load from that if available
@@ -415,6 +407,10 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				// Flag that we've updated the file
 				setPrev({ doc: navData.currentDoc, tempPath: navData.currentTempPath });
 
+				console.log(
+					'editorArchivesRef.current[navData.currentDoc]:',
+					editorArchivesRef.current[navData.currentDoc]
+				);
 				const newEditorState = editorArchivesRef.current[navData.currentDoc].editorState;
 				const editorStateWithDecorator = EditorState.set(newEditorState, {
 					decorator: decorator,
@@ -537,7 +533,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					}}
 				/>
 
-				<EditorHeader />
+				<EditorHeader {...{ editorRef }} />
 
 				<div
 					ref={editorPaddingWrapperRef}

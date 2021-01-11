@@ -8,7 +8,7 @@ import {
 	setObjPropertyAtPropertyPath,
 } from '../../utils/utils';
 
-const EditorHeaderTitle = () => {
+const EditorHeaderTitle = ({ editorRef }) => {
 	const [docName, setDocName] = useState('');
 	const [newDocName, setNewDocName] = useState('');
 	const [showEditTitle, setShowEditTitle] = useState(false);
@@ -80,6 +80,8 @@ const EditorHeaderTitle = () => {
 			setDocName(newDocName);
 			setDocStructure(newDocStructure);
 			setShowEditTitle(false);
+
+			editorRef.current.focus();
 		}
 	};
 
