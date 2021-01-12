@@ -1904,6 +1904,16 @@ input[type='number']::-webkit-outer-spin-button {
 	user-select: none;
 }
 
+.link {
+	cursor: pointer;
+	user-select: none;
+	border-bottom: 2px solid transparent;
+}
+
+.link:hover {
+	border-bottom: 2px solid var(--color-primary);
+}
+
 .editor-table-contents-list {
 	padding-inline-start: 1.25em;
 	margin: 0;
@@ -1924,13 +1934,6 @@ input[type='number']::-webkit-outer-spin-button {
 
 .editor-table-contents-item {
 	margin: 0;
-	/* font-size: 0.85em; */
-	/* line-height: 1.15em; */
-	/* display: inline-block; */
-	cursor: pointer;
-	border-bottom: 2px solid transparent;
-
-	/* color: #444; */
 }
 
 .editor-table-contents-expand {
@@ -1939,15 +1942,11 @@ input[type='number']::-webkit-outer-spin-button {
 	font-size: 0.85em;
 	line-height: 1em;
 	display: inline-block;
-	cursor: pointer;
-	border-bottom: 2px solid transparent;
 	color: #777;
-	user-select: none;
 }
 
 .editor-table-contents-expand:hover,
 .editor-table-contents-item:hover {
-	border-bottom: 2px solid var(--color-primary);
 	color: var(--text-color);
 }
 

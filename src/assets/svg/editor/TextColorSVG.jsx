@@ -22,9 +22,9 @@ const TextColorSVG = ({ color }) => {
 				height='85.333'
 				style={color ? { fill: color } : {}}
 				stroke='black'
-				stroke-width='10'
-				stroke-linecap='square'
-				stroke-opacity='0.5'
+				strokeWidth='10'
+				strokeLinecap='square'
+				strokeOpacity='0.5'
 			/>
 			{/* </g> */}
 			<g transform='matrix(1.14,0,0,1.14,-35.839999999999975,-35.839999999999975)'>

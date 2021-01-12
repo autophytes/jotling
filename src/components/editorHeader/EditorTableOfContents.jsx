@@ -56,7 +56,11 @@ const EditorTableOfContents = () => {
 				<div className='editor-table-contents-wrapper'>
 					{/* Title */}
 					<div style={{ display: 'flex', justifyContent: 'space-between' }}>
-						<span className='editor-table-contents-title'>Sections</span>
+						<span
+							className='editor-table-contents-title link'
+							onClick={() => setIsCollapsed((prev) => !prev)}>
+							Sections
+						</span>
 						{/* <span className='editor-table-reorder'>Reorder</span> */}
 					</div>
 
@@ -66,7 +70,7 @@ const EditorTableOfContents = () => {
 							{sections.map((item) => (
 								<li key={item.key}>
 									<span
-										className='editor-table-contents-item'
+										className='editor-table-contents-item link'
 										onClick={() => handleSectionClick(item.key)}>
 										{item.text}
 									</span>
@@ -76,7 +80,7 @@ const EditorTableOfContents = () => {
 					</Collapse>
 				</div>
 				<span
-					className='editor-table-contents-expand'
+					className='editor-table-contents-expand link'
 					onClick={() => setIsCollapsed((prev) => !prev)}>
 					{isCollapsed ? 'Expand' : 'Collapse'}
 				</span>

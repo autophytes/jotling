@@ -412,7 +412,9 @@ const AppMgmt = () => {
 			<TopNav />
 			<LeftNav />
 			<RightNav />
+
 			{navData.currentDoc && <EditorContainer {...{ saveProject, setSaveProject }} />}
+
 			<LoadingOverlay {...{ structureLoaded }} />
 			{peekWindowLinkId !== null && <PeekDocument />}
 			{showEditorSettings && <EditorSettings />}

@@ -25,9 +25,9 @@ const HighlightSVG = ({ color }) => {
 				height='105.333'
 				style={color ? { fill: color } : {}}
 				stroke='black'
-				stroke-width='10'
-				stroke-linecap='square'
-				stroke-opacity='0.5'
+				strokeWidth='10'
+				strokeLinecap='square'
+				strokeOpacity='0.5'
 			/>
 			{/* </g> */}
 		</svg>
