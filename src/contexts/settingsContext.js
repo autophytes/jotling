@@ -8,14 +8,15 @@ const store = new Store();
 export const SettingsContext = createContext();
 
 const defaultSettings = {
-	editorMaxWidth: 60,
-	editorPadding: 5.0,
+	editorMaxWidth: 65,
+	editorPadding: 7.0,
 	primaryColor: '#0095ff',
 	primaryColorRgb: '0, 149, 255',
 	primaryColorList: ['#C61F37', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
 	currentFont: 'PT Sans',
 	fontSize: 20,
 	lineHeight: 1.15,
+	paragraphSpacing: 1.2,
 };
 
 const defaultHighlightColor = {
@@ -42,6 +43,7 @@ const SettingsContextProvider = (props) => {
 	const [showEditorSettings, setShowEditorSettings] = useState(false);
 	const [fontList, setFontList] = useState([]);
 	const [lineHeight, setLineHeight] = useState(1.15);
+	const [paragraphSpacing, setParagraphSpacing] = useState(1.2);
 	const [fontSize, setFontSize] = useState(20);
 	const [fontSettings, setFontSettings] = useState({
 		currentFont: 'PT Sans',
@@ -50,31 +52,19 @@ const SettingsContextProvider = (props) => {
 
 	// Update the CSS with new line heights
 	useEffect(() => {
-		const newStyleSheetRule = `
-    .editor h1,
-    .editor h2,
-    .editor h3,
-    .editor h4,
-    .editor h5,
-    .editor h6 {
-      line-height: ${lineHeight}em;
-    }`;
+		const newStyleSheetRule = `{ line-height: ${lineHeight}em; }`;
+		const selector = '.editor h1, .editor h2, .editor h3, .editor h4, .editor h5, .editor h6';
 
-		// Delete the old line height css rule
-		const cssRuleArray = Array.from(document.styleSheets[0].cssRules);
-		const deleteIndex = cssRuleArray.findIndex(
-			(item) =>
-				item.selectorText ===
-				'.editor h1, .editor h2, .editor h3, .editor h4, .editor h5, .editor h6'
-		);
-		if (deleteIndex !== -1) {
-			document.styleSheets[0].deleteRule(deleteIndex);
-		}
-
-		// Insert the new rule
-		const insertIndex = document.styleSheets[0].cssRules.length;
-		document.styleSheets[0].insertRule(newStyleSheetRule, insertIndex);
+		updateCSSRule(newStyleSheetRule, selector);
 	}, [lineHeight]);
+
+	// Update the CSS with new line heights
+	useEffect(() => {
+		const newStyleSheetRule = `{ margin-bottom: ${paragraphSpacing}em; }`;
+		const selector = '.public-DraftStyleDefault-block.public-DraftStyleDefault-ltr';
+
+		updateCSSRule(newStyleSheetRule, selector);
+	}, [paragraphSpacing]);
 
 	// Initialize the values from electron-store
 	useEffect(() => {
@@ -151,6 +141,8 @@ const SettingsContextProvider = (props) => {
 				setHighlightColor,
 				textColor,
 				setTextColor,
+				paragraphSpacing,
+				setParagraphSpacing,
 			}}>
 			{props.children}
 		</SettingsContext.Provider>
@@ -158,3 +150,29 @@ const SettingsContextProvider = (props) => {
 };
 
 export default SettingsContextProvider;
+
+// Replace a CSS rule with a new one
+const updateCSSRule = (newRule, selector) => {
+	// Find the Jotling style sheet
+	let sheetIndex = 0;
+	Array.from(document.styleSheets).forEach((sheet, i) => {
+		if (sheet.cssRules[0].selectorText === '.jotling-stylesheet') {
+			sheetIndex = i;
+		}
+	});
+
+	// Delete the old line height css rule
+	console.log('document.styleSheets[0]:', document.styleSheets[sheetIndex]);
+	const cssRuleArray = Array.from(document.styleSheets[sheetIndex].cssRules);
+	const deleteIndex = cssRuleArray.findIndex((item) => {
+		// console.log('item.selectorText: ', item.selectorText);
+		return item.selectorText === selector;
+	});
+	if (deleteIndex !== -1) {
+		document.styleSheets[sheetIndex].deleteRule(deleteIndex);
+	}
+
+	// Insert the new rule
+	const insertIndex = document.styleSheets[sheetIndex].cssRules.length;
+	document.styleSheets[sheetIndex].insertRule(selector + ' ' + newRule, insertIndex);
+};

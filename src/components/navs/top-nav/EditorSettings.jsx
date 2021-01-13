@@ -36,6 +36,8 @@ const EditorSettings = () => {
 		setFontSize,
 		fontSettings,
 		setFontSettings,
+		paragraphSpacing,
+		setParagraphSpacing,
 	} = useContext(SettingsContext);
 
 	// STATE
@@ -224,7 +226,7 @@ const EditorSettings = () => {
 							type='range'
 							value={editorPadding}
 							min='0.0'
-							max='10.0'
+							max='14.0'
 							step='0.1'
 							onChange={handlePaddingChange}
 							onMouseUp={handlePaddingMouseUp}
@@ -246,7 +248,7 @@ const EditorSettings = () => {
 							type='range'
 							value={editorMaxWidth}
 							min='0.0'
-							max='120.0'
+							max='130.0'
 							step='0.1'
 							onChange={handleMaxWidthChange}
 							onMouseUp={handleMaxWidthMouseUp}
@@ -369,6 +371,21 @@ const EditorSettings = () => {
 						value={lineHeight}
 						onChange={(e) => {
 							setLineHeight(e.target.value);
+						}}
+					/>
+
+					{/* PARAGRAPH SPACING */}
+					<p className='settings-category-title'>Paragraph Spacing</p>
+					<input
+						type='number'
+						min='0'
+						max='10'
+						step='0.1'
+						className='settings-range-number-input'
+						style={{ marginLeft: '1.5rem' }}
+						value={paragraphSpacing}
+						onChange={(e) => {
+							setParagraphSpacing(e.target.value);
 						}}
 					/>
 				</div>

@@ -1,3 +1,8 @@
+.jotling-stylesheet {
+	/* Used to programatically identify this stylesheet */
+	box-sizing: border-box;
+}
+
 /* Main CSS stylesheet */
 html,
 *,
@@ -131,13 +136,13 @@ body {
 	outline: none;
 }
 
-.public-DraftStyleDefault-block {
+/* .public-DraftStyleDefault-block {
 	margin-bottom: 0.5em;
 }
 
 li .public-DraftStyleDefault-block {
 	margin-bottom: 0;
-}
+} */
 
 .DraftEditor-root {
 	flex-grow: 0;

@@ -1,6 +1,6 @@
 // Return the selected plain text from the content state
-export const getTextSelection = (contentState, selection, blockDelimiter) => {
-	blockDelimiter = blockDelimiter || '\n'; // Used to join the text afterwards
+export const getTextSelection = (contentState, selection, blockDelimiter = '\n') => {
+	// blockDelimeter is used to join the text afterwards
 	var startKey = selection.getStartKey();
 	var endKey = selection.getEndKey();
 	var blocks = contentState.getBlockMap();

@@ -10,6 +10,8 @@ import { SettingsContext } from '../../contexts/settingsContext';
 import CaratDownSVG from '../../assets/svg/CaratDownSVG';
 import CloseSVG from '../../assets/svg/CloseSVG';
 
+import { getTextSelection } from '../../utils/draftUtils';
+
 import Collapse from 'react-css-collapse';
 // import { replace } from 'tar';
 
@@ -71,10 +73,32 @@ const EditorFindReplace = ({ editorRef }) => {
 		contextEditorRef.current = editorRef;
 	}, []);
 
+	const findEditorStateSelection = () => {
+		const selection = editorStateRef.current.getSelection();
+		if (!selection.getHasFocus()) {
+			return;
+		}
+
+		const contentState = editorStateRef.current.getCurrentContent();
+		const selectedText = getTextSelection(contentState, selection);
+
+		if (selectedText && !selectedText.includes('\n')) {
+			findRegisterRef.current[selectedText.toLowerCase()] = [];
+			setFindText(selectedText);
+			setContextFindText(selectedText);
+		}
+	};
+
+	// Set the initial find text to the current document selection
+	useEffect(() => {
+		findEditorStateSelection();
+	}, []);
+
 	// Focus the find input
 	useEffect(() => {
 		if (refocusFind) {
 			// Focus on the find input
+			findEditorStateSelection();
 			findInputRef.current.focus();
 			setRefocusFind(false);
 		}
@@ -84,6 +108,7 @@ const EditorFindReplace = ({ editorRef }) => {
 	useEffect(() => {
 		if (refocusReplace) {
 			// Focus on the replace input
+			findEditorStateSelection();
 			setShowReplace(true);
 			setRefocusReplace(false);
 			setTimeout(() => {
@@ -249,6 +274,7 @@ const EditorFindReplace = ({ editorRef }) => {
 				onClick={() => setShowReplace(!showReplace)}>
 				<CaratDownSVG rotate='-90' />
 			</div>
+
 			<div>
 				<div style={{ display: 'flex' }}>
 					<input
