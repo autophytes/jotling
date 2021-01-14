@@ -365,5 +365,28 @@ export const findFirstFileAlongPathWithProp = (
 	}
 };
 
+// Cleans up text like "test\. Test" and returns "test. Test"
+export const stripOutEscapeCharacters = (origText) => {
+	let newText = '';
+	let i = 0,
+		length = origText.length;
+	while (i < length) {
+		if (origText[i] === '\\') {
+			// If 2 in a row, add 1 and skip the next index
+			// Otherwise, don't store the character.
+			if (origText[i + i] && origText[i + 1] === '\\') {
+				newText = newText + '\\';
+				i++;
+			}
+		} else {
+			// Otherwise, store the character normally
+			newText = newText + origText[i];
+		}
+		i++;
+	}
+
+	return newText;
+};
+
 const userAgent = navigator.userAgent.toLowerCase();
 export const isInElectron = userAgent.indexOf(' electron/') > -1;

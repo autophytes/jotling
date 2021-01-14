@@ -16,6 +16,7 @@ import {
 	getBlockKeysForSelection,
 	getTextSelection,
 } from '../../utils/draftUtils';
+import { stripOutEscapeCharacters } from '../../utils/utils';
 import { findAllDocsInFolder } from '../navs/navFunctions';
 
 import { LinkSourceDecorator, LinkDestDecorator } from './editorComponents/LinkDecorators';
@@ -55,6 +56,7 @@ function getBlockDataStrategy(blockDataProp) {
 }
 
 const buildFindWithRegexFunction = (findTextArray, findRegisterRef, editorStateRef) => {
+	console.log('findTextArray:', findTextArray);
 	var regexMetachars = /[(){[*+?.\\^$|]/g;
 	// Escape regex metacharacters in the text
 	for (var i = 0; i < findTextArray.length; i++) {
@@ -587,8 +589,17 @@ export const updateImageBlockData = (
 };
 
 // Update the find match in the find register array
-const updateFindRegisterRef = (findRegisterRef, blockKey, start, findText, editorStateRef) => {
-	let registerArray = [...findRegisterRef.current[findText.toLowerCase()]];
+const updateFindRegisterRef = (
+	findRegisterRef,
+	blockKey,
+	start,
+	origFindText,
+	editorStateRef
+) => {
+	let findText = stripOutEscapeCharacters(origFindText);
+
+	const origRegisterArray = findRegisterRef.current[findText.toLowerCase()];
+	let registerArray = [...(origRegisterArray ? origRegisterArray : [])];
 	const updatedMatch = { blockKey, start };
 
 	let matchIndex = registerArray.findIndex(
@@ -659,8 +670,13 @@ const updateFindRegisterRef = (findRegisterRef, blockKey, start, findText, edito
 	findRegisterRef.current[findText.toLowerCase()] = [...registerArray];
 };
 
-const removeBlockFromFindRegisterRef = (findRegisterRef, blockKey, findText) => {
-	let registerArray = [...findRegisterRef.current[findText.toLowerCase()]];
+const removeBlockFromFindRegisterRef = (findRegisterRef, blockKey, origFindText) => {
+	// Clean out the \'s from the regex
+	let findText = stripOutEscapeCharacters(origFindText);
+
+	const origRegisterArray = findRegisterRef.current[findText.toLowerCase()];
+	let registerArray = [...(origRegisterArray ? origRegisterArray : [])];
+
 	// Remove all elements in the array for a given blockKey
 	const updateRemoveIndex = () =>
 		registerArray.findIndex((item) => item.blockKey === blockKey);
