@@ -13,6 +13,7 @@ const defaultSettings = {
 	primaryColor: '#0095ff',
 	primaryColorRgb: '0, 149, 255',
 	primaryColorList: ['#C61F37', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
+	backdropColor: '#f6f5f3',
 	currentFont: 'PT Sans',
 	fontSize: 20,
 	lineHeight: 1.15,
@@ -34,6 +35,7 @@ const SettingsContextProvider = (props) => {
 	const [editorSettings, setEditorSettings] = useState({
 		editorMaxWidth: defaultSettings.editorMaxWidth,
 		editorPadding: defaultSettings.editorPadding,
+		backdropColor: '#f6f5f3',
 		primaryColor: '#0095ff',
 		primaryColorRgb: '0, 149, 255',
 		primaryColorList: ['#D0021B', '#F5A623', '#F8E71C', '#8B572A', '#7ED321', '#417505'],
@@ -85,6 +87,7 @@ const SettingsContextProvider = (props) => {
 		const rootElement = document.querySelector(':root');
 		rootElement.style.setProperty('--color-primary', newEditorSettings.primaryColor);
 		rootElement.style.setProperty('--color-primary-rgb', newEditorSettings.primaryColorRgb);
+		rootElement.style.setProperty('--color-backdrop', newEditorSettings.backdropColor);
 
 		setEditorSettings(newEditorSettings);
 		setHighlightColor(newHighlightColor);

@@ -10,6 +10,8 @@ const PopperContainer = ({
 	isContentRendered = true,
 	additionalClass = '',
 	additionalArrowClass = '',
+	style = {},
+	forceUpdateRef,
 }) => {
 	// REFS
 	const popperElement = useRef(null);
@@ -20,25 +22,30 @@ const PopperContainer = ({
 	const [minWidth, setMinWidth] = useState(0);
 
 	// POPPER
-	const { styles, attributes } = usePopper(referenceElement, popperElement.current, {
-		placement: 'top',
-		modifiers: [
-			{ name: 'arrow', options: { element: arrowElement.current } },
-			{
-				name: 'offset',
-				options: {
-					offset: [0, 10],
+	const { styles, attributes, forceUpdate } = usePopper(
+		referenceElement,
+		popperElement.current,
+		{
+			placement: 'top',
+			modifiers: [
+				{ name: 'arrow', options: { element: arrowElement.current } },
+				{
+					name: 'offset',
+					options: {
+						offset: [0, 10],
+					},
 				},
-			},
-			{ name: 'flip', options: { padding: 100 } },
-			{
-				name: 'preventOverflow',
-				options: {
-					padding: { left: leftOffset, right: rightOffset },
+				{ name: 'flip', options: { padding: 100 } },
+				{
+					name: 'preventOverflow',
+					options: {
+						padding: { left: leftOffset, right: rightOffset },
+					},
 				},
-			},
-		],
-	});
+			],
+		}
+	);
+	forceUpdateRef.current = forceUpdate;
 
 	// Update the closeFnRef so the event handlers get the current function
 	useEffect(() => {
@@ -77,7 +84,7 @@ const PopperContainer = ({
 	return (
 		<div
 			ref={popperElement}
-			style={styles.popper}
+			style={{ ...styles.popper, ...style }}
 			{...attributes.popper}
 			id='link-popper-element'>
 			<div className={`link-popper ${additionalClass}`} style={{ minWidth: minWidth }}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useLayoutEffect, useRef } from 'react';
 
 import PopperContainer from './../../containers/PopperContainer';
 
@@ -6,12 +6,9 @@ import { SketchPicker } from 'react-color';
 
 const ColorPickerPopper = ({ referenceElement, closeFn, colorObj, setColorObj }) => {
 	const [pickerColor, setPickerColor] = useState(colorObj.color);
-	console.log('pickerColor: ', pickerColor);
+	const [showMoreColors, setShowMoreColors] = useState(false);
 
-	// Sync pickerColor with the colorObj.color
-	// useEffect(() => {
-	// 	setPickerColor(colorObj.color);
-	// }, [colorObj]);
+	const forceUpdateRef = useRef(null);
 
 	const wrappedCloseFn = useCallback(
 		(color) => {
@@ -52,27 +49,38 @@ const ColorPickerPopper = ({ referenceElement, closeFn, colorObj, setColorObj })
 		[closeFn]
 	);
 
-	// const handleChangeComplete = (color) => {
-	// 	console.log('on change complete fired!');
-	// 	setColorObj((prev) => ({
-	// 		...prev,
-	// 		color: color.hex,
-	// 	}));
-	// };
+	useLayoutEffect(() => {
+		if (forceUpdateRef.current) {
+			forceUpdateRef.current();
+		}
+	}, [showMoreColors]);
 
 	return (
 		<PopperContainer
 			referenceElement={referenceElement}
-			closeFn={() => wrappedCloseFn(pickerColor)}>
+			closeFn={() => wrappedCloseFn(pickerColor)}
+			forceUpdateRef={forceUpdateRef}>
 			<div className='accent-color-swatch-picker'>
-				<SketchPicker
-					disableAlpha={true}
-					color={pickerColor}
-					width={160}
-					onChange={(color) => setPickerColor(color.hex)}
-					// onChangeComplete={handleChangeComplete}
-					presetColors={colorObj.colorList}
-				/>
+				{!showMoreColors && (
+					<button
+						onMouseDown={(e) => e.stopPropagation()}
+						onClick={(e) => {
+							e.stopPropagation();
+							setShowMoreColors(true);
+						}}>
+						More Colors
+					</button>
+				)}
+				{showMoreColors && (
+					<SketchPicker
+						disableAlpha={true}
+						color={pickerColor}
+						width={160}
+						onChange={(color) => setPickerColor(color.hex)}
+						// onChangeComplete={handleChangeComplete}
+						presetColors={colorObj.colorList}
+					/>
+				)}
 			</div>
 		</PopperContainer>
 	);

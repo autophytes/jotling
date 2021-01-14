@@ -27,6 +27,7 @@ html,
 	--color-delete: #e1342a;
 	/* --color-red: #de4b43; not currently used */
 	--color-background: white;
+	--color-backdrop: #f6f5f3;
 	/* --color-text: #212529; */
 	--color-text: #000;
 }
@@ -98,7 +99,7 @@ body {
 .editor-area {
 	/* padding: 0 2rem 0 2rem; */
 	/* position: relative; */
-	background-color: #f6f5f3;
+	background-color: var(--color-backdrop);
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
@@ -1520,7 +1521,7 @@ input[type='number']::-webkit-outer-spin-button {
 	height: 1.5rem;
 	/* width: 1.5rem; */
 	margin-left: 1.5rem;
-	/* border: 1px solid #444; */
+	border: 1px solid rgba(0, 0, 0, 0.5);
 	border-radius: 5px;
 	cursor: pointer;
 	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);

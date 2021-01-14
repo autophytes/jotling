@@ -1,11 +1,4 @@
-import React, {
-	useEffect,
-	useState,
-	useContext,
-	useLayoutEffect,
-	useRef,
-	useCallback,
-} from 'react';
+import React, { useEffect, useState, useContext, useRef, useCallback } from 'react';
 
 import { SettingsContext } from '../../../contexts/settingsContext';
 
@@ -44,10 +37,13 @@ const EditorSettings = () => {
 	const [editorPadding, setEditorPadding] = useState(editorSettings.editorPadding);
 	const [editorMaxWidth, setEditorMaxWidth] = useState(editorSettings.editorMaxWidth);
 	const [showAccentPicker, setShowAccentPicker] = useState(false);
+	const [showBackdropPicker, setShowBackdropPicker] = useState(false);
 	const [primaryColor, setPrimaryColor] = useState('');
+	const [backdropColor, setBackdropColor] = useState('');
 
 	// REFS
-	const colorSwatchRef = useRef(null);
+	const primaryColorSwatchRef = useRef(null);
+	const backdropColorSwatchRef = useRef(null);
 
 	// UPDATE
 	const closeFn = useCallback(() => {
@@ -83,12 +79,17 @@ const EditorSettings = () => {
 		setShowEditorSettings(false);
 	}, [editorSettings, primaryColor]);
 
+	// Load initial colors from stylesheet
 	useEffect(() => {
 		let newPrimary = getComputedStyle(document.querySelector(':root')).getPropertyValue(
 			'--color-primary'
 		); // #999999
+		let newBackdrop = getComputedStyle(document.querySelector(':root')).getPropertyValue(
+			'--color-backdrop'
+		); // #999999
 
 		setPrimaryColor(newPrimary);
+		setBackdropColor(newBackdrop);
 	}, []);
 
 	// Editor Padding Change
@@ -151,6 +152,13 @@ const EditorSettings = () => {
 				: `${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`;
 		rootElement.style.setProperty('--color-primary-rgb', newRgb);
 		setPrimaryColor(color.hex);
+	};
+
+	const handleBackdropColorColorChange = (color) => {
+		const rootElement = document.querySelector(':root');
+		rootElement.style.setProperty('--color-backdrop', color.hex);
+
+		setBackdropColor(color.hex);
 	};
 
 	// Set the selected font
@@ -265,7 +273,7 @@ const EditorSettings = () => {
 					<p className='settings-category-title'>Accent Color</p>
 					<div className='accent-color-swatch-row'>
 						<div
-							ref={colorSwatchRef}
+							ref={primaryColorSwatchRef}
 							className='accent-color-swatch'
 							onClick={(e) => {
 								e.stopPropagation();
@@ -290,8 +298,9 @@ const EditorSettings = () => {
 					</div>
 					{showAccentPicker && (
 						<PopperContainer
-							referenceElement={colorSwatchRef.current}
-							closeFn={() => setShowAccentPicker(false)}>
+							referenceElement={primaryColorSwatchRef.current}
+							closeFn={() => setShowAccentPicker(false)}
+							style={{ zIndex: 10 }}>
 							<div className='accent-color-swatch-picker'>
 								<SketchPicker
 									disableAlpha={true}
@@ -303,6 +312,55 @@ const EditorSettings = () => {
 											...editorSettings,
 											primaryColor: color.hex,
 											primaryColorRgb: `${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`,
+										});
+									}}
+									presetColors={editorSettings.primaryColorList}
+								/>
+							</div>
+						</PopperContainer>
+					)}
+
+					<p className='settings-category-title'>Background Color</p>
+					<div className='accent-color-swatch-row'>
+						<div
+							ref={backdropColorSwatchRef}
+							style={{ backgroundColor: 'var(--color-backdrop)' }}
+							className='accent-color-swatch'
+							onClick={(e) => {
+								e.stopPropagation();
+								setShowBackdropPicker(true);
+							}}
+						/>
+						{/* Reset */}
+						<button
+							className='editor-settings-reset'
+							onClick={() => {
+								setEditorSettings({
+									...editorSettings,
+									backdropColor: defaultSettings.backdropColor,
+								});
+								handleBackdropColorColorChange({
+									hex: defaultSettings.backdropColor,
+								});
+							}}>
+							<ResetSVG />
+						</button>
+					</div>
+					{showBackdropPicker && (
+						<PopperContainer
+							referenceElement={backdropColorSwatchRef.current}
+							closeFn={() => setShowBackdropPicker(false)}
+							style={{ zIndex: 10 }}>
+							<div className='accent-color-swatch-picker'>
+								<SketchPicker
+									disableAlpha={true}
+									color={backdropColor}
+									width={160}
+									onChange={handleBackdropColorColorChange}
+									onChangeComplete={(color) => {
+										setEditorSettings({
+											...editorSettings,
+											backdropColor: color.hex,
 										});
 									}}
 									presetColors={editorSettings.primaryColorList}
