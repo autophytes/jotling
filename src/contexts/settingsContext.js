@@ -22,12 +22,14 @@ const defaultSettings = {
 
 const defaultHighlightColor = {
 	color: '#fdffb6',
-	colorList: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#bdb2ff'],
+	defaultColorList: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#bdb2ff'],
+	userColorList: [],
 };
 
 const defaultTextColor = {
 	color: '#212529',
-	colorList: ['#212529', '#066600', '#010866', '#410F70', '#660200', '#664200'],
+	defaultColorList: ['#212529', '#066600', '#010866', '#410F70', '#660200', '#664200'],
+	userColorList: [],
 };
 
 const SettingsContextProvider = (props) => {
@@ -71,8 +73,6 @@ const SettingsContextProvider = (props) => {
 	// Initialize the values from electron-store
 	useEffect(() => {
 		let newEditorSettings = { ...editorSettings };
-		let newHighlightColor = { ...highlightColor };
-		let newTextColor = { ...textColor };
 
 		for (let prop in editorSettings) {
 			let newValue = store.get(`editorSettings.${prop}`, null);
@@ -82,6 +82,15 @@ const SettingsContextProvider = (props) => {
 				newEditorSettings[prop] = defaultSettings[prop];
 			}
 		}
+
+		const newHighlightColor = {
+			...highlightColor,
+			...store.get(`highlightColor`, {}),
+		};
+		const newTextColor = {
+			...textColor,
+			...store.get(`textColor`, {}),
+		};
 
 		// Load in our primary color
 		const rootElement = document.querySelector(':root');
@@ -99,12 +108,16 @@ const SettingsContextProvider = (props) => {
 		for (let prop in editorSettings) {
 			store.set(`editorSettings.${prop}`, editorSettings[prop]);
 		}
-		for (let prop in highlightColor) {
-			store.set(`highlightColor.${prop}`, highlightColor[prop]);
-		}
-		for (let prop in textColor) {
-			store.set(`textColor.${prop}`, textColor[prop]);
-		}
+
+		store.set(`highlightColor`, highlightColor);
+		store.set(`textColor`, textColor);
+
+		// for (let prop in highlightColor) {
+		// 	store.set(`highlightColor.${prop}`, highlightColor[prop]);
+		// }
+		// for (let prop in textColor) {
+		// 	store.set(`textColor.${prop}`, textColor[prop]);
+		// }
 	}, [editorSettings, highlightColor, textColor]);
 
 	// Load available fonts

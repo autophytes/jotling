@@ -45,7 +45,13 @@ const PopperContainer = ({
 			],
 		}
 	);
-	forceUpdateRef.current = forceUpdate;
+
+	// Allow the parent to recalculate the popper position
+	useEffect(() => {
+		if (forceUpdateRef) {
+			forceUpdateRef.current = forceUpdate;
+		}
+	}, [forceUpdateRef]);
 
 	// Update the closeFnRef so the event handlers get the current function
 	useEffect(() => {
