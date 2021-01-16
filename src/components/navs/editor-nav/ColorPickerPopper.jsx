@@ -20,17 +20,25 @@ const generateColorList = (colorList) => {
 			if (colorList[i]) {
 				newColorList.push(colorList[i]);
 			} else {
-				newColorList.push('##EMPTY');
+				newColorList.push(`##EMPTY-${i}`);
 			}
 		}
 		return newColorList;
 	};
 };
 
-const ColorPickerPopper = ({ referenceElement, closeFn, colorObj, setColorObj }) => {
+const ColorPickerPopper = ({
+	referenceElement,
+	closeFn,
+	colorObj,
+	setColorObj,
+	setColorFn,
+}) => {
+	// STATE
 	const [pickerColor, setPickerColor] = useState(colorObj.color);
 	const [showMoreColors, setShowMoreColors] = useState(false);
 
+	// MEMO
 	const defaultColorList = useMemo(generateColorList(colorObj.defaultColorList), [
 		colorObj.defaultColorList,
 	]);
@@ -38,46 +46,57 @@ const ColorPickerPopper = ({ referenceElement, closeFn, colorObj, setColorObj })
 		colorObj.userColorList,
 	]);
 
+	// REF
 	const forceUpdateRef = useRef(null);
 
-	const wrappedCloseFn = useCallback(
-		(color) => {
-			// setColorObj((prev) => {
-			// 	// If already the first color, no change.
-			// 	if (prev.defaultColorList[0] === color) {
-			// 		console.log('just returning prev');
-			// 		return prev;
-			// 	}
-
-			// 	// If already in the list, move to the front.
-			// 	let newColorList = [...prev.defaultColorList];
-			// 	let colorIndex = newColorList.findIndex((item) => item === color);
-			// 	if (colorIndex !== -1) {
-			// 		newColorList.splice(colorIndex, 1);
-			// 		console.log('splicing from middle of list');
-			// 	} else {
-			// 		// Otherwise, remove one from the end.
-			// 		newColorList.pop();
-			// 		console.log('removing one from end of list');
-			// 	}
-
-			// 	// Add the color to the front and return.
-			// 	newColorList.unshift(color);
-			// 	console.log("new object we're setting: ", {
-			// 		color: color,
-			// 		defaultColorList: newColorList,
-			// 	});
-			// 	return {
-			// 		// ...prev,
-			// 		color: color,
-			// 		defaultColorList: newColorList,
-			// 	};
-			// });
-
-			closeFn();
+	const updateColor = useCallback(
+		(e, color) => {
+			if (color.slice(0, 7) === '##EMPTY') {
+				return;
+			}
+			setColorFn(e, color);
+			setPickerColor(color);
 		},
-		[closeFn]
+		[setColorFn]
 	);
+
+	const wrappedCloseFn = (color = pickerColor) => {
+		setColorObj((prev) => {
+			if (color.slice(0, 7) === '##EMPTY') {
+				return prev;
+			}
+
+			// If in the defaultColorList, update active color if needed
+			if (prev.defaultColorList.includes(color)) {
+				if (prev.color === color) {
+					return prev;
+				} else {
+					return {
+						...prev,
+						color,
+					};
+				}
+			}
+
+			// If already in the list, remove before adding to front
+			let newColorList = [...prev.userColorList];
+			const colorIndex = newColorList.findIndex((item) => item === color);
+			if (colorIndex !== -1) {
+				newColorList.splice(colorIndex, 1);
+			}
+
+			// Add the color to the front and return.
+			newColorList.unshift(color);
+
+			return {
+				...prev,
+				color,
+				userColorList: newColorList.slice(0, NUM_SWATCHES), // Cap the number of colors
+			};
+		});
+
+		closeFn();
+	};
 
 	// Recenter the popper when changing views
 	useLayoutEffect(() => {
@@ -89,60 +108,101 @@ const ColorPickerPopper = ({ referenceElement, closeFn, colorObj, setColorObj })
 	return (
 		<PopperContainer
 			referenceElement={referenceElement}
-			closeFn={() => wrappedCloseFn(pickerColor)}
+			closeFn={wrappedCloseFn}
 			forceUpdateRef={forceUpdateRef}>
 			<div className='accent-color-swatch-picker'>
 				{!showMoreColors && (
+					// DEFAULT COLORS
 					<div className='color-picker-popper-swatch-section'>
-						<div className='color-picker-popper-swatch-row'>
+						<div
+							className='color-picker-popper-swatch-row'
+							style={{ paddingBottom: '0.4rem' }}>
 							{defaultColorList.map((item) => (
 								<div
+									key={item}
 									className={
-										'color-picker-popper-swatch ' + (item === '##EMPTY' ? 'empty' : '')
+										'color-picker-popper-swatch ' +
+										(item.slice(0, 7) === '##EMPTY' ? 'empty' : '')
 									}
 									style={{ backgroundColor: item }}
+									onClick={(e) => {
+										updateColor(e, item);
+									}}
 								/>
 							))}
 						</div>
-						<div className='color-picker-popper-swatch-row'>
+						{/* USER COLORS */}
+						{/* When selecting, move to front of list */}
+						<div className='color-picker-popper-swatch-row' style={{ paddingTop: '0' }}>
 							{userColorList.map((item) => (
 								<div
+									key={item}
 									className={
-										'color-picker-popper-swatch ' + (item === '##EMPTY' ? 'empty' : '')
+										'color-picker-popper-swatch ' +
+										(item.slice(0, 7) === '##EMPTY' ? 'empty' : '')
 									}
 									style={{ backgroundColor: item }}
+									onClick={(e) => {
+										updateColor(e, item);
+									}}
 								/>
 							))}
 						</div>
+						{/* MORE & AUTO */}
 						<div className='color-picker-popper-button-row'>
 							<button
 								onMouseDown={(e) => e.stopPropagation()}
 								onClick={(e) => {
 									e.stopPropagation();
 									setShowMoreColors(true);
-								}}>
+								}}
+								style={{ marginRight: '0.3rem' }}>
 								More
 							</button>
 							<button
 								onMouseDown={(e) => e.stopPropagation()}
 								onClick={(e) => {
 									e.stopPropagation();
-									setShowMoreColors(true);
-								}}>
+									setColorFn(e, '', 'REMOVE');
+								}}
+								style={{ marginLeft: '0.3rem' }}>
 								Auto
 							</button>
 						</div>
 					</div>
 				)}
 				{showMoreColors && (
-					<SketchPicker
-						disableAlpha={true}
-						color={pickerColor}
-						width={160}
-						onChange={(color) => setPickerColor(color.hex)}
-						// onChangeComplete={handleChangeComplete}
-						presetColors={colorObj.defaultColorList}
-					/>
+					<div className='sketch-picker-wrapper'>
+						<SketchPicker
+							disableAlpha={true}
+							color={pickerColor}
+							width={160}
+							onChange={(color) => setPickerColor(color.hex)}
+							// onChangeComplete={handleChangeComplete}
+							presetColors={[]}
+						/>
+						<div className='color-picker-popper-button-row sketch-picker'>
+							<button
+								onMouseDown={(e) => e.stopPropagation()}
+								onClick={(e) => {
+									e.stopPropagation();
+									setShowMoreColors(false);
+								}}
+								style={{ marginRight: '0.3rem' }}>
+								Back
+							</button>
+							<button
+								onMouseDown={(e) => e.stopPropagation()}
+								onClick={(e) => {
+									e.stopPropagation();
+									updateColor(e, pickerColor);
+									setTimeout(() => wrappedCloseFn(pickerColor), 0); // Timeout needed to let the editorState resolve
+								}}
+								style={{ marginLeft: '0.3rem' }}>
+								Select
+							</button>
+						</div>
+					</div>
 				)}
 			</div>
 		</PopperContainer>

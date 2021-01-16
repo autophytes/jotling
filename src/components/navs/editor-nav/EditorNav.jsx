@@ -248,6 +248,7 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 						style={{ marginRight: 0 }}
 						onMouseDown={(e) => e.preventDefault()}
 						onClick={(e) => {
+							console.log('highlightColor.color:', highlightColor.color);
 							toggleTextCustomStyle(
 								e,
 								highlightColor.color,
@@ -265,7 +266,7 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 						onMouseDown={(e) => e.preventDefault()}
 						onClick={(e) => {
 							e.stopPropagation();
-							setShowColorPicker('highlight');
+							setShowColorPicker((prev) => (prev !== 'highlight' ? 'highlight' : ''));
 						}}
 						ref={highlightColorRef}>
 						<CaratDownSVG />
@@ -279,6 +280,17 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 							}}
 							colorObj={highlightColor}
 							setColorObj={setHighlightColor}
+							setColorFn={(e, color, remove) => {
+								toggleTextCustomStyle(
+									e,
+									color,
+									'highlight',
+									editorStateRef.current,
+									setEditorStateRef.current,
+									setDocStructure,
+									remove
+								);
+							}}
 						/>
 					)}
 
@@ -307,7 +319,7 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 						onMouseDown={(e) => e.preventDefault()}
 						onClick={(e) => {
 							e.stopPropagation();
-							setShowColorPicker('text');
+							setShowColorPicker((prev) => (prev !== 'text' ? 'text' : ''));
 						}}
 						ref={textColorRef}>
 						<CaratDownSVG />
@@ -321,6 +333,16 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 							}}
 							colorObj={textColor}
 							setColorObj={setTextColor}
+							setColorFn={(e, color) => {
+								toggleTextCustomStyle(
+									e,
+									color,
+									'textColor',
+									editorStateRef.current,
+									setEditorStateRef.current,
+									setDocStructure
+								);
+							}}
 						/>
 					)}
 

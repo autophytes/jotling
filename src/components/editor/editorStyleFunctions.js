@@ -158,7 +158,8 @@ export const toggleTextCustomStyle = (
 	styleName,
 	editorState,
 	setEditorState,
-	setDocStructure
+	setDocStructure,
+	removeOnly = ''
 ) => {
 	e.preventDefault();
 
@@ -194,7 +195,6 @@ export const toggleTextCustomStyle = (
 	const start = selectionState.getStartOffset();
 	const end = selectionState.getEndOffset();
 	const selectedBlocks = getSelectedBlocksList(editorState);
-	console.log('blocks selected: ', selectedBlocks.size);
 	if (selectedBlocks.size > 0) {
 		// Loop through each block
 		for (let i = 0; i < selectedBlocks.size; i += 1) {
@@ -230,7 +230,7 @@ export const toggleTextCustomStyle = (
 	}
 
 	// If all characters already have the color, don't apply. Let the remove above clear the color.
-	if (!isEntireSelectionCurrentColor) {
+	if (!isEntireSelectionCurrentColor && removeOnly !== 'REMOVE') {
 		contentState = Modifier.applyInlineStyle(
 			contentState,
 			selectionState,
