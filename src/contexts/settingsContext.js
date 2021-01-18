@@ -127,7 +127,6 @@ const SettingsContextProvider = (props) => {
 			setFontList(newFontList);
 		};
 		fetchFonts();
-		console.log('ipcRenderer useEffect triggered');
 	}, [ipcRenderer, setFontList]);
 
 	// REFS
@@ -178,7 +177,6 @@ const updateCSSRule = (newRule, selector) => {
 	});
 
 	// Delete the old line height css rule
-	console.log('document.styleSheets[0]:', document.styleSheets[sheetIndex]);
 	const cssRuleArray = Array.from(document.styleSheets[sheetIndex].cssRules);
 	const deleteIndex = cssRuleArray.findIndex((item) => {
 		// console.log('item.selectorText: ', item.selectorText);

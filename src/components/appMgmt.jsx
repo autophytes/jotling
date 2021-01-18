@@ -29,6 +29,7 @@ import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
 import HiddenContextMenu from './hiddenContextMenu';
 import UploadImageForm from './forms/UploadImageForm';
+import { getBlockPlainTextArray } from '../utils/draftUtils';
 
 // For an example of how we can use web workers. Webpack already configured. Doesn't work with Draft.
 //   https://willowtreeapps.com/ideas/improving-web-app-performance-with-web-worker
@@ -70,9 +71,9 @@ const AppMgmt = () => {
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
-		setReplaceDefaultOn,
 		setRefocusFind,
 		setRefocusReplace,
+		setShowFindReplaceAll,
 	} = useContext(FindReplaceContext);
 	const { showEditorSettings } = useContext(SettingsContext);
 
@@ -125,7 +126,6 @@ const AppMgmt = () => {
 		);
 
 		const docArray = Object.keys(newAllDocObj);
-		console.log('calling preload function');
 		preloadEachDocument(docArray, newAllDocObj, setEditorArchives);
 	};
 
@@ -188,7 +188,6 @@ const AppMgmt = () => {
 			loadLinkStructure();
 			loadMediaStructure();
 			loadAllDocuments();
-			console.log('function after loadAllDocuments');
 			setPrevProj(project.tempPath);
 		}
 	}, [loadDocStructure, loadMediaStructure, prevProj, project]);
@@ -298,14 +297,19 @@ const AppMgmt = () => {
 		});
 
 		// Save Project and Open - queues EditorContainer to request a save and open another project
-		ipcRenderer.on('show-find-replace', (event, { replace }) => {
-			if (replace) {
-				// setReplaceDefaultOn(true);
-				setRefocusReplace(true);
-			} else {
-				setRefocusFind(true);
+		ipcRenderer.on('show-find-replace', (event, { replace, wholeProject }) => {
+			if (!wholeProject) {
+				if (replace) {
+					setRefocusReplace(true);
+				} else {
+					setRefocusFind(true);
+				}
+				setShowFindReplace(true);
 			}
-			setShowFindReplace(true);
+
+			if (wholeProject) {
+				setShowFindReplaceAll(true);
+			}
 		});
 
 		ipcRenderer.on('insert-link', (event) => {
@@ -444,6 +448,7 @@ const preloadEachDocument = (docArray, newAllDocObj, setEditorArchives) => {
 							[docName]: {
 								editorState: newEditorState,
 								scrollY: 0,
+								textBlocks: getBlockPlainTextArray(newEditorState),
 							},
 					  }
 			);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useCallback } from 'react';
+import React, { useEffect, useState, useContext, useCallback, useMemo } from 'react';
 import { ipcRenderer } from 'electron';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
@@ -31,12 +31,9 @@ const NavTrash = () => {
 	} = useContext(LeftNavContext);
 
 	// Toggles open/close on folders
-	const handleFolderClick = useCallback(
-		(folderId) => {
-			setOpenFolders({ ...openFolders, [folderId]: !openFolders[folderId] });
-		},
-		[openFolders, setOpenFolders]
-	);
+	const handleFolderClick = useCallback((folderId) => {
+		setOpenFolders((prev) => ({ ...prev, [folderId]: !openFolders[folderId] }));
+	}, []);
 
 	const handleFileDelete = useCallback(() => {
 		let results;
@@ -82,6 +79,21 @@ const NavTrash = () => {
 		});
 	}, []);
 
+	const trashFolderStructure = useMemo(
+		() =>
+			Object.keys(docStructure).length
+				? buildFileStructure(
+						docStructure['trash'],
+						'',
+						true,
+						handleFolderClick,
+						openFolders,
+						setOpenFolders
+				  )
+				: null,
+		[docStructure, openFolders]
+	);
+
 	return (
 		<>
 			<div className='file-nav folder'>
@@ -93,18 +105,19 @@ const NavTrash = () => {
 				</button>
 				<Collapse isOpen={isOpen}>
 					<div className='folder-contents'>
-						{Object.keys(docStructure).length ? (
-							buildFileStructure(
-								docStructure['trash'],
-								'',
-								true,
-								handleFolderClick,
-								openFolders,
-								setOpenFolders
-							)
-						) : (
-							<></>
-						)}
+						{/* {Object.keys(docStructure).length
+							? buildFileStructure(
+									docStructure['trash'],
+									'',
+									true,
+									handleFolderClick,
+									openFolders,
+									setOpenFolders
+							  )
+							: null} */}
+
+						{trashFolderStructure}
+
 						{/* {docStructure.trash.children.map((item) => (
 							<NavDocumentTrash child={item} key={item.id} />
 						))} */}

@@ -31,7 +31,7 @@ const RightNav = () => {
 		);
 
 		let windowWidth = window.innerWidth;
-		let minWidth = 7 * rootSize;
+		let minWidth = 10 * rootSize;
 		let maxWidth = 25 * rootSize;
 		let widthOffset = 1;
 

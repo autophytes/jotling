@@ -7,6 +7,7 @@ import { cleanupJpeg } from '../components/appFunctions';
 import Store from 'electron-store';
 import { findFileTab } from '../utils/utils';
 import { convertSetterToRefSetter } from '../utils/contextUtils';
+import { getBlockPlainTextArray } from '../utils/draftUtils';
 
 const store = new Store();
 
@@ -39,6 +40,7 @@ const LeftNavContextProvider = (props) => {
 		showIndTags: [],
 	});
 	const [editorArchives, setEditorArchivesOrig] = useState({});
+
 	const [scrollToLinkId, setScrollToLinkId] = useState(null);
 	const [peekWindowLinkId, setPeekWindowLinkId] = useState(null);
 	const [displayWikiPopper, setDisplayWikiPopper] = useState(false);
@@ -139,7 +141,6 @@ const LeftNavContextProvider = (props) => {
 
 	// Update the tab the open document is in
 	useEffect(() => {
-		console.log('docStructureRef.current:', docStructureRef.current);
 		const fileTab = findFileTab(
 			docStructureRef.current,
 			'doc',
@@ -186,6 +187,7 @@ const LeftNavContextProvider = (props) => {
 					...prev[docName],
 					editorState: editorStateToSave,
 					...(typeof scrollY !== 'undefined' ? { scrollY } : {}), // Add scroll if available
+					textBlocks: getBlockPlainTextArray(editorStateToSave),
 				},
 			}));
 		},

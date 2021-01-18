@@ -320,9 +320,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 	// Updates the customStyleMap
 	useEffect(() => {
-		console.log('customStyles changed');
 		if (customStyles) {
-			console.log('updating the style map');
 			setCustomStyleMap(updateCustomStyleMap(customStyles));
 			editorRef.current.forceUpdate();
 		}

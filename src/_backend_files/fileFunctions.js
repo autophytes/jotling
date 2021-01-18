@@ -402,9 +402,9 @@ const requestSaveAndOpen = async (openJotsPath) => {
 	mainWindow.webContents.send('request-save-and-open', true, openJotsPath);
 };
 
-const requestShowFindReplace = async ({ replace }) => {
+const requestShowFindReplace = async ({ replace, wholeProject }) => {
 	let mainWindow = getMainWindow();
-	mainWindow.webContents.send('show-find-replace', { replace });
+	mainWindow.webContents.send('show-find-replace', { replace, wholeProject });
 };
 
 const requestInsertLink = async () => {

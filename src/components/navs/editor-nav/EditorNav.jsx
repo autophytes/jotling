@@ -37,7 +37,7 @@ import {
 	toggleTextCustomStyle,
 } from '../../editor/editorStyleFunctions';
 
-import { insertNewSection } from '../../editor/editorFunctions';
+import { insertNewSectionInOpenDoc } from '../../editor/editorFunctions';
 
 // AVAILABLE BLOCKS - https://draftjs.org/docs/api-reference-content-block#representing-styles-and-entities
 // unstyled
@@ -398,7 +398,7 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 						onMouseDown={(e) => {
 							e.preventDefault();
 							if (navData.currentDocTab === 'pages') {
-								insertNewSection(editorStateRef.current, setEditorStateRef.current);
+								insertNewSectionInOpenDoc(editorStateRef.current, setEditorStateRef.current);
 								// editorRef.current.focus();
 								// setTimeout(() => editorRef.current.focus(), 0);
 							}

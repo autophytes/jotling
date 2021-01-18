@@ -91,3 +91,15 @@ export const getAllBlockKeys = (contentState) => {
 	const blockArray = contentState.getBlocksAsArray();
 	return blockArray.map((item) => item.getKey());
 };
+
+// Build an array of block keys and text
+export const getBlockPlainTextArray = (editorState) => {
+	const currentContent = editorState.getCurrentContent();
+	const draftBlockArray = currentContent.getBlocksAsArray();
+	const filteredArray = draftBlockArray.filter((block) => block.getType !== 'wiki-section');
+
+	return filteredArray.map((block) => ({
+		key: block.getKey(),
+		text: block.getText(),
+	}));
+};

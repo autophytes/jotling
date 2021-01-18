@@ -81,7 +81,7 @@ export const initializeDocWithSections = (docStructure, currentDoc, filePath, sa
 
 // Update an editorState && docStructure with a new wiki-section inserted in a specific location
 // Returns the new editorState && blockKey
-export const insertNewDocSection = (
+export const insertNewSectionInClosedDoc = (
 	editorState,
 	newSectionOptions,
 	setDocStructure,
@@ -863,8 +863,6 @@ export const buildFileStructure = (
 	currentlyDragging,
 	setCurrentlyDragging
 ) => {
-	console.log('buildFileStructure is running');
-
 	return folder.children.map((child) => {
 		// Rendering a document
 		if (child.type === 'doc') {

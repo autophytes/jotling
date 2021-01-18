@@ -2130,3 +2130,71 @@ button.wiki-template-add-section > svg {
 button.wiki-template-add-section:hover {
 	background-color: rgba(0, 0, 0, 0.1);
 }
+
+.left-nav-stats-words-today {
+	margin: 0.5rem 0.25rem;
+}
+
+.project-find-container {
+	position: fixed;
+	right: 13rem;
+	top: calc(var(--top-nav-height) * 2);
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	z-index: 1;
+	border-radius: 5px;
+	padding: 4px 7px;
+	color: white;
+	background-image: linear-gradient(to bottom, #555555, #4e4e4e);
+	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.project-find-container input {
+	border-radius: 5px;
+	width: 7rem;
+	margin: 0.1rem 0.5rem;
+	padding-left: 6px;
+	padding-top: 2px;
+	font-size: 1rem;
+	text-align: left;
+	border: none;
+}
+
+.project-find-container input:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);
+}
+
+.project-find-container .find-containter-counter {
+	margin: 0;
+	font-size: 0.9rem;
+	line-height: 0.9rem;
+	padding-top: 3px;
+	width: 5rem;
+	align-self: center;
+	user-select: none;
+}
+
+.project-find-container .find-container-svg {
+	display: flex;
+	align-items: center;
+	padding: 0 3px;
+	cursor: pointer;
+	user-select: none;
+}
+.project-find-container .find-container-svg:hover {
+	background-color: #888;
+}
+
+.project-find-container .find-container-svg svg {
+	width: 0.75rem;
+	height: 0.75rem;
+	fill: white;
+	transform: none;
+	transition: 250ms cubic-bezier(0.4, 0, 0.2, 1) transform;
+}
+
+.project-find-container .find-container-svg.expanded svg {
+	transform: rotate(90deg);
+}

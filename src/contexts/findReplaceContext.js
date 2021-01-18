@@ -18,7 +18,6 @@ const FindReplaceContextProvider = (props) => {
 	const [findText, setFindText] = useState('');
 	const [replaceText, setReplaceText] = useState('');
 	const [showFindReplace, setShowFindReplace] = useState(false);
-	const [replaceDefaultOn, setReplaceDefaultOn] = useState(false);
 	const [refocusFind, setRefocusFind] = useState(false);
 	const [refocusReplace, setRefocusReplace] = useState(false);
 	const [findIndex, setFindIndex] = useState(null);
@@ -26,6 +25,8 @@ const FindReplaceContextProvider = (props) => {
 	const [replaceSingleQueue, setReplaceSingleQueue] = useState({});
 	const [replaceAll, setReplaceAll] = useState('');
 	const [prev, setPrev] = useState({});
+
+	const [showFindReplaceAll, setShowFindReplaceAll] = useState(false);
 
 	// REF
 	const findRegisterRef = useRef({});
@@ -184,8 +185,6 @@ const FindReplaceContextProvider = (props) => {
 				setFindText,
 				showFindReplace,
 				setShowFindReplace,
-				replaceDefaultOn,
-				setReplaceDefaultOn,
 				refocusFind,
 				setRefocusFind,
 				refocusReplace,
@@ -205,6 +204,8 @@ const FindReplaceContextProvider = (props) => {
 				replaceAllCharacterOffsetRef,
 				updateFindIndex,
 				contextEditorRef,
+				showFindReplaceAll,
+				setShowFindReplaceAll,
 				setTotalMatches, // DELETE
 				// queueIncrement,
 			}}>

@@ -2,12 +2,8 @@ export class LinkSelectionRangeRef {
 	constructor() {
 		// this.updateRect();
 
-		console.log('LinkSelection constructor running');
-
 		this.update = (e) => {
-			console.log('updating the referenceElement');
 			if (!this.selection) {
-				console.log('setting this.selection');
 				this.selection = document.getSelection();
 			}
 
@@ -34,7 +30,6 @@ export class LinkSelectionRangeRef {
 			// console.log('setting properties via get bounding client rect');
 			this.rect = this.range.getBoundingClientRect();
 		} else {
-			console.log('setting default properties');
 			this.rect = {
 				top: 0,
 				left: 0,

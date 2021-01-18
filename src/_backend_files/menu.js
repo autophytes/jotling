@@ -141,17 +141,37 @@ const registerMenu = () => {
 					registerAccelerator: true,
 					acceleratorWorksWhenHidden: true,
 					click: async () => {
-						requestShowFindReplace({ replace: false });
+						requestShowFindReplace({ replace: false, wholeProject: false });
+					},
+					enabled: isWindowOpen,
+				},
+				{
+					label: 'Find All',
+					accelerator: 'CmdOrCtrl+Shift+F',
+					registerAccelerator: true,
+					acceleratorWorksWhenHidden: true,
+					click: async () => {
+						requestShowFindReplace({ replace: false, wholeProject: true });
 					},
 					enabled: isWindowOpen,
 				},
 				{
 					label: 'Replace',
-					accelerator: 'CmdOrCtrl+Shift+F',
+					accelerator: 'CmdOrCtrl+R',
+					registerAccelerator: true,
+					acceleratorWorksWhenHidden: true,
+					click: async (item, window, e) => {
+						requestShowFindReplace({ replace: true, wholeProject: false });
+					},
+					enabled: isWindowOpen,
+				},
+				{
+					label: 'Replace All',
+					accelerator: 'CmdOrCtrl+Shift+R',
 					registerAccelerator: true,
 					acceleratorWorksWhenHidden: true,
 					click: async () => {
-						requestShowFindReplace({ replace: true });
+						requestShowFindReplace({ replace: true, wholeProject: true });
 					},
 					enabled: isWindowOpen,
 				},
@@ -182,8 +202,8 @@ const registerMenu = () => {
 			submenu: [
 				...(dev
 					? [
-							{ role: 'reload' },
-							{ role: 'forcereload' },
+							// { role: 'reload' },
+							// { role: 'forcereload' },
 							{ role: 'toggledevtools' },
 							{ type: 'separator' },
 					  ]

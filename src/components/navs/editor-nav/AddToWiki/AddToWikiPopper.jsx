@@ -319,7 +319,6 @@ const AddToWikiPopper = () => {
 									spellCheck={false}
 									onChange={(e) => setNewWikiName(e.target.value)}
 									onFocus={(e) => {
-										console.log('getting ready to focus: ', e);
 										e.target.select();
 									}}
 									onKeyUp={handleNewWikiEnter}

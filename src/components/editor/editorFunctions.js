@@ -952,7 +952,7 @@ export const selectionContainsBlockType = (editorState, blockType) => {
 };
 
 // Insert a new section title into a Wiki page
-export const insertNewSection = (editorState, setEditorState) => {
+export const insertNewSectionInOpenDoc = (editorState, setEditorState) => {
 	const contentState = editorState.getCurrentContent();
 	const selectionState = editorState.getSelection();
 	const startBlockKey = selectionState.getStartKey();

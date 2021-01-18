@@ -6,7 +6,7 @@ import SectionsSVG from '../../../../assets/svg/SectionsSVG';
 import BackArrowSVG from '../../../../assets/svg/BackArrowSVG';
 
 import { createTagLink } from '../../../editor/editorFunctions';
-import { addFile, insertNewDocSection } from '../../navFunctions';
+import { addFile, insertNewSectionInClosedDoc } from '../../navFunctions';
 import { findFilePath, retrieveContentAtPropertyPath } from '../../../../utils/utils';
 
 const PickSection = ({
@@ -43,7 +43,7 @@ const PickSection = ({
 
 			// If creating a new section, go ahead and create/sync that here
 			// In this case, we probably need to return the new editorState from the addFile
-			insertNewDocSection(
+			insertNewSectionInClosedDoc(
 				editorArchivesRef.current[`doc${selectedDocId}.json`].editorState,
 				insertSectionOptions,
 				setDocStructure,
@@ -108,7 +108,7 @@ const PickSection = ({
 
 			// If creating a new section, go ahead and create/sync that here
 			// In this case, we probably need to return the new editorState from the addFile
-			const { blockKey: newSectionBlockKey } = insertNewDocSection(
+			const { blockKey: newSectionBlockKey } = insertNewSectionInClosedDoc(
 				editorState,
 				insertSectionOptions,
 				setDocStructure,

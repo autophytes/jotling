@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useContext, useEffect } from 'react';
+import React, { useCallback, useState, useContext, useEffect, useMemo } from 'react';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
@@ -48,21 +48,27 @@ const LeftNavContent = () => {
 		});
 	}, []);
 
+	// Build the files and folders
+	const newFileStructure = useMemo(() => {
+		return Object.keys(docStructure).length
+			? buildFileStructure(
+					docStructure[navData.currentTab],
+					'',
+					false,
+					handleFolderClick,
+					openFolders,
+					setOpenFolders,
+					openCloseFolder,
+					currentlyDragging,
+					setCurrentlyDragging
+			  )
+			: null;
+	}, [docStructure, navData.currentTab, openFolders, currentlyDragging]);
+
 	return (
 		<div className='left-nav-content'>
-			{Object.keys(docStructure).length
-				? buildFileStructure(
-						docStructure[navData.currentTab],
-						'',
-						false,
-						handleFolderClick,
-						openFolders,
-						setOpenFolders,
-						openCloseFolder,
-						currentlyDragging,
-						setCurrentlyDragging
-				  )
-				: null}
+			{/* Files and Folders */}
+			{newFileStructure}
 
 			<hr />
 			{navData.currentTab === 'pages' && <WikiTemplatesButton />}
