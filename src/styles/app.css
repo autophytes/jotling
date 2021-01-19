@@ -96,6 +96,12 @@ body {
 	align-items: center;
 }
 
+.ellipsis {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .editor-area {
 	/* padding: 0 2rem 0 2rem; */
 	/* position: relative; */
@@ -2132,47 +2138,59 @@ button.wiki-template-add-section:hover {
 }
 
 .left-nav-stats-words-today {
-	margin: 0.5rem 0.25rem;
+	margin: 0.5rem 0.25rem 0.5rem 0.15rem;
+}
+
+.project-find-navigation-row {
+	margin: 0.25rem 0.5rem 0rem 0.25rem;
+	align-items: stretch;
+}
+
+.project-find-input-section {
+	display: flex;
+	flex-direction: row;
+	justify-content: stretch;
+	align-items: stretch;
+}
+
+.project-find-input-wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	width: 100%;
 }
 
 .project-find-container {
-	position: fixed;
-	right: 13rem;
-	top: calc(var(--top-nav-height) * 2);
-	display: flex;
-	flex-direction: row;
-	align-items: stretch;
-	z-index: 1;
-	border-radius: 5px;
-	padding: 4px 7px;
-	color: white;
-	background-image: linear-gradient(to bottom, #555555, #4e4e4e);
-	box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+	margin-bottom: 0.5rem;
 }
 
 .project-find-container input {
 	border-radius: 5px;
-	width: 7rem;
+	/* width: 7rem; */
+	width: calc(100% - 1rem);
 	margin: 0.1rem 0.5rem;
 	padding-left: 6px;
 	padding-top: 2px;
 	font-size: 1rem;
 	text-align: left;
 	border: none;
+	border: 1px solid #444;
+	flex-shrink: 1;
 }
 
 .project-find-container input:focus {
 	outline: none;
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);
+	box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.7);
 }
 
 .project-find-container .find-containter-counter {
 	margin: 0;
 	font-size: 0.9rem;
 	line-height: 0.9rem;
-	padding-top: 3px;
-	width: 5rem;
-	align-self: center;
+	padding: 0.25rem 0;
+	/* width: 5rem; */
+	width: 100%;
+	/* align-self: center; */
 	user-select: none;
 }
 
@@ -2182,15 +2200,16 @@ button.wiki-template-add-section:hover {
 	padding: 0 3px;
 	cursor: pointer;
 	user-select: none;
+	border-radius: 3px;
 }
 .project-find-container .find-container-svg:hover {
-	background-color: #888;
+	background-color: rgba(0, 0, 0, 0.1);
 }
 
 .project-find-container .find-container-svg svg {
 	width: 0.75rem;
 	height: 0.75rem;
-	fill: white;
+	fill: #444;
 	transform: none;
 	transition: 250ms cubic-bezier(0.4, 0, 0.2, 1) transform;
 }
@@ -2198,3 +2217,55 @@ button.wiki-template-add-section:hover {
 .project-find-container .find-container-svg.expanded svg {
 	transform: rotate(90deg);
 }
+
+.project-find-container-replace-button-row {
+	display: flex;
+	justify-content: flex-end;
+	margin: 0.1rem 0.5rem 0.25rem 0;
+}
+
+.project-find-container-replace-button {
+	color: white;
+	font-weight: bold;
+	font-size: 0.75rem;
+	/* border: 1px solid white; */
+	width: calc(4ch + 8px);
+	border-radius: 3px;
+	background-color: var(--color-primary);
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+	margin-left: 0.25rem;
+
+	padding: 2px 4px 2px 4px;
+	cursor: pointer;
+	user-select: none;
+}
+
+.project-find-container-replace-button:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 6px -1px rgba(0, 0, 0, 0.2), 0 4px 4px -1px rgba(0, 0, 0, 0.12);
+}
+
+.project-find-results-container {
+	padding-right: 0.25rem;
+	overflow-y: scroll;
+}
+
+.project-find.react-css-collapse-transition {
+	padding-left: 0.25rem;
+}
+
+/* .project-find-container-replace-button:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);
+} */
+
+/* border-radius: 0.25rem;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+padding: 2px 0.5rem;
+width: calc(1rem + 6ch);
+
+background-color: var(--color-primary);
+}
+
+.color-picker-popper-button-row button:hover {
+box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */

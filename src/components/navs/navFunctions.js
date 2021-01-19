@@ -1014,18 +1014,104 @@ export const findAllDocsInFolder = (currentFolder, path = '') => {
 				path: path + (path ? '/' : '') + 'children',
 			});
 		}
-	}
 
-	// Find and store all docs from children folders
-	for (let folderName in currentFolder.folders) {
-		let subDocArray = findAllDocsInFolder(
-			currentFolder.folders[folderName],
-			path + (path === '' ? '' : '/') + 'folders/' + folderName
-		);
-		if (subDocArray) {
-			docArray = [...docArray, ...subDocArray];
+		if (child.type === 'folder') {
+			const folderId = child.id.toString();
+			let subDocArray = findAllDocsInFolder(
+				currentFolder.folders[folderId],
+				path + (path === '' ? '' : '/') + 'folders/' + folderId
+			);
+			if (subDocArray) {
+				docArray = [...docArray, ...subDocArray];
+			}
 		}
 	}
 
+	// // Find and store all docs from children folders
+	// for (let folderName in currentFolder.folders) {
+	// 	let subDocArray = findAllDocsInFolder(
+	// 		currentFolder.folders[folderName],
+	// 		path + (path === '' ? '' : '/') + 'folders/' + folderName
+	// 	);
+	// 	if (subDocArray) {
+	// 		docArray = [...docArray, ...subDocArray];
+	// 	}
+	// }
+
 	return docArray;
 };
+
+export const findInWholeProject = (editorArchives, editorState, currentDoc, findText) => {
+	let findResults = {};
+
+	// Exclude current doc from the editorArchives search
+	// Find matches in the current editorState
+	// Select relevant text for each match
+
+	const regexMetaChars = /[(){[*+?.\\^$|]/g;
+	const cleanedFindText = findText.replace(regexMetaChars, '\\$&');
+	const regex = new RegExp(cleanedFindText, 'gi');
+	// console.log('regex:', regex);
+
+	for (let docName in editorArchives) {
+		// console.log('docName:', docName);
+		let textBlocks = editorArchives[docName].textBlocks;
+		let docResults = [];
+
+		// For each paragrah, find all matches
+		for (let block of textBlocks) {
+			// Store each match in docResults
+			let matchArr;
+			// console.log('block.text:', block.text);
+			while ((matchArr = regex.exec(block.text)) !== null) {
+				// console.log('regex loop running');
+
+				docResults.push({
+					key: block.key,
+					start: matchArr.index,
+					text: parseFindResultsText(block.text, matchArr.index, 80, 10),
+					// text: block.text.slice(matchArr.index, matchArr.index + 40), // NEEDS TO select a couple words before
+				});
+			}
+		}
+
+		findResults[docName] = docResults;
+	}
+
+	return findResults;
+};
+
+const excludedCharacters = [' '];
+const parseFindResultsText = (text, startIndex, maxLength, charsBackward) => {
+	let start = startIndex;
+
+	let sentenceBreak;
+
+	for (let i = 1; i <= charsBackward; i++) {
+		const adjStart = Math.max(startIndex - i, 0);
+		const char = text.slice(adjStart, adjStart + 1);
+
+		if (char === ' ') {
+			start = adjStart + 1;
+		}
+	}
+
+	let end = startIndex + maxLength;
+
+	const adjMaxLength = maxLength + (startIndex - start);
+	for (let i = adjMaxLength - 1; i > start; i--) {
+		const adjEnd = Math.max(adjMaxLength + start - i, 0);
+		const char = text.slice(adjEnd, adjEnd + 1);
+
+		if (char === ' ') {
+			end = adjEnd + 1;
+		}
+	}
+
+	return text.slice(start, end);
+};
+
+// Kripper’s heart quickened. The swelling continued, and Kripper could feel the heat rising from the display in front of them.
+// A flash of green heat won out. Kripper stumbled back several steps before turning and running towards the
+// “Yes, sir?” Kripper said, turning to face the old man.
+// “Ay, sir. Very close indeed, sir.” Kripper turned beside the old man and watched the workers prepare to slide the fifteenth and final stone into its socket in the floor.

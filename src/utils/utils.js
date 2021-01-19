@@ -388,5 +388,5 @@ export const stripOutEscapeCharacters = (origText) => {
 	return newText;
 };
 
-const userAgent = navigator.userAgent.toLowerCase();
-export const isInElectron = userAgent.indexOf(' electron/') > -1;
+// const userAgent = navigator.userAgent.toLowerCase();
+// export const isInElectron = userAgent.indexOf(' electron/') > -1;

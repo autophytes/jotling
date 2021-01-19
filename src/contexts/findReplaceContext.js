@@ -168,16 +168,6 @@ const FindReplaceContextProvider = (props) => {
 		}
 	}, [findText, currentDoc, updateFindIndex]);
 
-	// const queueIncrement = useCallback(() => {
-	// 	// Remove any queued updates to findRegisterRef
-	// 	clearTimeout(queueIncrementRef.current);
-
-	// 	// Update the number of matches on the page
-	// 	queueIncrementRef.current = setTimeout(() => {
-	// 		updateFindIndex('INCREMENT');
-	// 	}, 100);
-	// }, [updateFindIndex]);
-
 	return (
 		<FindReplaceContext.Provider
 			value={{
