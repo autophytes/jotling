@@ -2254,6 +2254,26 @@ button.wiki-template-add-section:hover {
 	padding-left: 0.25rem;
 }
 
+.project-find-document.file-nav.document {
+	font-weight: bold;
+}
+
+.project-find-document.file-nav.document svg {
+	fill: #444;
+	transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.project-find-result.file-nav.document {
+	white-space: nowrap;
+	/* display: inline-block; */
+}
+
+.project-find-result.file-nav.document span {
+	flex-shrink: 0;
+	white-space: pre;
+	display: inline-block;
+}
+
 /* .project-find-container-replace-button:focus {
 	outline: none;
 	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.7);

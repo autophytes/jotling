@@ -1060,17 +1060,17 @@ export const findInWholeProject = (editorArchives, editorState, currentDoc, find
 
 		// For each paragrah, find all matches
 		for (let block of textBlocks) {
-			// Store each match in docResults
 			let matchArr;
-			// console.log('block.text:', block.text);
+
 			while ((matchArr = regex.exec(block.text)) !== null) {
-				// console.log('regex loop running');
+				const start = matchArr.index;
 
 				docResults.push({
 					key: block.key,
-					start: matchArr.index,
-					text: parseFindResultsText(block.text, matchArr.index, 80, 10),
-					// text: block.text.slice(matchArr.index, matchArr.index + 40), // NEEDS TO select a couple words before
+					start: start,
+					preText: block.text.slice(Math.max(start - 50, 0), start),
+					text: block.text.slice(start, start + findText.length),
+					postText: block.text.slice(start + findText.length, start + findText.length + 100),
 				});
 			}
 		}
@@ -1079,36 +1079,6 @@ export const findInWholeProject = (editorArchives, editorState, currentDoc, find
 	}
 
 	return findResults;
-};
-
-const excludedCharacters = [' '];
-const parseFindResultsText = (text, startIndex, maxLength, charsBackward) => {
-	let start = startIndex;
-
-	let sentenceBreak;
-
-	for (let i = 1; i <= charsBackward; i++) {
-		const adjStart = Math.max(startIndex - i, 0);
-		const char = text.slice(adjStart, adjStart + 1);
-
-		if (char === ' ') {
-			start = adjStart + 1;
-		}
-	}
-
-	let end = startIndex + maxLength;
-
-	const adjMaxLength = maxLength + (startIndex - start);
-	for (let i = adjMaxLength - 1; i > start; i--) {
-		const adjEnd = Math.max(adjMaxLength + start - i, 0);
-		const char = text.slice(adjEnd, adjEnd + 1);
-
-		if (char === ' ') {
-			end = adjEnd + 1;
-		}
-	}
-
-	return text.slice(start, end);
 };
 
 // Kripper’s heart quickened. The swelling continued, and Kripper could feel the heat rising from the display in front of them.
