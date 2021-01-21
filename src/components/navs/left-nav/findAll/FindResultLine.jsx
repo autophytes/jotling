@@ -27,7 +27,7 @@ const FindResultLine = ({ result, width: preTextChars, handleClick }) => {
 
 	return (
 		<button
-			className='file-nav document project-find-result'
+			className='project-find-result file-nav document'
 			style={{ textOverflow: 'hidden' }}
 			onClick={handleClick}>
 			<span>{preText}</span>

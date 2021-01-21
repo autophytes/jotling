@@ -279,7 +279,7 @@ h2.editor-doc-title {
 	flex-direction: row;
 	justify-content: stretch;
 	align-items: center;
-	padding: 0.25rem 0.75rem;
+	padding: 0 0.75rem;
 	font-size: 0.95rem;
 	z-index: 3;
 
@@ -303,6 +303,7 @@ h2.editor-doc-title {
 .side-nav-container {
 	height: 100%;
 	width: calc(100% - 0.5rem - 1px);
+	padding: 0.25rem 0;
 	align-self: stretch;
 	display: flex;
 	flex-direction: column;
@@ -327,14 +328,14 @@ h2.editor-doc-title {
 }
 
 .vertical-rule.primary-color {
-	/* background-color: var(--color-primary); */
-	background-image: linear-gradient(
+	background-color: var(--color-primary);
+	/* background-image: linear-gradient(
 		to bottom,
 		rgba(var(--color-primary-rgb), 0) 0%,
 		rgba(var(--color-primary-rgb), 1) 10%,
 		rgba(var(--color-primary-rgb), 1) 90%,
 		rgba(var(--color-primary-rgb), 0) 100%
-	);
+	); */
 }
 
 .vertical-rule-drag-region {
@@ -462,6 +463,7 @@ h2.editor-doc-title {
 	justify-content: stretch;
 	align-items: center;
 	width: 100%;
+	/* max-width: calc(10.75rem - 2px); */
 }
 
 .nav-section-tab {
@@ -2142,8 +2144,8 @@ button.wiki-template-add-section:hover {
 }
 
 .project-find-navigation-row {
-	margin: 0.25rem 0.5rem 0rem 0.25rem;
-	align-items: stretch;
+	margin: 0 0 0.25rem 0.25rem;
+	/* align-items: stretch; */
 }
 
 .project-find-input-section {
@@ -2161,14 +2163,17 @@ button.wiki-template-add-section:hover {
 }
 
 .project-find-container {
-	margin-bottom: 0.5rem;
+	margin-top: 0.5rem;
+	margin-right: 0.5rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid #777;
 }
 
 .project-find-container input {
 	border-radius: 5px;
 	/* width: 7rem; */
-	width: calc(100% - 1rem);
-	margin: 0.1rem 0.5rem;
+	width: calc(100% - 0.25rem);
+	margin: 0 0 0.25rem 0.25rem;
 	padding-left: 6px;
 	padding-top: 2px;
 	font-size: 1rem;
@@ -2187,7 +2192,7 @@ button.wiki-template-add-section:hover {
 	margin: 0;
 	font-size: 0.9rem;
 	line-height: 0.9rem;
-	padding: 0.25rem 0;
+	/* padding-bottom: 0.5rem; */
 	/* width: 5rem; */
 	width: 100%;
 	/* align-self: center; */
@@ -2197,7 +2202,7 @@ button.wiki-template-add-section:hover {
 .project-find-container .find-container-svg {
 	display: flex;
 	align-items: center;
-	padding: 0 3px;
+	padding: 0.25rem 0.25rem;
 	cursor: pointer;
 	user-select: none;
 	border-radius: 3px;
@@ -2221,7 +2226,7 @@ button.wiki-template-add-section:hover {
 .project-find-container-replace-button-row {
 	display: flex;
 	justify-content: flex-end;
-	margin: 0.1rem 0.5rem 0.25rem 0;
+	/* margin: 0 0.5rem 0 0; */
 }
 
 .project-find-container-replace-button {
@@ -2246,7 +2251,9 @@ button.wiki-template-add-section:hover {
 }
 
 .project-find-results-container {
-	padding-right: 0.25rem;
+	/* padding-right: 0.25rem;
+  padding-bottom: 1.5rem; */
+	padding: 0.25rem 0.25rem 1.5rem 0;
 	overflow-y: scroll;
 }
 
@@ -2256,6 +2263,12 @@ button.wiki-template-add-section:hover {
 
 .project-find-document.file-nav.document {
 	font-weight: bold;
+	margin-bottom: 0.25rem;
+	/* margin-top: 0.5rem; */
+	width: 100%;
+}
+.project-find-document.file-nav.document:focus {
+	background-color: initial;
 }
 
 .project-find-document.file-nav.document svg {
@@ -2265,13 +2278,22 @@ button.wiki-template-add-section:hover {
 
 .project-find-result.file-nav.document {
 	white-space: nowrap;
-	/* display: inline-block; */
+	display: inline-block;
+	text-overflow: ellipsis;
+	width: 100%;
+	text-align: left;
+}
+
+.project-find-document.file-nav.document:hover,
+.project-find-result.file-nav.document:not(:focus):hover {
+	background-color: rgba(0, 0, 0, 0.06);
+	border-radius: 0.25rem;
 }
 
 .project-find-result.file-nav.document span {
 	flex-shrink: 0;
 	white-space: pre;
-	display: inline-block;
+	display: inline;
 }
 
 /* .project-find-container-replace-button:focus {

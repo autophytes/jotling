@@ -113,7 +113,7 @@ const FindAll = () => {
 						{/* {findText && findRegisterRef.current[findText.toLowerCase()] && totalMatches
 					? `${findIndex === null ? 1 : findIndex + 1} of ${totalMatches}`
 					: '0 matches'} */}
-						3 out of 27
+						3 of 27
 					</p>
 
 					<div
@@ -205,7 +205,7 @@ const FindAll = () => {
 					return (
 						<div className='file-nav folder' key={doc.id} style={{ marginBottom: '0.25rem' }}>
 							<button
-								className={'file-nav document project-find-document'}
+								className={'project-find-document file-nav document'}
 								onClick={() =>
 									setIsDocOpen((prev) => ({
 										...prev,
