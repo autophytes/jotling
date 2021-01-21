@@ -69,12 +69,9 @@ const AppMgmt = () => {
 		showUploadImage,
 		saveFileRef,
 	} = useContext(LeftNavContext);
-	const {
-		setShowFindReplace,
-		setRefocusFind,
-		setRefocusReplace,
-		setShowFindReplaceAll,
-	} = useContext(FindReplaceContext);
+	const { setShowFindReplace, setRefocusFind, setRefocusReplace, setShowFindAll } = useContext(
+		FindReplaceContext
+	);
 	const { showEditorSettings } = useContext(SettingsContext);
 
 	// HiddenContextMenu();
@@ -308,7 +305,7 @@ const AppMgmt = () => {
 			}
 
 			if (wholeProject) {
-				setShowFindReplaceAll(true);
+				setShowFindAll(true);
 			}
 		});
 

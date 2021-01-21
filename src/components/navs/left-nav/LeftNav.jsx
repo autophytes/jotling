@@ -18,9 +18,8 @@ const TAB_NAMES = {
 
 const LeftNav = () => {
 	const { navData, editorStyles, setEditorStyles, resetNavWidth } = useContext(LeftNavContext);
-	const { showFindReplaceAll } = useContext(FindReplaceContext);
+	const { showFindAll } = useContext(FindReplaceContext);
 
-	const [pinNav, setPinNav] = useState(true);
 	const [isResizing, setIsResizing] = useState(false);
 
 	const navRef = useRef(null);
@@ -56,7 +55,10 @@ const LeftNav = () => {
 
 			let newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX));
 
-			setEditorStyles({ ...editorStyles, leftNav: newWidth / rootSize }) + widthOffset;
+			setEditorStyles({
+				...editorStyles,
+				[showFindAll ? 'leftNavFind' : 'leftNav']: newWidth / rootSize,
+			});
 		};
 
 		window.addEventListener('mousemove', handleResizeMouseMove);
@@ -68,14 +70,16 @@ const LeftNav = () => {
 			<div className='side-nav-hover-region left' />
 
 			<nav
-				className={'side-nav left-nav animation' + (pinNav ? '' : ' hidden')}
-				style={{ width: editorStyles.leftNav + 'rem' }}
+				className={
+					'side-nav left-nav animation' + (editorStyles.leftIsPinned ? '' : ' hidden')
+				}
+				style={{ width: editorStyles[showFindAll ? 'leftNavFind' : 'leftNav'] + 'rem' }}
 				ref={navRef}
 				id='left-nav'>
 				{/* Normal - File Tree */}
-				{!showFindReplaceAll && (
+				{!showFindAll && (
 					<div className='side-nav-container'>
-						<LeftNavTopButtons {...{ pinNav, setPinNav }} />
+						<LeftNavTopButtons />
 						<LeftNavTabs />
 						<p className='left-nav-section-title'>
 							{TAB_NAMES[navData.currentTab] ? TAB_NAMES[navData.currentTab] : ''}
@@ -86,7 +90,7 @@ const LeftNav = () => {
 				)}
 
 				{/* Find / Replace - full project search */}
-				{showFindReplaceAll && <FindAll />}
+				{showFindAll && <FindAll />}
 
 				{/* Resize Handle */}
 				<div className={'vertical-rule vr-left-nav' + (isResizing ? ' primary-color' : '')} />

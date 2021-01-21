@@ -26,7 +26,7 @@ const FindReplaceContextProvider = (props) => {
 	const [replaceAll, setReplaceAll] = useState('');
 	const [prev, setPrev] = useState({});
 
-	const [showFindReplaceAll, setShowFindReplaceAll] = useState(false);
+	const [showFindAll, setShowFindAll] = useState(false);
 
 	// REF
 	const findRegisterRef = useRef({});
@@ -194,8 +194,8 @@ const FindReplaceContextProvider = (props) => {
 				replaceAllCharacterOffsetRef,
 				updateFindIndex,
 				contextEditorRef,
-				showFindReplaceAll,
-				setShowFindReplaceAll,
+				showFindAll,
+				setShowFindAll,
 				setTotalMatches, // DELETE
 				// queueIncrement,
 			}}>

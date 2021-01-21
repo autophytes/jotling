@@ -502,6 +502,7 @@ h2.editor-doc-title {
 }
 
 .left-nav-section-title {
+	position: relative;
 	font-size: 1.1rem;
 	font-weight: bold;
 	margin: 0.5rem 0 0 0;
@@ -2141,6 +2142,12 @@ button.wiki-template-add-section:hover {
 
 .left-nav-stats-words-today {
 	margin: 0.5rem 0.25rem 0.5rem 0.15rem;
+}
+
+.project-find.nav-button {
+	position: absolute;
+	right: 0;
+	top: 0;
 }
 
 .project-find-navigation-row {

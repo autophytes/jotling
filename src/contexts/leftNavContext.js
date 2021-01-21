@@ -33,6 +33,7 @@ const LeftNavContextProvider = (props) => {
 	});
 	const [editorStyles, setEditorStyles] = useState({
 		leftNav: DEFAULT_WIDTH,
+		leftNavFind: 18,
 		leftIsPinned: true,
 		rightNav: DEFAULT_WIDTH,
 		rightIsPinned: false,

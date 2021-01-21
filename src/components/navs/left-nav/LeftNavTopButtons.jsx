@@ -57,11 +57,10 @@ const LeftNavTopButtons = ({ pinNav, setPinNav }) => {
 				</button>
 			</div>
 			<button
-				className={'nav-button' + (pinNav ? ' active' : '')}
+				className={'nav-button' + (editorStyles.leftIsPinned ? ' active' : '')}
 				title='Pin Document Navigation'
 				onMouseUp={() => {
-					setPinNav(!pinNav);
-					setEditorStyles({ ...editorStyles, leftIsPinned: !pinNav });
+					setEditorStyles((prev) => ({ ...prev, leftIsPinned: !prev.leftIsPinned }));
 				}}>
 				<PushpinSVG />
 			</button>

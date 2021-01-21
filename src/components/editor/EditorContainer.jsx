@@ -75,7 +75,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		saveFile,
 		saveFileAndProject,
 	} = useContext(LeftNavContext);
-	const { showFindReplace } = useContext(FindReplaceContext);
+	const { showFindAll, showFindReplace } = useContext(FindReplaceContext);
 	const {
 		editorPaddingWrapperRef,
 		editorContainerRef,
@@ -89,15 +89,15 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	);
 
 	// EDITOR STATE
-	const [editorState, setEditorStateOrig] = useState(EditorState.createEmpty());
+	const [editorState, setEditorState] = useState(EditorState.createEmpty());
 	// Updates the editorStateRef with the updated editorState
-	// useEffect(() => {
-	// 	editorStateRef.current = editorState;
-	// }, [editorState]);
+	useEffect(() => {
+		editorStateRef.current = editorState;
+	}, [editorState]);
 
-	const setEditorState = useCallback((value) => {
-		convertSetterToRefSetter(editorStateRef, setEditorStateOrig, value);
-	}, []);
+	// const setEditorState = useCallback((value) => {
+	// 	convertSetterToRefSetter(editorStateRef, setEditorStateOrig, value);
+	// }, []);
 
 	// STATE
 	const [spellCheck, setSpellCheck] = useState(false);
@@ -513,7 +513,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		<main
 			className='editor-area'
 			style={{
-				paddingLeft: editorStyles.leftIsPinned ? editorStyles.leftNav + 'rem' : 0,
+				paddingLeft: editorStyles.leftIsPinned
+					? editorStyles[showFindAll ? 'leftNavFind' : 'leftNav'] + 'rem'
+					: 0,
 				paddingRight: editorStyles.rightIsPinned ? editorStyles.rightNav + 'rem' : 0,
 			}}>
 			<div

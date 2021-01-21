@@ -10,10 +10,17 @@ import { findAllDocsInFolder, findInWholeProject } from '../../navFunctions';
 
 import Collapse from 'react-css-collapse';
 import FindResultLine from './FindResultLine';
+import PushpinSVG from '../../../../assets/svg/PushpinSVG';
 
 const FindAll = () => {
 	// CONTEXT
-	const { setShowFindReplaceAll } = useContext(FindReplaceContext);
+	const {
+		setShowFindAll,
+		setFindText: setContextFindText,
+		findRegisterRef,
+		setFindIndex,
+		setTotalMatches,
+	} = useContext(FindReplaceContext);
 	const {
 		docStructureRef,
 		editorArchivesRef,
@@ -21,6 +28,7 @@ const FindAll = () => {
 		setNavData,
 		navDataRef,
 		editorStyles,
+		setEditorStyles,
 	} = useContext(LeftNavContext);
 
 	// STATE
@@ -29,6 +37,11 @@ const FindAll = () => {
 	const [replaceText, setReplaceText] = useState('');
 	const [findResults, setFindResults] = useState({});
 	const [isDocOpen, setIsDocOpen] = useState({});
+
+	const [currentResult, setCurrentResult] = useState({
+		docName: '',
+		index: 0,
+	});
 
 	// REF
 	const queuedUpdateRef = useRef(null);
@@ -50,8 +63,6 @@ const FindAll = () => {
 		}
 		setIsDocOpen(newIsDocOpen);
 	}, [allDocs]);
-
-	console.log('allDocs:', allDocs);
 
 	// Queueing and debouncing the find update
 	useEffect(() => {
@@ -87,7 +98,8 @@ const FindAll = () => {
 		}, 500);
 	}, [findText, allDocs]);
 
-	const handleResultClick = useCallback((docName) => {
+	const handleResultClick = useCallback((docName, index, totalMatches) => {
+		console.log('handleResultClick in findAll');
 		setNavData((prev) => {
 			if (prev.currentDoc === docName) {
 				return prev;
@@ -98,6 +110,14 @@ const FindAll = () => {
 				};
 			}
 		});
+		setCurrentResult({ docName, index });
+		setTimeout(() => {
+			//
+			// ISSUE: first click on a result in a different document doesn't highlight/jump
+
+			setTotalMatches(totalMatches);
+			setFindIndex(index);
+		}, 0);
 	}, []);
 
 	// console.log('allDocs:', allDocs);
@@ -105,7 +125,17 @@ const FindAll = () => {
 
 	return (
 		<div className='side-nav-container'>
-			<p className='left-nav-section-title'>Find</p>
+			<p className='left-nav-section-title'>
+				Find
+				<button
+					className={'project-find nav-button' + (editorStyles.leftIsPinned ? ' active' : '')}
+					title='Pin Find Navigation'
+					onMouseUp={() => {
+						setEditorStyles((prev) => ({ ...prev, leftIsPinned: !prev.leftIsPinned }));
+					}}>
+					<PushpinSVG />
+				</button>
+			</p>
 
 			<div className='project-find-container'>
 				<div className='project-find-navigation-row flex-row-center'>
@@ -131,9 +161,9 @@ const FindAll = () => {
 					<div
 						className='find-container-svg'
 						onClick={() => {
-							// setContextFindText('');
 							// setShowFindReplace(false);
-							setShowFindReplaceAll(false);
+							setContextFindText('');
+							setShowFindAll(false);
 						}}>
 						<CloseSVG />
 					</div>
@@ -155,9 +185,9 @@ const FindAll = () => {
 							value={findText}
 							onChange={(e) => {
 								console.log('on change fired');
-								// findRegisterRef.current[e.target.value.toLowerCase()] = [];
+								findRegisterRef.current[e.target.value.toLowerCase()] = [];
 								setFindText(e.target.value);
-								// setContextFindText(e.target.value);
+								setContextFindText(e.target.value);
 							}}
 							// onKeyDown={handleInputEnter}
 						/>
@@ -222,11 +252,13 @@ const FindAll = () => {
 								isOpen={isDocOpen[doc.fileName]}
 								className='react-css-collapse-transition project-find'>
 								<div className='folder-contents'>
-									{findResults[doc.fileName].map((item) => (
+									{findResults[doc.fileName].map((item, i) => (
 										<FindResultLine
 											result={item}
-											width={editorStyles.leftNav}
-											handleClick={() => handleResultClick(doc.fileName)}
+											width={editorStyles.leftNavFind}
+											handleClick={() =>
+												handleResultClick(doc.fileName, i, findResults[doc.fileName].length)
+											}
 											key={item.key + item.start}
 										/>
 									))}
