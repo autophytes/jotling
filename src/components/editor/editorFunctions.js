@@ -597,6 +597,8 @@ const updateFindRegisterRef = (
 	editorStateRef
 ) => {
 	let findText = stripOutEscapeCharacters(origFindText);
+	console.log('blockKey:', blockKey);
+	console.log('findText:', findText);
 
 	const origRegisterArray = findRegisterRef.current[findText.toLowerCase()];
 	let registerArray = [...(origRegisterArray ? origRegisterArray : [])];
@@ -609,6 +611,7 @@ const updateFindRegisterRef = (
 		return;
 	}
 
+	console.log('editorStateRef.current.:', editorStateRef.current);
 	let blockMap = editorStateRef.current.getCurrentContent().getBlockMap();
 	let blockKeyOrder = [...blockMap.keys()];
 
@@ -645,7 +648,7 @@ const updateFindRegisterRef = (
 		// Find where the next block is in the block order
 		let blockKeyIndex = blockKeyOrder.findIndex((item) => item === blockKey) + 1;
 		if (blockKeyIndex === 0) {
-			console.error('Our block key was NOT found in the blockKeyOrder array.');
+			console.log('Our block key was NOT found in the blockKeyOrder array.');
 			return;
 		}
 

@@ -410,6 +410,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 					editorArchivesRef.current[navData.currentDoc]
 				);
 				const newEditorState = editorArchivesRef.current[navData.currentDoc].editorState;
+
+				// Decorator needs updated editorStateRef to update findRegisterRef
+				editorStateRef.current = newEditorState;
 				const editorStateWithDecorator = EditorState.set(newEditorState, {
 					decorator: decorator,
 				});

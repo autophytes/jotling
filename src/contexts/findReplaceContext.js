@@ -26,7 +26,10 @@ const FindReplaceContextProvider = (props) => {
 	const [replaceAll, setReplaceAll] = useState('');
 	const [prev, setPrev] = useState({});
 
+	// STATE - global find
 	const [showFindAll, setShowFindAll] = useState(false);
+	const [refocusFindAll, setRefocusFindAll] = useState(false);
+	const [refocusReplaceAll, setRefocusReplaceAll] = useState(false);
 
 	// REF
 	const findRegisterRef = useRef({});
@@ -42,6 +45,11 @@ const FindReplaceContextProvider = (props) => {
 
 	// Update the number of find matches
 	const queueDecoratorUpdate = useCallback((findText) => {
+		// Do not update for project wide find/replace
+		if (showFindAll) {
+			return;
+		}
+
 		// Remove any queued updates to findRegisterRef
 		clearTimeout(updateFindRegisterQueueRef.current);
 
@@ -60,15 +68,15 @@ const FindReplaceContextProvider = (props) => {
 
 	useEffect(() => {
 		// If we replaced the last match, reset to 0
-		if (findIndex > totalMatches - 1) {
+		if (!showFindAll && findIndex > totalMatches - 1) {
 			setFindIndex(0);
 		}
 	}, [totalMatches, findIndex]);
 
 	// Reset the findRegister when the findText or currentDoc changes
 	useEffect(() => {
-		setFindIndex(null);
-		findRegisterRef.current[findText.toLowerCase()] = [];
+		!showFindAll && setFindIndex(null);
+		!showFindAll && (findRegisterRef.current[findText.toLowerCase()] = []);
 
 		// for (let key of Object.keys(findRegisterRef.current)) {
 		// 	if (key !== findText.toLowerCase()) {
@@ -77,7 +85,7 @@ const FindReplaceContextProvider = (props) => {
 		// }
 
 		queueDecoratorUpdate(findText);
-	}, [findText, currentDoc, queueDecoratorUpdate]);
+	}, [findText, currentDoc, queueDecoratorUpdate, showFindAll]);
 
 	// Once all replace alls have completed, reset the replace all variable
 	const resetReplaceAll = useCallback(() => {
@@ -160,6 +168,11 @@ const FindReplaceContextProvider = (props) => {
 
 	// When we change our search, update our findIndex
 	useEffect(() => {
+		// Don't run for project-wide find
+		if (showFindAll) {
+			return;
+		}
+
 		if (prev.findText !== findText || prev.currentDoc !== currentDoc) {
 			setTimeout(() => {
 				updateFindIndex();
@@ -179,6 +192,10 @@ const FindReplaceContextProvider = (props) => {
 				setRefocusFind,
 				refocusReplace,
 				setRefocusReplace,
+				refocusFindAll,
+				setRefocusFindAll,
+				refocusReplaceAll,
+				setRefocusReplaceAll,
 				findRegisterRef,
 				findIndex,
 				setFindIndex,
@@ -196,7 +213,7 @@ const FindReplaceContextProvider = (props) => {
 				contextEditorRef,
 				showFindAll,
 				setShowFindAll,
-				setTotalMatches, // DELETE
+				setTotalMatches,
 				// queueIncrement,
 			}}>
 			{props.children}

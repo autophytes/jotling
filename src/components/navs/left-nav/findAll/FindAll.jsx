@@ -20,6 +20,10 @@ const FindAll = () => {
 		findRegisterRef,
 		setFindIndex,
 		setTotalMatches,
+		refocusFindAll,
+		setRefocusFindAll,
+		refocusReplaceAll,
+		setRefocusReplaceAll,
 	} = useContext(FindReplaceContext);
 	const {
 		docStructureRef,
@@ -45,6 +49,8 @@ const FindAll = () => {
 
 	// REF
 	const queuedUpdateRef = useRef(null);
+	const findInputRef = useRef(null);
+	const replaceInputRef = useRef(null);
 
 	// MEMO
 	const allDocs = useMemo(() => {
@@ -98,27 +104,55 @@ const FindAll = () => {
 		}, 500);
 	}, [findText, allDocs]);
 
-	const handleResultClick = useCallback((docName, index, totalMatches) => {
-		console.log('handleResultClick in findAll');
-		setNavData((prev) => {
-			if (prev.currentDoc === docName) {
-				return prev;
-			} else {
-				return {
-					...prev,
-					currentDoc: docName,
-				};
-			}
-		});
-		setCurrentResult({ docName, index });
-		setTimeout(() => {
-			//
-			// ISSUE: first click on a result in a different document doesn't highlight/jump
+	// Focus the find input
+	useEffect(() => {
+		if (refocusFindAll) {
+			console.log('refocusFindAll:', refocusFindAll);
+			// Focus on the find input
+			// findEditorStateSelection();
+			findInputRef.current.focus();
+			setRefocusFindAll(false);
+		}
+	}, [refocusFindAll]);
 
-			setTotalMatches(totalMatches);
-			setFindIndex(index);
-		}, 0);
-	}, []);
+	// Focus the replace input
+	useEffect(() => {
+		if (refocusReplaceAll) {
+			console.log('refocusReplaceAll:', refocusReplaceAll);
+			// Focus on the replace input
+			// findEditorStateSelection();
+			setShowReplace(true);
+			setRefocusReplaceAll(false);
+			setTimeout(() => {
+				replaceInputRef.current.focus();
+			}, 0);
+		}
+	}, [refocusReplaceAll]);
+
+	const handleResultClick = useCallback(
+		(docName, index, totalMatches) => {
+			setNavData((prev) => {
+				if (prev.currentDoc === docName) {
+					return prev;
+				} else {
+					findRegisterRef.current[findText.toLowerCase()] = [];
+					return {
+						...prev,
+						currentDoc: docName,
+					};
+				}
+			});
+			setCurrentResult({ docName, index });
+			setTimeout(() => {
+				//
+				// ISSUE: first click on a result in a different document doesn't highlight/jump
+
+				setTotalMatches(totalMatches);
+				setFindIndex(index);
+			}, 0);
+		},
+		[findText]
+	);
 
 	// console.log('allDocs:', allDocs);
 	// console.log('editorArchives: ', editorArchivesRef.current);
@@ -180,8 +214,7 @@ const FindAll = () => {
 						<input
 							type='text'
 							placeholder='Find'
-							autoFocus
-							// ref={findInputRef}
+							ref={findInputRef}
 							value={findText}
 							onChange={(e) => {
 								console.log('on change fired');
@@ -195,7 +228,7 @@ const FindAll = () => {
 							<input
 								type='text'
 								placeholder='Replace'
-								// ref={replaceInputRef}
+								ref={replaceInputRef}
 								value={replaceText}
 								onChange={(e) => {
 									setReplaceText(e.target.value);

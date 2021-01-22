@@ -83,7 +83,7 @@ const DecoratorComponentComposition = (props) => {
 export class CompoundDecorator {
 	constructor(decorators = []) {
 		// Create an array of CompositeDecorators
-		console.log('constructing the compound decorator');
+		// console.log('constructing the compound decorator');
 		this.decorators = decorators.map((decorator) => {
 			return decorator.strategy && decorator.component
 				? new CompositeDecorator([decorator])
@@ -149,7 +149,7 @@ export class CompoundDecorator {
 	// Instead of expecting an actual key, it's our tuple from above
 	getComponentForKey(key) {
 		const tuple = JSON.parse(key);
-		console.log('GetComponetForKey fired.');
+		// console.log('GetComponetForKey fired.');
 
 		let counter = 0;
 		for (let key of tuple) {
