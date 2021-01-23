@@ -75,7 +75,9 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		saveFile,
 		saveFileAndProject,
 	} = useContext(LeftNavContext);
-	const { showFindAll, showFindReplace } = useContext(FindReplaceContext);
+	const { showFindAll, showFindReplace, contextEditorRef: findContextEditorRef } = useContext(
+		FindReplaceContext
+	);
 	const {
 		editorPaddingWrapperRef,
 		editorContainerRef,
@@ -139,6 +141,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		// Cleans up selectionState before setting the editorState
 		setEditorState(removeEndingNewline(editorState));
 	};
+
+	// Synchronize the editorRef to the contextEditorRef
+	useEffect(() => {
+		findContextEditorRef.current = editorRef;
+	}, []);
 
 	// Run on initial load
 	useEffect(() => {
@@ -563,7 +570,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 				<div className='editor-bottom-padding' />
 				{/* <InlineToolbar /> */}
-				{showFindReplace && <EditorFindReplace {...{ editorRef }} />}
+				{showFindReplace && <EditorFindReplace />}
 			</div>
 		</main>
 	);

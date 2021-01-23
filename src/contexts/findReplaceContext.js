@@ -174,6 +174,7 @@ const FindReplaceContextProvider = (props) => {
 		}
 
 		if (prev.findText !== findText || prev.currentDoc !== currentDoc) {
+			console.log('updating find index in the context');
 			setTimeout(() => {
 				updateFindIndex();
 			}, 0);

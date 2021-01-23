@@ -2260,7 +2260,7 @@ button.wiki-template-add-section:hover {
 .project-find-results-container {
 	/* padding-right: 0.25rem;
   padding-bottom: 1.5rem; */
-	padding: 0.25rem 0.25rem 1.5rem 0;
+	padding: 0.5rem 0.25rem 1.5rem 0;
 	overflow-y: scroll;
 }
 
@@ -2274,9 +2274,6 @@ button.wiki-template-add-section:hover {
 	/* margin-top: 0.5rem; */
 	width: 100%;
 }
-.project-find-document.file-nav.document:focus {
-	background-color: initial;
-}
 
 .project-find-document.file-nav.document svg {
 	fill: #444;
@@ -2289,6 +2286,12 @@ button.wiki-template-add-section:hover {
 	text-overflow: ellipsis;
 	width: 100%;
 	text-align: left;
+}
+
+.project-find-result.file-nav.document.current-result {
+	font-weight: bold;
+	background-color: rgba(var(--color-primary-rgb), 0.2);
+	border-radius: 0.25rem;
 }
 
 .project-find-document.file-nav.document:hover,

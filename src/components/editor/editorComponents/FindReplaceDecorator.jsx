@@ -61,7 +61,7 @@ const FindReplaceDecorator = ({
 		queueDecoratorUpdate,
 		totalMatches,
 	} = useContext(FindReplaceContext);
-	console.log('findIndex:', findIndex);
+	// console.log('findIndex:', findIndex);
 
 	// REFS
 	const decoratorRef = useRef(null);
@@ -79,10 +79,10 @@ const FindReplaceDecorator = ({
 
 	// Check if the decorator is the current result
 	useEffect(() => {
-		console.log('findIndex when checking isCurrentResult:', findIndex);
+		// console.log('findIndex when checking isCurrentResult:', findIndex);
 		if (findIndex !== null) {
 			let findObject = findRegisterRef.current[findText.toLowerCase()][findIndex];
-			console.log('findObject:', findObject);
+			// console.log('findObject:', findObject);
 
 			if (
 				findObject &&

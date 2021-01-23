@@ -395,6 +395,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 };
 
 export const findVisibleBlocks = (editorRef) => {
+	console.log('editorRef:', editorRef);
 	const bottom = window.innerHeight;
 	const blockElementList = editorRef.current.editor.children[0].children;
 
@@ -597,8 +598,6 @@ const updateFindRegisterRef = (
 	editorStateRef
 ) => {
 	let findText = stripOutEscapeCharacters(origFindText);
-	console.log('blockKey:', blockKey);
-	console.log('findText:', findText);
 
 	const origRegisterArray = findRegisterRef.current[findText.toLowerCase()];
 	let registerArray = [...(origRegisterArray ? origRegisterArray : [])];
@@ -611,7 +610,6 @@ const updateFindRegisterRef = (
 		return;
 	}
 
-	console.log('editorStateRef.current.:', editorStateRef.current);
 	let blockMap = editorStateRef.current.getCurrentContent().getBlockMap();
 	let blockKeyOrder = [...blockMap.keys()];
 

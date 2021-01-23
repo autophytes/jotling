@@ -35,7 +35,7 @@ const repositionFindPopper = (editorStyles, editorSettings, setRightOffset) => {
 	setRightOffset(newRightOffset);
 };
 
-const EditorFindReplace = ({ editorRef }) => {
+const EditorFindReplace = () => {
 	// STATE
 	const [showReplace, setShowReplace] = useState(false);
 	const [findText, setFindText] = useState('');
@@ -67,11 +67,6 @@ const EditorFindReplace = ({ editorRef }) => {
 	// REFS
 	const findInputRef = useRef(null);
 	const replaceInputRef = useRef(null);
-
-	// Synchronize the editorRef
-	useEffect(() => {
-		contextEditorRef.current = editorRef;
-	}, []);
 
 	const findEditorStateSelection = () => {
 		const selection = editorStateRef.current.getSelection();

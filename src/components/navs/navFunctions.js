@@ -1066,6 +1066,7 @@ export const findInWholeProject = (editorArchives, editorState, currentDoc, find
 				const start = matchArr.index;
 
 				docResults.push({
+					docName: docName,
 					key: block.key,
 					start: start,
 					preText: block.text.slice(Math.max(start - 50, 0), start),

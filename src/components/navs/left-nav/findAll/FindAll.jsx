@@ -7,6 +7,7 @@ import CaratDownSVG from '../../../../assets/svg/CaratDownSVG';
 import CloseSVG from '../../../../assets/svg/CloseSVG';
 
 import { findAllDocsInFolder, findInWholeProject } from '../../navFunctions';
+import { findVisibleBlocks } from '../../../editor/editorFunctions';
 
 import Collapse from 'react-css-collapse';
 import FindResultLine from './FindResultLine';
@@ -18,12 +19,14 @@ const FindAll = () => {
 		setShowFindAll,
 		setFindText: setContextFindText,
 		findRegisterRef,
+		findIndex,
 		setFindIndex,
 		setTotalMatches,
 		refocusFindAll,
 		setRefocusFindAll,
 		refocusReplaceAll,
 		setRefocusReplaceAll,
+		contextEditorRef,
 	} = useContext(FindReplaceContext);
 	const {
 		docStructureRef,
@@ -40,6 +43,8 @@ const FindAll = () => {
 	const [findText, setFindText] = useState('');
 	const [replaceText, setReplaceText] = useState('');
 	const [findResults, setFindResults] = useState({});
+	const [totalProjectResults, setTotalProjectResults] = useState(0);
+	const [totalProjectIndex, setTotalProjectIndex] = useState(0);
 	const [isDocOpen, setIsDocOpen] = useState({});
 
 	const [currentResult, setCurrentResult] = useState({
@@ -92,6 +97,13 @@ const FindAll = () => {
 				findText
 			);
 
+			let newTotalResults = 0;
+			Object.values(newFindResults).forEach(
+				(resultsArray) => (newTotalResults += resultsArray.length)
+			);
+
+			setTotalProjectIndex(0);
+			setTotalProjectResults(newTotalResults);
 			setFindResults(newFindResults);
 
 			console.log('newFindResults:', newFindResults);
@@ -129,8 +141,22 @@ const FindAll = () => {
 		}
 	}, [refocusReplaceAll]);
 
-	const handleResultClick = useCallback(
-		(docName, index, totalMatches) => {
+	// Set the new result
+	const updateResult = useCallback(
+		(docName, index) => {
+			// Finding what result number we are on for ALL results
+			let newIndex = 0;
+			for (let doc of allDocs) {
+				if (doc.fileName === docName) {
+					// If we found our document, add the index we're on in that document and stop searching
+					newIndex += index;
+					break;
+				} else {
+					// Adding up all results BEFORE our result
+					newIndex += findResults[doc.fileName].length;
+				}
+			}
+
 			setNavData((prev) => {
 				if (prev.currentDoc === docName) {
 					return prev;
@@ -143,16 +169,193 @@ const FindAll = () => {
 				}
 			});
 			setCurrentResult({ docName, index });
+			setTotalProjectIndex(newIndex + 1); // +1 because indexes start at 0
+			// Set the index at the end of the call stack
 			setTimeout(() => {
-				//
-				// ISSUE: first click on a result in a different document doesn't highlight/jump
-
-				setTotalMatches(totalMatches);
+				setTotalMatches(findResults[docName].length);
 				setFindIndex(index);
 			}, 0);
 		},
-		[findText]
+		[findText, allDocs, findResults]
 	);
+
+	// Increment/decrement the selected result
+	const updateFindIndexProject = useCallback(
+		(direction) => {
+			const currentDoc = navDataRef.current.currentDoc;
+
+			// Build an array of all results with the docName added
+			let allResultsArray = [];
+			for (let doc of allDocs) {
+				// const newResults = findResults[doc.fileName].map((item) => ({
+				// 	...item,
+				// 	docName: doc.fileName,
+				// }));
+				allResultsArray = [...allResultsArray, ...findResults[doc.fileName]];
+			}
+
+			// If no results, exit the function
+			if (!allResultsArray.length) {
+				return;
+			}
+
+			// If no index to start from
+			if (findIndex === null) {
+				// If the current doc has results
+				if (findResults[currentDoc].length) {
+					// List all blocks on screen (array of block keys)
+					let visibleBlocks = findVisibleBlocks(contextEditorRef.current);
+
+					// Look for the first match on screen
+					let visibleResultIndex = -1;
+					findResults[currentDoc].some((result, index) => {
+						if (visibleBlocks.includes(result.key)) {
+							visibleResultIndex = index;
+							return true;
+						}
+					});
+
+					// If a result is visible on screen, select it
+					if (visibleResultIndex !== -1) {
+						updateResult(currentDoc, visibleResultIndex);
+						return;
+					}
+
+					// If no onscreen match, find the first offscreen match.
+					// We know there are matches in this document.
+
+					// If not on screen, iterate through the off-screen blocks to find the first match
+					let contentState = editorStateRef.current.getCurrentContent();
+					const blockKeysWithMatches = findResults[currentDoc].map((item) => item.key);
+
+					// Start with the last block on screen
+					let blockKey = visibleBlocks[visibleBlocks.length - 1];
+					while (true) {
+						// Move to the next block
+						let block = contentState.getBlockAfter(blockKey);
+						if (!block) {
+							// Or the first block if we were at the last
+							block = contentState.getFirstBlock();
+						}
+						// Update the block key for the next iteration
+						blockKey = block.getKey();
+
+						if (blockKeysWithMatches.includes(blockKey)) {
+							let matchIndex = findResults[currentDoc].findIndex(
+								(item) => item.key === blockKey
+							);
+							updateResult(currentDoc, matchIndex);
+							return;
+						}
+					}
+				}
+
+				// If the current doc doesn't have results, find the first doc with a result
+				updateResult(allResultsArray[0].docName, 0);
+				return;
+			}
+
+			// If incrementing
+			if (direction === 'INCREMENT') {
+				// If we've reached the end of the current document, move to the next
+				if (findResults[currentResult.docName].length - 1 === currentResult.index) {
+					// Find the current result object
+					const current = findResults[currentResult.docName][currentResult.index];
+
+					// Find the index in the total matches for the entire project
+					const currentIndex = allResultsArray.findIndex(
+						(item) =>
+							item.docName === currentResult.docName &&
+							item.key === current.key &&
+							item.start === current.start
+					);
+
+					// Find the incremented result from that array, starting over if at the end
+					let newResult =
+						currentIndex === allResultsArray.length - 1
+							? allResultsArray[0]
+							: allResultsArray[currentIndex + 1];
+
+					updateResult(
+						newResult.docName,
+						0 // We know we're starting a new doc, so the index is 0
+					);
+				} else {
+					// Otherwise, increment to the next
+					updateResult(currentResult.docName, currentResult.index + 1);
+				}
+			}
+
+			if (direction === 'DECREMENT') {
+				// If we're at the start of the new document
+				if (currentResult.index === 0) {
+					// Find the current result object
+					const current = findResults[currentResult.docName][currentResult.index];
+
+					// Find the index in the total matches for the entire project
+					const currentIndex = allResultsArray.findIndex(
+						(item) =>
+							item.docName === currentResult.docName &&
+							item.key === current.key &&
+							item.start === current.start
+					);
+
+					// Find the decremented result from that array, looping to the end if at the start
+					let newResult =
+						currentIndex === 0
+							? allResultsArray[allResultsArray.length - 1]
+							: allResultsArray[currentIndex - 1];
+
+					updateResult(
+						newResult.docName,
+						findResults[newResult.docName].length - 1 // We know we're at the end of the new doc
+					);
+				} else {
+					// Otherwise, decrement to the previous
+					updateResult(currentResult.docName, currentResult.index - 1);
+				}
+			}
+		},
+		[findResults, findIndex, currentResult, findText, updateResult, contextEditorRef]
+	);
+
+	// Move the find selection forwards/backwards
+	const handleInputEnter = useCallback(
+		(e) => {
+			// If enter was pressed
+			if (e.key === 'Enter') {
+				if (e.shiftKey) {
+					updateFindIndexProject('DECREMENT');
+				} else {
+					updateFindIndexProject('INCREMENT');
+				}
+			}
+		},
+		[updateFindIndexProject]
+	);
+
+	const closeFn = useCallback(() => {
+		// Reset the find
+		findRegisterRef.current[findText.toLowerCase()] = [];
+		setContextFindText('');
+		setFindIndex(null);
+		setTotalMatches(0);
+
+		// Close the panel
+		setShowFindAll(false);
+	}, [findText]);
+
+	// Close the find popper on ESCAPE
+	useEffect(() => {
+		const closeEventListener = (e) => {
+			if (e.keyCode === 27) {
+				closeFn();
+			}
+		};
+		document.addEventListener('keyup', closeEventListener);
+
+		return () => document.removeEventListener('keyup', closeEventListener);
+	}, [closeFn]);
 
 	// console.log('allDocs:', allDocs);
 	// console.log('editorArchives: ', editorArchivesRef.current);
@@ -177,28 +380,22 @@ const FindAll = () => {
 						{/* {findText && findRegisterRef.current[findText.toLowerCase()] && totalMatches
 					? `${findIndex === null ? 1 : findIndex + 1} of ${totalMatches}`
 					: '0 matches'} */}
-						3 of 27
+						{totalProjectIndex
+							? `${totalProjectIndex} of ${totalProjectResults}`
+							: `${totalProjectResults} results`}
 					</p>
 
 					<div
 						className='find-container-svg'
-						// onClick={() => updateFindIndex('DECREMENT')}
-					>
+						onClick={() => updateFindIndexProject('DECREMENT')}>
 						<CaratDownSVG rotate='90' />
 					</div>
 					<div
 						className='find-container-svg'
-						// onClick={() => updateFindIndex('INCREMENT')}
-					>
+						onClick={() => updateFindIndexProject('INCREMENT')}>
 						<CaratDownSVG rotate='-90' />
 					</div>
-					<div
-						className='find-container-svg'
-						onClick={() => {
-							// setShowFindReplace(false);
-							setContextFindText('');
-							setShowFindAll(false);
-						}}>
+					<div className='find-container-svg' onClick={closeFn}>
 						<CloseSVG />
 					</div>
 				</div>
@@ -222,7 +419,7 @@ const FindAll = () => {
 								setFindText(e.target.value);
 								setContextFindText(e.target.value);
 							}}
-							// onKeyDown={handleInputEnter}
+							onKeyDown={handleInputEnter}
 						/>
 						<Collapse isOpen={showReplace}>
 							<input
@@ -288,10 +485,11 @@ const FindAll = () => {
 									{findResults[doc.fileName].map((item, i) => (
 										<FindResultLine
 											result={item}
-											width={editorStyles.leftNavFind}
-											handleClick={() =>
-												handleResultClick(doc.fileName, i, findResults[doc.fileName].length)
+											isCurrentResult={
+												currentResult.docName === doc.fileName && currentResult.index === i
 											}
+											width={editorStyles.leftNavFind}
+											handleClick={() => updateResult(doc.fileName, i)}
 											key={item.key + item.start}
 										/>
 									))}
