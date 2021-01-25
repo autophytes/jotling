@@ -1,6 +1,12 @@
 import React, { useMemo } from 'react';
 
-const FindResultLine = ({ result, isCurrentResult, width: preTextChars, handleClick }) => {
+const FindResultLine = ({
+	result,
+	isCurrentResult,
+	width: preTextChars,
+	handleClick,
+	currentResultRef,
+}) => {
 	// Calculate how much text to show before the keyword
 	const preText = useMemo(() => {
 		// if we hit the beginning, adjust the start to 0 to use all characters (like punctuation)
@@ -32,7 +38,8 @@ const FindResultLine = ({ result, isCurrentResult, width: preTextChars, handleCl
 				'project-find-result file-nav document' + (isCurrentResult ? ' current-result' : '')
 			}
 			style={{ textOverflow: 'hidden' }}
-			onClick={handleClick}>
+			onClick={handleClick}
+			ref={isCurrentResult ? currentResultRef : null}>
 			<span>{preText}</span>
 			<span style={{ backgroundColor: 'yellow' }}>{result.text}</span>
 			<span>{result.postText}</span>

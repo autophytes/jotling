@@ -27,6 +27,8 @@ const FindAll = () => {
 		refocusReplaceAll,
 		setRefocusReplaceAll,
 		contextEditorRef,
+		searchOpenDoc,
+		setSearchOpenDoc,
 	} = useContext(FindReplaceContext);
 	const {
 		docStructureRef,
@@ -56,6 +58,7 @@ const FindAll = () => {
 	const queuedUpdateRef = useRef(null);
 	const findInputRef = useRef(null);
 	const replaceInputRef = useRef(null);
+	const currentResultRef = useRef(null);
 
 	// MEMO
 	const allDocs = useMemo(() => {
@@ -77,17 +80,18 @@ const FindAll = () => {
 
 	// Queueing and debouncing the find update
 	useEffect(() => {
-		// Skip if no search text
-		if (!findText) {
-			return;
-		}
-
 		// Remove the previous search
 		clearTimeout(queuedUpdateRef.current);
 
 		// Queue up the search
 		queuedUpdateRef.current = setTimeout(() => {
-			console.log('update the find results');
+			// Reset if no search text
+			if (!findText) {
+				setTotalProjectIndex(0);
+				setTotalProjectResults(0);
+				setFindResults({});
+				return;
+			}
 
 			// Search the whole project
 			const newFindResults = findInWholeProject(
@@ -97,6 +101,7 @@ const FindAll = () => {
 				findText
 			);
 
+			// Count the number of results for the whole project
 			let newTotalResults = 0;
 			Object.values(newFindResults).forEach(
 				(resultsArray) => (newTotalResults += resultsArray.length)
@@ -105,14 +110,6 @@ const FindAll = () => {
 			setTotalProjectIndex(0);
 			setTotalProjectResults(newTotalResults);
 			setFindResults(newFindResults);
-
-			console.log('newFindResults:', newFindResults);
-
-			// editorArchivesRef
-			// editorStateRef
-			// navDataRef.currentDocument
-			// findText
-			// allDocs
 		}, 500);
 	}, [findText, allDocs]);
 
@@ -140,6 +137,43 @@ const FindAll = () => {
 			}, 0);
 		}
 	}, [refocusReplaceAll]);
+
+	// Re-search currentDoc when editorState changes
+	useEffect(() => {
+		if (searchOpenDoc) {
+			// Remove the flag to re-search the currentDoc
+			setSearchOpenDoc(false);
+
+			if (!findText) {
+				return;
+			}
+
+			const currentDoc = navDataRef.current.currentDoc;
+
+			// Search the whole project
+			const newFindResults = findInWholeProject(
+				{},
+				editorStateRef.current,
+				currentDoc,
+				findText,
+				true // only search currentDoc
+			);
+
+			// Calculate change in number of currentDoc results
+			const currentDocResultsChange =
+				newFindResults[currentDoc].length -
+				(findResults[currentDoc] ? findResults[currentDoc].length : 0);
+
+			// Adjust the number of results by the change
+			setTotalProjectResults((prev) => prev + currentDocResultsChange);
+
+			// Only overwrite the currentDoc's results
+			setFindResults((prev) => ({
+				...prev,
+				...newFindResults,
+			}));
+		}
+	}, [searchOpenDoc, findResults, findText]);
 
 	// Set the new result
 	const updateResult = useCallback(
@@ -174,6 +208,11 @@ const FindAll = () => {
 			setTimeout(() => {
 				setTotalMatches(findResults[docName].length);
 				setFindIndex(index);
+
+				// Scroll to the selected result in the results bar
+				if (currentResultRef.current) {
+					currentResultRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+				}
 			}, 0);
 		},
 		[findText, allDocs, findResults]
@@ -416,6 +455,7 @@ const FindAll = () => {
 							onChange={(e) => {
 								console.log('on change fired');
 								findRegisterRef.current[e.target.value.toLowerCase()] = [];
+								setFindIndex(null);
 								setFindText(e.target.value);
 								setContextFindText(e.target.value);
 							}}
@@ -455,7 +495,10 @@ const FindAll = () => {
 			</div>
 
 			{/* RESULTS */}
-			<div className='project-find-results-container'>
+			<div
+				className='project-find-results-container'
+				// ref={resultsContainerRef}
+			>
 				{allDocs.map((doc) => {
 					if (!findResults.hasOwnProperty(doc.fileName) || !findResults[doc.fileName].length) {
 						return null;
@@ -489,6 +532,7 @@ const FindAll = () => {
 												currentResult.docName === doc.fileName && currentResult.index === i
 											}
 											width={editorStyles.leftNavFind}
+											currentResultRef={currentResultRef}
 											handleClick={() => updateResult(doc.fileName, i)}
 											key={item.key + item.start}
 										/>

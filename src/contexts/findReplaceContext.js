@@ -13,6 +13,8 @@ import { LeftNavContext } from './leftNavContext';
 
 export const FindReplaceContext = createContext();
 
+let queued_find_all_update = null;
+
 const FindReplaceContextProvider = (props) => {
 	// STATE
 	const [findText, setFindText] = useState('');
@@ -30,12 +32,13 @@ const FindReplaceContextProvider = (props) => {
 	const [showFindAll, setShowFindAll] = useState(false);
 	const [refocusFindAll, setRefocusFindAll] = useState(false);
 	const [refocusReplaceAll, setRefocusReplaceAll] = useState(false);
+	const [searchOpenDoc, setSearchOpenDoc] = useState(false);
 
 	// REF
 	const findRegisterRef = useRef({});
 	const updateFindRegisterQueueRef = useRef(null);
 	const resetReplaceAllQueueRef = useRef(null);
-	const queueIncrementRef = useState(null);
+	// const queueIncrementRef = useState(null);
 	const replaceAllCharacterOffsetRef = useRef({});
 	const contextEditorRef = useRef(null);
 
@@ -64,6 +67,16 @@ const FindReplaceContextProvider = (props) => {
 			// }
 			setTotalMatches(newTotalMatches);
 		}, 100);
+	}, []);
+
+	const queueFindAllUpdate = useCallback(() => {
+		clearTimeout(queued_find_all_update);
+
+		// Update the number of matches on the page
+		queued_find_all_update = setTimeout(() => {
+			// Tell the findAll component to re-search the currentDoc
+			setSearchOpenDoc(true);
+		}, 1000);
 	}, []);
 
 	useEffect(() => {
@@ -215,6 +228,9 @@ const FindReplaceContextProvider = (props) => {
 				showFindAll,
 				setShowFindAll,
 				setTotalMatches,
+				queueFindAllUpdate,
+				searchOpenDoc,
+				setSearchOpenDoc,
 				// queueIncrement,
 			}}>
 			{props.children}

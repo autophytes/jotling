@@ -22,17 +22,9 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 // offsetKey: string,
 // start: number,
 
-const FindReplaceDecorator = ({
-	children,
-	decoratedText,
-	blockKey,
-	start,
-	end,
-	childDecorator = {},
-}) => {
+const FindReplaceDecorator = ({ children, blockKey, start, childDecorator = {} }) => {
 	// STATE
 	const [isCurrentResult, setIsCurrentResult] = useState(false);
-	const [prev, setPrev] = useState({});
 
 	// CHILD DECORATOR
 	let {
@@ -61,7 +53,6 @@ const FindReplaceDecorator = ({
 		queueDecoratorUpdate,
 		totalMatches,
 	} = useContext(FindReplaceContext);
-	// console.log('findIndex:', findIndex);
 
 	// REFS
 	const decoratorRef = useRef(null);
@@ -79,10 +70,8 @@ const FindReplaceDecorator = ({
 
 	// Check if the decorator is the current result
 	useEffect(() => {
-		// console.log('findIndex when checking isCurrentResult:', findIndex);
 		if (findIndex !== null) {
 			let findObject = findRegisterRef.current[findText.toLowerCase()][findIndex];
-			// console.log('findObject:', findObject);
 
 			if (
 				findObject &&

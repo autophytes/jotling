@@ -24,6 +24,7 @@ import DocumentSingleSVG from '../../assets/svg/DocumentSingleSVG';
 
 import Collapse from 'react-css-collapse';
 import { CharacterMetadata, ContentBlock, ContentState, EditorState, genKey } from 'draft-js';
+import { getBlockPlainTextArray } from '../../utils/draftUtils';
 
 // If we have sections in the document, initialize the editorState with those sections
 export const initializeDocWithSections = (docStructure, currentDoc, filePath, saveFileRef) => {
@@ -1041,21 +1042,31 @@ export const findAllDocsInFolder = (currentFolder, path = '') => {
 	return docArray;
 };
 
-export const findInWholeProject = (editorArchives, editorState, currentDoc, findText) => {
+export const findInWholeProject = (
+	editorArchives,
+	editorState,
+	currentDoc,
+	findText,
+	onlyCurrentDoc = false
+) => {
 	let findResults = {};
+
+	// Ensure we have valid findText
+	if (!findText) {
+		console.error('Invalid findText in findInWholeProject():', findText);
+		return findResults;
+	}
 
 	// Exclude current doc from the editorArchives search
 	// Find matches in the current editorState
-	// Select relevant text for each match
+	// Have an argument we can pass to this function to just update the results for hte currentDoc
 
 	const regexMetaChars = /[(){[*+?.\\^$|]/g;
 	const cleanedFindText = findText.replace(regexMetaChars, '\\$&');
 	const regex = new RegExp(cleanedFindText, 'gi');
-	// console.log('regex:', regex);
 
-	for (let docName in editorArchives) {
-		// console.log('docName:', docName);
-		let textBlocks = editorArchives[docName].textBlocks;
+	// Search the textBlocks for the results
+	const findMatches = (textBlocks, docName) => {
 		let docResults = [];
 
 		// For each paragrah, find all matches
@@ -1076,7 +1087,27 @@ export const findInWholeProject = (editorArchives, editorState, currentDoc, find
 			}
 		}
 
-		findResults[docName] = docResults;
+		return docResults;
+	};
+
+	// Find results for the currentDoc
+	const currentTextBlocks = getBlockPlainTextArray(editorState);
+	findResults[currentDoc] = findMatches(currentTextBlocks, currentDoc);
+
+	// Check if only updating the currentDoc
+	if (onlyCurrentDoc) {
+		return findResults;
+	}
+
+	// Find results for the editorArchives
+	for (let docName in editorArchives) {
+		// Don't search the currentDoc in the editorArchives
+		if (docName === currentDoc) {
+			continue;
+		}
+
+		let textBlocks = editorArchives[docName].textBlocks;
+		findResults[docName] = findMatches(textBlocks, docName);
 	}
 
 	return findResults;

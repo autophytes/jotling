@@ -75,9 +75,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		saveFile,
 		saveFileAndProject,
 	} = useContext(LeftNavContext);
-	const { showFindAll, showFindReplace, contextEditorRef: findContextEditorRef } = useContext(
-		FindReplaceContext
-	);
+	const {
+		showFindAll,
+		showFindReplace,
+		contextEditorRef: findContextEditorRef,
+		queueFindAllUpdate,
+	} = useContext(FindReplaceContext);
 	const {
 		editorPaddingWrapperRef,
 		editorContainerRef,
@@ -136,6 +139,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			console.log('skipping');
 			// setEditorState((prev) => EditorState.forceSelection(prev, prev.getSelection()));
 			return;
+		}
+
+		// Tell the FindAll component to re-search the currentDoc
+		if (showFindAll) {
+			queueFindAllUpdate();
 		}
 
 		// Cleans up selectionState before setting the editorState
