@@ -13,6 +13,7 @@ import CloseSVG from '../../assets/svg/CloseSVG';
 import { getTextSelection } from '../../utils/draftUtils';
 
 import Collapse from 'react-css-collapse';
+import { replaceSingleFindMatch } from './editorFunctions';
 // import { replace } from 'tar';
 
 const repositionFindPopper = (editorStyles, editorSettings, setRightOffset) => {
@@ -60,6 +61,7 @@ const EditorFindReplace = () => {
 		setReplaceAll,
 		updateFindIndex,
 		contextEditorRef,
+		showFindAll,
 	} = useContext(FindReplaceContext);
 	const { editorStyles, editorStateRef, setEditorStateRef } = useContext(LeftNavContext);
 	const { editorSettings } = useContext(SettingsContext);
@@ -130,6 +132,14 @@ const EditorFindReplace = () => {
 		repositionFindPopper(editorStyles, editorSettings, setRightOffset);
 	}, [editorStyles, editorSettings]);
 
+	// Close the find popper if the project-wide find is open
+	useEffect(() => {
+		if (showFindAll) {
+			setContextFindText('');
+			setShowFindReplace(false);
+		}
+	}, [showFindAll]);
+
 	// Close the find popper on ESCAPE
 	useEffect(() => {
 		const closeEventListener = (e) => {
@@ -160,53 +170,6 @@ const EditorFindReplace = () => {
 		[updateFindIndex]
 	);
 
-	const replaceSingle = useCallback((findText, replaceText, blockKey, start, editorState) => {
-		const contentState = editorState.getCurrentContent();
-		const contentBlock = contentState.getBlockForKey(blockKey);
-		const entityKey = contentBlock.getEntityAt(start);
-
-		// Find content block with block key
-		// Find the entity at the start index
-		// On content state, get the entity for the entity key
-		// Somehow apply this entity to the new selection
-
-		// Lets grab the initial selection state and reset it when we're done
-		const emptySelectionState = SelectionState.createEmpty();
-		const selectionState = emptySelectionState.merge({
-			anchorKey: blockKey, // Starting block (position is the start)
-			anchorOffset: start, // How much to adjust from the starting position
-			focusKey: blockKey, // Ending position (position is the start)
-			focusOffset: start + findText.length,
-		});
-
-		const newContentState = Modifier.replaceText(contentState, selectionState, replaceText);
-
-		// If we have an entity, apply that entity to the new text
-		let contentStateWithLink;
-		if (entityKey !== null) {
-			const selectionStateForEntity = emptySelectionState.merge({
-				anchorKey: blockKey,
-				anchorOffset: start,
-				focusKey: blockKey,
-				focusOffset: start + replaceText.length,
-			});
-
-			contentStateWithLink = Modifier.applyEntity(
-				newContentState,
-				selectionStateForEntity,
-				entityKey
-			);
-		}
-
-		const newEditorState = EditorState.push(
-			editorState,
-			contentStateWithLink ? contentStateWithLink : newContentState,
-			'insert-characters'
-		);
-
-		return newEditorState;
-	}, []);
-
 	// Replace a single find match
 	const handleReplaceSingle = useCallback(() => {
 		if (
@@ -217,7 +180,7 @@ const EditorFindReplace = () => {
 			// Finds the object to replace
 			let findObject = findRegisterRef.current[findText.toLowerCase()][findIndex];
 
-			const newEditorState = replaceSingle(
+			const newEditorState = replaceSingleFindMatch(
 				findText,
 				replaceText,
 				findObject.blockKey,
@@ -236,23 +199,25 @@ const EditorFindReplace = () => {
 	}, [findIndex, queueDecoratorUpdate, findText, replaceText]);
 
 	const handleReplaceAll = useCallback(() => {
+		// Reverse the array so we don't have to adjust start indexes
 		let registerArray = [...findRegisterRef.current[findText.toLowerCase()]].reverse();
 
-		let editorStateArray = [editorStateRef.current];
-		// let newEditorState = { ...editorStateRef.current };
+		// editorState to iterate over
+		let newEditorState = editorStateRef.current;
+
+		// Update the editorState for each replace
 		for (let match of registerArray) {
-			let newEditorState = replaceSingle(
+			newEditorState = replaceSingleFindMatch(
 				findText,
 				replaceText,
 				match.blockKey,
 				match.start,
-				editorStateArray[editorStateArray.length - 1]
+				newEditorState
 			);
-			editorStateArray.push(newEditorState);
 		}
 
 		if (registerArray.length) {
-			setEditorStateRef.current(editorStateArray[editorStateArray.length - 1]);
+			setEditorStateRef.current(newEditorState);
 		}
 	}, [replaceText, findText]);
 

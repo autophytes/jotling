@@ -7,7 +7,7 @@ import CaratDownSVG from '../../../../assets/svg/CaratDownSVG';
 import CloseSVG from '../../../../assets/svg/CloseSVG';
 
 import { findAllDocsInFolder, findInWholeProject } from '../../navFunctions';
-import { findVisibleBlocks } from '../../../editor/editorFunctions';
+import { findVisibleBlocks, replaceSingleFindMatch } from '../../../editor/editorFunctions';
 
 import Collapse from 'react-css-collapse';
 import FindResultLine from './FindResultLine';
@@ -16,6 +16,7 @@ import PushpinSVG from '../../../../assets/svg/PushpinSVG';
 const FindAll = () => {
 	// CONTEXT
 	const {
+		showFindReplace,
 		setShowFindAll,
 		setFindText: setContextFindText,
 		findRegisterRef,
@@ -34,10 +35,12 @@ const FindAll = () => {
 		docStructureRef,
 		editorArchivesRef,
 		editorStateRef,
+		setEditorStateRef,
 		setNavData,
 		navDataRef,
 		editorStyles,
 		setEditorStyles,
+		saveFile,
 	} = useContext(LeftNavContext);
 
 	// STATE
@@ -78,6 +81,34 @@ const FindAll = () => {
 		setIsDocOpen(newIsDocOpen);
 	}, [allDocs]);
 
+	const updateAllFindResults = useCallback((findText) => {
+		// Reset if no search text
+		if (!findText) {
+			setTotalProjectIndex(0);
+			setTotalProjectResults(0);
+			setFindResults({});
+			return;
+		}
+
+		// Search the whole project
+		const newFindResults = findInWholeProject(
+			editorArchivesRef.current,
+			editorStateRef.current,
+			navDataRef.current.currentDoc,
+			findText
+		);
+
+		// Count the number of results for the whole project
+		let newTotalResults = 0;
+		Object.values(newFindResults).forEach(
+			(resultsArray) => (newTotalResults += resultsArray.length)
+		);
+
+		setTotalProjectIndex(0);
+		setTotalProjectResults(newTotalResults);
+		setFindResults(newFindResults);
+	}, []);
+
 	// Queueing and debouncing the find update
 	useEffect(() => {
 		// Remove the previous search
@@ -85,31 +116,7 @@ const FindAll = () => {
 
 		// Queue up the search
 		queuedUpdateRef.current = setTimeout(() => {
-			// Reset if no search text
-			if (!findText) {
-				setTotalProjectIndex(0);
-				setTotalProjectResults(0);
-				setFindResults({});
-				return;
-			}
-
-			// Search the whole project
-			const newFindResults = findInWholeProject(
-				editorArchivesRef.current,
-				editorStateRef.current,
-				navDataRef.current.currentDoc,
-				findText
-			);
-
-			// Count the number of results for the whole project
-			let newTotalResults = 0;
-			Object.values(newFindResults).forEach(
-				(resultsArray) => (newTotalResults += resultsArray.length)
-			);
-
-			setTotalProjectIndex(0);
-			setTotalProjectResults(newTotalResults);
-			setFindResults(newFindResults);
+			updateAllFindResults(findText);
 		}, 500);
 	}, [findText, allDocs]);
 
@@ -138,12 +145,9 @@ const FindAll = () => {
 		}
 	}, [refocusReplaceAll]);
 
-	// Re-search currentDoc when editorState changes
-	useEffect(() => {
-		if (searchOpenDoc) {
-			// Remove the flag to re-search the currentDoc
-			setSearchOpenDoc(false);
-
+	// Update the find results for the open document
+	const reSearchOpenDoc = useCallback(
+		(editorState = null) => {
 			if (!findText) {
 				return;
 			}
@@ -153,7 +157,7 @@ const FindAll = () => {
 			// Search the whole project
 			const newFindResults = findInWholeProject(
 				{},
-				editorStateRef.current,
+				editorState ? editorState : editorStateRef.current,
 				currentDoc,
 				findText,
 				true // only search currentDoc
@@ -172,8 +176,19 @@ const FindAll = () => {
 				...prev,
 				...newFindResults,
 			}));
+		},
+		[findResults, findText]
+	);
+
+	// Re-searches currentDoc when editorState changes
+	useEffect(() => {
+		if (searchOpenDoc) {
+			// Remove the flag to re-search the currentDoc
+			setSearchOpenDoc(false);
+
+			reSearchOpenDoc();
 		}
-	}, [searchOpenDoc, findResults, findText]);
+	}, [searchOpenDoc, reSearchOpenDoc]);
 
 	// Set the new result
 	const updateResult = useCallback(
@@ -396,6 +411,92 @@ const FindAll = () => {
 		return () => document.removeEventListener('keyup', closeEventListener);
 	}, [closeFn]);
 
+	// Close if the regular FIND is opened
+	useEffect(() => {
+		if (showFindReplace) {
+			closeFn();
+		}
+	}, [showFindReplace, closeFn]);
+
+	// NOTE: For the replace all, we may need to be storing the start indexes of the matches
+	// NOTE: Add some checks to make sure the editorState matches what we expect
+
+	// Replace a single find match
+	const handleReplaceSingle = useCallback(() => {
+		if (
+			findRegisterRef.current[findText.toLowerCase()] &&
+			findRegisterRef.current[findText.toLowerCase()].length &&
+			findIndex !== null
+		) {
+			// Finds the object to replace
+			const findObject = findRegisterRef.current[findText.toLowerCase()][findIndex];
+
+			const newEditorState = replaceSingleFindMatch(
+				findText,
+				replaceText,
+				findObject.blockKey,
+				findObject.start,
+				editorStateRef.current
+			);
+			setEditorStateRef.current(newEditorState);
+
+			// If the replacement still matches our find, increment to the next index.
+			if (findText.toLowerCase() === replaceText.toLowerCase()) {
+				updateFindIndexProject('INCREMENT');
+			}
+
+			// Update the results
+			reSearchOpenDoc(newEditorState);
+		}
+	}, [findIndex, findText, replaceText, reSearchOpenDoc]);
+
+	const handleReplaceAll = useCallback(() => {
+		const currentDoc = navDataRef.current.currentDoc;
+
+		for (let docName in findResults) {
+			// No results, skip
+			if (!findResults[docName] || !findResults[docName].length) {
+				continue;
+			}
+
+			// EditorState to iterate over
+			let newEditorState =
+				docName === currentDoc
+					? editorStateRef.current
+					: editorArchivesRef.current[docName].editorState;
+
+			// Update the editorState for each replace
+			let startOffsets = {};
+			for (let match of findResults[docName]) {
+				newEditorState = replaceSingleFindMatch(
+					findText,
+					replaceText,
+					match.key,
+					match.start + (startOffsets[match.key] ? startOffsets[match.key] : 0),
+					newEditorState
+				);
+
+				// Adjust the start index for future matches in the same block
+				startOffsets[match.key] =
+					(startOffsets[match.key] ? startOffsets[match.key] : 0) +
+					(replaceText.length - findText.length);
+			}
+
+			if (docName === currentDoc) {
+				// If the open document, update the editorState
+				setEditorStateRef.current(newEditorState);
+			} else {
+				// Save and update the editorArchives with the results
+				saveFile(docName, newEditorState);
+			}
+		}
+
+		// At the end, redo all the results
+		setTimeout(() => {
+			updateAllFindResults(findText);
+		}, 0);
+	}, [replaceText, findText, saveFile, updateAllFindResults]);
+
 	// console.log('allDocs:', allDocs);
 	// console.log('editorArchives: ', editorArchivesRef.current);
 
@@ -480,14 +581,12 @@ const FindAll = () => {
 					<div className='project-find-container-replace-button-row'>
 						<button
 							className='project-find-container-replace-button'
-							// onClick={handleReplaceSingle}
-						>
+							onClick={handleReplaceSingle}>
 							One
 						</button>
 						<button
 							className='project-find-container-replace-button'
-							// onClick={handleReplaceAll}
-						>
+							onClick={handleReplaceAll}>
 							All
 						</button>
 					</div>

@@ -76,6 +76,7 @@ const AppMgmt = () => {
 		setShowFindAll,
 		setRefocusFindAll,
 		setRefocusReplaceAll,
+		setFindText,
 	} = useContext(FindReplaceContext);
 	const { showEditorSettings } = useContext(SettingsContext);
 
@@ -300,7 +301,15 @@ const AppMgmt = () => {
 
 		// Save Project and Open - queues EditorContainer to request a save and open another project
 		ipcRenderer.on('show-find-replace', (event, { replace, wholeProject }) => {
+			// Reset here
+			// setFindText('');
+
 			if (!wholeProject) {
+				setShowFindAll((prev) => {
+					prev && setFindText('');
+					return false;
+				}); // Close whole project find
+
 				if (replace) {
 					setRefocusReplace(true);
 				} else {
@@ -310,6 +319,11 @@ const AppMgmt = () => {
 			}
 
 			if (wholeProject) {
+				setShowFindReplace((prev) => {
+					prev && setFindText('');
+					return false;
+				}); // Close local find
+
 				if (replace) {
 					setRefocusReplaceAll(true);
 				} else {
@@ -449,7 +463,7 @@ const preloadEachDocument = (docArray, newAllDocObj, setEditorArchives) => {
 
 			setEditorArchives((prev) =>
 				prev[docName]
-					? prev[docName]
+					? prev
 					: {
 							...prev,
 							[docName]: {
