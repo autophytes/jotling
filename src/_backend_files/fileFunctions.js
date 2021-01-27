@@ -412,6 +412,11 @@ const requestInsertLink = async () => {
 	mainWindow.webContents.send('insert-link');
 };
 
+const requestExport = async (extension) => {
+	let mainWindow = getMainWindow();
+	mainWindow.webContents.send('request-export-project', { extension });
+};
+
 module.exports = {
 	createNewProject,
 	openProject,
@@ -426,4 +431,5 @@ module.exports = {
 	requestShowFindReplace,
 	requestInsertLink,
 	updateRecentProjects,
+	requestExport,
 };

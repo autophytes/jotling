@@ -30,6 +30,7 @@ import EditorSettings from './navs/top-nav/EditorSettings';
 import HiddenContextMenu from './hiddenContextMenu';
 import UploadImageForm from './forms/UploadImageForm';
 import { getBlockPlainTextArray } from '../utils/draftUtils';
+import { exportProject } from './export/export';
 
 // For an example of how we can use web workers. Webpack already configured. Doesn't work with Draft.
 //   https://willowtreeapps.com/ideas/improving-web-app-performance-with-web-worker
@@ -52,19 +53,22 @@ const AppMgmt = () => {
 		docStructureRef,
 		linkStructure,
 		setLinkStructure,
+		linkStructureRef,
 		mediaStructure,
 		setMediaStructure,
+		mediaStructureRef,
 		project,
 		setProject,
+		projectRef,
 		navData,
 		setNavData,
 		navDataRef,
+		editorArchivesRef,
 		setEditorArchives,
 		peekWindowLinkId,
 		setDisplayWikiPopper,
 		editorStateRef,
 		setEditorStateRef,
-		linkStructureRef,
 		setSyncLinkIdList,
 		showUploadImage,
 		saveFileRef,
@@ -421,6 +425,20 @@ const AppMgmt = () => {
 			if (document.getSelection().toString().length) {
 				setDisplayWikiPopper(true);
 			}
+		});
+
+		ipcRenderer.on('request-export-project', (event, { extension }) => {
+			console.log('EXPORTING: ', extension);
+
+			exportProject({
+				editorStateRef,
+				editorArchivesRef,
+				mediaStructureRef,
+				docStructureRef,
+				projectRef,
+			});
+
+			// editorStateRef, editorArchivesRef, mediaStructureRef, docStructureRef
 		});
 	}, []);
 

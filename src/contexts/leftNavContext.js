@@ -21,7 +21,7 @@ const LeftNavContextProvider = (props) => {
 	const [docStructure, setDocStructureOrig] = useState({});
 	const [linkStructure, setLinkStructureOrig] = useState({});
 	const [mediaStructure, setMediaStructureOrig] = useState({});
-	const [project, setProject] = useState({ tempPath: '', jotsPath: '' });
+	const [project, setProjectOrig] = useState({ tempPath: '', jotsPath: '' });
 	const [navData, setNavDataOrig] = useState({
 		currentDoc: '',
 		currentDocTab: 'draft',
@@ -58,6 +58,7 @@ const LeftNavContextProvider = (props) => {
 	const editorStateRef = useRef(EditorState.createEmpty());
 	const editorArchivesRef = useRef(editorArchives);
 	const navDataRef = useRef(navData);
+	const projectRef = useRef(project);
 	const setEditorStateRef = useRef(null);
 	const isImageSelectedRef = useRef(false);
 	const saveFileRef = useRef(null);
@@ -76,6 +77,10 @@ const LeftNavContextProvider = (props) => {
 
 	const setNavData = (value) => {
 		convertSetterToRefSetter(navDataRef, setNavDataOrig, value);
+	};
+
+	const setProject = (value) => {
+		convertSetterToRefSetter(projectRef, setProjectOrig, value);
 	};
 
 	const setEditorArchives = (value) => {
@@ -335,6 +340,7 @@ const LeftNavContextProvider = (props) => {
 				navDataRef,
 				project,
 				setProject,
+				projectRef,
 				linkStructure,
 				setLinkStructure,
 				editorStyles,

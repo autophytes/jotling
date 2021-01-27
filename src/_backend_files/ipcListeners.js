@@ -1,4 +1,5 @@
 const { ipcMain, app, dialog, BrowserWindow } = require('electron');
+const docx = require('docx');
 const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
@@ -33,6 +34,7 @@ const registerHandlers = () => {
 	saveProjectListener();
 	renameDocListener();
 	deleteDocListener();
+	exportProjectListener();
 };
 
 // Utility function
@@ -413,6 +415,27 @@ const deleteDocListener = () => {
 				console.error(`Failed to delete the document ${fileName}.`);
 				console.error(err);
 			}
+		});
+	});
+};
+
+const exportProjectListener = () => {
+	ipcMain.handle('export-project', (e, pathName, docName, childrenArray) => {
+		// console.log('newDoc:', newDoc);
+
+		const doc = new docx.Document();
+
+		doc.addSection({
+			properties: {},
+			children: [
+				new docx.Paragraph({
+					children: childrenArray.map((item) => new docx.TextRun(item)),
+				}),
+			],
+		});
+
+		docx.Packer.toBuffer(doc).then((buffer) => {
+			fs.writeFileSync(path.join(pathName, docName), buffer);
 		});
 	});
 };

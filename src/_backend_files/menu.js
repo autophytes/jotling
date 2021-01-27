@@ -9,6 +9,7 @@ const {
 	requestSaveAndOpen,
 	requestShowFindReplace,
 	requestInsertLink,
+	requestExport,
 } = require('./fileFunctions');
 const { createWindow } = require('./createWindow');
 
@@ -118,6 +119,23 @@ const registerMenu = () => {
 					},
 					enabled: isWindowOpen,
 				},
+				{ type: 'separator' },
+				{
+					label: 'Export to',
+					submenu: [
+						{
+							label: '.docx',
+							// accelerator: 'CmdOrCtrl+Shift+S',
+							// registerAccelerator: true,
+							// acceleratorWorksWhenHidden: true,
+							click: async () => {
+								requestExport('.docx');
+							},
+							enabled: isWindowOpen,
+						},
+					],
+				},
+
 				{ type: 'separator' },
 				...(isMac ? [{ role: 'close' }] : [{ role: 'quit' }]),
 			],

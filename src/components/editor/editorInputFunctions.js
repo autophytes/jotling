@@ -31,6 +31,10 @@ let skipEditorStatesBeforeMS = null;
 
 // Updates the editorState with the browser's native selection
 export const fetchCorrectSelection = (editorState, editorRef) => {
+	// NEEDS MORE WORK
+	// FOR NOW, RETURNING ORIGINAL EDITOR STATE
+	return editorState;
+
 	// Fetch the documents native selection
 	const docSelection = document.getSelection();
 	// console.log('docSelection:', docSelection);
