@@ -13,6 +13,7 @@ const {
 	linkStructureTemplate,
 	mediaStructureTemplate,
 } = require('./structureTemplates');
+const { Underline, UnderlineType } = require('docx');
 
 // Create a new blank project
 const createNewProjectStructure = (projectTempDirectory) => {
@@ -422,16 +423,8 @@ const requestExport = async (extension) => {
 const exportDocument = ({ pathName, docName, docObj }) => {
 	let childArray = [];
 
-	for (let child of docObj.children) {
-		switch (child.type) {
-			case 'Paragraph':
-				childArray.push(genDocxParagraph(child));
-				break;
-			case 'Media':
-				console.log('do the thing');
-				break;
-			default:
-		}
+	for (let block of docObj.blocks) {
+		childArray.push(genDocxParagraph(block));
 	}
 
 	const doc = new docx.Document({
@@ -459,62 +452,106 @@ const exportDocument = ({ pathName, docName, docObj }) => {
 		children: childArray,
 	});
 
-	// docObj = {
-	// 	children: [
-	// 		{
-	// 			type: 'Paragraph',
-	// 			children: [
-	// {
-	//   type: 'TextRun',
-	//   textRun: {
-	//     text: 'Text to insert in the paragraph',
-	//     italic: true
-	//   }
-	// },
-	// {
-	//   type: 'TextRun',
-	//   textRun: {
-	//     text: 'Text to insert in the paragraph',
-	//     italic: true
-	//   }
-	// },
-	// 			],
-	// 		},
-	// 		{
-	// 			type: 'Paragraph',
-	// 			children: [
-	// 				{
-	// 					type: 'TextRun',
-	//           text: 'Text to insert in the paragraph',
-	//           italic: true
-	// 				},
-	// 				{
-	// 					type: 'TextRun',
-	//           text: 'Text to insert in the paragraph',
-	//           bold: true
-	// 				},
-	// 			],
-	// 		},
-	// 	],
-	// };
-
 	docx.Packer.toBuffer(doc).then((buffer) => {
 		fs.writeFileSync(path.join(pathName, docName), buffer);
 	});
 };
 
-const genDocxParagraph = (paragraph) => {
-	let newParagraph = { children: [] };
+const genDocxParagraph = (block) => {
+	// Add IDs to the style ranges
+	const inlineStyleRanges = block.inlineStyleRanges.map((item, i) => ({
+		...item,
+		id: i,
+	}));
 
-	for (let child of paragraph.children) {
-		if (child.type === 'TextRun') {
-			newParagraph.children.push(new docx.TextRun(child.textRun));
-		}
+	let textRuns = [];
+	if (inlineStyleRanges.length) {
+		let breakpoints = [0, block.text.length];
 
-		// Check for media, bullet lists, etc
+		inlineStyleRanges.forEach((item) => {
+			breakpoints.push(item.offset);
+			breakpoints.push(item.offset + item.length);
+		});
+
+		breakpoints = [...new Set(breakpoints)];
+		breakpoints.sort((a, b) => a - b);
+
+		breakpoints.forEach((index, i) => {
+			// No textRun for the last breapoint
+			if (i === breakpoints.length - 1) {
+				return;
+			}
+
+			let newStyles = inlineStyleRanges.filter(
+				(item) => item.offset <= index && item.offset + item.length > index
+			);
+
+			let newTextRunObj = {
+				text: block.text.slice(index, breakpoints[i + 1]),
+			};
+			for (let style of newStyles) {
+				switch (style.style) {
+					case 'BOLD':
+						newTextRunObj.bold = true;
+						break;
+					case 'ITALIC':
+						newTextRunObj.italics = true;
+						break;
+					case 'STRIKETHROUGH':
+						newTextRunObj.strike = true;
+						break;
+					case 'SUBSCRIPT':
+						newTextRunObj.subScript = true;
+						break;
+					case 'SUPERSCRIPT':
+						newTextRunObj.superScript = true;
+						break;
+					// case 'UNDERLINE':
+					// 	newTextRunObj.underline = {
+					// 		type: UnderlineType.SINGLE,
+					// 		color: null,
+					// 	};
+					// 	break;
+					default:
+				}
+
+				if (style.style.slice(0, 9) === 'TEXTCOLOR') {
+					newTextRunObj.color = style.style.slice(-6);
+				}
+				if (style.style.slice(0, 9) === 'HIGHLIGHT') {
+					newTextRunObj.highlight = style.style.slice(-6);
+				}
+			}
+
+			textRuns.push(new docx.TextRun(newTextRunObj));
+		});
+
+		console.log('breakpoints:', breakpoints);
+
+		// }
+	} else {
+		textRuns.push(new docx.TextRun(block.text));
 	}
 
-	return new docx.Paragraph(newParagraph);
+	// {
+	//   "key": "7rgf7",
+	//   "text": "Kripper hobbled alongside the mammoth obelisk as he watched his workers shimmy a new log in front of the stone, inching it closer to it’s final resting place. The other stones had been a challenge, but this one – this one had almost done them in. They had been forced to widen two separate tunnels just to roll the stone through, and he was relieved it was now in the cavern.",
+	//   "type": "unstyled",
+	//   "depth": 0,
+	//   "inlineStyleRanges": [
+	//     { "offset": 0, "length": 18, "style": "FUN"},
+	//     { "offset": 16, "length": 16, "style": "BOLD" },
+	//     { "offset": 23, "length": 13, "style": "HIGHLIGHT-#fdffb6" },
+	//     { "offset": 45, "length": 28, "style": "BOLD" },
+	//     { "offset": 102, "length": 104, "style": "STRIKETHROUGH" },
+	//     { "offset": 218, "length": 3, "style": "TEXTCOLOR-#660200" },
+	//     { "offset": 234, "length": 12, "style": "SUPERSCRIPT" }
+	//   ],
+	//   "entityRanges": [],
+	//   "data": {}
+	// },
+
+	return new docx.Paragraph({ children: textRuns });
 };
 
 module.exports = {
