@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 const tar = require('tar');
 const Store = require('electron-store');
 const store = new Store();
+const docx = require('docx');
 
 const {
 	docStructureTemplate,
@@ -417,6 +418,105 @@ const requestExport = async (extension) => {
 	mainWindow.webContents.send('request-export-project', { extension });
 };
 
+// Generate a docx with the
+const exportDocument = ({ pathName, docName, docObj }) => {
+	let childArray = [];
+
+	for (let child of docObj.children) {
+		switch (child.type) {
+			case 'Paragraph':
+				childArray.push(genDocxParagraph(child));
+				break;
+			case 'Media':
+				console.log('do the thing');
+				break;
+			default:
+		}
+	}
+
+	const doc = new docx.Document({
+		styles: {
+			paragraphStyles: [
+				{
+					// Only `name` prop required, `id` not necessary
+					name: 'Normal',
+					run: {
+						font: 'Calibri',
+						size: 24,
+					},
+					paragraph: {
+						spacing: {
+							after: 120,
+						},
+					},
+				},
+			],
+		},
+	});
+
+	doc.addSection({
+		properties: {},
+		children: childArray,
+	});
+
+	// docObj = {
+	// 	children: [
+	// 		{
+	// 			type: 'Paragraph',
+	// 			children: [
+	// {
+	//   type: 'TextRun',
+	//   textRun: {
+	//     text: 'Text to insert in the paragraph',
+	//     italic: true
+	//   }
+	// },
+	// {
+	//   type: 'TextRun',
+	//   textRun: {
+	//     text: 'Text to insert in the paragraph',
+	//     italic: true
+	//   }
+	// },
+	// 			],
+	// 		},
+	// 		{
+	// 			type: 'Paragraph',
+	// 			children: [
+	// 				{
+	// 					type: 'TextRun',
+	//           text: 'Text to insert in the paragraph',
+	//           italic: true
+	// 				},
+	// 				{
+	// 					type: 'TextRun',
+	//           text: 'Text to insert in the paragraph',
+	//           bold: true
+	// 				},
+	// 			],
+	// 		},
+	// 	],
+	// };
+
+	docx.Packer.toBuffer(doc).then((buffer) => {
+		fs.writeFileSync(path.join(pathName, docName), buffer);
+	});
+};
+
+const genDocxParagraph = (paragraph) => {
+	let newParagraph = { children: [] };
+
+	for (let child of paragraph.children) {
+		if (child.type === 'TextRun') {
+			newParagraph.children.push(new docx.TextRun(child.textRun));
+		}
+
+		// Check for media, bullet lists, etc
+	}
+
+	return new docx.Paragraph(newParagraph);
+};
+
 module.exports = {
 	createNewProject,
 	openProject,
@@ -432,4 +532,5 @@ module.exports = {
 	requestInsertLink,
 	updateRecentProjects,
 	requestExport,
+	exportDocument,
 };

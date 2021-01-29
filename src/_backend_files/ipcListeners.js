@@ -1,5 +1,4 @@
 const { ipcMain, app, dialog, BrowserWindow } = require('electron');
-const docx = require('docx');
 const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
@@ -9,6 +8,7 @@ const {
 	openProject,
 	removeOldTempFilesSync,
 	updateRecentProjects,
+	exportDocument,
 } = require('./fileFunctions');
 // const { getCurrentMainWindow } = require('../main');
 // const { setShouldCloseMainWindow, setShouldQuitApp } = require('../main');
@@ -420,23 +420,8 @@ const deleteDocListener = () => {
 };
 
 const exportProjectListener = () => {
-	ipcMain.handle('export-project', (e, pathName, docName, childrenArray) => {
-		// console.log('newDoc:', newDoc);
-
-		const doc = new docx.Document();
-
-		doc.addSection({
-			properties: {},
-			children: [
-				new docx.Paragraph({
-					children: childrenArray.map((item) => new docx.TextRun(item)),
-				}),
-			],
-		});
-
-		docx.Packer.toBuffer(doc).then((buffer) => {
-			fs.writeFileSync(path.join(pathName, docName), buffer);
-		});
+	ipcMain.handle('export-project', (e, pathName, docName, docObj) => {
+		exportDocument({ pathName, docName, docObj });
 	});
 };
 
