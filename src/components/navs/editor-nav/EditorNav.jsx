@@ -386,9 +386,9 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 					</button>
 
 					<button
-						className={'nav-button' + (currentAlignment === 'justify' ? ' active' : '')}
+						className={'nav-button' + (currentAlignment === 'justified' ? ' active' : '')}
 						title='Justify Text'
-						onMouseDown={wrappedToggleTextAlign('justify')}>
+						onMouseDown={wrappedToggleTextAlign('justified')}>
 						<AlignJustifySVG />
 					</button>
 

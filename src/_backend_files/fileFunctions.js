@@ -13,7 +13,8 @@ const {
 	linkStructureTemplate,
 	mediaStructureTemplate,
 } = require('./structureTemplates');
-const { Underline, UnderlineType } = require('docx');
+const { Underline, UnderlineType, AlignmentType, ConcreteNumbering, Indent } = require('docx');
+const { NoEmitOnErrorsPlugin } = require('webpack');
 
 // Create a new blank project
 const createNewProjectStructure = (projectTempDirectory) => {
@@ -428,6 +429,111 @@ const exportDocument = ({ pathName, docName, docObj }) => {
 	}
 
 	const doc = new docx.Document({
+		numbering: {
+			config: [
+				{
+					reference: 'default-numbering',
+					levels: [
+						{
+							level: 0,
+							format: 'decimal',
+							text: '%1.',
+							alignment: AlignmentType.START,
+							suffix: 'none',
+							style: {
+								paragraph: {
+									indent: { left: 720, hanging: 360 },
+								},
+							},
+						},
+						{
+							level: 1,
+							format: 'lowerLetter',
+							text: '%2.',
+							alignment: AlignmentType.START,
+							suffix: 'none',
+							style: {
+								paragraph: {
+									indent: { left: 1440, hanging: 360 },
+								},
+							},
+						},
+						{
+							level: 2,
+							format: 'lowerRoman',
+							text: '%3.',
+							alignment: AlignmentType.START,
+							suffix: 'none',
+							style: {
+								paragraph: {
+									indent: { left: 2160, hanging: 360 },
+								},
+							},
+						},
+						{
+							level: 3,
+							format: 'decimal',
+							text: '%4.',
+							alignment: AlignmentType.START,
+							suffix: 'none',
+							style: {
+								paragraph: {
+									indent: { left: 2880, hanging: 360 },
+								},
+							},
+						},
+						{
+							level: 4,
+							format: 'lowerLetter',
+							text: '%5.',
+							alignment: AlignmentType.START,
+							suffix: 'none',
+							style: {
+								paragraph: {
+									indent: { left: 3600, hanging: 360 },
+								},
+							},
+						},
+						{
+							level: 5,
+							format: 'lowerRoman',
+							text: '%6.',
+							alignment: AlignmentType.START,
+							suffix: 'none',
+							style: {
+								paragraph: {
+									indent: { left: 4320, hanging: 360 },
+								},
+							},
+						},
+						{
+							level: 6,
+							format: 'decimal',
+							text: '%7.',
+							alignment: AlignmentType.START,
+							suffix: 'none',
+							style: {
+								paragraph: {
+									indent: { left: 5040, hanging: 360 },
+								},
+							},
+						},
+						{
+							level: 7,
+							format: 'lowerLetter',
+							text: '%8.',
+							alignment: AlignmentType.START,
+							suffix: 'none',
+							style: {
+								paragraph: {
+									indent: { left: 5760, hanging: 360 },
+								},
+							},
+						},
+					],
+				},
+			],
+		},
 		styles: {
 			paragraphStyles: [
 				{
@@ -506,12 +612,12 @@ const genDocxParagraph = (block) => {
 					case 'SUPERSCRIPT':
 						newTextRunObj.superScript = true;
 						break;
-					// case 'UNDERLINE':
-					// 	newTextRunObj.underline = {
-					// 		type: UnderlineType.SINGLE,
-					// 		color: null,
-					// 	};
-					// 	break;
+					case 'UNDERLINE':
+						newTextRunObj.underline = {
+							type: UnderlineType.SINGLE,
+							color: null,
+						};
+						break;
 					default:
 				}
 
@@ -519,16 +625,12 @@ const genDocxParagraph = (block) => {
 					newTextRunObj.color = style.style.slice(-6);
 				}
 				if (style.style.slice(0, 9) === 'HIGHLIGHT') {
-					newTextRunObj.highlight = style.style.slice(-6);
+					newTextRunObj.highlight = findNearestHighlightColor(style.style.slice(-6));
 				}
 			}
 
 			textRuns.push(new docx.TextRun(newTextRunObj));
 		});
-
-		console.log('breakpoints:', breakpoints);
-
-		// }
 	} else {
 		textRuns.push(new docx.TextRun(block.text));
 	}
@@ -549,9 +651,85 @@ const genDocxParagraph = (block) => {
 	//   ],
 	//   "entityRanges": [],
 	//   "data": {}
+	// "data": { "text-align": "center" }
+	// "data": { "text-align": "left" }
+	// "data": { "text-align": "right" }
+	// "data": { "text-align": "justified" }
 	// },
 
-	return new docx.Paragraph({ children: textRuns });
+	let paragraph = { children: textRuns };
+
+	// Text Align
+	if (block.data.hasOwnProperty('text-align')) {
+		paragraph.alignment = AlignmentType[block.data['text-align'].toUpperCase()];
+	}
+
+	// Bullet Lists
+	if (block.type === 'unordered-list-item') {
+		paragraph.bullet = {
+			level: block.depth,
+		};
+	}
+
+	// Numbered Lists
+	if (block.type === 'ordered-list-item') {
+		paragraph.numbering = {
+			reference: 'default-numbering',
+			level: block.depth,
+		};
+	}
+
+	return new docx.Paragraph(paragraph);
+};
+
+// Highlight colors availaible for Microsoft Word
+const HIGHLIGHT_COLORS = {
+	// black: [0, 0, 0],
+	// lightGray: [192, 192, 192],
+	// darkGray: [128, 128, 128],
+	// white: [255, 255, 255],
+	blue: [32, 0, 255],
+	green: [82, 255, 0],
+	darkBlue: [10, 0, 128],
+	darkRed: [128, 0, 0],
+	darkYellow: [128, 127, 0],
+	darkGreen: [37, 128, 0],
+	magenta: [245, 0, 255],
+	red: [243, 1, 5],
+	darkCyan: [40, 128, 128],
+	cyan: [89, 255, 254],
+	darkMagenta: [128, 0, 128],
+	yellow: [253, 255, 0],
+};
+
+// Find the closest available Highlight color in Microsoft Word
+const findNearestHighlightColor = (hexColor) => {
+	// Convert the current highlight color to RGB
+	const r = parseInt(hexColor.slice(0, 2), 16);
+	const g = parseInt(hexColor.slice(2, 4), 16);
+	const b = parseInt(hexColor.slice(-2), 16);
+
+	// Loop through the available highlight colors in Word
+	// Calculate the closest color
+	let closest = { color: '', distance: Number.MAX_VALUE };
+	for (let [color, array] of Object.entries(HIGHLIGHT_COLORS)) {
+		// Calculate the Euclidian distance between the colors
+		//   weighted: https://web.archive.org/web/20100316195057/http://www.dfanning.com/ip_tips/color2gray.html
+		let newDistance = Math.sqrt(
+			(r - array[0]) ** 2 + (g - array[1]) ** 2 + (b - array[2]) ** 2
+			// ((r - array[0]) * 0.3) ** 2 + ((g - array[1]) * 0.59) ** 2 + ((b - array[2]) * 0.11) ** 2
+		);
+
+		// Save if the closest
+		if (newDistance < closest.distance) {
+			closest = {
+				color: color,
+				distance: newDistance,
+			};
+		}
+	}
+
+	return closest.color;
 };
 
 module.exports = {
