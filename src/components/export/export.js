@@ -8,10 +8,24 @@ export const exportProject = async ({
 	mediaStructureRef,
 	projectRef,
 }) => {
+	// Generate the folder scaffolding for the project
+	ipcRenderer.invoke(
+		'create-export-folder-structure',
+		projectRef.current.tempPath,
+		'Project Name',
+		docStructureRef.current
+	);
+
 	const currentContent = editorStateRef.current.getCurrentContent();
 	const rawContent = convertToRaw(currentContent);
 
-	ipcRenderer.invoke('export-project', projectRef.current.tempPath, 'Test.docx', rawContent);
+	ipcRenderer.invoke(
+		'export-single-document',
+		projectRef.current.tempPath,
+		'Test.docx',
+		rawContent,
+		mediaStructureRef.current
+	);
 
 	// const blockArray = currentContent.getBlocksAsArray();
 	// let newDoc = { children: [] };

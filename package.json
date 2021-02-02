@@ -33,6 +33,7 @@
 		"electron-is-dev": "^1.2.0",
 		"electron-store": "^6.0.1",
 		"font-list": "^1.2.11",
+		"image-size": "^0.9.3",
 		"ncp": "^2.0.0",
 		"react": "^17.0.0",
 		"react-beautiful-dnd": "^13.0.0",

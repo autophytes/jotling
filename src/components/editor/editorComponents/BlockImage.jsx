@@ -118,20 +118,6 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 		}
 	}, [block, blockKey]);
 
-	// Synchronize the displayData back to the block metadata
-	// useEffect(() => {
-	// 	if (displayData && (displayData.resize || displayData.float)) {
-	// 		updateImageBlockData(
-	// 			imageId,
-	// 			imageUseId,
-	// 			editorStateRef.current,
-	// 			setEditorStateRef.current,
-	// 			block.getKey(),
-	// 			displayData
-	// 		);
-	// 	}
-	// }, [displayData, imageId, imageUseId, blockKey]);
-
 	// If repositioning the image, update the mediaStructure and move the image
 	// Yo binarywarrior76, you're pretty dope. Thanks. 👍
 	useEffect(() => {

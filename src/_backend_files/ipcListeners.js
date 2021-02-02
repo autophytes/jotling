@@ -3,12 +3,12 @@ const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
 const tar = require('tar');
+const { exportDocument } = require('./docxExport');
 const {
 	createNewProject,
 	openProject,
 	removeOldTempFilesSync,
 	updateRecentProjects,
-	exportDocument,
 } = require('./fileFunctions');
 // const { getCurrentMainWindow } = require('../main');
 // const { setShouldCloseMainWindow, setShouldQuitApp } = require('../main');
@@ -420,8 +420,12 @@ const deleteDocListener = () => {
 };
 
 const exportProjectListener = () => {
-	ipcMain.handle('export-project', (e, pathName, docName, docObj) => {
-		exportDocument({ pathName, docName, docObj });
+	ipcMain.handle('export-single-document', (e, pathName, docName, docObj, mediaStructure) => {
+		exportDocument({ pathName, docName, docObj, mediaStructure });
+	});
+
+	ipcMain.handle('create-export-folder-structure', (e, pathName, folderName, docStructure) => {
+		generateExportFolderStructure({ pathName, folderName, docStructure });
 	});
 };
 
