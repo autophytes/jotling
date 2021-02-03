@@ -3,7 +3,7 @@ const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
 const tar = require('tar');
-const { exportDocument } = require('./docxExport');
+const { exportDocument, generateExportFolderStructure } = require('./docxExport');
 const {
 	createNewProject,
 	openProject,

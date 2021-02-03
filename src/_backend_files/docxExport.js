@@ -36,9 +36,60 @@ const exportDocument = ({ pathName, docName, docObj, mediaStructure }) => {
 	});
 };
 
-const generateExportFolderStructure = ({ pathName, folderName, docStructure }) => {
-	// LOOP THROUGH the docStructure and create each level of folders
-	console.log('generate folders');
+// Increment folder names until they are unique
+const findUniqueFolderName = (filePath, folderName) => {
+	// Ensure the project folder name is unique
+	let newFolderName = folderName;
+	let index = 1;
+
+	const usedFileNames = fs.readdirSync(filePath);
+	while (usedFileNames.includes(newFolderName)) {
+		newFolderName = folderName + `(${index})`;
+		index++;
+	}
+
+	return newFolderName;
+};
+
+// Create a file system folder for each project folder
+const generateAllChildrenFolders = (currentFolder, folderPath) => {
+	// For this folder level's children, add all docs to the docArray
+	for (let child of currentFolder.children) {
+		if (child.type === 'folder') {
+			const newFolderName = findUniqueFolderName(folderPath, child.name);
+			fs.mkdirSync(path.join(folderPath, newFolderName));
+
+			generateAllChildrenFolders(currentFolder.folders[child.id.toString()], folderPath);
+		}
+	}
+};
+
+const generateExportFolderStructure = ({
+	pathName,
+	folderName = 'Project Export',
+	docStructure,
+}) => {
+	// Ensure the project folder name is unique
+	const projectFolderName = findUniqueFolderName(pathName, folderName);
+
+	// Create the top-level export folder
+	fs.mkdirSync(path.join(pathName, projectFolderName));
+
+	const topLevelFolders = {
+		draft: 'Manuscript',
+		research: 'Planning',
+		pages: 'Wikis',
+	};
+
+	for (let key in topLevelFolders) {
+		// Create parent folder
+		const newFolderPath = path.join(pathName, projectFolderName, topLevelFolders[key]);
+		fs.mkdirSync(path.join(pathName, projectFolderName, topLevelFolders[key]));
+		generateAllChildrenFolders(docStructure[key], newFolderPath);
+
+		// Create all children folders
+		// call our function below
+	}
 };
 
 const genDocxParagraph = (block, doc, pathName, mediaStructure) => {
@@ -398,4 +449,5 @@ const docxConfig = {
 
 module.exports = {
 	exportDocument,
+	generateExportFolderStructure,
 };

@@ -436,6 +436,7 @@ const AppMgmt = () => {
 				mediaStructureRef,
 				docStructureRef,
 				projectRef,
+				currentDoc: navDataRef.current.currentDoc,
 			});
 
 			// editorStateRef, editorArchivesRef, mediaStructureRef, docStructureRef
