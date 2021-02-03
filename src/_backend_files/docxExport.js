@@ -16,6 +16,34 @@ const {
 } = require('docx');
 const { constants } = require('os');
 
+const TOP_LEVEL_FOLDERS = {
+	draft: 'Manuscript',
+	research: 'Planning',
+	pages: 'Wikis',
+};
+
+const exportProject = ({
+	rawEditorStates,
+	projectName,
+	filePath,
+	docStructure,
+	mediaStructure,
+}) => {
+	// Create the top-level export folder
+	const projectFolderName = findUniqueFolderName(filePath, projectName);
+	fs.mkdirSync(path.join(filePath, projectFolderName));
+
+	for (let key in TOP_LEVEL_FOLDERS) {
+		// Create parent folder
+		const newFolderPath = path.join(pathName, projectFolderName, topLevelFolders[key]);
+		fs.mkdirSync(path.join(pathName, projectFolderName, topLevelFolders[key]));
+
+		// Generate children folders AND documents
+		// in the function we call, we're going to use our exportDocument function
+		generateAllChildren(docStructure[key], newFolderPath);
+	}
+};
+
 // Generate a docx with the
 const exportDocument = ({ pathName, docName, docObj, mediaStructure }) => {
 	let childArray = [];
@@ -36,6 +64,28 @@ const exportDocument = ({ pathName, docName, docObj, mediaStructure }) => {
 	});
 };
 
+const generateExportFolderStructure = ({
+	pathName,
+	folderName = 'Project Export',
+	docStructure,
+}) => {
+	// Ensure the project folder name is unique
+	const projectFolderName = findUniqueFolderName(pathName, folderName);
+
+	// Create the top-level export folder
+	fs.mkdirSync(path.join(pathName, projectFolderName));
+
+	for (let key in topLevelFolders) {
+		// Create parent folder
+		const newFolderPath = path.join(pathName, projectFolderName, topLevelFolders[key]);
+		fs.mkdirSync(path.join(pathName, projectFolderName, topLevelFolders[key]));
+		generateAllChildrenFolders(docStructure[key], newFolderPath);
+
+		// Create all children folders
+		// call our function below
+	}
+};
+
 // Increment folder names until they are unique
 const findUniqueFolderName = (filePath, folderName) => {
 	// Ensure the project folder name is unique
@@ -44,7 +94,7 @@ const findUniqueFolderName = (filePath, folderName) => {
 
 	const usedFileNames = fs.readdirSync(filePath);
 	while (usedFileNames.includes(newFolderName)) {
-		newFolderName = folderName + `(${index})`;
+		newFolderName = folderName + ` (${index})`;
 		index++;
 	}
 
@@ -61,34 +111,6 @@ const generateAllChildrenFolders = (currentFolder, folderPath) => {
 
 			generateAllChildrenFolders(currentFolder.folders[child.id.toString()], folderPath);
 		}
-	}
-};
-
-const generateExportFolderStructure = ({
-	pathName,
-	folderName = 'Project Export',
-	docStructure,
-}) => {
-	// Ensure the project folder name is unique
-	const projectFolderName = findUniqueFolderName(pathName, folderName);
-
-	// Create the top-level export folder
-	fs.mkdirSync(path.join(pathName, projectFolderName));
-
-	const topLevelFolders = {
-		draft: 'Manuscript',
-		research: 'Planning',
-		pages: 'Wikis',
-	};
-
-	for (let key in topLevelFolders) {
-		// Create parent folder
-		const newFolderPath = path.join(pathName, projectFolderName, topLevelFolders[key]);
-		fs.mkdirSync(path.join(pathName, projectFolderName, topLevelFolders[key]));
-		generateAllChildrenFolders(docStructure[key], newFolderPath);
-
-		// Create all children folders
-		// call our function below
 	}
 };
 

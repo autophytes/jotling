@@ -7,25 +7,46 @@ export const exportProject = async ({
 	docStructureRef,
 	mediaStructureRef,
 	projectRef,
+	currentDoc,
 }) => {
-	// Generate the folder scaffolding for the project
-	ipcRenderer.invoke(
-		'create-export-folder-structure',
-		projectRef.current.tempPath,
-		'Project Name',
-		docStructureRef.current
-	);
+	// Convert the editorArchives to raw
+	let rawEditorStates = {};
+	for (let docName in editorArchivesRef.current) {
+		const archivesCurrentContent = editorArchivesRef.current[
+			docName
+		].editorState.getCurrentContent();
+		const archivesEditorState = convertToRaw(archivesCurrentContent);
+		rawEditorStates[docName] = archivesEditorState;
+	}
 
+	// Convert the current editorState to raw
 	const currentContent = editorStateRef.current.getCurrentContent();
-	const rawContent = convertToRaw(currentContent);
+	const rawEditorState = convertToRaw(currentContent);
+	rawEditorStates[currentDoc] = rawEditorState;
 
-	ipcRenderer.invoke(
-		'export-single-document',
-		projectRef.current.tempPath,
-		'Test.docx',
-		rawContent,
-		mediaStructureRef.current
-	);
+	ipcRenderer.invoke('export-project-docx', {
+		rawEditorStates,
+		projectName: 'Project Name',
+		filePath: projectRef.current.tempPath,
+		docStructure: docStructureRef.current,
+		mediaStructure: mediaStructureRef.current,
+	});
+
+	// // Generate the folder scaffolding for the project
+	// ipcRenderer.invoke(
+	// 	'create-export-folder-structure',
+	// 	projectRef.current.tempPath,
+	// 	'Project Name',
+	// 	docStructureRef.current
+	// );
+
+	// ipcRenderer.invoke(
+	// 	'export-single-document',
+	// 	projectRef.current.tempPath,
+	// 	'Test.docx',
+	// 	rawContent,
+	// 	mediaStructureRef.current
+	// );
 
 	// const blockArray = currentContent.getBlocksAsArray();
 	// let newDoc = { children: [] };
