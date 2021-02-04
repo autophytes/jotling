@@ -26,8 +26,8 @@ export const exportProject = async ({
 
 	ipcRenderer.invoke('export-project-docx', {
 		rawEditorStates,
-		projectName: 'Project Name',
-		filePath: projectRef.current.tempPath,
+		tempPath: projectRef.current.tempPath,
+		jotsPath: projectRef.current.jotsPath,
 		docStructure: docStructureRef.current,
 		mediaStructure: mediaStructureRef.current,
 	});

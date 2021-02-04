@@ -258,7 +258,7 @@ const createNewProject = async () => {
 		'JotlingProjectFiles',
 		projectFolderName
 	);
-	let defaultProjectFiles = path.resolve(__dirname, '../backend_files/defaultProjectFiles');
+	// let defaultProjectFiles = path.resolve(__dirname, '../backend_files/defaultProjectFiles');
 
 	// Ensures the JotlingProjectFiles folder exists
 	if (!fs.existsSync(path.join(app.getPath('temp'), 'JotlingProjectFiles'))) {
@@ -432,4 +432,5 @@ module.exports = {
 	requestInsertLink,
 	updateRecentProjects,
 	requestExport,
+	getMainWindow,
 };

@@ -3,7 +3,11 @@ const fontList = require('font-list');
 const fs = require('fs');
 const path = require('path');
 const tar = require('tar');
-const { exportDocument, generateExportFolderStructure } = require('./docxExport');
+const {
+	exportDocument,
+	generateExportFolderStructure,
+	exportProject,
+} = require('./docxExport');
 const {
 	createNewProject,
 	openProject,
@@ -420,14 +424,6 @@ const deleteDocListener = () => {
 };
 
 const exportProjectListener = () => {
-	// ipcMain.handle('export-single-document', (e, pathName, docName, docObj, mediaStructure) => {
-	// 	exportDocument({ pathName, docName, docObj, mediaStructure });
-	// });
-
-	// ipcMain.handle('create-export-folder-structure', (e, pathName, folderName, docStructure) => {
-	// 	generateExportFolderStructure({ pathName, folderName, docStructure });
-	// });
-
 	ipcMain.handle('export-project-docx', (e, data) => {
 		exportProject(data);
 	});

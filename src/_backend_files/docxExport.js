@@ -1,7 +1,10 @@
+const { dialog, app } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const sizeOf = require('image-size');
 const docx = require('docx');
+const sanitize = require('sanitize-filename');
+
 const {
 	UnderlineType,
 	AlignmentType,
@@ -12,9 +15,9 @@ const {
 	VerticalPositionRelativeFrom,
 	VerticalPositionAlign,
 	TextWrappingType,
-	TextWrappingSide,
 } = require('docx');
-const { constants } = require('os');
+
+const { getMainWindow } = require('./fileFunctions');
 
 const TOP_LEVEL_FOLDERS = {
 	draft: 'Manuscript',
@@ -22,35 +25,108 @@ const TOP_LEVEL_FOLDERS = {
 	pages: 'Wikis',
 };
 
+// Export project to docx files
 const exportProject = ({
 	rawEditorStates,
-	projectName,
-	filePath,
+	tempPath,
+	jotsPath,
 	docStructure,
 	mediaStructure,
 }) => {
+	const lastSlash = jotsPath ? jotsPath.lastIndexOf('/') : 0;
+	let projectName = jotsPath ? jotsPath.slice(lastSlash + 1, -5) : 'Untitled';
+	const jotsFolderPath = jotsPath ? jotsPath.slice(0, lastSlash) : app.getPath('documents');
+
+	projectName = findUniqueFileName(jotsFolderPath, projectName, '.zip').slice(0, -4);
+
+	// Ask user for save location
+	const finalFilePath = dialog.showSaveDialogSync(getMainWindow(), {
+		title: 'Export Project',
+		defaultPath: path.join(jotsFolderPath, projectName),
+		buttonLabel: 'Export',
+		nameFieldLabel: 'Project Name',
+		showsTagField: false,
+		filters: [],
+	});
+	console.log('finalFilePath:', finalFilePath);
+
+	// If the user cancelled, stop the export
+	if (!finalFilePath) {
+		return;
+	}
+
+	const exportTempPath = path.join(tempPath, 'export');
+	if (fs.existsSync(exportTempPath)) {
+		fs.rmdir(exportTempPath, { recursive: true }, (err) => {
+			console.error('error deleting export folder:');
+			console.log(err);
+		});
+	}
+	fs.mkdirSync(exportTempPath);
+
+	// Extract final project name
+	projectName = finalFilePath.slice(finalFilePath.lastIndexOf('/') + 1);
+
 	// Create the top-level export folder
-	const projectFolderName = findUniqueFolderName(filePath, projectName);
-	fs.mkdirSync(path.join(filePath, projectFolderName));
+	const projectFolderName = findUniqueFileName(exportTempPath, projectName);
+	fs.mkdirSync(path.join(exportTempPath, projectFolderName));
 
 	for (let key in TOP_LEVEL_FOLDERS) {
 		// Create parent folder
-		const newFolderPath = path.join(pathName, projectFolderName, topLevelFolders[key]);
-		fs.mkdirSync(path.join(pathName, projectFolderName, topLevelFolders[key]));
+		const newFolderPath = path.join(exportTempPath, projectFolderName, TOP_LEVEL_FOLDERS[key]);
+		fs.mkdirSync(path.join(exportTempPath, projectFolderName, TOP_LEVEL_FOLDERS[key]));
 
 		// Generate children folders AND documents
 		// in the function we call, we're going to use our exportDocument function
-		generateAllChildren(docStructure[key], newFolderPath);
+		generateAllChildren(docStructure[key], newFolderPath, rawEditorStates, mediaStructure);
+	}
+
+	// NEXT Now we need to - zip our project, and save the zip file to the finalFilePath
+
+	// Then, delete the export folder and all contents
+	// fs.rmdir(exportTempPath, {recursive: true}, (err) => {
+	//   console.err('error deleting export folder:')
+	//   console.log(err);
+	// })
+};
+
+// Generate the folder tree and docx documents in each folder
+const generateAllChildren = (currentFolder, folderPath, rawEditorStates, mediaStructure) => {
+	// For this folder level's children, add all docs to the docArray
+	for (let child of [...currentFolder.children].reverse()) {
+		if (child.type === 'folder') {
+			const newFolderName = findUniqueFileName(folderPath, child.name);
+			fs.mkdirSync(path.join(folderPath, newFolderName));
+
+			generateAllChildren(
+				currentFolder.folders[child.id.toString()],
+				path.join(folderPath, newFolderName),
+				rawEditorStates,
+				mediaStructure
+			);
+		}
+
+		if (child.type === 'doc') {
+			const newDocName = findUniqueFileName(folderPath, child.name, '.docx');
+
+			// GENERATE THE DOCUMENT
+			exportDocument({
+				pathName: folderPath,
+				docName: newDocName,
+				rawEditorState: rawEditorStates[child.fileName],
+				mediaStructure: mediaStructure,
+			});
+		}
 	}
 };
 
 // Generate a docx with the
-const exportDocument = ({ pathName, docName, docObj, mediaStructure }) => {
+const exportDocument = ({ pathName, docName, rawEditorState, mediaStructure }) => {
 	let childArray = [];
 
 	const doc = new docx.Document(docxConfig);
 
-	for (let block of docObj.blocks) {
+	for (let block of rawEditorState.blocks) {
 		childArray.push(genDocxParagraph(block, doc, pathName, mediaStructure));
 	}
 
@@ -64,55 +140,25 @@ const exportDocument = ({ pathName, docName, docObj, mediaStructure }) => {
 	});
 };
 
-const generateExportFolderStructure = ({
-	pathName,
-	folderName = 'Project Export',
-	docStructure,
-}) => {
+// Increment file/folder names until they are unique
+const findUniqueFileName = (filePath, fileName, fileExtension = '') => {
+	// Remove any illegal file characters
+	const cleanFileName = sanitize(fileName);
+
 	// Ensure the project folder name is unique
-	const projectFolderName = findUniqueFolderName(pathName, folderName);
-
-	// Create the top-level export folder
-	fs.mkdirSync(path.join(pathName, projectFolderName));
-
-	for (let key in topLevelFolders) {
-		// Create parent folder
-		const newFolderPath = path.join(pathName, projectFolderName, topLevelFolders[key]);
-		fs.mkdirSync(path.join(pathName, projectFolderName, topLevelFolders[key]));
-		generateAllChildrenFolders(docStructure[key], newFolderPath);
-
-		// Create all children folders
-		// call our function below
-	}
-};
-
-// Increment folder names until they are unique
-const findUniqueFolderName = (filePath, folderName) => {
-	// Ensure the project folder name is unique
-	let newFolderName = folderName;
+	let newFileName = cleanFileName;
 	let index = 1;
 
 	const usedFileNames = fs.readdirSync(filePath);
-	while (usedFileNames.includes(newFolderName)) {
-		newFolderName = folderName + ` (${index})`;
+	while (usedFileNames.includes(newFileName + fileExtension)) {
+		newFileName = cleanFileName + ` (${index})`;
 		index++;
 	}
 
-	return newFolderName;
+	return newFileName + fileExtension;
 };
 
 // Create a file system folder for each project folder
-const generateAllChildrenFolders = (currentFolder, folderPath) => {
-	// For this folder level's children, add all docs to the docArray
-	for (let child of currentFolder.children) {
-		if (child.type === 'folder') {
-			const newFolderName = findUniqueFolderName(folderPath, child.name);
-			fs.mkdirSync(path.join(folderPath, newFolderName));
-
-			generateAllChildrenFolders(currentFolder.folders[child.id.toString()], folderPath);
-		}
-	}
-};
 
 const genDocxParagraph = (block, doc, pathName, mediaStructure) => {
 	// Add IDs to the style ranges
@@ -470,6 +516,5 @@ const docxConfig = {
 };
 
 module.exports = {
-	exportDocument,
-	generateExportFolderStructure,
+	exportProject,
 };
