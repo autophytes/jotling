@@ -37,7 +37,7 @@ const BlockImage = ({ pageWidth, imageId, imageUseId, block, allProps }) => {
 	// Setting the image URL
 	useEffect(() => {
 		if (imageId !== null) {
-			setImageUrl('localfile://' + project.tempPath + `/media/media${imageId}.jpeg`);
+			setImageUrl('localfile://' + project.tempPath + `/media/media${imageId}.webp`);
 		}
 	}, [imageId, project]);
 

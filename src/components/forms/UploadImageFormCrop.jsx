@@ -11,6 +11,7 @@ import ReactCrop from 'react-image-crop';
 
 const MAX_WIDTH = 1000;
 const MAX_HEIGHT = 1000;
+const IMG_FORMAT = 'webp'; // Note this is hardcoded other places in the app
 
 const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 	const [image, setImage] = useState(null);
@@ -42,13 +43,13 @@ const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 
 	const makeClientCrop = async (crop) => {
 		if (image && crop.width && crop.height) {
-			const newBlob = await getCroppedImg(image, crop, 'newFile.jpeg');
+			const newBlob = await getCroppedImg(image, crop);
 			setCroppedImgBlob(newBlob);
 		}
 	};
 
 	// Uses Canvas to crop and compress the image
-	const getCroppedImg = (image, crop, fileName) => {
+	const getCroppedImg = (image, crop) => {
 		console.log('image: ', image);
 		const canvas = document.createElement('canvas');
 		const scaleX = image.naturalWidth / image.width;
@@ -100,8 +101,11 @@ const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 					// resolve(this.fileUrl);
 					resolve(blob);
 				},
-				'image/jpeg',
-				0.92
+				// 'image/jpeg',
+				`image/${IMG_FORMAT}`,
+				// 0.92 (78kb jpeg, 40kb webp)
+				// 0.8 // (55kb jpeg, 29kb webp)
+				0.8 // trims 30% file size from .92 (default) for jpeg
 			);
 		});
 	};
@@ -111,7 +115,7 @@ const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 		// e.preventDefault();
 		const mediaIds = Object.keys(mediaStructure).map((item) => Number(item));
 		const newId = mediaIds.length ? Math.max(...mediaIds) + 1 : 1;
-		const fileName = `media${newId}.jpeg`;
+		const fileName = `media${newId}.${IMG_FORMAT}`;
 		// console.log(croppedImgBlob);
 
 		// NEED TO FIX SENDING THE IMAGE

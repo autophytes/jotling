@@ -4,6 +4,7 @@ const path = require('path');
 const sizeOf = require('image-size');
 const docx = require('docx');
 const sanitize = require('sanitize-filename');
+const AdmZip = require('adm-zip');
 
 const {
 	UnderlineType,
@@ -26,7 +27,7 @@ const TOP_LEVEL_FOLDERS = {
 };
 
 // Export project to docx files
-const exportProject = ({
+const exportProject = async ({
 	rawEditorStates,
 	tempPath,
 	jotsPath,
@@ -40,13 +41,14 @@ const exportProject = ({
 	projectName = findUniqueFileName(jotsFolderPath, projectName, '.zip').slice(0, -4);
 
 	// Ask user for save location
-	const finalFilePath = dialog.showSaveDialogSync(getMainWindow(), {
+	let finalFilePath = dialog.showSaveDialogSync(getMainWindow(), {
 		title: 'Export Project',
 		defaultPath: path.join(jotsFolderPath, projectName),
 		buttonLabel: 'Export',
 		nameFieldLabel: 'Project Name',
 		showsTagField: false,
-		filters: [],
+		filters: [{ name: 'ZIP', extensions: ['zip'] }],
+		properties: [],
 	});
 	console.log('finalFilePath:', finalFilePath);
 
@@ -65,7 +67,11 @@ const exportProject = ({
 	fs.mkdirSync(exportTempPath);
 
 	// Extract final project name
-	projectName = finalFilePath.slice(finalFilePath.lastIndexOf('/') + 1);
+	if (finalFilePath.slice(-4) === '.zip') {
+		projectName = finalFilePath.slice(finalFilePath.lastIndexOf('/') + 1, -4);
+	} else {
+		projectName = finalFilePath.slice(finalFilePath.lastIndexOf('/') + 1);
+	}
 
 	// Create the top-level export folder
 	const projectFolderName = findUniqueFileName(exportTempPath, projectName);
@@ -78,29 +84,55 @@ const exportProject = ({
 
 		// Generate children folders AND documents
 		// in the function we call, we're going to use our exportDocument function
-		generateAllChildren(docStructure[key], newFolderPath, rawEditorStates, mediaStructure);
+		await generateAllChildren(
+			docStructure[key],
+			newFolderPath,
+			tempPath,
+			rawEditorStates,
+			mediaStructure
+		);
 	}
 
-	// NEXT Now we need to - zip our project, and save the zip file to the finalFilePath
+	// Ensure the zip file path has a zip extension
+	if (finalFilePath.slice(-4) !== '.zip') {
+		finalFilePath += '.zip';
+	}
+
+	// If the zip file already exists, delete it
+	if (fs.existsSync(finalFilePath)) {
+		fs.unlinkSync(finalFilePath);
+	}
+
+	// Zip and save the
+	const zip = new AdmZip();
+	zip.addLocalFolder(path.join(exportTempPath, projectFolderName));
+	zip.writeZip(finalFilePath);
 
 	// Then, delete the export folder and all contents
-	// fs.rmdir(exportTempPath, {recursive: true}, (err) => {
-	//   console.err('error deleting export folder:')
-	//   console.log(err);
-	// })
+	fs.rmdir(exportTempPath, { recursive: true }, (err) => {
+		console.error('error deleting export folder:');
+		console.log(err);
+	});
 };
 
 // Generate the folder tree and docx documents in each folder
-const generateAllChildren = (currentFolder, folderPath, rawEditorStates, mediaStructure) => {
+const generateAllChildren = async (
+	currentFolder,
+	folderPath,
+	tempPath,
+	rawEditorStates,
+	mediaStructure
+) => {
 	// For this folder level's children, add all docs to the docArray
 	for (let child of [...currentFolder.children].reverse()) {
 		if (child.type === 'folder') {
 			const newFolderName = findUniqueFileName(folderPath, child.name);
 			fs.mkdirSync(path.join(folderPath, newFolderName));
 
-			generateAllChildren(
+			await generateAllChildren(
 				currentFolder.folders[child.id.toString()],
 				path.join(folderPath, newFolderName),
+				tempPath,
 				rawEditorStates,
 				mediaStructure
 			);
@@ -110,8 +142,9 @@ const generateAllChildren = (currentFolder, folderPath, rawEditorStates, mediaSt
 			const newDocName = findUniqueFileName(folderPath, child.name, '.docx');
 
 			// GENERATE THE DOCUMENT
-			exportDocument({
+			await exportDocument({
 				pathName: folderPath,
+				tempPath: tempPath,
 				docName: newDocName,
 				rawEditorState: rawEditorStates[child.fileName],
 				mediaStructure: mediaStructure,
@@ -121,22 +154,25 @@ const generateAllChildren = (currentFolder, folderPath, rawEditorStates, mediaSt
 };
 
 // Generate a docx with the
-const exportDocument = ({ pathName, docName, rawEditorState, mediaStructure }) => {
-	let childArray = [];
+const exportDocument = ({ pathName, docName, rawEditorState, tempPath, mediaStructure }) => {
+	return new Promise((resolve) => {
+		let childArray = [];
 
-	const doc = new docx.Document(docxConfig);
+		const doc = new docx.Document(docxConfig);
 
-	for (let block of rawEditorState.blocks) {
-		childArray.push(genDocxParagraph(block, doc, pathName, mediaStructure));
-	}
+		for (let block of rawEditorState.blocks) {
+			childArray.push(genDocxParagraph(block, doc, tempPath, mediaStructure));
+		}
 
-	doc.addSection({
-		properties: {},
-		children: childArray,
-	});
+		doc.addSection({
+			properties: {},
+			children: childArray,
+		});
 
-	docx.Packer.toBuffer(doc).then((buffer) => {
-		fs.writeFileSync(path.join(pathName, docName), buffer);
+		docx.Packer.toBuffer(doc).then((buffer) => {
+			fs.writeFileSync(path.join(pathName, docName), buffer);
+			resolve();
+		});
 	});
 };
 
@@ -160,7 +196,7 @@ const findUniqueFileName = (filePath, fileName, fileExtension = '') => {
 
 // Create a file system folder for each project folder
 
-const genDocxParagraph = (block, doc, pathName, mediaStructure) => {
+const genDocxParagraph = (block, doc, tempPath, mediaStructure) => {
 	// Add IDs to the style ranges
 	const inlineStyleRanges = block.inlineStyleRanges.map((item, i) => ({
 		...item,
@@ -238,7 +274,7 @@ const genDocxParagraph = (block, doc, pathName, mediaStructure) => {
 	if (block.data.images && block.data.images.length) {
 		for (let image of block.data.images) {
 			const imageFileName = mediaStructure[image.imageId].fileName;
-			const imagePath = path.join(pathName, 'media', imageFileName);
+			const imagePath = path.join(tempPath, 'media', imageFileName);
 
 			// Image dimensions - scale to roughly 1/2 page
 			// 1 word page is roughly 600 points

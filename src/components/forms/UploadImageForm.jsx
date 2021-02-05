@@ -32,7 +32,7 @@ const UploadImageForm = () => {
 	useEffect(() => {
 		const tempPath = project.tempPath;
 		const newImageList = Object.keys(mediaStructure).map((imageId) => ({
-			url: `localfile://${tempPath}/media/media${imageId}.jpeg`,
+			url: `localfile://${tempPath}/media/media${imageId}.webp`,
 			imageId: Number(imageId),
 		}));
 

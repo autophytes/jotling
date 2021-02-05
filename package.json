@@ -24,6 +24,7 @@
 	"dependencies": {
 		"@babel/runtime": "^7.12.5",
 		"@popperjs/core": "^2.6.0",
+		"adm-zip": "^0.5.2",
 		"cli-truncate": "^2.1.0",
 		"docx": "^5.4.1",
 		"draft-js": "^0.11.7",
