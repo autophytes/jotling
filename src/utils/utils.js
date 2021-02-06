@@ -388,5 +388,32 @@ export const stripOutEscapeCharacters = (origText) => {
 	return newText;
 };
 
+// Adds commas to the thousands place in a number. Returns a string.
+export const addThousandsComma = (number) => {
+	// const numString = number.toString();
+
+	// let beforeDecimal = numString;
+	// let afterDecimal = '';
+
+	// const periodIndex = numString.findIndex('.');
+
+	// // Split the part of the number > 0
+	// if (periodIndex !== -1) {
+	//   afterDecimal = numString.slice(periodIndex);
+	//   beforeDecimal = numString.slice(0, periodIndex);
+	// }
+
+	// // If not at least 1,000, no comma necessary.
+	// if (beforeDecimal.length < 4) {
+	//   return numString;
+	// }
+
+	// let finalString;
+	// for (let i = beforeDecimal.length; i >= 0; i++) {
+
+	// }
+	return number.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+};
+
 // const userAgent = navigator.userAgent.toLowerCase();
 // export const isInElectron = userAgent.indexOf(' electron/') > -1;

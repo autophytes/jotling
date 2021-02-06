@@ -470,7 +470,9 @@ const AppMgmt = () => {
 
 export default AppMgmt;
 
+// Queues up hydrating editorStates from raw documents to store in the editorArchives.
 const preloadEachDocument = (docArray, newAllDocObj, setEditorArchives) => {
+	// The timeout puts each loading on the end of the call stack
 	setTimeout(() => {
 		let newDocArray = [...docArray];
 		const docName = newDocArray.pop();
@@ -496,6 +498,8 @@ const preloadEachDocument = (docArray, newAllDocObj, setEditorArchives) => {
 
 		// Eventually take in an array of names and call this function recursively for each
 		if (newDocArray.length) {
+			// We call the next document at the end to give the program the chance to resolve any
+			//   user actions in the meantime.
 			preloadEachDocument(newDocArray, newAllDocObj, setEditorArchives);
 		}
 	}, 0);

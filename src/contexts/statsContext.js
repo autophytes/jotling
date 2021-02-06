@@ -19,8 +19,6 @@ const StatsContextProvider = (props) => {
 
 	// Updates the current doc's net word count
 	const netOutDocWordCount = (newWordCountObj, origWordCountObj, currentDoc) => {
-		console.log('netOut: origWordCountObj:', origWordCountObj);
-		console.log('netOut: newWordCountObj:', newWordCountObj);
 		const newDocTotal = Object.values(newWordCountObj).reduce((acc, val) => acc + val, 0);
 		const origDocTotal = Object.values(origWordCountObj).reduce((acc, val) => acc + val, 0);
 
@@ -50,7 +48,6 @@ const StatsContextProvider = (props) => {
 	 */
 	const initializeDocWordCount = (editorState, currentDoc) => {
 		const newDocWordCountObj = getEditorStateWordCount(editorState);
-		console.log('newDocWordCountObj:', newDocWordCountObj);
 
 		setOrigDocWordCountObj(newDocWordCountObj);
 		setDocWordCountObj(newDocWordCountObj);
@@ -61,8 +58,6 @@ const StatsContextProvider = (props) => {
 	const updateWordCount = (editorStateRef, origEditorState, currentDoc, option) => {
 		const contentState = editorStateRef.current.getCurrentContent();
 		let keyArray = [];
-
-		console.log('updating word count');
 
 		// Start with all blockKeys in the selection. All options except 'update-all' start from this.
 		if (option !== 'update-all') {
@@ -110,14 +105,12 @@ const StatsContextProvider = (props) => {
 			newWordCountObj[blockKey] = words;
 		}
 
-		console.log('newWordCountObj:', newWordCountObj);
 		setDocWordCountObj((prev) => {
 			const newObj = {
 				...prev,
 				...newWordCountObj,
 			};
 
-			console.log('currentDoc:', currentDoc);
 			netOutDocWordCount(newObj, origDocWordCountObj, currentDoc);
 
 			return newObj;
@@ -127,6 +120,7 @@ const StatsContextProvider = (props) => {
 	return (
 		<StatsContext.Provider
 			value={{
+				docWordCountObj,
 				docsNetWordCountObj,
 				finalizeDocWordCount,
 				initializeDocWordCount,

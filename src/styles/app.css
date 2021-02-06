@@ -2150,7 +2150,7 @@ button.wiki-template-add-section:hover {
 	height: 0.6rem;
 	margin-right: 0.35rem;
 	fill: #444;
-	transition: 250ms cubic-bezier(0.4, 0, 0.2, 1) transform;
+	transition: 500ms cubic-bezier(0.4, 0, 0.2, 1) transform;
 }
 
 .left-nav-stats-toggle.expanded svg {
