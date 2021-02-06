@@ -1,16 +1,70 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
+import Collapse from 'react-css-collapse';
+import CaratDownSVG from '../../../assets/svg/CaratDownSVG';
 
 import { StatsContext } from '../../../contexts/statsContext';
 
-const LeftNavStats = () => {
-	const { docWordCount, sessionWordCount } = useContext(StatsContext);
+// Project: 1,210 words added
+// Project: 390 words removed
+// Document: -300 net words
 
-	const numOfWords = Math.max(0, docWordCount + sessionWordCount);
+const LeftNavStats = ({ currentDoc }) => {
+	const { docsNetWordCountObj } = useContext(StatsContext);
+	const [isExpanded, setIsExpanded] = useState(true);
+
+	// FOR BOTH, need to add thousands-place commas
+
+	const wordsAdded = Object.values(docsNetWordCountObj).reduce(
+		(acc, value) => (value > 0 ? acc + value : acc),
+		0
+	);
+	const wordsRemoved = Math.abs(
+		Object.values(docsNetWordCountObj).reduce(
+			(acc, value) => (value < 0 ? acc + value : acc),
+			0
+		)
+	);
+
 	return (
 		<div className='left-nav-footer'>
-			<p className='left-nav-stats-words-today'>{`${numOfWords} word${
-				numOfWords === 1 ? '' : 's'
-			} today.`}</p>
+			{/* Show/Hide Toggle */}
+			<div
+				className={'left-nav-stats-toggle' + (isExpanded ? ' expanded' : '')}
+				onClick={() => setIsExpanded((prev) => !prev)}>
+				<CaratDownSVG rotate='90deg' />
+				{isExpanded ? 'Hide' : 'Show'} Stats
+			</div>
+
+			{/* Stats Section */}
+			<Collapse isOpen={isExpanded}>
+				{/* Project */}
+				<p className='left-nav-stats-section-title'>Project:</p>
+				<div className='left-nav-stats-section'>
+					{/* Added */}
+					<p style={{ margin: '0' }}>{`${wordsAdded} word${
+						wordsAdded === 1 ? '' : 's'
+					} added`}</p>
+
+					{/* Removed */}
+					<p style={{ margin: '0' }}>{`${wordsRemoved} word${
+						wordsRemoved === 1 ? '' : 's'
+					} removed`}</p>
+				</div>
+
+				{/* Document */}
+				<p className='left-nav-stats-section-title'>Document:</p>
+				<div className='left-nav-stats-section'>
+					{/* Net */}
+					<p style={{ margin: '0' }}>
+						{(docsNetWordCountObj[currentDoc]
+							? Math.abs(docsNetWordCountObj[currentDoc])
+							: 0) +
+							' word' +
+							(docsNetWordCountObj[currentDoc] === 1 ? '' : 's') +
+							(docsNetWordCountObj[currentDoc] >= 0 ? ' added' : ' removed')}
+					</p>
+				</div>
+			</Collapse>
 		</div>
 	);
 	{

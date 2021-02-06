@@ -197,20 +197,20 @@ export const manuallyHandleReplaceText = (editorState, char) => {
 	return finalEditorState;
 };
 
-// Skip the late selection if we're overriding it
-export const shouldSkipEditorState = () => {
-	if (!skipEditorStatesBeforeMS) {
-		return false;
-	} else {
-		const shouldSkip = Date.now() - skipEditorStatesBeforeMS < 200;
-		console.log(
-			'Date.now() - skipEditorStatesBeforeMS:',
-			Date.now() - skipEditorStatesBeforeMS
-		);
-		// skipEditorStatesBeforeMS = null;
-		return shouldSkip;
-	}
-};
+// // Skip the late selection if we're overriding it
+// export const shouldSkipEditorState = () => {
+// 	if (!skipEditorStatesBeforeMS) {
+// 		return false;
+// 	} else {
+// 		const shouldSkip = Date.now() - skipEditorStatesBeforeMS < 200;
+// 		console.log(
+// 			'Date.now() - skipEditorStatesBeforeMS:',
+// 			Date.now() - skipEditorStatesBeforeMS
+// 		);
+// 		// skipEditorStatesBeforeMS = null;
+// 		return shouldSkip;
+// 	}
+// };
 
 // Converts '1. ', '* ', and '- ' to lists
 export const spaceToAutoList = (editorState, setEditorState) => {

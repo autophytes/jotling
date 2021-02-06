@@ -85,7 +85,7 @@ const LeftNav = () => {
 							{TAB_NAMES[navData.currentTab] ? TAB_NAMES[navData.currentTab] : ''}
 						</p>
 						<LeftNavContent />
-						<LeftNavStats />
+						<LeftNavStats currentDoc={navData.currentDoc} />
 					</div>
 				)}
 

@@ -105,9 +105,9 @@ const EditorHeaderTitle = ({ editorRef }) => {
 					onBlur={saveNewDocName}
 					// onFocus={(e) => e.target.select()}
 					onKeyUp={(e) => {
-						console.log('keyup: ', e);
+						// console.log('keyup: ', e);
 						if (e.key === 'Enter' || e.keyCode === 27) {
-							console.log('saving new doc');
+							// console.log('saving new doc name');
 							saveNewDocName();
 						}
 					}}

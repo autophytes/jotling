@@ -26,7 +26,7 @@ import { getSelectedBlocksMetadata } from 'draftjs-utils';
 
 import EditorNav from '../navs/editor-nav/EditorNav';
 
-import { updateLinkEntities, updateWordCount } from './editorFunctions';
+import { updateLinkEntities } from './editorFunctions';
 import {
 	spaceToAutoList,
 	enterToUnindentList,
@@ -62,6 +62,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	const {
 		navData,
 		setNavData,
+		navDataRef,
 		project,
 		linkStructureRef,
 		editorStateRef,
@@ -89,7 +90,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		fontSize,
 		fontSettings,
 	} = useContext(SettingsContext);
-	const { setDocWordCountObj, finalizeDocWordCount, initializeDocWordCount } = useContext(
+	const { finalizeDocWordCount, initializeDocWordCount, updateWordCount } = useContext(
 		StatsContext
 	);
 
@@ -101,6 +102,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	}, [editorState]);
 
 	// const setEditorState = useCallback((value) => {
+	// 	// console.log('setEditorState is being called');
 	// 	convertSetterToRefSetter(editorStateRef, setEditorStateOrig, value);
 	// }, []);
 
@@ -116,6 +118,8 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// REFS
 	const editorRef = useRef(null);
 	const navSettersRef = useRef(null);
+	const waitForSelectionRef = useRef(false);
+	const waitForSelectionTimeoutRef = useRef(null);
 
 	// CUSTOM HOOKS
 	const decorator = useDecorator(prev.doc, setEditorState);
@@ -132,13 +136,30 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 	}, []);
 
+	// Disable updates during text selection
+	useEffect(() => {
+		document.addEventListener('selectstart', () => {
+			clearTimeout(waitForSelectionTimeoutRef.current);
+
+			waitForSelectionRef.current = true;
+
+			// Fallback to re-enable updates
+			waitForSelectionTimeoutRef.current = setTimeout(() => {
+				if (waitForSelectionRef.current === true) {
+					console.log('timeout was needed to clear the waitForSelectionRef.current');
+				}
+				waitForSelectionRef.current = false;
+			}, 2000);
+		});
+	}, []);
+
 	// Sets the editorState
 	const handleEditorStateChange = (editorState) => {
-		// If manuallyHandleReplaceText runs, we want to skip the editor's late selection
-		if (shouldSkipEditorState()) {
-			console.log('skipping');
-			// setEditorState((prev) => EditorState.forceSelection(prev, prev.getSelection()));
-			return;
+		// console.log('handleEditorStateChange');
+
+		// Re-enable editorState updates again (disabled from selection)
+		if (waitForSelectionRef.current) {
+			waitForSelectionRef.current = false;
 		}
 
 		// Tell the FindAll component to re-search the currentDoc
@@ -193,8 +214,15 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	);
 
 	// Process the key presses
-	const handleKeyCommand = useCallback((command, origEditorState) => {
+	const handleKeyCommand = (command, origEditorState) => {
 		console.log('command:', command);
+
+		// If the text selection hasn't settled yet (touchpad issues), skip changes
+		if (waitForSelectionRef.current) {
+			console.log('skipping keyCommand - waiting for selection');
+			return 'handled';
+		}
+
 		if (command === 'handled-in-binding-fn') {
 			// For instance, I have to handle tab in the binding fn b/c it needs (e)
 			// Otherwise, the browser tries to do things with the commands.
@@ -207,9 +235,14 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		// Check if we need to update the word count. If so, pass through the update option.
 		const updateWordCountOption = checkCommandForUpdateWordCount(command);
 		if (updateWordCountOption) {
-			// console.log('calling updateWordCount with command: ', updateWordCountOption);
+			console.log('calling updateWordCount with command: ', updateWordCountOption);
 			setTimeout(() =>
-				updateWordCount(editorStateRef, editorState, setDocWordCountObj, updateWordCountOption)
+				updateWordCount(
+					editorStateRef,
+					editorState,
+					navDataRef.current.currentDoc,
+					updateWordCountOption
+				)
 			);
 			// Note that this isn't "handling" the command, just scheduling a background update.
 		}
@@ -260,9 +293,15 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		}
 
 		return 'not-handled'; // Lets Draft know to try to handle this itself.
-	}, []);
+	};
 
 	const handleBeforeInput = (char, origEditorState) => {
+		// If the text selection hasn't settled yet (touchpad issues), skip changes
+		if (waitForSelectionRef.current) {
+			console.log('skipping input - waiting for selection');
+			return 'handled';
+		}
+
 		// Use the DOM selection if necessary
 		const editorState = fetchCorrectSelection(origEditorState, editorRef);
 
@@ -270,9 +309,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 		// Update the word count after each space
 		if (char === ' ') {
+			console.log('getting ready to update word count');
 			// Timeout to delay until after update.
 			// Let's us use the selection before to check the updated editorState.
-			setTimeout(() => updateWordCount(editorStateRef, editorState, setDocWordCountObj));
+			setTimeout(() =>
+				updateWordCount(editorStateRef, editorState, navDataRef.current.currentDoc)
+			);
 		}
 
 		// If we're typing at the end of a line and inside a link, continue that link
@@ -394,7 +436,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			);
 
 			setEditorState(editorStateWithLinks);
-			initializeDocWordCount(editorStateWithLinks);
+			initializeDocWordCount(editorStateWithLinks, navData.currentDoc);
 
 			setResetScrollDoc(navData.currentDoc);
 			console.log('Setting editorState inside loadFile.');
@@ -406,8 +448,11 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	// Loading the new current document
 	useEffect(() => {
 		if (navData.currentDoc !== prev.doc || navData.currentTempPath !== prev.tempPath) {
+			// Ensure edits are allowed again
+			waitForSelectionRef.current = false;
+
 			// Update the session word count
-			finalizeDocWordCount(editorStateRef.current);
+			finalizeDocWordCount(editorStateRef.current, prev.doc);
 
 			// If the previous doc changed and we didn't open a new project, save.
 			if (prev.doc !== '' && navData.currentTempPath === prev.tempPath) {
@@ -442,7 +487,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 				console.log('Setting editorState from editorArchives.');
 
 				setEditorState(editorStateWithLinks);
-				initializeDocWordCount(editorStateWithLinks);
+				initializeDocWordCount(editorStateWithLinks, navData.currentDoc);
 				setResetScrollDoc(navData.currentDoc);
 			} else {
 				loadFile();
