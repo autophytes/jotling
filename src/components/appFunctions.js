@@ -27,7 +27,7 @@ export const cleanupJpeg = async (image, mediaStructure, tempPath) => {
 
 	// Delete the image file
 	if (deleteImageFile) {
-		await ipcRenderer.invoke('delete-file', tempPath, 'media', `media${imageId}.webp`);
+		await ipcRenderer.invoke('delete-file', tempPath, 'media', `media${imageId}.jpeg`);
 	}
 
 	return newMediaStructure;

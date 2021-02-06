@@ -11,7 +11,7 @@ import ReactCrop from 'react-image-crop';
 
 const MAX_WIDTH = 1000;
 const MAX_HEIGHT = 1000;
-const IMG_FORMAT = 'webp'; // Note this is hardcoded other places in the app
+const IMG_FORMAT = 'jpeg'; // Note this is hardcoded other places in the app
 
 const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 	const [image, setImage] = useState(null);
@@ -101,7 +101,6 @@ const UploadImageFormCrop = ({ uploadImageUrl, setDisplayModal }) => {
 					// resolve(this.fileUrl);
 					resolve(blob);
 				},
-				// 'image/jpeg',
 				`image/${IMG_FORMAT}`,
 				// 0.92 (78kb jpeg, 40kb webp)
 				// 0.8 // (55kb jpeg, 29kb webp)
