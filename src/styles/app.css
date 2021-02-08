@@ -2065,7 +2065,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .wiki-template-section-list {
-	padding: 0.5rem 0 0.5rem 1rem;
+	padding: 0.5rem 0 0.5rem 0.5rem;
 }
 
 .wiki-template-section-row {
@@ -2086,10 +2086,12 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .wiki-template-section-drag-handle > svg {
-	width: 1.3rem;
-	height: 1.3rem;
+	width: 1.1rem;
+	height: 1.1rem;
 	margin-right: 0.5rem;
+	margin-left: 0.5rem;
 	cursor: grab;
+	fill: #bbb;
 }
 
 .wiki-template-section-drag-handle:active {
@@ -2122,7 +2124,7 @@ button.wiki-template-add-section {
 	color: var(--color-text);
 	font-size: 1rem;
 	font-weight: bold;
-	padding: 0.2rem 0.5rem;
+	padding: 0.2rem 0.7rem;
 	border-radius: 0.25rem;
 	user-select: none;
 	cursor: pointer;
@@ -2343,3 +2345,46 @@ background-color: var(--color-primary);
 
 .color-picker-popper-button-row button:hover {
 box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */
+
+.tags-row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+.tags-row-button {
+	display: flex;
+	align-items: center;
+	background-color: var(--color-primary);
+	margin: 0.15rem 0 0.15rem 0.3rem;
+	padding: 0.1rem 0.5rem 0.1rem 0.25rem;
+	border-radius: 0.25rem;
+	color: white;
+	font-weight: bold;
+}
+
+.tags-row-button.add-tag {
+	cursor: pointer;
+}
+.tags-row-button.add-tag:hover {
+	cursor: pointer;
+	background-color: rgba(var(--color-primary-rgb), 0.7);
+}
+
+.tags-row-button svg {
+	width: 1.15rem;
+	height: 1.15rem;
+	fill: white;
+	margin-right: 0.1rem;
+	padding: 0.25rem;
+	border-radius: 0.25rem;
+	cursor: pointer;
+}
+
+.tags-row-button:not(.add-tag) svg:hover {
+	background-color: rgba(255, 255, 255, 0.3);
+}
+
+.tags-content {
+	margin: 0.5rem 0 0.5rem 0.3rem;
+}

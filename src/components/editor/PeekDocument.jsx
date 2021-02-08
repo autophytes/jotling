@@ -19,6 +19,7 @@ const PeekDocument = () => {
 	// STATE
 	const [documentName, setDocumentName] = useState('');
 	const [documentTitle, setDocumentTitle] = useState('');
+	const [docTab, setDocTab] = useState('');
 	const [editorState, setEditorState] = useState(EditorState.createEmpty());
 	const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -49,6 +50,7 @@ const PeekDocument = () => {
 		for (let category of docCategories) {
 			let potentialTitle = findTitleForGivenDocFileName(docStructure[category], documentName);
 			if (potentialTitle) {
+				setDocTab(category);
 				setDocumentTitle(potentialTitle);
 				return;
 			}
@@ -96,26 +98,29 @@ const PeekDocument = () => {
 	}, []);
 
 	return (
-		<>
-			<ResizableWindow
-				windowTitle={documentTitle ? documentTitle : documentName}
-				peekWindowContentRef={peekWindowContentRef}
-				closeFn={closeFn}>
-				<Editor editorState={editorState} readOnly style={{ paddingBottom: '3rem' }} />
-				<br />
-				<br />
-				<br />
-				<button
-					className='show-hide-tags-button peek-window-floating-button'
-					onClick={() => {
-						setNavData({ ...navData, currentDoc: documentName });
-						setScrollToLinkId(peekWindowLinkId);
-						setPeekWindowLinkId(null);
-					}}>
-					Open Source
-				</button>
-			</ResizableWindow>
-		</>
+		<ResizableWindow
+			windowTitle={documentTitle ? documentTitle : documentName}
+			peekWindowContentRef={peekWindowContentRef}
+			closeFn={closeFn}>
+			<Editor editorState={editorState} readOnly style={{ paddingBottom: '3rem' }} />
+			<br />
+			<br />
+			<br />
+			<button
+				className='show-hide-tags-button peek-window-floating-button'
+				onClick={() => {
+					setNavData((prev) => ({
+						...navData,
+						currentDoc: documentName,
+						currentTab: docTab ? docTab : prev.currentTab,
+						currentDocTab: docTab ? docTab : prev.currentTab,
+					}));
+					setScrollToLinkId(peekWindowLinkId);
+					setPeekWindowLinkId(null);
+				}}>
+				Open Source
+			</button>
+		</ResizableWindow>
 	);
 };
 
