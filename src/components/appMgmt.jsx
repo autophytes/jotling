@@ -28,9 +28,11 @@ import {
 import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
 import HiddenContextMenu from './hiddenContextMenu';
+
 import UploadImageForm from './forms/UploadImageForm';
-import { getBlockPlainTextArray } from '../utils/draftUtils';
+
 import { exportProject } from './export/export';
+import { loadProjectFiles } from './appMgmtFunctions';
 
 // For an example of how we can use web workers. Webpack already configured. Doesn't work with Draft.
 //   https://willowtreeapps.com/ideas/improving-web-app-performance-with-web-worker
@@ -39,12 +41,9 @@ import { exportProject } from './export/export';
 // Create main App component
 const AppMgmt = () => {
 	// STATE
-	const [structureLoaded, setStructureLoaded] = useState(false);
-	const [linkStructureLoaded, setLinkStructureLoaded] = useState(false);
-	const [mediaStructureLoaded, setMediaStructureLoaded] = useState(false);
+	const [isProjectLoaded, setIsProjectLoaded] = useState(false);
 	const [prevProj, setPrevProj] = useState('');
 	const [saveProject, setSaveProject] = useState({});
-	const [needCurrentDocReset, setNeedCurrentDocReset] = useState(false);
 
 	// CONTEXT
 	const {
@@ -56,6 +55,7 @@ const AppMgmt = () => {
 		linkStructureRef,
 		mediaStructure,
 		setMediaStructure,
+		setWikiMetadata,
 		mediaStructureRef,
 		project,
 		setProject,
@@ -87,117 +87,28 @@ const AppMgmt = () => {
 	// HiddenContextMenu();
 	console.log('appMgmt refreshed!!');
 
-	// Loads the document map (function)
-	const loadDocStructure = useCallback(
-		async ({ isNewProject = false }) => {
-			const newDocStructure = await ipcRenderer.invoke(
-				'read-single-document',
-				project.tempPath,
-				'documentStructure.json'
-			);
-			setDocStructure(newDocStructure.fileContents);
-			setStructureLoaded(true);
-			isNewProject && setNeedCurrentDocReset(true);
-		},
-		[setDocStructure, setStructureLoaded, project.tempPath]
-	);
-
-	// Loads the document link structure (function)
-	const loadLinkStructure = useCallback(async () => {
-		const newLinkStructure = await ipcRenderer.invoke(
-			'read-single-document',
-			project.tempPath,
-			'linkStructure.json'
-		);
-		setLinkStructure(newLinkStructure.fileContents);
-		setLinkStructureLoaded(true);
-	}, [project.tempPath]);
-
-	// Loads the document media structure (function)
-	const loadMediaStructure = useCallback(async () => {
-		const newMediaStructure = await ipcRenderer.invoke(
-			'read-single-document',
-			project.tempPath,
-			'mediaStructure.json'
-		);
-		setMediaStructure(newMediaStructure.fileContents);
-		setMediaStructureLoaded(true);
-	}, [project.tempPath]);
-
-	// Load an object with all raw document contents
-	const loadAllDocuments = async () => {
-		const newAllDocObj = await ipcRenderer.invoke(
-			'read-all-documents',
-			project.tempPath,
-			'docs'
-		);
-
-		const docArray = Object.keys(newAllDocObj);
-		preloadEachDocument(docArray, newAllDocObj, setEditorArchives);
-	};
-
-	const resetCurrentDoc = useCallback(() => {
-		// Find the first document in the first tab with contents
-		const tabList = ['draft', 'pages', 'research'];
-		let response, currentTab;
-		for (let i = 0; i <= tabList.length && !response; i++) {
-			response = findFirstDocInFolder(docStructureRef.current[tabList[i]]);
-			if (response) {
-				currentTab = tabList[i];
-			}
-		}
-
-		// let response = findFirstDocInFolder(newDocStructure[currentTab]);
-		if (response) {
-			// Document was found. Mark the document as the currentDoc.
-			setNavData((prev) => ({
-				...prev,
-				currentTab: currentTab,
-				currentDoc: response.docName,
-				currentTempPath: project.tempPath,
-				lastClicked: { type: 'doc', id: response.docId },
-				parentFolders: response.parentFolders,
-			}));
-		} else {
-			// No documents found. Reset navData to default.
-			console.log('No document was found in the current tab!');
-			// Only set if currentDoc has contents. Otherwise, changing navData will trigger a recheck.
-			if (navData.currentDoc !== '') {
-				console.log('Resetting navData (currentDoc, currentTab, lastClicked, parentFolders)');
-				setNavData((prev) => ({
-					...prev,
-					currentDoc: '',
-					currentTab: 'draft',
-					currentTempPath: project.tempPath,
-					lastClicked: { type: '', id: '' },
-					parentFolders: [],
-				}));
-			}
-		}
-	}, [navData, project]);
-
-	// Once the docStructure has loaded for a new project, load the first document
-	useEffect(() => {
-		if (needCurrentDocReset) {
-			setNeedCurrentDocReset(false);
-			resetCurrentDoc();
-		}
-	}, [needCurrentDocReset, resetCurrentDoc]);
-
 	// Loads the document / link structures when the project changes
 	useEffect(() => {
 		if (prevProj !== project.tempPath && project.tempPath) {
 			// Loads the doc structure
 			setEditorArchives({});
 
-			// MOVE THESE DEFS TO A SEPARATE FILE
-			loadDocStructure({ isNewProject: true });
-			loadLinkStructure();
-			loadMediaStructure();
-			loadAllDocuments();
+			// Load all project JSON files on project change
+			loadProjectFiles({
+				setDocStructure,
+				setLinkStructure,
+				setMediaStructure,
+				setWikiMetadata,
+				setNavData,
+				setIsProjectLoaded,
+				setEditorArchives,
+				docStructureRef,
+				tempPath: project.tempPath,
+			});
+
 			setPrevProj(project.tempPath);
 		}
-	}, [loadDocStructure, loadMediaStructure, prevProj, project]);
+	}, [prevProj, project]);
 
 	// Updates the application title when the project changes
 	useEffect(() => {
@@ -213,7 +124,7 @@ const AppMgmt = () => {
 
 	// Saves the docStructure after every change
 	useEffect(() => {
-		if (structureLoaded) {
+		if (isProjectLoaded) {
 			ipcRenderer.invoke(
 				'save-single-document',
 				project.tempPath,
@@ -223,11 +134,11 @@ const AppMgmt = () => {
 			);
 			console.log('Saving document structure.');
 		}
-	}, [docStructure, structureLoaded, project]);
+	}, [docStructure, isProjectLoaded, project]);
 
 	// Saves the linkStructure after every change
 	useEffect(() => {
-		if (linkStructureLoaded) {
+		if (isProjectLoaded) {
 			ipcRenderer.invoke(
 				'save-single-document',
 				project.tempPath,
@@ -237,11 +148,11 @@ const AppMgmt = () => {
 			);
 			console.log('Saving link structure.');
 		}
-	}, [linkStructure, linkStructureLoaded, project]);
+	}, [linkStructure, isProjectLoaded, project]);
 
 	// Saves the mediaStructure after every change
 	useEffect(() => {
-		if (mediaStructureLoaded) {
+		if (isProjectLoaded) {
 			ipcRenderer.invoke(
 				'save-single-document',
 				project.tempPath,
@@ -251,7 +162,7 @@ const AppMgmt = () => {
 			);
 			console.log('Saving link structure.');
 		}
-	}, [mediaStructure, mediaStructureLoaded, project]);
+	}, [mediaStructure, isProjectLoaded, project]);
 
 	// Registers ipcRenderer listeners
 	useEffect(() => {
@@ -443,14 +354,6 @@ const AppMgmt = () => {
 		});
 	}, []);
 
-	// If no current doc, finds the first document
-	// useEffect(() => {
-	// if (!navData.currentDoc && Object.keys(docStructure).length) {
-	// 	console.log('no current doc, reseting');
-	// 	resetCurrentDoc();
-	// }
-	// }, [docStructure, navData.currentDoc, resetCurrentDoc]);
-
 	return (
 		<>
 			<TopNav />
@@ -459,7 +362,7 @@ const AppMgmt = () => {
 
 			{navData.currentDoc && <EditorContainer {...{ saveProject, setSaveProject }} />}
 
-			<LoadingOverlay {...{ structureLoaded }} />
+			<LoadingOverlay {...{ isProjectLoaded }} />
 			{peekWindowLinkId !== null && <PeekDocument />}
 			{showEditorSettings && <EditorSettings />}
 			<HiddenContextMenu />
@@ -469,38 +372,3 @@ const AppMgmt = () => {
 };
 
 export default AppMgmt;
-
-// Queues up hydrating editorStates from raw documents to store in the editorArchives.
-const preloadEachDocument = (docArray, newAllDocObj, setEditorArchives) => {
-	// The timeout puts each loading on the end of the call stack
-	setTimeout(() => {
-		let newDocArray = [...docArray];
-		const docName = newDocArray.pop();
-
-		if (newAllDocObj[docName] && Object.keys(newAllDocObj[docName]).length) {
-			// Convert to a valid editorState
-			const newContentState = convertFromRaw(newAllDocObj[docName]);
-			const newEditorState = EditorState.createWithContent(newContentState);
-
-			setEditorArchives((prev) =>
-				prev[docName]
-					? prev
-					: {
-							...prev,
-							[docName]: {
-								editorState: newEditorState,
-								scrollY: 0,
-								textBlocks: getBlockPlainTextArray(newEditorState),
-							},
-					  }
-			);
-		}
-
-		// Eventually take in an array of names and call this function recursively for each
-		if (newDocArray.length) {
-			// We call the next document at the end to give the program the chance to resolve any
-			//   user actions in the meantime.
-			preloadEachDocument(newDocArray, newAllDocObj, setEditorArchives);
-		}
-	}, 0);
-};

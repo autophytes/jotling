@@ -49,4 +49,11 @@ const linkStructureTemplate = {
 
 const mediaStructureTemplate = {};
 
-module.exports = { docStructureTemplate, linkStructureTemplate, mediaStructureTemplate };
+const wikiMetadataTemplate = {};
+
+module.exports = {
+	docStructureTemplate,
+	linkStructureTemplate,
+	mediaStructureTemplate,
+	wikiMetadataTemplate,
+};

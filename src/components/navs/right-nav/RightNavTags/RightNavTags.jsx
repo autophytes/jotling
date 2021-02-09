@@ -2,6 +2,8 @@ import React, { useContext, useState, useEffect, useCallback, Fragment } from 'r
 import CloseSVG from '../../../../assets/svg/CloseSVG';
 import PlusSVG from '../../../../assets/svg/PlusSVG';
 
+import TextareaAutosize from 'react-textarea-autosize';
+
 const RightNavTags = ({ activeTab }) => {
 	return (
 		<>
@@ -29,37 +31,78 @@ const RightNavTags = ({ activeTab }) => {
 					<p className='tag-section-title'>Character</p>
 					<div className='tag-section-fields'>
 						<p className='tag-section-key'>Height</p>
-						<p className='tag-section-value'>5'10"</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'5\'10"'}
+							className='tag-section-value'
+						/>
 						<p className='tag-section-key'>Weight</p>
-						<p className='tag-section-value'>175lbs</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'175lbs'}
+							className='tag-section-value'
+						/>
 						<p className='tag-section-key'>Hair</p>
-						<p className='tag-section-value'>Brown, short cut, wavy</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'Brown, short cut, wavy'}
+							className='tag-section-value'
+						/>
 					</div>
 				</div>
 				<div className='tag-section'>
-					<p>Faction</p>
+					<p className='tag-section-title'>Faction</p>
 					<div className='tag-section-fields'>
 						<p className='tag-section-key'>Rank</p>
-						<p className='tag-section-value'>New guy</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'New guy'}
+							className='tag-section-value'
+						/>
 						<p className='tag-section-key'>Superior Officer</p>
-						<p className='tag-section-value'>Billy</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'Billy'}
+							className='tag-section-value'
+						/>
 						<p className='tag-section-key'>Introduction</p>
-						<p className='tag-section-value'>
-							This character met billy bob at the thing and they talked for a while
-						</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'This character met billy bob at the thing and they talked for a while'}
+							className='tag-section-value'
+						/>
 					</div>
 				</div>
 				<div className='tag-section'>
-					<p>Faction</p>
+					<p className='tag-section-title'>Faction</p>
 					<div className='tag-section-fields'>
 						<p className='tag-section-key'>Rank</p>
-						<p className='tag-section-value'>New guy</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'New guy'}
+							className='tag-section-value'
+						/>
 						<p className='tag-section-key'>Superior Officer</p>
-						<p className='tag-section-value'>Billy</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'Billy'}
+							className='tag-section-value'
+						/>
 						<p className='tag-section-key'>Introduction</p>
-						<p className='tag-section-value'>
-							This character met billy bob at the thing and they talked for a while
-						</p>
+						<TextareaAutosize
+							minRows={1}
+							maxRows={6}
+							value={'This character met billy bob at the thing and they talked for a while'}
+							className='tag-section-value'
+						/>
 					</div>
 				</div>
 			</div>

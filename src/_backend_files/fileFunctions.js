@@ -11,6 +11,7 @@ const {
 	docStructureTemplate,
 	linkStructureTemplate,
 	mediaStructureTemplate,
+	wikiMetadataTemplate,
 } = require('./structureTemplates');
 
 // Create a new blank project
@@ -30,6 +31,9 @@ const createNewProjectStructure = (projectTempDirectory) => {
 
 	let newMediaStructure = JSON.stringify(mediaStructureTemplate);
 	fs.writeFileSync(path.join(projectTempDirectory, 'mediaStructure.json'), newMediaStructure);
+
+	let newWikiMetadata = JSON.stringify(wikiMetadataTemplate);
+	fs.writeFileSync(path.join(projectTempDirectory, 'wikiMetadata.json'), newWikiMetadata);
 };
 
 // Creates a temp folder and extracts a project to that folder

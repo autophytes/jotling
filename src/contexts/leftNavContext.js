@@ -21,6 +21,7 @@ const LeftNavContextProvider = (props) => {
 	const [docStructure, setDocStructureOrig] = useState({});
 	const [linkStructure, setLinkStructureOrig] = useState({});
 	const [mediaStructure, setMediaStructureOrig] = useState({});
+	const [wikiMetadata, setWikiMetadata] = useState({});
 	const [project, setProjectOrig] = useState({ tempPath: '', jotsPath: '' });
 	const [navData, setNavDataOrig] = useState({
 		currentDoc: '',
@@ -368,6 +369,8 @@ const LeftNavContextProvider = (props) => {
 				mediaStructure,
 				mediaStructureRef,
 				setMediaStructure,
+				wikiMetadata,
+				setWikiMetadata,
 				isImageSelectedRef,
 				customStyles,
 				saveFile,

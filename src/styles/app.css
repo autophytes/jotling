@@ -2361,6 +2361,7 @@ box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */
 	border-radius: 0.25rem;
 	color: white;
 	font-weight: bold;
+	font-size: 0.9rem;
 }
 
 .tags-row-button.add-tag {
@@ -2372,8 +2373,8 @@ box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */
 }
 
 .tags-row-button svg {
-	width: 1.15rem;
-	height: 1.15rem;
+	width: 1.05rem;
+	height: 1.05rem;
 	fill: white;
 	margin-right: 0.1rem;
 	padding: 0.25rem;
@@ -2387,4 +2388,28 @@ box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */
 
 .tags-content {
 	margin: 0.5rem 0 0.5rem 0.3rem;
+}
+
+.tag-section-title {
+	font-size: 1.1rem;
+	font-weight: bold;
+	margin: 0;
+}
+
+.tag-section-fields {
+	margin: 0.25rem 0 0.75rem 0.5rem;
+}
+
+.tag-section-key {
+	font-size: 0.9;
+	font-weight: bold;
+	margin: 0.25rem 0.5rem 0.1rem 0;
+}
+textarea.tag-section-value {
+	width: 100%;
+	font-size: 0.9rem;
+	border: 1px solid #888;
+	padding-left: 0.25rem;
+	resize: none;
+	border-radius: 0.25rem;
 }
