@@ -2041,7 +2041,7 @@ input[type='number']::-webkit-outer-spin-button {
 
 .wiki-template-modal-body {
 	font-size: 1.1rem;
-	padding: 0.25rem 0 0 1.5rem;
+	padding: 0.25rem 0 0 1rem;
 }
 
 .wiki-template-title {
@@ -2050,6 +2050,7 @@ input[type='number']::-webkit-outer-spin-button {
 	display: flex;
 	align-items: center;
 	user-select: none;
+	padding-left: 0.5rem;
 }
 
 .wiki-template-title > p {
@@ -2065,7 +2066,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .wiki-template-section-list {
-	padding: 0.5rem 0 0.5rem 0.5rem;
+	padding: 0.5rem 0 0.5rem 1rem;
 }
 
 .wiki-template-section-row {
@@ -2362,6 +2363,7 @@ box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */
 	color: white;
 	font-weight: bold;
 	font-size: 0.9rem;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .tags-row-button.add-tag {
@@ -2412,4 +2414,10 @@ textarea.tag-section-value {
 	padding-left: 0.25rem;
 	resize: none;
 	border-radius: 0.25rem;
+}
+
+.wiki-template-title.add-tag:hover {
+	background-color: rgba(var(--color-primary-rgb), 0.3);
+	border-radius: 0.25rem;
+	cursor: pointer;
 }

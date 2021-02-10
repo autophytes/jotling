@@ -4,6 +4,7 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import NavTrash from './NavTrash';
 import WikiTemplatesButton from './WikiTemplatesButton';
+import TagTemplatesButton from './TagTemplatesButton';
 
 import { buildFileStructure } from '../navFunctions';
 
@@ -71,6 +72,7 @@ const LeftNavContent = () => {
 			{newFileStructure}
 
 			<hr />
+			<TagTemplatesButton />
 			{navData.currentTab === 'pages' && <WikiTemplatesButton />}
 			{docStructure.trash && <NavTrash />}
 		</div>
