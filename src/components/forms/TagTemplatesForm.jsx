@@ -16,17 +16,16 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	const [tags, setTags] = useState([]);
 
 	const { wikiMetadata, setWikiMetadata } = useContext(LeftNavContext);
-	console.log('wikiMetadata:', wikiMetadata);
 
 	// Load in the initial folders
 	useEffect(() => {
 		let newTags = [];
 		if (wikiMetadata.hasOwnProperty('tagTemplates')) {
 			newTags = Object.keys(wikiMetadata.tagTemplates).map((key, i) => ({
-				id: i,
+				id: i + 1,
 				tagName: key,
 				fields: wikiMetadata.tagTemplates[key].map((field, j) => ({
-					id: j,
+					id: j + 1,
 					fieldName: field,
 				})),
 			}));
@@ -99,8 +98,29 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		setTags(newTags);
 	};
 
-	// DONE - Update the section text. Will delete and cleanup isNew if required.
-	const updateSection = (tagId, fieldId, shouldDelete, newName, shouldRemoveNew) => {
+	// Update the TAG. Will delete and cleanup isNew if required.
+	const updateTag = (tagId, shouldDelete, newName, shouldRemoveNew) => {
+		const tagIndex = tags.findIndex((item) => item.id === tagId);
+		let newTags = JSON.parse(JSON.stringify(tags));
+
+		// If shouldDelete, remove the section
+		if (shouldDelete) {
+			newTags.splice(tagIndex, 1);
+		} else {
+			// Otherwise, update the section name
+			newTags[tagIndex].tagName = newName;
+		}
+
+		// Remove the isNew flag that autoFocuses the section
+		if (shouldRemoveNew) {
+			delete newTags[tagIndex].isNew;
+		}
+
+		setTags(newTags);
+	};
+
+	// Update the FIELD. Will delete and cleanup isNew if required.
+	const updateField = (tagId, fieldId, shouldDelete, newName, shouldRemoveNew) => {
 		const tagIndex = tags.findIndex((item) => item.id === tagId);
 		let newTags = JSON.parse(JSON.stringify(tags));
 
@@ -177,9 +197,28 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	};
 
 	// DONE - If hitting enter when typing a field name, create a new field
-	const handleInputEnter = (e, tagId) => {
-		if (e.keyCode === 13) {
-			addField(tagId);
+	const handleInputEnter = (e, tagId, fieldId) => {
+		if (e.key === 'Enter') {
+			const tag = tags.find((item) => item.id === tagId);
+
+			// If last field in tag or there are no tags, add new field
+			if (!tag.fields.length || fieldId === tag.fields[tag.fields.length - 1].id) {
+				addField(tagId);
+				return;
+			}
+
+			// If no field (called on a tag), focus the first tag
+			let newFieldId;
+			if (!fieldId) {
+				newFieldId = tag.fields[0].id;
+			} else {
+				// Otherwise, focus the NEXT tag
+				const fieldIndex = tag.fields.findIndex((item) => item.id === fieldId);
+				newFieldId = tag.fields[fieldIndex + 1].id;
+			}
+
+			const inputEl = document.getElementById('input-' + tagId + '-' + newFieldId);
+			inputEl.focus();
 		}
 	};
 
@@ -189,7 +228,6 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	// Delete tags
 	// If we rename an existing tag, make sure all uses of that name are converted in the wikis section
 	// Hide the drag handle and delete button unless row is hovered over? (metadata && sections)
-	// "Enter" in a field should create an additional field
 
 	return (
 		<PopupModal setDisplayModal={setDisplayModal} width='25rem'>
@@ -198,11 +236,24 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 
 			<div className='wiki-template-modal-body'>
 				{/* Folder */}
+
 				{tags.map((tag) => (
 					<Fragment key={tag.id}>
 						<div className='wiki-template-title'>
 							<TagSingleSVG />
-							<p>{tag.tagName}</p>
+							<input
+								value={tag.tagName}
+								autoFocus={tag.isNew}
+								onFocus={(e) => {
+									e.target.select();
+									if (tag.isNew) {
+										updateTag(tag.id, false, e.target.value, true);
+									}
+								}}
+								// Should be the equivalent of TAB
+								onKeyDown={(e) => handleInputEnter(e, tag.id)}
+								onChange={(e) => updateTag(tag.id, false, e.target.value)}
+							/>
 						</div>
 
 						<div className='wiki-template-section-list'>
@@ -230,32 +281,27 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 																<DragSVG />
 															</div>
 
-															{/* Section Name */}
+															{/* Field Name */}
 															<input
 																value={field.fieldName}
+																id={'input-' + tag.id + '-' + field.id}
 																autoFocus={field.isNew}
 																onFocus={(e) => {
 																	e.target.select();
 																	if (field.isNew) {
-																		updateSection(
-																			tag.id,
-																			field.id,
-																			false,
-																			e.target.value,
-																			true
-																		);
+																		updateField(tag.id, field.id, false, e.target.value, true);
 																	}
 																}}
-																onKeyDown={(e) => handleInputEnter(e, tag.id)}
+																onKeyDown={(e) => handleInputEnter(e, tag.id, field.id)}
 																onChange={(e) =>
-																	updateSection(tag.id, field.id, false, e.target.value)
+																	updateField(tag.id, field.id, false, e.target.value)
 																}
 															/>
 
 															{/* Delete Section */}
 															<div
 																className='wiki-template-section-close-handle'
-																onClick={() => updateSection(tag.id, field.id, true)}>
+																onClick={() => updateField(tag.id, field.id, true)}>
 																<TrashSVG />
 															</div>
 														</div>

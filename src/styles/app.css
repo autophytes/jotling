@@ -2421,3 +2421,11 @@ textarea.tag-section-value {
 	border-radius: 0.25rem;
 	cursor: pointer;
 }
+
+.wiki-template-title > input {
+	font-size: 1.1rem;
+	font-weight: bold;
+	padding: 0.1rem 0 0.1rem 0.35rem;
+	border-radius: 3px;
+	border: 1px solid #777;
+}
