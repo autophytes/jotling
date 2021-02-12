@@ -2045,6 +2045,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .wiki-template-title {
+	position: relative;
 	font-size: 1.2rem;
 	font-weight: bold;
 	display: flex;
@@ -2066,13 +2067,15 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .wiki-template-section-list {
-	padding: 0.5rem 0 0.5rem 1rem;
+	padding: 0.5rem 0 0.5rem 0;
 }
 
 .wiki-template-section-row {
+	position: relative;
 	display: flex;
 	align-items: center;
 	margin-bottom: 0.5rem;
+	margin-left: 0.5rem;
 }
 
 .wiki-template-section-row svg {
@@ -2084,11 +2087,17 @@ input[type='number']::-webkit-outer-spin-button {
 .wiki-template-section-close-handle {
 	display: flex;
 	align-items: center;
+	visibility: hidden;
+}
+
+.wiki-template-section-row:hover .wiki-template-section-drag-handle,
+.wiki-template-section-row:hover .wiki-template-section-close-handle {
+	visibility: unset;
 }
 
 .wiki-template-section-drag-handle > svg {
-	width: 1.1rem;
-	height: 1.1rem;
+	width: 1rem;
+	height: 1rem;
 	margin-right: 0.5rem;
 	margin-left: 0.5rem;
 	cursor: grab;
@@ -2119,6 +2128,7 @@ input[type='number']::-webkit-outer-spin-button {
 	padding: 0.1rem 0 0.1rem 0.35rem;
 	border-radius: 3px;
 	border: 1px solid #777;
+	width: 12rem;
 }
 
 button.wiki-template-add-section {
@@ -2126,6 +2136,7 @@ button.wiki-template-add-section {
 	font-size: 1rem;
 	font-weight: bold;
 	padding: 0.2rem 0.7rem;
+	margin-left: 2rem;
 	border-radius: 0.25rem;
 	user-select: none;
 	cursor: pointer;
@@ -2428,4 +2439,19 @@ textarea.tag-section-value {
 	padding: 0.1rem 0 0.1rem 0.35rem;
 	border-radius: 3px;
 	border: 1px solid #777;
+	width: 12.5rem;
+}
+
+.wiki-template-title:hover .wiki-template-section-close-handle {
+	visibility: unset;
+	cursor: pointer;
+}
+
+.new-tag-validation-alert {
+	top: -4rem !important;
+	position: absolute;
+	z-index: 999;
+}
+.new-tag-validation-alert .swal2-timer-progress-bar {
+	background-color: var(--color-primary);
 }

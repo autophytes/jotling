@@ -139,7 +139,7 @@ const WikiTemplatesForm = ({ setDisplayModal }) => {
 	};
 
 	return (
-		<PopupModal setDisplayModal={setDisplayModal} width='25rem'>
+		<PopupModal setDisplayModal={setDisplayModal} width='22rem'>
 			<h2 className='popup-modal-title'>Edit Templates</h2>
 			<hr className='modal-form-hr' />
 
