@@ -2456,4 +2456,6 @@ textarea.tag-section-value {
 .add-tag-wrapper {
 	padding: 1rem 1.25rem;
 	position: absolute;
+	top: 4rem;
+	min-width: 12rem;
 }

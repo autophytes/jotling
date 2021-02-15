@@ -26,7 +26,7 @@ const AddTagPopper = ({ setDisplayAddTagPopper }) => {
 	const rightNavElRef = useRef(null);
 
 	// CONTEXT
-	const { wikiMetadata } = useContext(LeftNavContext);
+	const { wikiMetadata, editorStyles } = useContext(LeftNavContext);
 
 	// MEMO
 	const tagOptions = useMemo(() => {
@@ -82,10 +82,12 @@ const AddTagPopper = ({ setDisplayAddTagPopper }) => {
 		// 	{...{
 		// 		referenceElement: rightNavElRef.current,
 		// 	}}>
-		<div className='link-popper add-to-wiki add-tag-wrapper'>
+		<div
+			className='link-popper add-to-wiki add-tag-wrapper'
+			style={{ top: '5rem', right: `calc(${editorStyles.rightNav}rem + 0.5rem)` }}>
 			{/* Create New Wiki */}
 			<p className='popper-title'>Create Tag</p>
-			<div style={{ position: 'relative' }} id='create-new-wiki-input'>
+			<div id='create-new-wiki-input'>
 				<button className='file-nav document add-to-wiki new-wiki'>
 					<div className='svg-wrapper add-to-wiki'>
 						<TagSingleSVG />
