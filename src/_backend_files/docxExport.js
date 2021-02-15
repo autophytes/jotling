@@ -59,10 +59,12 @@ const exportProject = async ({
 
 	const exportTempPath = path.join(tempPath, 'export');
 	if (fs.existsSync(exportTempPath)) {
-		fs.rmdir(exportTempPath, { recursive: true }, (err) => {
+		try {
+			fs.rmdirSync(exportTempPath, { recursive: true });
+		} catch (err) {
 			console.error('error deleting export folder:');
 			console.log(err);
-		});
+		}
 	}
 	fs.mkdirSync(exportTempPath);
 
@@ -110,8 +112,10 @@ const exportProject = async ({
 
 	// Then, delete the export folder and all contents
 	fs.rmdir(exportTempPath, { recursive: true }, (err) => {
-		console.error('error deleting export folder:');
-		console.log(err);
+		if (err) {
+			console.error('error deleting export folder:');
+			console.log(err);
+		}
 	});
 };
 

@@ -1134,10 +1134,6 @@ input[type='number']::-webkit-outer-spin-button {
 	margin-right: 0.5rem;
 }
 
-.add-to-wiki-wrapper {
-	padding: 1rem 1.25rem;
-}
-
 .editor-find-container {
 	position: fixed;
 	right: 13rem;
@@ -2455,4 +2451,9 @@ textarea.tag-section-value {
 }
 .new-tag-validation-alert .swal2-timer-progress-bar {
 	background-color: var(--color-primary);
+}
+
+.add-tag-wrapper {
+	padding: 1rem 1.25rem;
+	position: absolute;
 }

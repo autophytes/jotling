@@ -77,50 +77,51 @@ const AddTagPopper = ({ setDisplayAddTagPopper }) => {
 	}, []);
 
 	return (
-		<PopperVerticalContainer
-			closeFn={() => setDisplayAddTagPopper(false)}
-			{...{
-				referenceElement: rightNavElRef.current,
-			}}>
-			<div className='add-to-wiki-wrapper'>
-				{/* Create New Wiki */}
-				<p className='popper-title'>Create Tag</p>
-				<div style={{ position: 'relative' }} id='create-new-wiki-input'>
-					<button className='file-nav document add-to-wiki new-wiki'>
-						<div className='svg-wrapper add-to-wiki'>
-							<TagSingleSVG />
-						</div>
-						<input
-							type='text'
-							value={newTagName}
-							ref={newTagRef}
-							spellCheck={false}
-							onChange={(e) => setNewTagName(e.target.value)}
-							onFocus={(e) => {
-								e.target.select();
-							}}
-							onKeyUp={handleNewTagEnter}
-						/>
-					</button>
-				</div>
-				<hr />
-
-				{/* Select Tag */}
-				<p className='popper-title'>Select Tag</p>
-				{tagOptions.map((tag) => (
-					// NEED TO ADD CLICK AND HOVER
-					<button
-						className='file-nav document add-to-wiki'
-						onClick={() => console.log('select tag')}
-						key={tag.id}>
-						<div className='svg-wrapper add-to-wiki'>
-							<TagSingleSVG />
-						</div>
-						<span>{tag.tagName}</span>
-					</button>
-				))}
+		// <PopperVerticalContainer
+		// 	closeFn={() => setDisplayAddTagPopper(false)}
+		// 	{...{
+		// 		referenceElement: rightNavElRef.current,
+		// 	}}>
+		<div className='link-popper add-to-wiki add-tag-wrapper'>
+			{/* Create New Wiki */}
+			<p className='popper-title'>Create Tag</p>
+			<div style={{ position: 'relative' }} id='create-new-wiki-input'>
+				<button className='file-nav document add-to-wiki new-wiki'>
+					<div className='svg-wrapper add-to-wiki'>
+						<TagSingleSVG />
+					</div>
+					<input
+						type='text'
+						value={newTagName}
+						ref={newTagRef}
+						spellCheck={false}
+						onChange={(e) => setNewTagName(e.target.value)}
+						onFocus={(e) => {
+							e.target.select();
+						}}
+						onKeyUp={handleNewTagEnter}
+					/>
+				</button>
 			</div>
-		</PopperVerticalContainer>
+			<hr />
+
+			{/* Select Tag */}
+			<p className='popper-title'>Select Tag</p>
+			{tagOptions.map((tag) => (
+				// NEED TO ADD CLICK AND HOVER
+				<button
+					className='file-nav document add-to-wiki'
+					onClick={() => console.log('select tag')}
+					key={tag.id}>
+					<div className='svg-wrapper add-to-wiki'>
+						<TagSingleSVG />
+					</div>
+					<span>{tag.tagName}</span>
+				</button>
+			))}
+		</div>
+
+		// </PopperVerticalContainer>
 	);
 };
 
