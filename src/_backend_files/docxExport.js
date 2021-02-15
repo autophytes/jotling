@@ -138,7 +138,7 @@ const generateAllChildren = async (
 			);
 		}
 
-		if (child.type === 'doc') {
+		if (child.type === 'doc' && rawEditorStates[child.fileName]) {
 			const newDocName = findUniqueFileName(folderPath, child.name, '.docx');
 
 			// GENERATE THE DOCUMENT

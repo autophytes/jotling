@@ -12,6 +12,7 @@ let fieldTimeouts = {};
 const RightNavTags = ({ activeTab }) => {
 	const { wikiMetadata, setWikiMetadata, navData, docStructure } = useContext(LeftNavContext);
 	const { currentDoc, currentDocTab } = navData;
+	const { displayDoc: metadataDisplayDoc } = wikiMetadata;
 
 	const [tags, setTags] = useState([]);
 	const [displayAddTagPopper, setDisplayAddTagPopper] = useState(false);
@@ -42,6 +43,7 @@ const RightNavTags = ({ activeTab }) => {
 		console.log('currentDoc:', currentDoc);
 		console.log('currentDocTab:', currentDocTab);
 		if (currentDocTab === 'pages') {
+			setWikiMetadata((prev) => ({ ...prev, displayDoc: '' }));
 			setDisplayDoc(currentDoc);
 		} else {
 			setDisplayDoc('');
@@ -50,10 +52,10 @@ const RightNavTags = ({ activeTab }) => {
 
 	// If the page we opened isn't a wiki page, use the displayDoc from the metadata
 	useEffect(() => {
-		if (!displayDoc && wikiMetadata.displayDoc && wikiMetadata.displayDoc !== displayDoc) {
-			setDisplayDoc(wikiMetadata.displayDoc);
+		if (metadataDisplayDoc) {
+			setDisplayDoc(metadataDisplayDoc);
 		}
-	}, [wikiMetadata, displayDoc]);
+	}, [metadataDisplayDoc]);
 
 	// Ensure wikiMetadata has wikis and currentDoc props
 	useEffect(() => {
