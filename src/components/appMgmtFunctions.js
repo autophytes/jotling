@@ -64,11 +64,13 @@ const loadMediaStructure = async ({ tempPath, setMediaStructure }) => {
 
 // Loads the document media structure (function)
 const loadWikiMetadata = async ({ tempPath, setWikiMetadata }) => {
+	console.log('READING NEW METADATA tempPath:', tempPath);
 	const newWikiMetadata = await ipcRenderer.invoke(
 		'read-single-document',
 		tempPath,
 		'wikiMetadata.json'
 	);
+	console.log('newWikiMetadata:', newWikiMetadata);
 	setWikiMetadata(newWikiMetadata.fileContents);
 };
 

@@ -518,6 +518,7 @@ h2.editor-doc-title {
 	padding: 0.5rem 0;
 	flex-grow: 1;
 	overflow-y: auto;
+	overflow-x: visible;
 }
 
 .left-nav-content {

@@ -49,7 +49,12 @@ const linkStructureTemplate = {
 
 const mediaStructureTemplate = {};
 
-const wikiMetadataTemplate = {};
+const wikiMetadataTemplate = {
+	tagNames: {},
+	fieldNames: {},
+	tagTemplates: {},
+	wikis: {},
+};
 
 module.exports = {
 	docStructureTemplate,

@@ -55,6 +55,7 @@ const AppMgmt = () => {
 		linkStructureRef,
 		mediaStructure,
 		setMediaStructure,
+		wikiMetadata,
 		setWikiMetadata,
 		mediaStructureRef,
 		project,
@@ -133,6 +134,7 @@ const AppMgmt = () => {
 				docStructure
 			);
 			console.log('Saving document structure.');
+			console.log('to project.tempPath:', project.tempPath);
 		}
 	}, [docStructure, isProjectLoaded, project]);
 
@@ -160,9 +162,25 @@ const AppMgmt = () => {
 				'mediaStructure.json',
 				mediaStructure
 			);
-			console.log('Saving link structure.');
+			console.log('Saving media structure.');
 		}
 	}, [mediaStructure, isProjectLoaded, project]);
+
+	// Saves the wikiMetadata after every change
+	useEffect(() => {
+		if (isProjectLoaded) {
+			ipcRenderer.invoke(
+				'save-single-document',
+				project.tempPath,
+				project.jotsPath,
+				'wikiMetadata.json',
+				wikiMetadata
+			);
+			console.log('wikiMetadata:', wikiMetadata);
+			console.log('Saving wiki metadata.');
+			console.log('to project.tempPath:', project.tempPath);
+		}
+	}, [wikiMetadata, isProjectLoaded, project]);
 
 	// Registers ipcRenderer listeners
 	useEffect(() => {

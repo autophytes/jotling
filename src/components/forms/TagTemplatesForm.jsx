@@ -13,36 +13,87 @@ import { reorderArray } from '../../utils/utils';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Swal from 'sweetalert2';
 
+// wikiMetadata = {
+//   tagNames: {
+//    1: Character,
+//    2: Faction,
+//   },
+//   fieldNames: {
+//     1: Height
+//     2: Weight
+//     3: Hair
+//     4: Rank
+//     5: Superior Officer
+//     6: Hair
+//   }
+//   tagTemplates: {
+//     1: [1, 2, 3],
+//     2: [4, 5, 6],
+//   },
+//   wikis: {
+//     doc5.json: {
+//        1: {
+//          1: '5\'10"'
+//          2: '175lbs'
+//          3: 'Brown, short cut, wavy'
+//     }
+//   }
+
 const TagTemplatesForm = ({ setDisplayModal }) => {
 	const [tags, setTags] = useState([]);
 
 	const { wikiMetadata, setWikiMetadata } = useContext(LeftNavContext);
 
-	// Load in the initial folders
+	// DONE - Load in the initial folders
 	useEffect(() => {
 		let newTags = [];
 		if (wikiMetadata.hasOwnProperty('tagTemplates')) {
-			newTags = Object.keys(wikiMetadata.tagTemplates).map((key, i) => ({
-				id: i + 1,
-				tagName: key,
-				fields: wikiMetadata.tagTemplates[key].map((field, j) => ({
-					id: j + 1,
-					fieldName: field,
+			newTags = Object.keys(wikiMetadata.tagTemplates).map((tagId) => ({
+				id: Number(tagId),
+				tagName: wikiMetadata.tagNames[tagId],
+				fields: wikiMetadata.tagTemplates[tagId].map((fieldId) => ({
+					id: fieldId,
+					fieldName: wikiMetadata.fieldNames[fieldId],
 				})),
 			}));
 		}
 
 		setTags(newTags);
-	}, []);
+	}, [wikiMetadata]);
 
-	// Adds a new field to a tag
+	// wikiMetadata = {
+	//   tagNames: {
+	//    1: Character,
+	//    2: Faction,
+	//   },
+	//   fieldNames: {
+	//     1: Height
+	//     2: Weight
+	//   }
+	//   tagTemplates: {
+	//     1: [1, 2, 3],
+	//     2: [4, 5, 6],
+	//   },
+	//   wikis: {
+	//     doc5.json: {
+	//        1: {
+	// 1: '5\'10"'
+	//     }
+	//   }
+
+	// DONE - Adds a new field to a tag
 	const addField = (tagId) => {
 		const tagIndex = tags.findIndex((item) => item.id === tagId);
 		let newTags = JSON.parse(JSON.stringify(tags));
 		let newFields = newTags[tagIndex].fields;
 
 		// Find the current maxiumum id
-		const maxId = newFields.reduce((max, item) => (item.id > max ? item.id : max), 0);
+		const allFields = tags.flatMap((item) => item.fields);
+		const maxId = allFields.reduce((max, item) => (item.id > max ? item.id : max), 0);
+
+		// const maxId = Math.max(
+		// 	...(wikiMetadata.fieldNames ? Object.keys(wikiMetadata.fieldNames) : [0])
+		// );
 
 		// Find a unique new field name
 		const usedFieldNames = newFields.map((item) => item.fieldName.toLowerCase());
@@ -64,11 +115,14 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		setTags(newTags);
 	};
 
-	// Adds a new tag
+	// DONE - Adds a new tag
 	const addTag = () => {
 		let newTags = JSON.parse(JSON.stringify(tags));
 
 		// Find the current maxiumum id
+		// const maxId = Math.max(
+		// 	...(wikiMetadata.tagNames ? Object.keys(wikiMetadata.tagNames) : [0])
+		// );
 		const maxId = newTags.reduce((max, item) => (item.id > max ? item.id : max), 0);
 
 		// Find a unique new tag name
@@ -99,7 +153,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		setTags(newTags);
 	};
 
-	// Update the TAG. Will delete and cleanup isNew if required.
+	// DONE - Update the TAG. Will delete and cleanup isNew if required.
 	const updateTag = (tagId, shouldDelete, newName, shouldRemoveNew) => {
 		const tagIndex = tags.findIndex((item) => item.id === tagId);
 		let newTags = JSON.parse(JSON.stringify(tags));
@@ -120,7 +174,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		setTags(newTags);
 	};
 
-	// Update the FIELD. Will delete and cleanup isNew if required.
+	// DONE - Update the FIELD. Will delete and cleanup isNew if required.
 	const updateField = (tagId, fieldId, shouldDelete, newName, shouldRemoveNew) => {
 		const tagIndex = tags.findIndex((item) => item.id === tagId);
 		let newTags = JSON.parse(JSON.stringify(tags));
@@ -146,7 +200,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		setTags(newTags);
 	};
 
-	// wikiMetadata = {
+	// OLD: wikiMetadata = {
 	//   tagTemplates: {
 	//     character: ['Height', 'Weight', 'Hair'],
 	//     faction: ['Height', 'Weight', 'Hair'],
@@ -156,24 +210,59 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	//     kynan: {}
 	//   }
 
+	// wikiMetadata = {
+	//   tagNames: {
+	//    1: Character,
+	//    2: Faction,
+	//   },
+	//   fieldNames: {
+	//     1: Height
+	//     2: Weight
+	//   }
+	//   tagTemplates: {
+	//     1: [1, 2, 3],
+	//     2: [4, 5, 6],
+	//   },
+	//   wikis: {
+	//     doc5.json: {
+	//        1: {
+	// 1: '5\'10"'
+	//     }
+	//   }
+
 	// Save the tag templates back to the wikiMetadata
 	const saveTagTemplates = () => {
-		// Convert the tags to the tagTemplates format
 		let newTagTemplates = {};
+		let newTagNames = {};
+		let newFieldNames = {};
+
+		// Convert the tags to the tagTemplates, tagNames, and fieldNames format
+		console.log('tags:', tags);
 		for (let tag of tags) {
-			newTagTemplates[tag.tagName] = tag.fields.map((field) => field.fieldName);
+			// Build the tagTemplates
+			newTagTemplates[tag.id] = tag.fields.map((field) => field.id);
+
+			// Build the tagNames
+			newTagNames[tag.id] = tag.tagName;
+
+			// Build the list of fieldNames
+			for (const field of tag.fields) {
+				newFieldNames[field.id] = field.fieldName;
+			}
 		}
 
 		// Update the wikiMetadata with the new tag templates
 		setWikiMetadata((prev) => ({
 			...prev,
 			tagTemplates: newTagTemplates,
+			tagNames: newTagNames,
+			fieldNames: newFieldNames,
 		}));
 
 		setDisplayModal(false);
 	};
 
-	// Update the field order after drag and drop
+	// DONE - Update the field order after drag and drop
 	const onDragEnd = (result) => {
 		console.log('result: ', result);
 
@@ -182,6 +271,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 			return;
 		}
 
+		console.log('tags:', tags);
 		const tagIndex = tags.findIndex((tag) => tag.id === Number(result.source.droppableId));
 		const fields = tags[tagIndex].fields;
 

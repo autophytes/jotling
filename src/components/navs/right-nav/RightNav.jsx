@@ -7,6 +7,7 @@ import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
 import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
 import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
 import RightNavContent from './RightNavContent';
+import RightNavTags from './RightNavTags/RightNavTags';
 
 const RightNav = () => {
 	// STATE
@@ -63,6 +64,7 @@ const RightNav = () => {
 			<div className='side-nav-hover-region right' />
 			<nav
 				className={'side-nav right-nav' + (pinNav ? '' : ' hidden')}
+				id={'right-nav'}
 				style={{ width: editorStyles.rightNav + 'rem' }}
 				ref={navRef}>
 				<div className={'vertical-rule vr-right-nav' + (isResizing ? ' primary-color' : '')} />
@@ -105,7 +107,8 @@ const RightNav = () => {
 						</div>
 					</div>
 
-					<RightNavContent {...{ activeTab }} />
+					{/* <RightNavContent {...{ activeTab }} /> */}
+					{activeTab === 'tags' && <RightNavTags {...{ activeTab }} />}
 
 					<div className='right-nav-footer'>
 						<div>current version</div>

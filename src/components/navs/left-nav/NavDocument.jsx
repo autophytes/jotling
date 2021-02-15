@@ -31,6 +31,7 @@ const NavDocument = ({
 			setNavData({
 				...navData,
 				currentDoc: child.fileName,
+				currentDocTab: navData.currentTab,
 				lastClicked: { type: 'doc', id: child.id },
 			});
 	}, [setNavData, child, navData]);
@@ -180,7 +181,6 @@ const NavDocument = ({
 					onBlur={(e) => saveDocNameChange(e.target.value ? e.target.value : 'Unnamed', true)}
 					onFocus={(e) => e.target.select()}
 					onKeyUp={(e) => {
-						console.log('e:', e);
 						if (e.key === 'Enter') {
 							saveDocNameChange(e.target.value ? e.target.value : 'Unnamed');
 						}
