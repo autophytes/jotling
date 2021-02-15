@@ -259,12 +259,15 @@ const genDocxParagraph = (block, doc, tempPath, mediaStructure) => {
 					default:
 				}
 
-				// TEXTCOLOR / HIGHLIGHT
+				// TEXTCOLOR / HIGHLIGHT (SHADING)
 				if (style.style.slice(0, 9) === 'TEXTCOLOR') {
 					newTextRunObj.color = style.style.slice(-6);
 				}
 				if (style.style.slice(0, 9) === 'HIGHLIGHT') {
-					newTextRunObj.highlight = findNearestHighlightColor(style.style.slice(-6));
+				  newTextRunObj.shading = {
+                type: docx.ShadingType.CLEAR,
+                fill: style.style.slice(-6)
+            };
 				}
 			}
 
