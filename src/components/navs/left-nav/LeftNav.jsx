@@ -8,7 +8,7 @@ import LeftNavStats from './LeftNavStats';
 
 import LeftNavTopButtons from './LeftNavTopButtons';
 import LeftNavTabs from './LeftNavTabs';
-import FindAll from './findAll/findAll';
+import FindAll from './findAll/FindAll';
 
 const TAB_NAMES = {
 	draft: 'Manuscript',
