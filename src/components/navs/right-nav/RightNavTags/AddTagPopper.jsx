@@ -84,7 +84,7 @@ const AddTagPopper = ({ setDisplayAddTagPopper }) => {
 		// 	}}>
 		<div
 			className='link-popper add-to-wiki add-tag-wrapper'
-			style={{ top: '5rem', right: `calc(${editorStyles.rightNav}rem + 0.5rem)` }}>
+			style={{ right: `calc(${editorStyles.rightNav}rem + 0.5rem)` }}>
 			{/* Create New Wiki */}
 			<p className='popper-title'>Create Tag</p>
 			<div id='create-new-wiki-input'>
