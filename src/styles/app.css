@@ -245,7 +245,7 @@ h2.editor-doc-title {
 .editor-nav input {
 	height: 1.2rem;
 	font-size: 0.85rem;
-	border-radius: 0.5rem;
+	border-radius: 0.25rem;
 	padding-bottom: 1px;
 	margin-right: 0.25rem;
 	border: 1px solid #999;
@@ -533,6 +533,7 @@ button.file-nav {
 	margin: 0;
 	user-select: none;
 	cursor: pointer;
+	border-radius: 0.25rem;
 }
 
 .file-nav.folder.title,
@@ -546,15 +547,14 @@ button.file-nav input {
 	font-size: inherit;
 	width: 100%;
 	padding: 0.1rem 0 0 0.25rem;
-	border-radius: 0;
+	/* border-radius: 0; */
 	/* border: 1px solid var(--color-primary-dark); */
 }
 
-button.file-nav:focus {
+button.file-nav:not(.add-to-wiki):focus {
 	outline: none;
 	/* outline-color: var(--color-primary); */
 	background-color: rgba(var(--color-primary-rgb), 0.2);
-	border-radius: 0.25rem;
 }
 
 .file-nav .folder-contents {
@@ -601,6 +601,7 @@ button.file-nav:focus {
 
 .file-nav.document.active {
 	font-weight: bold;
+	background-color: rgba(var(--color-primary-rgb), 0.2);
 	/* text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1); */
 }
 
@@ -1132,6 +1133,10 @@ input[type='number']::-webkit-outer-spin-button {
 }
 .link-popper-tag-button.last {
 	margin-right: 0.5rem;
+}
+
+.add-to-wiki-wrapper {
+	padding: 1rem 1.25rem;
 }
 
 .editor-find-container {
@@ -2406,6 +2411,12 @@ box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */
 	margin: 0;
 }
 
+.tag-section-row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
 .tag-section-fields {
 	margin: 0.25rem 0 0.75rem 0.5rem;
 }
@@ -2416,12 +2427,25 @@ box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); */
 	margin: 0.25rem 0.5rem 0.1rem 0;
 }
 textarea.tag-section-value {
-	width: 100%;
+	min-width: 4rem;
 	font-size: 0.9rem;
-	border: 1px solid #888;
-	padding-left: 0.25rem;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	margin-top: 5px;
+	padding: 0 0 0 0.25rem;
 	resize: none;
-	border-radius: 0.25rem;
+	justify-self: stretch;
+	flex-grow: 1;
+	/* border-radius: 0.25rem; */
+}
+
+textarea.tag-section-value:focus {
+	outline: none;
+	border-bottom: 2px solid var(--color-primary);
+}
+
+textarea.tag-section-value::placeholder {
+	color: #888;
 }
 
 .wiki-template-title.add-tag:hover {
@@ -2458,4 +2482,9 @@ textarea.tag-section-value {
 	position: absolute;
 	top: 4rem;
 	min-width: 12rem;
+}
+
+.create-new-tag-input {
+	border: 1px solid #555;
+	border-radius: 0.25rem;
 }

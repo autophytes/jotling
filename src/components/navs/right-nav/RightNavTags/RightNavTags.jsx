@@ -18,6 +18,7 @@ const RightNavTags = ({ activeTab }) => {
 	const [displayAddTagPopper, setDisplayAddTagPopper] = useState(false);
 	const [displayDoc, setDisplayDoc] = useState('');
 	const [currentDocName, setCurrentDocName] = useState('Page Name');
+	const [fieldSize, setFieldSize] = useState({});
 
 	// FIRST, CONTROL WHAT WIKI PAGE WE ARE VIEWING DATA FOR
 	// WILL NEED TO FIND THE TAB IT IS IN
@@ -69,7 +70,7 @@ const RightNavTags = ({ activeTab }) => {
 				wikis: {
 					...(wikiMetadata.wikis ? wikiMetadata.wikis : {}),
 					// TEMPORARY - replace with {}
-					[displayDoc]: { 1: {}, 2: {} },
+					[displayDoc]: {},
 				},
 			}));
 		}
@@ -199,7 +200,13 @@ const RightNavTags = ({ activeTab }) => {
 	//          2: '175lbs'
 	//          3: 'Brown, short cut, wavy'
 	//        }
-	//   }
+	//     },
+	//     deleted: {
+	//       doc5.json: {
+
+	//       }
+	//     }
+	//   },
 
 	return (
 		<>
@@ -212,10 +219,14 @@ const RightNavTags = ({ activeTab }) => {
 						{tag.tagName}
 					</div>
 				))}
-				<div className='tags-row-button add-tag' onClick={() => setDisplayAddTagPopper(true)}>
-					<PlusSVG />
-					Tag
-				</div>
+				{!!displayDoc && (
+					<div
+						className='tags-row-button add-tag'
+						onClick={() => setDisplayAddTagPopper((prev) => !prev)}>
+						<PlusSVG />
+						Tag
+					</div>
+				)}
 			</div>
 
 			<div className='right-nav-content'>
@@ -225,18 +236,65 @@ const RightNavTags = ({ activeTab }) => {
 							<Fragment key={tag.id}>
 								<p className='tag-section-title'>{tag.tagName}</p>
 								<div className='tag-section-fields'>
-									{tag.fields.map((field) => (
-										<Fragment key={field.id}>
-											<p className='tag-section-key'>{field.fieldName}</p>
-											<TextareaAutosize
-												minRows={1}
-												maxRows={6}
-												value={field.value}
-												onChange={(e) => handleFieldChange(e.target.value, tag.id, field.id)}
-												className='tag-section-value'
-											/>
-										</Fragment>
-									))}
+									{tag.fields.map((field) => {
+										const fieldKey = `${tag.id}_${field.id}`;
+										return (
+											<div className='tag-section-row' key={field.id}>
+												<p className='tag-section-key'>{field.fieldName}:</p>
+												<TextareaAutosize
+													minRows={1}
+													maxRows={6}
+													placeholder='change this'
+													onHeightChange={(newHeight) => {
+														console.log('newHeight: ', newHeight);
+														// If multi-line
+														if (newHeight > 29) {
+															if (
+																(fieldSize[fieldKey] && !fieldSize[fieldKey].isExpanded) ||
+																!fieldSize[fieldKey]
+															) {
+																setFieldSize((prev) => ({
+																	...prev,
+																	[fieldKey]: {
+																		isExpanded: true,
+																		chars: field.value.length,
+																	},
+																}));
+															}
+														} else {
+															// If single line
+
+															if (
+																(fieldSize[fieldKey] && fieldSize[fieldKey].isExpanded) ||
+																!fieldSize[fieldKey]
+															) {
+																setFieldSize((prev) => ({
+																	...prev,
+																	[fieldKey]: {
+																		...(prev[fieldKey]
+																			? prev[fieldKey]
+																			: { chars: field.value.length }),
+																		isExpanded: false,
+																	},
+																}));
+															}
+														}
+														// If height is changing to > something (20 is 1 line, 38 is 2 lines)
+														//   flag to expand to 100% width, store the num of characters it flipped at
+													}}
+													value={field.value}
+													style={{
+														width:
+															!!fieldSize[fieldKey] && fieldSize[fieldKey].isExpanded
+																? '100%'
+																: 'auto',
+													}}
+													onChange={(e) => handleFieldChange(e.target.value, tag.id, field.id)}
+													className='tag-section-value'
+												/>
+											</div>
+										);
+									})}
 								</div>
 							</Fragment>
 						))}
@@ -244,7 +302,12 @@ const RightNavTags = ({ activeTab }) => {
 				</div>
 			</div>
 
-			{displayAddTagPopper && <AddTagPopper setDisplayAddTagPopper={setDisplayAddTagPopper} />}
+			{displayAddTagPopper && (
+				<AddTagPopper
+					setDisplayAddTagPopper={setDisplayAddTagPopper}
+					displayDoc={displayDoc}
+				/>
+			)}
 		</>
 	);
 };

@@ -166,7 +166,7 @@ const ColorPickerPopper = ({
 									setColorFn(e, '', 'REMOVE');
 								}}
 								style={{ marginLeft: '0.3rem' }}>
-								Auto
+								Clear
 							</button>
 						</div>
 					</div>
