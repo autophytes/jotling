@@ -8,18 +8,14 @@ import React, {
 	useMemo,
 } from 'react';
 
-import PopperVerticalContainer from '../../../containers/PopperVerticalContainer';
-
 import { LeftNavContext } from '../../../../contexts/leftNavContext';
-import { SettingsContext } from '../../../../contexts/settingsContext';
+import { RightNavContext } from '../../../../contexts/rightNavContext';
 
-import Swal from 'sweetalert2';
 import TagSingleSVG from '../../../../assets/svg/TagSingleSVG';
 
 const AddTagPopper = ({ setDisplayAddTagPopper, displayDoc }) => {
 	// STATE
 	const [newTagName, setNewTagName] = useState('New Tag');
-	const [allWikiDocs, setAllWikiDocs] = useState([]);
 
 	// REF
 	const newTagRef = useRef(null);
@@ -28,6 +24,7 @@ const AddTagPopper = ({ setDisplayAddTagPopper, displayDoc }) => {
 
 	// CONTEXT
 	const { wikiMetadata, editorStyles, setWikiMetadata } = useContext(LeftNavContext);
+	const { setNewTagTemplate } = useContext(RightNavContext);
 
 	// MEMO
 	const tagOptions = useMemo(() => {
@@ -51,29 +48,13 @@ const AddTagPopper = ({ setDisplayAddTagPopper, displayDoc }) => {
 	const handleNewTagEnter = useCallback(
 		(e) => {
 			if (e.key === 'Enter' || e.keyCode === 27) {
-				const wikiNames = allWikiDocs.map((item) => item.name.toLowerCase());
-				console.log('wikiNames:', wikiNames);
-
-				if (wikiNames.includes(newTagName.toLowerCase())) {
-					// Visual indicator of invalid name
-					Swal.fire({
-						toast: true,
-						title: 'Wiki name must be unique.',
-						target: document.getElementById('create-new-wiki-input'),
-						position: 'top-start',
-						showConfirmButton: false,
-						customClass: {
-							container: 'new-wiki-validation-alert',
-						},
-						timer: 3000,
-						timerProgressBar: true,
-					});
-				} else {
-					setShowPickFolder(true);
+				if (newTagName) {
+					setNewTagTemplate(newTagName);
+					setDisplayAddTagPopper(false);
 				}
 			}
 		},
-		[newTagName, allWikiDocs]
+		[newTagName]
 	);
 
 	//   wikis: {

@@ -147,9 +147,9 @@ const WikiTemplatesForm = ({ setDisplayModal }) => {
 				{/* Folder */}
 				{folders.map((folder) => (
 					<Fragment key={folder.id}>
-						<div className='wiki-template-title'>
+						<div className='wiki-template-title' style={{ paddingBottom: '0.25rem' }}>
 							<TemplatesSVG />
-							<p>{folder.name}</p>
+							<p style={{ marginLeft: '0.25rem' }}>{folder.name}</p>
 						</div>
 
 						<div className='wiki-template-section-list'>

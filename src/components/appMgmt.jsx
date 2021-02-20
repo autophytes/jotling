@@ -134,7 +134,7 @@ const AppMgmt = () => {
 				docStructure
 			);
 			console.log('Saving document structure.');
-			console.log('to project.tempPath:', project.tempPath);
+			// console.log('to project.tempPath:', project.tempPath);
 		}
 	}, [docStructure, isProjectLoaded, project]);
 
@@ -176,9 +176,9 @@ const AppMgmt = () => {
 				'wikiMetadata.json',
 				wikiMetadata
 			);
-			console.log('wikiMetadata:', wikiMetadata);
+			// console.log('wikiMetadata:', wikiMetadata);
 			console.log('Saving wiki metadata.');
-			console.log('to project.tempPath:', project.tempPath);
+			// console.log('to project.tempPath:', project.tempPath);
 		}
 	}, [wikiMetadata, isProjectLoaded, project]);
 

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useCallback, Fragment } from 'react';
+import React, { useContext, useState, useEffect, useCallback, Fragment, useRef } from 'react';
 import CloseSVG from '../../../../assets/svg/CloseSVG';
 import PlusSVG from '../../../../assets/svg/PlusSVG';
 
@@ -6,43 +6,59 @@ import TextareaAutosize from 'react-textarea-autosize';
 import { LeftNavContext } from '../../../../contexts/leftNavContext';
 import AddTagPopper from './AddTagPopper';
 import { findFilePath, retrieveContentAtPropertyPath } from '../../../../utils/utils';
+import { convertSetterToRefSetter } from '../../../../utils/contextUtils';
 
 let fieldTimeouts = {};
 
 const RightNavTags = ({ activeTab }) => {
-	const { wikiMetadata, setWikiMetadata, navData, docStructure } = useContext(LeftNavContext);
+	const { wikiMetadata, setWikiMetadata, navData, docStructure, editorStyles } = useContext(
+		LeftNavContext
+	);
 	const { currentDoc, currentDocTab } = navData;
 	const { displayDoc: metadataDisplayDoc } = wikiMetadata;
+	const { rightNav } = editorStyles;
 
-	const [tags, setTags] = useState([]);
+	const [tags, setTagsOrig] = useState([]);
 	const [displayAddTagPopper, setDisplayAddTagPopper] = useState(false);
 	const [displayDoc, setDisplayDoc] = useState('');
 	const [currentDocName, setCurrentDocName] = useState('Page Name');
 	const [fieldSize, setFieldSize] = useState({});
 
-	// FIRST, CONTROL WHAT WIKI PAGE WE ARE VIEWING DATA FOR
-	// WILL NEED TO FIND THE TAB IT IS IN
-	// // Pull the current doc name
-	// useEffect(() => {
-	// 	// const docPath = findFilePath(currentFolder, path, fileType, fileId))
-	// 	if (!navData.currentDocTab || !navData.currentDoc) {
-	// 		return;
-	// 	}
+	const tagsRef = useRef(tags);
 
-	// 	const docId = navData.currentDoc.slice(3, -5);
-	// 	console.log('docId:', docId)
-	// 	console.log('navData.currentDocTab:', navData.currentDocTab)
+	const setTags = (value) => {
+		convertSetterToRefSetter(tagsRef, setTagsOrig, value);
+	};
 
-	// 	const docPath = findFilePath(docStructure[navData.currentDocTab], '', 'doc', docId);
-	// 	console.log('docPath:', docPath);
-	// 	const children = retrieveContentAtPropertyPath(docPath, docStructure[navData.currentTab]);
-	// 	console.log('children:', children);
-	// }, [navData, docStructure]);
+	// Pull the current doc name
+	useEffect(() => {
+		// If no displayDoc, reset the title
+		if (!displayDoc) {
+			setCurrentDocName('Page Name');
+			return;
+		}
+
+		// Find the document
+		const docId = Number(displayDoc.slice(3, -5));
+		const docPath = findFilePath(docStructure.pages, '', 'doc', docId);
+
+		// If invalid, reset
+		if (!docPath) {
+			setCurrentDocName('Page Name');
+			return;
+		}
+
+		// Pull the document name
+		const children = retrieveContentAtPropertyPath(
+			docPath + (docPath ? '/children' : 'children'),
+			docStructure['pages']
+		);
+		const newDoc = children.find((item) => item.id === docId);
+		setCurrentDocName(newDoc.name);
+	}, [displayDoc, docStructure]);
 
 	// When opening a new page, check if it is a wiki page
 	useEffect(() => {
-		console.log('currentDoc:', currentDoc);
-		console.log('currentDocTab:', currentDocTab);
 		if (currentDocTab === 'pages') {
 			setWikiMetadata((prev) => ({ ...prev, displayDoc: '' }));
 			setDisplayDoc(currentDoc);
@@ -85,28 +101,6 @@ const RightNavTags = ({ activeTab }) => {
 			return;
 		}
 
-		// // Loop through all tags added to the current wiki page
-		// for (let tagId in wikiMetadata.wikis[displayDoc]) {
-		// 	const tagValueObj = wikiMetadata.wikis[displayDoc][tagId];
-
-		// 	// List all of the fields from the template
-		// 	console.log('wikiMetadata:', wikiMetadata);
-		// 	const newFields = wikiMetadata.tagTemplates[tagId].map((fieldId) => ({
-		// 		id: fieldId,
-		// 		fieldName: wikiMetadata.fieldNames[fieldId],
-		// 		// If we have a value, pull that. Otherwise default to empty string.
-		// 		value: tagValueObj[fieldId] ? tagValueObj[fieldId] : '',
-		// 	}));
-
-		// 	newTags.push({
-		// 		id: tagId,
-		// 		tagName: wikiMetadata.tagNames[tagId],
-		// 		fields: newFields,
-		// 	});
-		// }
-
-		// setTags(newTags);
-
 		setTags((prev) => {
 			let newTags = [];
 
@@ -148,6 +142,41 @@ const RightNavTags = ({ activeTab }) => {
 		});
 	}, [wikiMetadata, displayDoc]);
 
+	// On right-nav resize, recompute field line heights
+	useEffect(() => {
+		const fields = tagsRef.current.flatMap((tag) =>
+			tag.fields.map((field) => ({ ...field, key: `${tag.id}_${field.id}` }))
+		);
+
+		let newFieldSize = {};
+		fields.forEach((field) => {
+			const fieldEl = document.getElementById(field.key);
+			if (!fieldEl) {
+				return;
+			}
+
+			let newHeight = fieldEl.offsetHeight;
+
+			console.log('useEffect field.value: ', field.value);
+
+			// If multi-line
+			if (newHeight > 29) {
+				newFieldSize[field.key] = {
+					isExpanded: true,
+					chars: field.value.length,
+				};
+			} else {
+				// If single line
+
+				newFieldSize[field.key] = {
+					isExpanded: false,
+				};
+			}
+		});
+
+		setFieldSize(newFieldSize);
+	}, [rightNav]);
+
 	// Handle field keystrokes
 	const handleFieldChange = (value, tagId, fieldId) => {
 		// Update local tags
@@ -174,6 +203,40 @@ const RightNavTags = ({ activeTab }) => {
 				return newWikiMetadata;
 			});
 		}, 1000);
+	};
+
+	// Field height change handler
+	const handleHeightChange = (newHeight, field, fieldKey) => {
+		console.log('handleHeightChange field.value: ', field.value);
+		// If multi-line
+		if (newHeight > 29) {
+			if ((fieldSize[fieldKey] && !fieldSize[fieldKey].isExpanded) || !fieldSize[fieldKey]) {
+				setFieldSize((prev) => ({
+					...prev,
+					[fieldKey]: {
+						isExpanded: true,
+						chars: field.value.length,
+					},
+				}));
+			}
+		} else {
+			// If single line
+
+			if (
+				(fieldSize[fieldKey] && !fieldSize[fieldKey].hasOwnProperty('isExpanded')) ||
+				!fieldSize[fieldKey]
+			) {
+				setFieldSize((prev) => ({
+					...prev,
+					[fieldKey]: {
+						...(prev[fieldKey] ? prev[fieldKey] : {}),
+						isExpanded: false,
+					},
+				}));
+			}
+		}
+		// If height is changing to > something (20 is 1 line, 38 is 2 lines)
+		//   flag to expand to 100% width, store the num of characters it flipped at
 	};
 
 	// wikiMetadata = {
@@ -215,7 +278,6 @@ const RightNavTags = ({ activeTab }) => {
 			<div className='tags-row'>
 				{tags.map((tag) => (
 					<div className='tags-row-button' key={tag.id}>
-						<CloseSVG />
 						{tag.tagName}
 					</div>
 				))}
@@ -244,44 +306,30 @@ const RightNavTags = ({ activeTab }) => {
 												<TextareaAutosize
 													minRows={1}
 													maxRows={6}
-													placeholder='change this'
-													onHeightChange={(newHeight) => {
-														console.log('newHeight: ', newHeight);
-														// If multi-line
-														if (newHeight > 29) {
-															if (
-																(fieldSize[fieldKey] && !fieldSize[fieldKey].isExpanded) ||
-																!fieldSize[fieldKey]
-															) {
-																setFieldSize((prev) => ({
-																	...prev,
-																	[fieldKey]: {
-																		isExpanded: true,
-																		chars: field.value.length,
-																	},
-																}));
-															}
-														} else {
-															// If single line
+													cols={1}
+													id={fieldKey}
+													placeholder='New Field'
+													className='tag-section-value'
+													onChange={(e) => {
+														handleFieldChange(e.target.value, tag.id, field.id);
 
-															if (
-																(fieldSize[fieldKey] && fieldSize[fieldKey].isExpanded) ||
-																!fieldSize[fieldKey]
-															) {
-																setFieldSize((prev) => ({
-																	...prev,
-																	[fieldKey]: {
-																		...(prev[fieldKey]
-																			? prev[fieldKey]
-																			: { chars: field.value.length }),
-																		isExpanded: false,
-																	},
-																}));
-															}
+														if (
+															fieldSize[fieldKey] &&
+															fieldSize[fieldKey].isExpanded &&
+															e.target.value.length < fieldSize[fieldKey].chars
+														) {
+															setFieldSize((prev) => ({
+																...prev,
+																[fieldKey]: {
+																	...(prev[fieldKey] ? prev[fieldKey] : {}),
+																	isExpanded: false,
+																},
+															}));
 														}
-														// If height is changing to > something (20 is 1 line, 38 is 2 lines)
-														//   flag to expand to 100% width, store the num of characters it flipped at
 													}}
+													onHeightChange={(newHeight) =>
+														handleHeightChange(newHeight, field, fieldKey)
+													}
 													value={field.value}
 													style={{
 														width:
@@ -289,8 +337,6 @@ const RightNavTags = ({ activeTab }) => {
 																? '100%'
 																: 'auto',
 													}}
-													onChange={(e) => handleFieldChange(e.target.value, tag.id, field.id)}
-													className='tag-section-value'
 												/>
 											</div>
 										);

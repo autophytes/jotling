@@ -283,6 +283,8 @@ export const findFurthestChildrenFolderAlongPath = (currentFolder, path) => {
 
 // Finds the file path of a given file a docStructure folder
 export const findFilePath = (currentFolder, path, fileType, fileId) => {
+	fileId = Number(fileId);
+
 	// Ensure we have a docStructure folder
 	if (!currentFolder || !currentFolder.children || !currentFolder.folders) {
 		return;

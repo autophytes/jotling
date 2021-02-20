@@ -1,6 +1,7 @@
 import React, { Fragment, useContext, useEffect, useLayoutEffect, useState } from 'react';
 
 import PopupModal from '../containers/PopupModal';
+import ConfirmDeleteButton from '../buttons/ConfirmDeleteButton';
 
 import { LeftNavContext } from '../../contexts/leftNavContext';
 
@@ -8,10 +9,14 @@ import TagSingleSVG from '../../assets/svg/TagSingleSVG';
 import DragSVG from '../../assets/svg/DragSVG';
 import TrashSVG from '../../assets/svg/TrashSVG';
 import PlusSVG from '../../assets/svg/PlusSVG';
+import CaratDownSVG from '../../assets/svg/CaratDownSVG';
 
 import { reorderArray } from '../../utils/utils';
+
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Swal from 'sweetalert2';
+import Collapse from 'react-css-collapse';
+import { RightNavContext } from '../../contexts/rightNavContext';
 
 // wikiMetadata = {
 //   tagNames: {
@@ -41,45 +46,11 @@ import Swal from 'sweetalert2';
 
 const TagTemplatesForm = ({ setDisplayModal }) => {
 	const [tags, setTags] = useState([]);
+	const [openTags, setOpenTags] = useState({});
+	const [tagsHaveLoaded, setTagsHaveLoaded] = useState(false);
 
 	const { wikiMetadata, setWikiMetadata } = useContext(LeftNavContext);
-
-	// DONE - Load in the initial folders
-	useEffect(() => {
-		let newTags = [];
-		if (wikiMetadata.hasOwnProperty('tagTemplates')) {
-			newTags = Object.keys(wikiMetadata.tagTemplates).map((tagId) => ({
-				id: Number(tagId),
-				tagName: wikiMetadata.tagNames[tagId],
-				fields: wikiMetadata.tagTemplates[tagId].map((fieldId) => ({
-					id: fieldId,
-					fieldName: wikiMetadata.fieldNames[fieldId],
-				})),
-			}));
-		}
-
-		setTags(newTags);
-	}, [wikiMetadata]);
-
-	// wikiMetadata = {
-	//   tagNames: {
-	//    1: Character,
-	//    2: Faction,
-	//   },
-	//   fieldNames: {
-	//     1: Height
-	//     2: Weight
-	//   }
-	//   tagTemplates: {
-	//     1: [1, 2, 3],
-	//     2: [4, 5, 6],
-	//   },
-	//   wikis: {
-	//     doc5.json: {
-	//        1: {
-	// 1: '5\'10"'
-	//     }
-	//   }
+	const { newTagTemplate, setNewTagTemplate } = useContext(RightNavContext);
 
 	// DONE - Adds a new field to a tag
 	const addField = (tagId) => {
@@ -116,8 +87,8 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	};
 
 	// DONE - Adds a new tag
-	const addTag = () => {
-		let newTags = JSON.parse(JSON.stringify(tags));
+	const addTag = (origNewTagName = 'New Tag', origTags) => {
+		let newTags = JSON.parse(JSON.stringify(origTags ? origTags : tags));
 
 		// Find the current maxiumum id
 		// const maxId = Math.max(
@@ -127,10 +98,10 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 
 		// Find a unique new tag name
 		const usedTagNames = newTags.map((item) => item.tagName.toLowerCase());
-		let newTagName = 'New Tag';
+		let newTagName = origNewTagName;
 		let tagNameCounter = 1;
 		while (usedTagNames.includes(newTagName.toLowerCase())) {
-			newTagName = `New Tag (${tagNameCounter})`;
+			newTagName = `${origNewTagName} (${tagNameCounter})`;
 			tagNameCounter++;
 		}
 
@@ -151,7 +122,34 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		newTags.push(newTag);
 
 		setTags(newTags);
+		setOpenTags((prev) => ({ ...prev, [newTag.id]: true }));
 	};
+
+	// DONE - Load in the initial folders
+	useEffect(() => {
+		let newTags = [];
+		if (wikiMetadata.hasOwnProperty('tagTemplates')) {
+			// Build the updated tags object from the wikiMetadata
+			newTags = Object.keys(wikiMetadata.tagTemplates).map((tagId) => ({
+				id: Number(tagId),
+				tagName: wikiMetadata.tagNames[tagId],
+				fields: wikiMetadata.tagTemplates[tagId].map((fieldId) => ({
+					id: fieldId,
+					fieldName: wikiMetadata.fieldNames[fieldId],
+				})),
+			}));
+		}
+
+		if (newTagTemplate) {
+			// Will set the tags after adding the new one
+			addTag(newTagTemplate, newTags);
+			setNewTagTemplate('');
+			return;
+		}
+
+		// Set the updated tags
+		setTags(newTags);
+	}, [wikiMetadata]);
 
 	// DONE - Update the TAG. Will delete and cleanup isNew if required.
 	const updateTag = (tagId, shouldDelete, newName, shouldRemoveNew) => {
@@ -199,36 +197,6 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 
 		setTags(newTags);
 	};
-
-	// OLD: wikiMetadata = {
-	//   tagTemplates: {
-	//     character: ['Height', 'Weight', 'Hair'],
-	//     faction: ['Height', 'Weight', 'Hair'],
-	//     'crag\'s edge': ['Height', 'Weight', 'Hair'],
-	//   },
-	//   wikis: {
-	//     kynan: {}
-	//   }
-
-	// wikiMetadata = {
-	//   tagNames: {
-	//    1: Character,
-	//    2: Faction,
-	//   },
-	//   fieldNames: {
-	//     1: Height
-	//     2: Weight
-	//   }
-	//   tagTemplates: {
-	//     1: [1, 2, 3],
-	//     2: [4, 5, 6],
-	//   },
-	//   wikis: {
-	//     doc5.json: {
-	//        1: {
-	// 1: '5\'10"'
-	//     }
-	//   }
 
 	// Save the tag templates back to the wikiMetadata
 	const saveTagTemplates = () => {
@@ -401,7 +369,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	// NOTE: If we rename an existing tag, make sure all uses of that name are converted in the wikis section
 
 	return (
-		<PopupModal setDisplayModal={setDisplayModal} width='23rem'>
+		<PopupModal setDisplayModal={setDisplayModal} width='22rem'>
 			<h2 className='popup-modal-title'>Edit Tag Templates </h2>
 			<hr className='modal-form-hr' />
 
@@ -411,11 +379,35 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 				{tags.map((tag) => (
 					<Fragment key={tag.id}>
 						<div className='wiki-template-title'>
-							<TagSingleSVG />
+							<div
+								onClick={() =>
+									setOpenTags((prev) => ({
+										...prev,
+										[tag.id]: prev.hasOwnProperty(tag.id) ? !prev[tag.id] : true,
+									}))
+								}>
+								<CaratDownSVG
+									rotate={'-90'}
+									className={'wiki-template-title-svg' + (openTags[tag.id] ? ' open' : '')}
+								/>
+							</div>
+
+							{/* <TagSingleSVG className='wiki-template-title-svg' /> */}
+
 							<input
 								value={tag.tagName}
 								autoFocus={tag.isNew}
 								id={'tag-input-' + tag.id}
+								onClick={() =>
+									setOpenTags((prev) =>
+										!prev[tag.id]
+											? {
+													...prev,
+													[tag.id]: true,
+											  }
+											: prev
+									)
+								}
 								onFocus={(e) => {
 									e.target.select();
 									if (tag.isNew) {
@@ -427,78 +419,97 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 								onChange={(e) => updateTag(tag.id, false, e.target.value)}
 								onBlur={() => checkIsUniqueTag(tag.id)}
 							/>
-							<div
-								className='wiki-template-section-close-handle'
-								onClick={() => updateTag(tag.id, true)}>
-								<TrashSVG />
-							</div>
+
+							{/* Delete Field */}
+							<ConfirmDeleteButton
+								title={`Delete '${tag.tagName}'`}
+								message={`'${tag.tagName}', it's fields, and all data you've stored in them`}
+								noOverlay
+								deleteFunc={() => updateTag(tag.id, true)}>
+								<div className='wiki-template-section-close-handle'>
+									<TrashSVG />
+								</div>
+							</ConfirmDeleteButton>
 						</div>
 
-						<div className='wiki-template-section-list'>
-							<DragDropContext onDragEnd={onDragEnd}>
-								<Droppable droppableId={tag.id.toString()}>
-									{(provided) => (
-										<div ref={provided.innerRef} {...provided.droppableProps}>
-											{/* SECTIONS */}
-											{tag.fields.map((field, r) => (
-												<Draggable
-													draggableId={tag.tagName + field.id}
-													index={r}
-													key={tag.tagName + field.id}>
-													{(provided) => (
-														<div
-															className='wiki-template-section-row'
-															ref={provided.innerRef}
-															{...provided.draggableProps}>
-															{/* Drag Handle */}
+						<Collapse isOpen={openTags[tag.id]}>
+							<div className='wiki-template-section-list'>
+								<DragDropContext onDragEnd={onDragEnd}>
+									<Droppable droppableId={tag.id.toString()}>
+										{(provided) => (
+											<div ref={provided.innerRef} {...provided.droppableProps}>
+												{/* SECTIONS */}
+												{tag.fields.map((field, r) => (
+													<Draggable
+														draggableId={tag.tagName + field.id}
+														index={r}
+														key={tag.tagName + field.id}>
+														{(provided) => (
 															<div
-																className='wiki-template-section-drag-handle'
-																{...provided.dragHandleProps}
-																tabIndex={-1}>
-																<DragSVG />
-															</div>
+																className='wiki-template-section-row'
+																ref={provided.innerRef}
+																{...provided.draggableProps}>
+																{/* Drag Handle */}
+																<div
+																	className='wiki-template-section-drag-handle'
+																	{...provided.dragHandleProps}
+																	tabIndex={-1}>
+																	<DragSVG />
+																</div>
 
-															{/* Field Name */}
-															<input
-																value={field.fieldName}
-																id={'field-input-' + tag.id + '-' + field.id}
-																autoFocus={field.isNew}
-																onFocus={(e) => {
-																	e.target.select();
-																	if (field.isNew) {
-																		updateField(tag.id, field.id, false, e.target.value, true);
+																{/* Field Name */}
+																<input
+																	value={field.fieldName}
+																	className='tag-section-value'
+																	id={'field-input-' + tag.id + '-' + field.id}
+																	autoFocus={field.isNew}
+																	onFocus={(e) => {
+																		e.target.select();
+																		if (field.isNew) {
+																			updateField(
+																				tag.id,
+																				field.id,
+																				false,
+																				e.target.value,
+																				true
+																			);
+																		}
+																	}}
+																	onBlur={() => checkIsUniqueField(tag.id, field.id)}
+																	onKeyDown={(e) => handleInputEnter(e, tag.id, field.id)}
+																	onChange={(e) =>
+																		updateField(tag.id, field.id, false, e.target.value)
 																	}
-																}}
-																onBlur={() => checkIsUniqueField(tag.id, field.id)}
-																onKeyDown={(e) => handleInputEnter(e, tag.id, field.id)}
-																onChange={(e) =>
-																	updateField(tag.id, field.id, false, e.target.value)
-																}
-															/>
+																/>
 
-															{/* Delete Field */}
-															<div
-																className='wiki-template-section-close-handle'
-																onClick={() => updateField(tag.id, field.id, true)}>
-																<TrashSVG />
+																{/* Delete Field */}
+																<ConfirmDeleteButton
+																	title={`Delete ${field.fieldName}`}
+																	message={`${field.fieldName} and any data you've stored`}
+																	noOverlay
+																	deleteFunc={() => updateField(tag.id, field.id, true)}>
+																	<div className='wiki-template-section-close-handle'>
+																		<TrashSVG />
+																	</div>
+																</ConfirmDeleteButton>
 															</div>
-														</div>
-													)}
-												</Draggable>
-											))}
-											{provided.placeholder}
-										</div>
-									)}
-								</Droppable>
-							</DragDropContext>
+														)}
+													</Draggable>
+												))}
+												{provided.placeholder}
+											</div>
+										)}
+									</Droppable>
+								</DragDropContext>
 
-							{/* Add Section */}
-							<button className='wiki-template-add-section' onClick={() => addField(tag.id)}>
-								<PlusSVG />
-								{/* <span className='wiki-template-add-section-plus'>+</span> */}
-								Field
-							</button>
-						</div>
+								{/* Add Section */}
+								<button className='wiki-template-add-section' onClick={() => addField(tag.id)}>
+									<PlusSVG />
+									{/* <span className='wiki-template-add-section-plus'>+</span> */}
+									Field
+								</button>
+							</div>
+						</Collapse>
 					</Fragment>
 				))}
 

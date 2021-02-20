@@ -2,6 +2,7 @@
 import React from 'react';
 
 import LeftNavContextProvider from '../contexts/leftNavContext';
+import RightNavContextProvider from '../contexts/rightNavContext';
 import FindReplaceContextProvider from '../contexts/findReplaceContext';
 import SettingsContextProvider from '../contexts/settingsContext';
 import StatsContextProvider from '../contexts/statsContext';
@@ -12,13 +13,15 @@ const App = () => {
 	return (
 		<>
 			<LeftNavContextProvider>
-				<FindReplaceContextProvider>
-					<SettingsContextProvider>
-						<StatsContextProvider>
-							<AppMgmt />
-						</StatsContextProvider>
-					</SettingsContextProvider>
-				</FindReplaceContextProvider>
+				<RightNavContextProvider>
+					<FindReplaceContextProvider>
+						<SettingsContextProvider>
+							<StatsContextProvider>
+								<AppMgmt />
+							</StatsContextProvider>
+						</SettingsContextProvider>
+					</FindReplaceContextProvider>
+				</RightNavContextProvider>
 			</LeftNavContextProvider>
 		</>
 	);

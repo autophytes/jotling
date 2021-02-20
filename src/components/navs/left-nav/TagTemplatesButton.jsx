@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import TemplatesSVG from '../../../assets/svg/TemplatesSVG';
+import { RightNavContext } from '../../../contexts/rightNavContext';
 import TagTemplatesForm from '../../forms/TagTemplatesForm';
 
 const TagTemplatesButton = () => {
 	const [showTemplates, setShowTemplates] = useState(false);
+
+	const { newTagTemplate } = useContext(RightNavContext);
+
+	// If we add a new tag, open the form
+	useEffect(() => {
+		if (newTagTemplate) {
+			setShowTemplates(true);
+		}
+	}, [newTagTemplate]);
 
 	return (
 		<>
