@@ -76,11 +76,11 @@ const AddTagPopper = ({ setDisplayAddTagPopper, displayDoc }) => {
 		let newWikiMetadata = JSON.parse(JSON.stringify(wikiMetadata));
 
 		// Make sure deleted[displayDoc] exists
-		if (!newWikiMetadata.wikis.hasOwnProperty('deleted')) {
-			newWikiMetadata.wikis.deleted = {};
+		if (!newWikiMetadata.hasOwnProperty('deleted')) {
+			newWikiMetadata.deleted = {};
 		}
-		if (!newWikiMetadata.wikis.deleted.hasOwnProperty(displayDoc)) {
-			newWikiMetadata.wikis.deleted[displayDoc] = {};
+		if (!newWikiMetadata.deleted.hasOwnProperty(displayDoc)) {
+			newWikiMetadata.deleted[displayDoc] = {};
 		}
 		if (!newWikiMetadata.wikis.hasOwnProperty(displayDoc)) {
 			newWikiMetadata.wikis[displayDoc] = {};
@@ -93,15 +93,15 @@ const AddTagPopper = ({ setDisplayAddTagPopper, displayDoc }) => {
 			delete newWikiMetadata.wikis[displayDoc][tagId];
 			console.log('does this still exist? tagObj:', tagObj);
 
-			newWikiMetadata.wikis.deleted[displayDoc][tagId] = tagObj;
+			newWikiMetadata.deleted[displayDoc][tagId] = tagObj;
 
 			setWikiMetadata(newWikiMetadata);
 		} else {
 			// Toggle On
 			let tagObj = {};
-			if (newWikiMetadata.wikis.deleted[displayDoc].hasOwnProperty(tagId)) {
-				tagObj = { ...newWikiMetadata.wikis.deleted[displayDoc][tagId] };
-				delete newWikiMetadata.wikis.deleted[displayDoc][tagId];
+			if (newWikiMetadata.deleted[displayDoc].hasOwnProperty(tagId)) {
+				tagObj = { ...newWikiMetadata.deleted[displayDoc][tagId] };
+				delete newWikiMetadata.deleted[displayDoc][tagId];
 				console.log('does this still exist? tagObj:', tagObj);
 			}
 

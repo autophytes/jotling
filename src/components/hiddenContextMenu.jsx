@@ -8,12 +8,13 @@ import {
 	selectionHasEntityType,
 	selectionInMiddleOfLink,
 } from './editor/editorFunctions';
+import { findAllDocsInFolder } from './navs/navFunctions';
 
 const HiddenContextMenu = () => {
 	const [browserParams, setBrowserParams] = useState(null);
 	const [electronParams, setElectronParams] = useState(null);
 
-	const { editorStateRef } = useContext(LeftNavContext);
+	const { editorStateRef, docStructureRef } = useContext(LeftNavContext);
 
 	useEffect(() => {
 		const browserWindow = remote.getCurrentWindow();
@@ -61,11 +62,18 @@ const HiddenContextMenu = () => {
 			// 	}
 			// }
 
+			console.log('e.path: ', e.path);
+
+			//
 			e.path.find((element) => {
+				if (!element.dataset) {
+					return;
+				}
+
 				// LEFT NAV DOCUMENT / FOLDER
-				if (element.dataset && element.dataset.contextMenuItemType) {
-					console.log('has contextMenuItemType');
+				if (element.dataset.contextMenuItemType) {
 					newBrowserParams = {
+						...newBrowserParams,
 						type: element.dataset.contextMenuItemType,
 						id: element.dataset.contextMenuItemId,
 						currentTab: element.dataset.contextMenuCurrentTab,
@@ -73,9 +81,22 @@ const HiddenContextMenu = () => {
 					return true;
 				}
 
+				// SHOW DOC TAGS
+				if (element.dataset.contextMenuShowTagName) {
+					// Find the document that has the tag name
+					const tagName = element.dataset.contextMenuShowTagName.toLowerCase();
+					const docMatch = findAllDocsInFolder(docStructureRef.current.pages).find(
+						(doc) => doc.name.toLowerCase() === tagName
+					);
+
+					// Pass the matching file name name
+					newBrowserParams.showTagDocName = docMatch.fileName;
+
+					// Don't return true b/c the document text up the chain should fire too
+				}
+
 				// DOCUMENT TEXT (LINK)
-				if (element.dataset && element.dataset.offsetKey) {
-					console.log('building the document-text params');
+				if (element.dataset.offsetKey) {
 					const selection = editorStateRef.current.getSelection();
 					if (!selection.isCollapsed()) {
 						const hasLinkDest = selectionHasEntityType(editorStateRef.current, 'LINK-DEST');
@@ -93,10 +114,10 @@ const HiddenContextMenu = () => {
 						let inMiddleOfLink = false;
 						if (hasLinkSource) {
 							inMiddleOfLink = selectionInMiddleOfLink(editorStateRef.current);
-							console.log('inMiddleOfLink:', inMiddleOfLink);
 						}
 
 						newBrowserParams = {
+							...newBrowserParams,
 							type: 'document-text',
 							hasLink: hasLinkSource,
 							hasLinkDest: hasLinkDest,
@@ -104,7 +125,6 @@ const HiddenContextMenu = () => {
 							inMiddleOfLink: inMiddleOfLink,
 						};
 					}
-					return true;
 				}
 			});
 

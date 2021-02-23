@@ -47,19 +47,21 @@ import { RightNavContext } from '../../contexts/rightNavContext';
 const TagTemplatesForm = ({ setDisplayModal }) => {
 	const [tags, setTags] = useState([]);
 	const [openTags, setOpenTags] = useState({});
-	const [tagsHaveLoaded, setTagsHaveLoaded] = useState(false);
+	const [deleted, setDeleted] = useState({ tags: [], fields: [] });
 
 	const { wikiMetadata, setWikiMetadata } = useContext(LeftNavContext);
 	const { newTagTemplate, setNewTagTemplate } = useContext(RightNavContext);
 
 	// DONE - Adds a new field to a tag
-	const addField = (tagId) => {
-		const tagIndex = tags.findIndex((item) => item.id === tagId);
-		let newTags = JSON.parse(JSON.stringify(tags));
+	const addField = (tagId, origTags = [], isNew = true) => {
+		origTags = origTags.length ? origTags : tags;
+
+		const tagIndex = origTags.findIndex((item) => item.id === tagId);
+		let newTags = JSON.parse(JSON.stringify(origTags));
 		let newFields = newTags[tagIndex].fields;
 
 		// Find the current maxiumum id
-		const allFields = tags.flatMap((item) => item.fields);
+		const allFields = origTags.flatMap((item) => item.fields);
 		const maxId = allFields.reduce((max, item) => (item.id > max ? item.id : max), 0);
 
 		// const maxId = Math.max(
@@ -79,7 +81,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		newFields.push({
 			id: maxId + 1,
 			fieldName: newFieldName,
-			isNew: true,
+			isNew: isNew,
 		});
 		newTags[tagIndex].fields = newFields;
 
@@ -87,14 +89,11 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	};
 
 	// DONE - Adds a new tag
-	const addTag = (origNewTagName = 'New Tag', origTags) => {
-		let newTags = JSON.parse(JSON.stringify(origTags ? origTags : tags));
+	const addTag = (origNewTagName = 'New Tag', origTags = []) => {
+		let newTags = JSON.parse(JSON.stringify(origTags.length ? origTags : tags));
 
 		// Find the current maxiumum id
-		// const maxId = Math.max(
-		// 	...(wikiMetadata.tagNames ? Object.keys(wikiMetadata.tagNames) : [0])
-		// );
-		const maxId = newTags.reduce((max, item) => (item.id > max ? item.id : max), 0);
+		const maxTagId = newTags.reduce((max, item) => (item.id > max ? item.id : max), 0);
 
 		// Find a unique new tag name
 		const usedTagNames = newTags.map((item) => item.tagName.toLowerCase());
@@ -107,22 +106,19 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 
 		// Spin up a new tag
 		let newTag = {
-			id: maxId + 1,
+			id: maxTagId + 1,
 			tagName: newTagName,
 			isNew: true,
-			fields: [
-				{
-					id: 1,
-					fieldName: 'New Field',
-				},
-			],
+			fields: [],
 		};
 
 		// Push the new tag. isNew will autoFocus the tag title.
 		newTags.push(newTag);
 
-		setTags(newTags);
+		// setTags(newTags);
 		setOpenTags((prev) => ({ ...prev, [newTag.id]: true }));
+
+		addField(maxTagId + 1, newTags, false);
 	};
 
 	// DONE - Load in the initial folders
@@ -158,6 +154,10 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 
 		// If shouldDelete, remove the section
 		if (shouldDelete) {
+			setDeleted((prev) => ({
+				...prev,
+				tags: [...prev.tags, tagId.toString()],
+			}));
 			newTags.splice(tagIndex, 1);
 		} else {
 			// Otherwise, update the section name
@@ -182,6 +182,10 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 
 		// If shouldDelete, remove the section
 		if (shouldDelete) {
+			setDeleted((prev) => ({
+				...prev,
+				fields: [...prev.fields, fieldId.toString()],
+			}));
 			newFields.splice(fieldIndex, 1);
 		} else {
 			// Otherwise, update the section name
@@ -203,9 +207,12 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		let newTagTemplates = {};
 		let newTagNames = {};
 		let newFieldNames = {};
+		let newWikis = JSON.parse(JSON.stringify(wikiMetadata.wikis));
+		let newDeleted = JSON.parse(
+			JSON.stringify(wikiMetadata.deleted ? wikiMetadata.deleted : {})
+		);
 
 		// Convert the tags to the tagTemplates, tagNames, and fieldNames format
-		console.log('tags:', tags);
 		for (let tag of tags) {
 			// Build the tagTemplates
 			newTagTemplates[tag.id] = tag.fields.map((field) => field.id);
@@ -219,9 +226,41 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 			}
 		}
 
+		// Clean up wikis for deleted tags / fields
+		for (let docName in newWikis) {
+			for (let tagId in newWikis[docName]) {
+				for (let fieldId in newWikis[docName][tagId]) {
+					if (deleted.fields.includes(fieldId)) {
+						delete newWikis[docName][tagId][fieldId];
+					}
+				}
+
+				if (deleted.tags.includes(tagId)) {
+					delete newWikis[docName][tagId];
+				}
+			}
+		}
+
+		// Clean up 'deleted' for deleted tags / fields
+		for (let docName in newDeleted) {
+			for (let tagId in newDeleted[docName]) {
+				for (let fieldId in newDeleted[docName][tagId]) {
+					if (deleted.fields.includes(fieldId)) {
+						delete newDeleted[docName][tagId][fieldId];
+					}
+				}
+
+				if (deleted.tags.includes(tagId)) {
+					delete newDeleted[docName][tagId];
+				}
+			}
+		}
+
 		// Update the wikiMetadata with the new tag templates
 		setWikiMetadata((prev) => ({
 			...prev,
+			wikis: newWikis,
+			deleted: newDeleted,
 			tagTemplates: newTagTemplates,
 			tagNames: newTagNames,
 			fieldNames: newFieldNames,
@@ -232,14 +271,11 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 
 	// DONE - Update the field order after drag and drop
 	const onDragEnd = (result) => {
-		console.log('result: ', result);
-
 		// Check if order actually changed
 		if (!result.destination || result.destination.index === result.source.index) {
 			return;
 		}
 
-		console.log('tags:', tags);
 		const tagIndex = tags.findIndex((tag) => tag.id === Number(result.source.droppableId));
 		const fields = tags[tagIndex].fields;
 
@@ -302,7 +338,6 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		);
 
 		// If we found a matching tag (that isn't itself), prevent blur and fire alert
-		console.log('matchIndex:', matchIndex);
 		if (matchIndex !== -1) {
 			// Alert the user of duplicate tag name
 			Swal.fire({
@@ -341,7 +376,6 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		);
 
 		// If we found a matching field (that isn't itself), prevent blur and fire alert
-		console.log('matchIndex:', matchIndex);
 		if (matchIndex !== -1) {
 			// Alert the user of duplicate tag name
 			Swal.fire({
@@ -514,7 +548,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 				))}
 
 				{/* Add New Tag */}
-				<div className='wiki-template-title add-tag' onClick={addTag}>
+				<div className='wiki-template-title add-tag' onClick={() => addTag()}>
 					<TagSingleSVG />
 					<p>Add Tag</p>
 				</div>

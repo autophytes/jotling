@@ -261,6 +261,19 @@ const create = (win, options) => {
 					});
 				},
 			}),
+			showWikiTags: () => ({
+				id: 'showWikiTags',
+				label: 'Show Wiki Tags',
+				visible:
+					(browserParams.type === 'doc' && browserParams.currentTab === 'pages') ||
+					!!browserParams.showTagDocName,
+				click() {
+					webContents(win).send('show-wiki-tags', {
+						docId: browserParams.id,
+						docName: browserParams.showTagDocName,
+					});
+				},
+			}),
 			insertFolder: () => ({
 				id: 'insertFolder',
 				label: 'Insert Folder',
@@ -404,43 +417,42 @@ const create = (win, options) => {
 		let menuTemplate = [
 			dictionarySuggestions.length > 0 && defaultActions.separator(),
 			...dictionarySuggestions,
-			defaultActions.separator(),
+			defaultActions.separator(), // SEPARATOR
 			defaultActions.learnSpelling(),
-			// defaultActions.separator(),
 			options.showLookUpSelection !== false && defaultActions.lookUpSelection(),
-			defaultActions.separator(),
 			// options.showSearchWithGoogle !== false && defaultActions.searchWithGoogle(),
-			defaultActions.separator(),
+			defaultActions.separator(), // SEPARATOR
 			defaultActions.cut(),
 			defaultActions.copy(),
 			defaultActions.paste(),
-			defaultActions.separator(),
+			defaultActions.separator(), // SEPARATOR
 			defaultActions.insertDocument(),
-			defaultActions.duplicateDocument(),
-			defaultActions.moveDocToTrash(),
+			defaultActions.insertFolder(),
 			defaultActions.restoreDoc(),
 			defaultActions.deleteDoc(),
-			defaultActions.separator(),
-			defaultActions.insertFolder(),
-			defaultActions.moveFolderToTrash(),
 			defaultActions.restoreFolder(),
 			defaultActions.deleteFolder(),
-			defaultActions.separator(), // Using this section for either links / renaming
-			defaultActions.renameFile(), // Renaming leftNav docs/folders
+			defaultActions.separator(), // SEPARATOR
+			defaultActions.duplicateDocument(),
+			defaultActions.showWikiTags(),
 			defaultActions.addLink(),
 			defaultActions.removeLink(),
-			defaultActions.separator(),
+			defaultActions.separator(), // SEPARATOR Using this section for either links / renaming
+			defaultActions.renameFile(), // Renaming leftNav docs/folders
+			defaultActions.moveFolderToTrash(),
+			defaultActions.moveDocToTrash(),
+			defaultActions.separator(), // SEPARATOR
 			options.showSaveImage && defaultActions.saveImage(),
 			options.showSaveImageAs && defaultActions.saveImageAs(),
 			options.showCopyImage !== false && defaultActions.copyImage(),
 			options.showCopyImageAddress && defaultActions.copyImageAddress(),
-			defaultActions.separator(),
+			defaultActions.separator(), // SEPARATOR
 			defaultActions.copyLink(),
 			options.showSaveLinkAs && defaultActions.saveLinkAs(),
-			defaultActions.separator(),
+			defaultActions.separator(), // SEPARATOR
 			shouldShowInspectElement && defaultActions.inspect(),
 			options.showServices && defaultActions.services(),
-			defaultActions.separator(),
+			defaultActions.separator(), // SEPARATOR
 		];
 
 		// Insert / delete document

@@ -357,8 +357,6 @@ const AppMgmt = () => {
 		});
 
 		ipcRenderer.on('request-export-project', (event, { extension }) => {
-			console.log('EXPORTING: ', extension);
-
 			exportProject({
 				editorStateRef,
 				editorArchivesRef,
@@ -367,8 +365,14 @@ const AppMgmt = () => {
 				projectRef,
 				currentDoc: navDataRef.current.currentDoc,
 			});
+		});
 
-			// editorStateRef, editorArchivesRef, mediaStructureRef, docStructureRef
+		ipcRenderer.on('show-wiki-tags', (event, { docId, docName }) => {
+			console.log('docName:', docName);
+			setWikiMetadata((prev) => ({
+				...prev,
+				displayDoc: docName ? docName : `doc${docId}.json`,
+			}));
 		});
 	}, []);
 

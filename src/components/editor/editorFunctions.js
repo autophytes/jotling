@@ -106,7 +106,7 @@ const findTagsToHighlight = (wikiStructure, currentDoc) => {
 	// Compiling a list of all tags
 	let tagList = [];
 
-	for (let doc of findAllDocsInFolder(wikiStructure, '')) {
+	for (let doc of findAllDocsInFolder(wikiStructure)) {
 		if (doc.fileName !== currentDoc) {
 			tagList.push(doc.name);
 		}

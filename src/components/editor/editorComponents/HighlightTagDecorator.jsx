@@ -43,7 +43,7 @@ const HighlightTagDecorator = ({ children, decoratedText, childDecorator = {} })
 	);
 
 	return (
-		<span style={{ fontWeight: 'bold' }}>
+		<span style={{ fontWeight: 'bold' }} data-context-menu-show-tag-name={decoratedText}>
 			{Component ? (
 				<Component
 					{...getComponentProps(componentIndex)}

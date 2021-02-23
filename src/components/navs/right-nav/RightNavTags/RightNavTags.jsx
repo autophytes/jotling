@@ -62,8 +62,6 @@ const RightNavTags = ({ activeTab }) => {
 		if (currentDocTab === 'pages') {
 			setWikiMetadata((prev) => ({ ...prev, displayDoc: '' }));
 			setDisplayDoc(currentDoc);
-		} else {
-			setDisplayDoc('');
 		}
 	}, [currentDoc, currentDocTab]);
 
@@ -199,7 +197,7 @@ const RightNavTags = ({ activeTab }) => {
 		fieldTimeouts[fieldId] = setTimeout(() => {
 			setWikiMetadata((prev) => {
 				let newWikiMetadata = JSON.parse(JSON.stringify(prev));
-				newWikiMetadata.wikis[currentDoc][tagId][fieldId] = value;
+				newWikiMetadata.wikis[displayDoc][tagId][fieldId] = value;
 				return newWikiMetadata;
 			});
 		}, 1000);
@@ -264,9 +262,13 @@ const RightNavTags = ({ activeTab }) => {
 	//          3: 'Brown, short cut, wavy'
 	//        }
 	//     },
-	//     deleted: {
-	//       doc5.json: {
-
+	//   },
+	//   deleted: {
+	//     doc6.json: {
+	//       1: {
+	//         1: '5\'10"'
+	//         2: '175lbs'
+	//         3: 'Brown, short cut, wavy'
 	//       }
 	//     }
 	//   },
