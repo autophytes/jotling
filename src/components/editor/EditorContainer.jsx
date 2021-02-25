@@ -39,6 +39,7 @@ import {
 	fetchCorrectSelection,
 	manuallyHandleReplaceText,
 	shouldSkipEditorState,
+	updateQuoteInput,
 } from './editorInputFunctions';
 import {
 	defaultCustomStyleMap,
@@ -304,8 +305,14 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 		// Use the DOM selection if necessary
 		const editorState = fetchCorrectSelection(origEditorState, editorRef);
-
 		const selection = editorState.getSelection();
+
+		// Substitute the quote character
+		let shouldReplaceText = false;
+		if (char === "'" || char === '"') {
+			char = updateQuoteInput(editorState, char);
+			shouldReplaceText = true;
+		}
 
 		// Update the word count after each space
 		if (char === ' ') {
@@ -319,7 +326,12 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 		// If we're typing at the end of a line and inside a link, continue that link
 		if (selection.isCollapsed()) {
-			const didHandle = continueMultiBlockLinkSource(editorState, selection, char);
+			const didHandle = continueMultiBlockLinkSource(
+				editorState,
+				setEditorState,
+				selection,
+				char
+			);
 			if (didHandle === 'handled') {
 				return 'handled';
 			}
@@ -327,11 +339,18 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 
 		// Draft's selection is messed up on non-collapsed selections on some systems.
 		// Handle inserting the input manually.
-		if (!selection.isCollapsed()) {
-			console.log('about to set the new editorState');
-			setEditorState(manuallyHandleReplaceText(editorState, char));
+		// if (!selection.isCollapsed()) {
+		// 	console.log('about to set the new editorState');
+		// 	setEditorState(manuallyHandleReplaceText(editorState, char));
 
-			console.log('set the new editorState');
+		// 	console.log('set the new editorState');
+		// 	return 'handled';
+		// }
+
+		// Replace the character ourselves if needed
+		if (shouldReplaceText) {
+			const newEditorState = manuallyHandleReplaceText(editorState, char);
+			setEditorState(newEditorState);
 			return 'handled';
 		}
 

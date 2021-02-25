@@ -537,7 +537,7 @@ export const removeEndingNewline = (editorState) => {
 };
 
 // If we're typing at the end of a line and inside a link, continue that link
-export const continueMultiBlockLinkSource = (editorState, selection, char) => {
+export const continueMultiBlockLinkSource = (editorState, setEditorState, selection, char) => {
 	const contentState = editorState.getCurrentContent();
 	const blockKey = selection.getStartKey();
 	const block = contentState.getBlockForKey(blockKey);
@@ -588,6 +588,36 @@ export const continueMultiBlockLinkSource = (editorState, selection, char) => {
 
 	console.log('handleBeforeInput - continuing link');
 	const newEditorState = EditorState.push(editorState, newContent, 'insert-characters');
+	console.log('setEditorState:', setEditorState);
 	setEditorState(newEditorState);
 	return 'handled';
+};
+
+// Substitute single quotes for back/forward variants
+export const updateQuoteInput = (editorState, char) => {
+	const currentContent = editorState.getCurrentContent();
+	const selectionState = editorState.getSelection();
+	const blockKey = selectionState.getStartKey();
+	const startOffset = selectionState.getStartOffset();
+
+	let prevChar;
+	if (startOffset !== 0) {
+		const block = currentContent.getBlockForKey(blockKey);
+		const text = block.getText();
+		prevChar = text.charAt(startOffset - 1);
+	}
+
+	if (startOffset === 0 || prevChar === ' ') {
+		if (char === "'") {
+			return '‘';
+		} else {
+			return '“';
+		}
+	} else {
+		if (char === "'") {
+			return '’';
+		} else {
+			return '”';
+		}
+	}
 };
