@@ -5,6 +5,7 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import { updateChildName, moveFileToPath } from '../../../utils/utils';
 import { findAllDocsInFolder } from '../navFunctions';
+import { updateQuotesInString } from '../../editor/editorInputFunctions';
 
 import Swal from 'sweetalert2';
 
@@ -178,11 +179,19 @@ const NavDocument = ({
 					value={fileName}
 					autoFocus
 					onChange={(e) => setFileName(e.target.value)}
-					onBlur={(e) => saveDocNameChange(e.target.value ? e.target.value : 'Unnamed', true)}
+					onBlur={(e) =>
+						saveDocNameChange(
+							e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed',
+							true
+						)
+					}
 					onFocus={(e) => e.target.select()}
 					onKeyUp={(e) => {
 						if (e.key === 'Enter') {
-							saveDocNameChange(e.target.value ? e.target.value : 'Unnamed');
+							// saveDocNameChange(
+							// 	e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed'
+							// );
+							e.target.blur();
 						}
 						if (e.key === 'Escape') {
 							setFileName(child.name);

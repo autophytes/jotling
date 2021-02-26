@@ -5,6 +5,7 @@ import FolderOpenSVG from '../../../assets/svg/FolderOpenSVG';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 import { updateChildName, moveFileToPath } from '../../../utils/utils';
+import { updateQuotesInString } from '../../editor/editorInputFunctions';
 
 const NavFolder = ({
 	child,
@@ -165,11 +166,19 @@ const NavFolder = ({
 					value={fileName}
 					autoFocus
 					onChange={(e) => setFileName(e.target.value)}
-					onBlur={(e) => saveFolderNameChange(e.target.value ? e.target.value : 'Unnamed')}
+					onBlur={(e) =>
+						saveFolderNameChange(
+							e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed'
+						)
+					}
 					onFocus={(e) => e.target.select()}
 					onKeyUp={(e) => {
-						if (e.key === 'Enter' || e.keyCode === 27) {
+						if (e.key === 'Enter') {
 							e.target.blur();
+						}
+						if (e.key === 'Escape') {
+							setFileName(child.name);
+							setNavData({ ...navData, editFile: '' });
 						}
 					}}
 				/>

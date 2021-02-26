@@ -1468,6 +1468,10 @@ input[type='number']::-webkit-outer-spin-button {
 .editor-settings-wrapper {
 	padding-left: 0.5rem;
 }
+
+.settings-section {
+  margin-left: 1rem;
+}
 .settings-range-slider-wrapper {
 	display: flex;
 	flex-direction: row;

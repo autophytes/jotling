@@ -7,6 +7,7 @@ import {
 	retrieveContentAtPropertyPath,
 	setObjPropertyAtPropertyPath,
 } from '../../utils/utils';
+import { updateQuotesInString } from '../editor/editorInputFunctions';
 
 const EditorHeaderTitle = ({ editorRef }) => {
 	const [docName, setDocName] = useState('');
@@ -56,10 +57,13 @@ const EditorHeaderTitle = ({ editorRef }) => {
 			);
 			const doc = childrenArray[docIndex];
 
+			// Update the single/double quotes with curly quotes
+			const finalDocName = updateQuotesInString(newDocName);
+
 			// Update the name in the document
 			const newDoc = {
 				...doc,
-				name: newDocName,
+				name: finalDocName,
 			};
 
 			// Update the current folder with the new document
@@ -77,7 +81,7 @@ const EditorHeaderTitle = ({ editorRef }) => {
 				docStructure
 			);
 
-			setDocName(newDocName);
+			setDocName(finalDocName);
 			setDocStructure(newDocStructure);
 			setShowEditTitle(false);
 
@@ -101,14 +105,14 @@ const EditorHeaderTitle = ({ editorRef }) => {
 					type='text'
 					value={newDocName}
 					autoFocus
-					onChange={(e) => setNewDocName(e.target.value)}
+					onChange={(e) => {
+						setNewDocName(e.target.value);
+					}}
 					onBlur={saveNewDocName}
 					// onFocus={(e) => e.target.select()}
 					onKeyUp={(e) => {
-						// console.log('keyup: ', e);
-						if (e.key === 'Enter' || e.keyCode === 27) {
-							// console.log('saving new doc name');
-							saveNewDocName();
+						if (e.key === 'Enter') {
+							e.target.blur();
 						}
 					}}
 				/>

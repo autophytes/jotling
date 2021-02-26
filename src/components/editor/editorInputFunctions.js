@@ -621,3 +621,61 @@ export const updateQuoteInput = (editorState, char) => {
 		}
 	}
 };
+
+// Update all single and double quotes in a string
+export const updateQuotesInString = (newString) => {
+	// let newString = original;
+
+	// // Ensure we were given a string
+	// if (typeof original !== 'string') {
+	// 	return original;
+	// }
+
+	// Replace single quote
+	let singleIndex = newString.indexOf("'");
+	while (singleIndex !== -1) {
+		// Find which quote to use
+		let newChar;
+		if (singleIndex === 0) {
+			newChar = '‘';
+		} else {
+			let prevChar = newString.charAt(singleIndex - 1);
+			if (prevChar === ' ') {
+				newChar = '‘';
+			} else {
+				newChar = '’';
+			}
+		}
+
+		// Update the quote
+		newString = newString.replace("'", newChar);
+
+		// Find the next single quote
+		singleIndex = newString.indexOf("'");
+	}
+
+	// Replace double quote
+	let doubleIndex = newString.indexOf('"');
+	while (doubleIndex !== -1) {
+		// Find which quote to use
+		let newChar;
+		if (doubleIndex === 0) {
+			newChar = '“';
+		} else {
+			let prevChar = newString.charAt(doubleIndex - 1);
+			if (prevChar === ' ') {
+				newChar = '“';
+			} else {
+				newChar = '”';
+			}
+		}
+
+		// Update the quote
+		newString = newString.replace('"', newChar);
+
+		// Find the next double quote
+		doubleIndex = newString.indexOf('"');
+	}
+
+	return newString;
+};

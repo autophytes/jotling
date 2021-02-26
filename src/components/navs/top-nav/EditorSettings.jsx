@@ -226,48 +226,55 @@ const EditorSettings = () => {
 		<>
 			<ResizableWindow windowTitle='Editor Settings' closeFn={closeFn} defaultWidth={350}>
 				<div className='editor-settings-wrapper'>
-					{/* EDITOR PADDING */}
-					<p className='settings-category-title'>Page Margin</p>
-					<div className='settings-range-slider-wrapper'>
-						<input
-							className='settings-range-slider'
-							type='range'
-							value={editorPadding}
-							min='0.0'
-							max='14.0'
-							step='0.1'
-							onChange={handlePaddingChange}
-							onMouseUp={handlePaddingMouseUp}
-							onDoubleClick={() => handleDoubleClick('editorPadding')}
-						/>
-						<input
-							className='settings-range-number-input'
-							type='number'
-							value={editorPadding}
-							onChange={handlePaddingMouseUp}
-						/>
-					</div>
+					<p className='settings-category-title'>Page</p>
+					<div className='settings-section'>
+						<div className='flex-row'>
+							{/* EDITOR PADDING */}
+							<p className='settings-category-title'>Margin</p>
+							<div className='settings-range-slider-wrapper'>
+								<input
+									className='settings-range-slider'
+									type='range'
+									value={editorPadding}
+									min='0.0'
+									max='14.0'
+									step='0.1'
+									onChange={handlePaddingChange}
+									onMouseUp={handlePaddingMouseUp}
+									onDoubleClick={() => handleDoubleClick('editorPadding')}
+								/>
+								<input
+									className='settings-range-number-input'
+									type='number'
+									value={editorPadding}
+									onChange={handlePaddingMouseUp}
+								/>
+							</div>
+						</div>
 
-					{/* EDITOR MAX WIDTH */}
-					<p className='settings-category-title'>Page Width</p>
-					<div className='settings-range-slider-wrapper'>
-						<input
-							className='settings-range-slider'
-							type='range'
-							value={editorMaxWidth}
-							min='0.0'
-							max='130.0'
-							step='0.1'
-							onChange={handleMaxWidthChange}
-							onMouseUp={handleMaxWidthMouseUp}
-							onDoubleClick={() => handleDoubleClick('editorMaxWidth')}
-						/>
-						<input
-							className='settings-range-number-input'
-							type='number'
-							value={editorMaxWidth}
-							onChange={handleMaxWidthMouseUp}
-						/>
+						<div className='flex-row'>
+							{/* EDITOR MAX WIDTH */}
+							<p className='settings-category-title'>Page Width</p>
+							<div className='settings-range-slider-wrapper'>
+								<input
+									className='settings-range-slider'
+									type='range'
+									value={editorMaxWidth}
+									min='0.0'
+									max='130.0'
+									step='0.1'
+									onChange={handleMaxWidthChange}
+									onMouseUp={handleMaxWidthMouseUp}
+									onDoubleClick={() => handleDoubleClick('editorMaxWidth')}
+								/>
+								<input
+									className='settings-range-number-input'
+									type='number'
+									value={editorMaxWidth}
+									onChange={handleMaxWidthMouseUp}
+								/>
+							</div>
+						</div>
 					</div>
 
 					<p className='settings-category-title'>Accent Color</p>
