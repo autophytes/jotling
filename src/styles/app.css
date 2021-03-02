@@ -207,7 +207,7 @@ h2.editor-doc-title {
 	justify-content: center;
 	align-items: center;
 	box-shadow: 0px 0px 2px 2px rgba(0, 0, 0, 0.05), 0px 0px 3px 3px rgba(0, 0, 0, 0.1);
-	border-bottom: 1px solid #555;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .editor-nav {
@@ -1313,13 +1313,14 @@ input[type='number']::-webkit-outer-spin-button {
 
 .peek-window-top-handle {
 	position: absolute;
-	top: -1.25rem;
-	height: 1.25rem;
+	top: -1.5rem;
+	height: 1.5rem;
 	width: 100%;
 	background-color: var(--color-primary);
 	border-top-left-radius: 0.5rem;
 	border-top-right-radius: 0.5rem;
 	border: 2px solid var(--color-primary);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 	color: white;
 	font-weight: bold;
 	cursor: move;
@@ -1343,6 +1344,9 @@ input[type='number']::-webkit-outer-spin-button {
 	border: 2px solid var(--color-primary);
 	border-top: none;
 	background-color: white;
+
+	box-shadow: 2px 2px 8px 0px rgba(var(--color-primary-rgb), 0.05) inset,
+		2px 2px 8px 0px rgba(0, 0, 0, 0.1) inset;
 }
 
 .peek-window-contents .public-DraftEditor-content > div {
@@ -1351,10 +1355,12 @@ input[type='number']::-webkit-outer-spin-button {
 
 .peek-window-title {
 	justify-self: center;
+	align-self: center;
 	margin: 0;
-	font-size: 0.8rem;
+	font-size: 0.9rem;
 	text-overflow: hidden;
 	white-space: nowrap;
+	text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .peek-window-open {
@@ -1390,9 +1396,10 @@ input[type='number']::-webkit-outer-spin-button {
 
 .peek-window-close {
 	justify-self: end;
+	align-self: center;
 	border-radius: 50%;
-	width: 1rem;
-	height: 1rem;
+	width: 1.25rem;
+	height: 1.25rem;
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
@@ -1409,8 +1416,8 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .peek-window-close svg {
-	width: 0.55rem;
-	height: 0.55rem;
+	width: 0.65rem;
+	height: 0.65rem;
 	fill: white;
 }
 
@@ -1466,26 +1473,38 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .editor-settings-wrapper {
-	padding-left: 0.5rem;
+	padding-left: 0.25rem;
 }
 
 .settings-section {
-  margin-left: 1rem;
+	margin-left: 1.25rem;
 }
+.settings-section .flex-row-center {
+	margin: 0.5rem 0;
+}
+
 .settings-range-slider-wrapper {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	margin-left: 1.5rem;
+	/* margin-left: 1.5rem; */
 }
 .settings-category-title {
 	font-size: 1.15rem;
 	font-weight: bold;
 	color: var(--color-text);
-	margin: 1.25rem 0 0.75rem 0;
+	margin: 1.5rem 0 0.5rem 0;
+	padding-left: 0.5rem;
+	border-left: 4px solid var(--color-primary);
+}
+.settings-category-subtitle {
+	font-size: 1rem;
+	width: 6.5rem;
+	font-weight: bold;
+	margin: 0;
 }
 .settings-range-slider {
-	width: 200px;
+	width: 10rem;
 	-webkit-appearance: none;
 }
 .settings-range-slider:focus {
@@ -1524,18 +1543,18 @@ input[type='number']::-webkit-outer-spin-button {
 	font-size: 1rem;
 }
 
-.accent-color-swatch-row {
+/* .accent-color-swatch-row {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-}
+} */
 
 .accent-color-swatch {
 	background-color: var(--color-primary);
 	width: 3.5rem;
 	height: 1.5rem;
 	/* width: 1.5rem; */
-	margin-left: 1.5rem;
+	/* margin-left: 1.5rem; */
 	border: 1px solid rgba(0, 0, 0, 0.5);
 	border-radius: 5px;
 	cursor: pointer;
@@ -1645,7 +1664,7 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 .editor-settings-font-select {
-	margin-left: 1.5rem;
+	/* margin-left: 1.5rem; */
 	border: 1px solid var(--color-text);
 	border-radius: 5px;
 	font-size: 1rem;

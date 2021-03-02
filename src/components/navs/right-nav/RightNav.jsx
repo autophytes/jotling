@@ -1,6 +1,7 @@
 import React, { useState, useRef, useContext } from 'react';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
+import { RightNavContext } from '../../../contexts/rightNavContext';
 
 import PushpinSVG from '../../../assets/svg/PushpinSVG';
 import TagSingleSVG from '../../../assets/svg/TagSingleSVG';
@@ -11,12 +12,13 @@ import RightNavTags from './RightNavTags/RightNavTags';
 
 const RightNav = () => {
 	// STATE
-	const [pinNav, setPinNav] = useState(false);
+	// const [pinNav, setPinNav] = useState(false);
 	const [isResizing, setIsResizing] = useState(false);
-	const [activeTab, setActiveTab] = useState('tags');
 
 	// CONTEXT
 	const { editorStyles, setEditorStyles, resetNavWidth } = useContext(LeftNavContext);
+	const { activeTab, setActiveTab } = useContext(RightNavContext);
+	const pinNav = editorStyles.rightIsPinned;
 
 	// REFS
 	const navRef = useRef(null);
@@ -83,7 +85,7 @@ const RightNav = () => {
 						<button
 							className={'nav-button' + (pinNav ? ' active' : '')}
 							onMouseUp={() => {
-								setPinNav(!pinNav);
+								// setPinNav(!pinNav);
 								setEditorStyles({ ...editorStyles, rightIsPinned: !pinNav });
 							}}>
 							<PushpinSVG />

@@ -224,13 +224,16 @@ const EditorSettings = () => {
 
 	return (
 		<>
-			<ResizableWindow windowTitle='Editor Settings' closeFn={closeFn} defaultWidth={350}>
+			<ResizableWindow windowTitle='Editor Settings' closeFn={closeFn} defaultWidth={400}>
 				<div className='editor-settings-wrapper'>
-					<p className='settings-category-title'>Page</p>
+					{/* PAGE */}
+					<p className='settings-category-title' style={{ marginTop: '0.5rem' }}>
+						Page
+					</p>
 					<div className='settings-section'>
-						<div className='flex-row'>
+						<div className='flex-row-center'>
 							{/* EDITOR PADDING */}
-							<p className='settings-category-title'>Margin</p>
+							<p className='settings-category-subtitle'>Margin</p>
 							<div className='settings-range-slider-wrapper'>
 								<input
 									className='settings-range-slider'
@@ -252,9 +255,9 @@ const EditorSettings = () => {
 							</div>
 						</div>
 
-						<div className='flex-row'>
+						<div className='flex-row-center'>
 							{/* EDITOR MAX WIDTH */}
-							<p className='settings-category-title'>Page Width</p>
+							<p className='settings-category-subtitle'>Page Width</p>
 							<div className='settings-range-slider-wrapper'>
 								<input
 									className='settings-range-slider'
@@ -277,182 +280,196 @@ const EditorSettings = () => {
 						</div>
 					</div>
 
-					<p className='settings-category-title'>Accent Color</p>
-					<div className='accent-color-swatch-row'>
-						<div
-							ref={primaryColorSwatchRef}
-							className='accent-color-swatch'
-							onClick={(e) => {
-								e.stopPropagation();
-								setShowAccentPicker(true);
-							}}
-						/>
-						<button
-							className='editor-settings-reset'
-							onClick={() => {
-								setEditorSettings({
-									...editorSettings,
-									primaryColor: defaultSettings.primaryColor,
-									primaryColorRgb: defaultSettings.primaryColorRgb,
-								});
-								handlePrimaryColorChange({
-									hex: defaultSettings.primaryColor,
-									rgb: defaultSettings.primaryColorRgb,
-								});
-							}}>
-							<ResetSVG />
-						</button>
-					</div>
-					{showAccentPicker && (
-						<PopperContainer
-							referenceElement={primaryColorSwatchRef.current}
-							closeFn={() => setShowAccentPicker(false)}
-							style={{ zIndex: 10 }}>
-							<div className='accent-color-swatch-picker'>
-								<SketchPicker
-									disableAlpha={true}
-									color={primaryColor}
-									width={160}
-									onChange={handlePrimaryColorChange}
-									onChangeComplete={(color) => {
-										setEditorSettings({
-											...editorSettings,
-											primaryColor: color.hex,
-											primaryColorRgb: `${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`,
-										});
-									}}
-									presetColors={editorSettings.primaryColorList}
-								/>
-							</div>
-						</PopperContainer>
-					)}
+					{/* COLORS */}
+					<p className='settings-category-title'>Colors</p>
+					<div className='settings-section'>
+						<div className='flex-row-center'>
+							<p className='settings-category-subtitle'>Accent</p>
+							<div
+								ref={primaryColorSwatchRef}
+								className='accent-color-swatch'
+								onClick={(e) => {
+									e.stopPropagation();
+									setShowAccentPicker(true);
+								}}
+							/>
+							<button
+								className='editor-settings-reset'
+								onClick={() => {
+									setEditorSettings({
+										...editorSettings,
+										primaryColor: defaultSettings.primaryColor,
+										primaryColorRgb: defaultSettings.primaryColorRgb,
+									});
+									handlePrimaryColorChange({
+										hex: defaultSettings.primaryColor,
+										rgb: defaultSettings.primaryColorRgb,
+									});
+								}}>
+								<ResetSVG />
+							</button>
+						</div>
+						{showAccentPicker && (
+							<PopperContainer
+								referenceElement={primaryColorSwatchRef.current}
+								closeFn={() => setShowAccentPicker(false)}
+								style={{ zIndex: 10 }}>
+								<div className='accent-color-swatch-picker'>
+									<SketchPicker
+										disableAlpha={true}
+										color={primaryColor}
+										width={160}
+										onChange={handlePrimaryColorChange}
+										onChangeComplete={(color) => {
+											setEditorSettings({
+												...editorSettings,
+												primaryColor: color.hex,
+												primaryColorRgb: `${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}`,
+											});
+										}}
+										presetColors={editorSettings.primaryColorList}
+									/>
+								</div>
+							</PopperContainer>
+						)}
 
-					<p className='settings-category-title'>Background Color</p>
-					<div className='accent-color-swatch-row'>
-						<div
-							ref={backdropColorSwatchRef}
-							style={{ backgroundColor: 'var(--color-backdrop)' }}
-							className='accent-color-swatch'
-							onClick={(e) => {
-								e.stopPropagation();
-								setShowBackdropPicker(true);
-							}}
-						/>
-						{/* Reset */}
-						<button
-							className='editor-settings-reset'
-							onClick={() => {
-								setEditorSettings({
-									...editorSettings,
-									backdropColor: defaultSettings.backdropColor,
-								});
-								handleBackdropColorColorChange({
-									hex: defaultSettings.backdropColor,
-								});
-							}}>
-							<ResetSVG />
-						</button>
-					</div>
-					{showBackdropPicker && (
-						<PopperContainer
-							referenceElement={backdropColorSwatchRef.current}
-							closeFn={() => setShowBackdropPicker(false)}
-							style={{ zIndex: 10 }}>
-							<div className='accent-color-swatch-picker'>
-								<SketchPicker
-									disableAlpha={true}
-									color={backdropColor}
-									width={160}
-									onChange={handleBackdropColorColorChange}
-									onChangeComplete={(color) => {
-										setEditorSettings({
-											...editorSettings,
-											backdropColor: color.hex,
-										});
-									}}
-									presetColors={editorSettings.primaryColorList}
-								/>
-							</div>
-						</PopperContainer>
-					)}
-
-					{/* FONTS */}
-					<p className='settings-category-title'>Font</p>
-					<select
-						value={fontSettings.currentFont}
-						className='editor-settings-font-select'
-						onChange={(e) => handleFontSelect(e.target.value)}>
-						{fontSettings.recentlyUsedFonts.map((font, i) => (
-							<option key={i} value={font}>
-								{font}
-							</option>
-						))}
-						<option disabled>- - - - -</option>
-
-						{fontList.map((font, i) => {
-							const trimFont = font.replace(/["]+/g, '');
-							return (
-								<option key={i} value={trimFont}>
-									{trimFont}
-								</option>
-							);
-						})}
-					</select>
-
-					{/* FONT SIZE */}
-					<p className='settings-category-title'>Font Size</p>
-					<div className='flex-row-center' style={{ marginLeft: '1.5rem' }}>
-						<input
-							type='number'
-							min='0'
-							max='999'
-							value={fontSize}
-							className='settings-range-number-input'
-							style={{ marginLeft: 0 }}
-							onChange={(e) => setFontSize(e.target.value)}
-						/>
-						<button
-							className='nav-button toggle-font-size'
-							onClick={() => increaseDecreaseFontSize('decrease')}
-							style={{ marginLeft: '0.5rem' }}>
-							<DecreaseFontSizeSVG />
-						</button>
-						<button
-							className='nav-button toggle-font-size'
-							onClick={() => increaseDecreaseFontSize('increase')}>
-							<IncreaseFontSizeSVG />
-						</button>
+						<div className='flex-row-center'>
+							<p className='settings-category-subtitle'>Background</p>
+							<div
+								ref={backdropColorSwatchRef}
+								style={{ backgroundColor: 'var(--color-backdrop)' }}
+								className='accent-color-swatch'
+								onClick={(e) => {
+									e.stopPropagation();
+									setShowBackdropPicker(true);
+								}}
+							/>
+							{/* Reset */}
+							<button
+								className='editor-settings-reset'
+								onClick={() => {
+									setEditorSettings({
+										...editorSettings,
+										backdropColor: defaultSettings.backdropColor,
+									});
+									handleBackdropColorColorChange({
+										hex: defaultSettings.backdropColor,
+									});
+								}}>
+								<ResetSVG />
+							</button>
+						</div>
+						{showBackdropPicker && (
+							<PopperContainer
+								referenceElement={backdropColorSwatchRef.current}
+								closeFn={() => setShowBackdropPicker(false)}
+								style={{ zIndex: 10 }}>
+								<div className='accent-color-swatch-picker'>
+									<SketchPicker
+										disableAlpha={true}
+										color={backdropColor}
+										width={160}
+										onChange={handleBackdropColorColorChange}
+										onChangeComplete={(color) => {
+											setEditorSettings({
+												...editorSettings,
+												backdropColor: color.hex,
+											});
+										}}
+										presetColors={editorSettings.primaryColorList}
+									/>
+								</div>
+							</PopperContainer>
+						)}
 					</div>
 
-					{/* LINE HEIGHT */}
-					<p className='settings-category-title'>Line Spacing</p>
-					<input
-						type='number'
-						min='0'
-						max='10'
-						step='0.1'
-						className='settings-range-number-input'
-						style={{ marginLeft: '1.5rem' }}
-						value={lineHeight}
-						onChange={(e) => {
-							setLineHeight(e.target.value);
-						}}
-					/>
+					{/* TEXT */}
+					<p className='settings-category-title'>Text</p>
+					<div className='settings-section'>
+						<div className='flex-row-center'>
+							<p className='settings-category-subtitle'>Font</p>
+							<select
+								value={fontSettings.currentFont}
+								className='editor-settings-font-select'
+								onChange={(e) => handleFontSelect(e.target.value)}>
+								{fontSettings.recentlyUsedFonts.map((font, i) => (
+									<option key={i} value={font}>
+										{font}
+									</option>
+								))}
+								<option disabled>- - - - -</option>
 
-					{/* PARAGRAPH SPACING */}
-					<p className='settings-category-title'>Paragraph Spacing</p>
-					<input
-						type='number'
-						min='0'
-						max='10'
-						step='0.1'
-						className='settings-range-number-input'
-						style={{ marginLeft: '1.5rem' }}
-						value={paragraphSpacing}
-						onChange={(e) => {
-							setParagraphSpacing(e.target.value);
-						}}
-					/>
+								{fontList.map((font, i) => {
+									const trimFont = font.replace(/["]+/g, '');
+									return (
+										<option key={i} value={trimFont}>
+											{trimFont}
+										</option>
+									);
+								})}
+							</select>
+						</div>
+
+						{/* FONT SIZE */}
+						<div className='flex-row-center'>
+							<p className='settings-category-subtitle'>Font Size</p>
+
+							<input
+								type='number'
+								min='0'
+								max='999'
+								value={fontSize}
+								className='settings-range-number-input'
+								style={{ marginLeft: 0 }}
+								onChange={(e) => setFontSize(e.target.value)}
+							/>
+							<button
+								className='nav-button toggle-font-size'
+								onClick={() => increaseDecreaseFontSize('decrease')}
+								style={{ marginLeft: '0.5rem' }}>
+								<DecreaseFontSizeSVG />
+							</button>
+							<button
+								className='nav-button toggle-font-size'
+								onClick={() => increaseDecreaseFontSize('increase')}>
+								<IncreaseFontSizeSVG />
+							</button>
+						</div>
+
+						{/* LINE HEIGHT */}
+						<div className='flex-row-center'>
+							<p className='settings-category-subtitle'>Line Spacing</p>
+							<input
+								type='number'
+								min='0'
+								max='10'
+								step='0.1'
+								className='settings-range-number-input'
+								style={{ marginLeft: '0' }}
+								value={lineHeight}
+								onChange={(e) => {
+									setLineHeight(e.target.value);
+								}}
+							/>
+						</div>
+
+						{/* PARAGRAPH SPACING */}
+						<div className='flex-row-center'>
+							<p className='settings-category-subtitle'>Paragraph Spacing</p>
+							<input
+								type='number'
+								min='0'
+								max='10'
+								step='0.1'
+								className='settings-range-number-input'
+								style={{ marginLeft: '0' }}
+								value={paragraphSpacing}
+								onChange={(e) => {
+									setParagraphSpacing(e.target.value);
+								}}
+							/>
+						</div>
+					</div>
 				</div>
 			</ResizableWindow>
 		</>

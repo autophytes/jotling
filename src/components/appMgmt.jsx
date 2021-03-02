@@ -12,6 +12,7 @@ import EditorContainer from './editor/EditorContainer';
 import { LeftNavContext } from '../contexts/leftNavContext';
 import { FindReplaceContext } from '../contexts/findReplaceContext';
 import { SettingsContext } from '../contexts/settingsContext';
+import { RightNavContext } from '../contexts/rightNavContext';
 
 import LoadingOverlay from './loadingOverlay';
 
@@ -73,6 +74,7 @@ const AppMgmt = () => {
 		setSyncLinkIdList,
 		showUploadImage,
 		saveFileRef,
+		setEditorStyles,
 	} = useContext(LeftNavContext);
 	const {
 		setShowFindReplace,
@@ -84,6 +86,7 @@ const AppMgmt = () => {
 		setFindText,
 	} = useContext(FindReplaceContext);
 	const { showEditorSettings } = useContext(SettingsContext);
+	const { setActiveTab: setRightNavActiveTab } = useContext(RightNavContext);
 
 	// HiddenContextMenu();
 	console.log('appMgmt refreshed!!');
@@ -372,6 +375,11 @@ const AppMgmt = () => {
 			setWikiMetadata((prev) => ({
 				...prev,
 				displayDoc: docName ? docName : `doc${docId}.json`,
+			}));
+			setRightNavActiveTab('tags');
+			setEditorStyles((prev) => ({
+				...prev,
+				rightIsPinned: true,
 			}));
 		});
 	}, []);
