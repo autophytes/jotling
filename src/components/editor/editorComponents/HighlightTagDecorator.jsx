@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
+import { LeftNavContext } from '../../../contexts/leftNavContext';
 
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
@@ -28,6 +29,8 @@ const HighlightTagDecorator = ({ children, decoratedText, childDecorator = {} })
 	} = childDecorator;
 	const [componentIndex, setComponentIndex] = useState(-1);
 
+	const { showAllTags } = useContext(LeftNavContext);
+
 	console.log('HIGHLIGHT TAG DECORATOR rendered');
 
 	useEffect(() => {
@@ -43,7 +46,10 @@ const HighlightTagDecorator = ({ children, decoratedText, childDecorator = {} })
 	);
 
 	return (
-		<span style={{ fontWeight: 'bold' }} data-context-menu-show-tag-name={decoratedText}>
+		<span
+			className={showAllTags ? 'highlight-tag-decorator' : ''}
+			// style={{ fontWeight: 'bold' }}
+			data-context-menu-show-tag-name={decoratedText}>
 			{Component ? (
 				<Component
 					{...getComponentProps(componentIndex)}

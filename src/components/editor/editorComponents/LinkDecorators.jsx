@@ -44,7 +44,7 @@ const LinkSourceDecorator = ({
 	const {
 		setLinkStructure,
 		linkStructureRef,
-		editorStyles,
+		showAllTags,
 		editorStateRef,
 		navData,
 		scrollToLinkId,
@@ -181,15 +181,10 @@ const LinkSourceDecorator = ({
 		<span
 			className={
 				'link-source-decorator' +
-				(editorStyles.showAllTags ||
-				editorStyles.showIndTags.includes(tagName) ||
-				showActive ||
-				hoverSourceLinkId === linkId
-					? ' active'
-					: '')
+				(showAllTags || showActive || hoverSourceLinkId === linkId ? ' active' : '')
 			}
-			onMouseEnter={handleHoverStart}
-			onMouseLeave={handleHoverLeave}>
+			onMouseEnter={!showAllTags ? handleHoverStart : null}
+			onMouseLeave={!showAllTags ? handleHoverLeave : null}>
 			{Component ? (
 				<Component
 					{...componentProps}
@@ -216,7 +211,7 @@ const LinkDestDecorator = ({
 	childDecorator = {},
 }) => {
 	// CONTEXT
-	const { setLinkStructure, linkStructureRef, editorStyles, setPeekWindowLinkId } = useContext(
+	const { setLinkStructure, linkStructureRef, showAllTags, setPeekWindowLinkId } = useContext(
 		LeftNavContext
 	);
 	const { hoverDestLinkId, setHoverDestLinkId } = useContext(DecoratorContext);
@@ -292,11 +287,10 @@ const LinkDestDecorator = ({
 		<>
 			<span
 				className={
-					'link-dest-decorator' +
-					(editorStyles.showAllTags || hoverDestLinkId === linkId ? ' active' : '')
+					'link-dest-decorator' + (showAllTags || hoverDestLinkId === linkId ? ' active' : '')
 				}
-				onMouseEnter={handleHoverStart}
-				onMouseLeave={handleHoverLeave}
+				onMouseEnter={!showAllTags ? handleHoverStart : null}
+				onMouseLeave={!showAllTags ? handleHoverLeave : null}
 				style={{ position: 'relative' }}>
 				{Component ? (
 					<Component
@@ -374,8 +368,7 @@ const LinkDestBlock = (props) => {
 	return (
 		<div
 			className={
-				'link-dest-decorator' +
-				(editorStyles.showAllTags || hoverDestLinkId === linkId ? ' active' : '')
+				'link-dest-decorator' + (showAllTags || hoverDestLinkId === linkId ? ' active' : '')
 			}
 			style={{ position: 'relative' }}
 			// onMouseEnter={handleHoverStart}
@@ -395,7 +388,7 @@ const LinkDestBlock = (props) => {
 	// 	<div
 	// 		className={
 	// 			'link-dest-decorator' +
-	// 			(editorStyles.showAllTags || hoverDestLinkId === linkId ? ' active' : '')
+	// 			(showAllTags || hoverDestLinkId === linkId ? ' active' : '')
 	// 		}
 	// 		style={{ position: 'relative' }}
 	// 		onMouseEnter={handleHoverStart}

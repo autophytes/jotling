@@ -141,7 +141,6 @@ const defaultDecorator = [
 export const generateDecorators = (
 	docStructure,
 	currentDoc,
-	showAllTags,
 	findText,
 	findRegisterRef,
 	editorStateRef
@@ -149,12 +148,11 @@ export const generateDecorators = (
 ) => {
 	let decoratorArray = [...defaultDecorator];
 
-	if (showAllTags) {
-		decoratorArray.push({
-			strategy: findTagsToHighlight(docStructure.pages, currentDoc),
-			component: HighlightTagDecorator,
-		});
-	}
+	// Always wrap the wiki names
+	decoratorArray.push({
+		strategy: findTagsToHighlight(docStructure.pages, currentDoc),
+		component: HighlightTagDecorator,
+	});
 
 	if (findText) {
 		decoratorArray.push({

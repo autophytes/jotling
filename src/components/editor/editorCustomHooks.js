@@ -20,24 +20,16 @@ import { FindReplaceContext } from '../../contexts/findReplaceContext';
 // Debounce the decorator updates - make sure the user has paused typing
 
 export const useDecorator = (currentDoc, setEditorState) => {
-	const [showAllTags, setShowAllTags] = useState(false);
 	const [decorator, setDecorator] = useState(defaultCompositeDecorator);
 	const [needToClearFind, setNeedToClearFind] = useState(false);
 
 	const queuedUpdate = useRef(null);
 
-	const { docStructureRef, editorStyles, editorStateRef } = useContext(LeftNavContext);
+	const { docStructureRef, editorStateRef } = useContext(LeftNavContext);
 	const { findText, findRegisterRef } = useContext(FindReplaceContext);
 
-	// Break out our showAllTags flag
-	useEffect(() => {
-		if (editorStyles.showAllTags !== showAllTags) {
-			setShowAllTags(editorStyles.showAllTags);
-		}
-	}, [editorStyles, showAllTags]);
-
 	// Debounce our full page "find" decorator update
-	const queueDecoratorUpdate = useCallback((currentDoc, showAllTags, findText) => {
+	const queueDecoratorUpdate = useCallback((currentDoc, findText) => {
 		// Remove any queued updates to linkStructure
 		clearTimeout(queuedUpdate.current);
 
@@ -48,7 +40,6 @@ export const useDecorator = (currentDoc, setEditorState) => {
 				generateDecorators(
 					docStructureRef.current,
 					currentDoc,
-					showAllTags,
 					findText,
 					findRegisterRef,
 					editorStateRef
@@ -65,11 +56,9 @@ export const useDecorator = (currentDoc, setEditorState) => {
 	useEffect(() => {
 		console.log('updating decorator');
 
-		if (!findText && showAllTags && !needToClearFind) {
-			setDecorator(
-				generateDecorators(docStructureRef.current, currentDoc, showAllTags, findText)
-			);
-		} else if (showAllTags || findText || needToClearFind) {
+		if (!findText && !needToClearFind) {
+			setDecorator(generateDecorators(docStructureRef.current, currentDoc, findText));
+		} else if (findText || needToClearFind) {
 			if (!findText && needToClearFind) {
 				setNeedToClearFind(false);
 			} else if (!needToClearFind) {
@@ -77,11 +66,11 @@ export const useDecorator = (currentDoc, setEditorState) => {
 			}
 
 			// Delay the update of the rest of the search results
-			queueDecoratorUpdate(currentDoc, showAllTags, findText);
+			queueDecoratorUpdate(currentDoc, findText);
 		} else {
 			setDecorator(defaultCompositeDecorator);
 		}
-	}, [showAllTags, currentDoc, findText, queueDecoratorUpdate, needToClearFind]);
+	}, [currentDoc, findText, queueDecoratorUpdate, needToClearFind]);
 
 	// Monitor the decorator for changes to update the editorState
 	useEffect(() => {

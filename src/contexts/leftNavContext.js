@@ -32,14 +32,13 @@ const LeftNavContextProvider = (props) => {
 		editFile: '',
 		parentFolders: [],
 	});
+	const [showAllTags, setShowAllTags] = useState(false);
 	const [editorStyles, setEditorStyles] = useState({
 		leftNav: DEFAULT_WIDTH,
 		leftNavFind: 18,
 		leftIsPinned: true,
 		rightNav: DEFAULT_WIDTH,
 		rightIsPinned: false,
-		showAllTags: false,
-		showIndTags: [],
 	});
 	const [editorArchives, setEditorArchivesOrig] = useState({});
 
@@ -346,6 +345,8 @@ const LeftNavContextProvider = (props) => {
 				setLinkStructure,
 				editorStyles,
 				setEditorStyles,
+				showAllTags,
+				setShowAllTags,
 				resetNavWidth,
 				setEditorArchives,
 				editorArchivesRef, // Nothing should monitor editorArchives

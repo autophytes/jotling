@@ -98,8 +98,8 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 
 	// CONTEXT
 	const {
-		editorStyles,
-		setEditorStyles,
+		showAllTags,
+		setShowAllTags,
 		displayWikiPopper,
 		setDisplayWikiPopper,
 		setDocStructure,
@@ -442,16 +442,13 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 
 					{/* Show / Hide Keys/Links */}
 					<button
-						className={'nav-button' + (editorStyles.showAllTags ? ' active' : '')}
+						className={'nav-button' + (showAllTags ? ' active' : '')}
 						title='Show Wiki Links'
 						onMouseDown={(e) => {
 							e.preventDefault();
-							setEditorStyles({
-								...editorStyles,
-								showAllTags: !editorStyles.showAllTags,
-							});
+							setShowAllTags(!showAllTags);
 						}}>
-						{editorStyles.showAllTags ? <EyeSVG /> : <EyeHideSVG />}
+						{showAllTags ? <EyeSVG /> : <EyeHideSVG />}
 					</button>
 
 					<button
