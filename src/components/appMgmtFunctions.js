@@ -1,8 +1,13 @@
 import { ipcRenderer } from 'electron';
-import { convertFromRaw, EditorState } from 'draft-js';
+import { convertFromRaw, EditorState, Modifier, SelectionState } from 'draft-js';
 
 import { getBlockPlainTextArray } from '../utils/draftUtils';
-import { findFirstDocInFolder } from '../utils/utils';
+import {
+	findFirstDocInFolder,
+	retrieveContentAtPropertyPath,
+	findFilePath,
+} from '../utils/utils';
+import { addFile } from './navs/navFunctions';
 
 // Loads the document / structures when the project changes
 export const loadProjectFiles = async ({
@@ -163,4 +168,78 @@ const preloadEachDocument = (docArray, newAllDocObj, setEditorArchives) => {
 	}, 0);
 };
 
-// MOVE THESE DEFS TO A SEPARATE FILE
+export const duplicateDocument = ({
+	docId,
+	currentTab,
+	navDataRef,
+	docStructureRef,
+	setDocStructure,
+	setNavData,
+	saveFileRef,
+	editorStateRef,
+	editorArchivesRef,
+}) => {
+	console.log('docId:', docId);
+
+	// Grab the original document
+	const origFilePath = findFilePath(docStructureRef.current[currentTab], '', 'doc', docId);
+	if (origFilePath === undefined) {
+		return;
+	}
+
+	const childrenArray = retrieveContentAtPropertyPath(
+		origFilePath + (origFilePath === '' ? '' : '/') + 'children',
+		docStructureRef.current[currentTab]
+	);
+	const origDoc = childrenArray.find(
+		(item) => item.id === Number(docId) && item.type === 'doc'
+	);
+
+	// Add a new document below our original
+	const { id: newDocId } = addFile(
+		'doc',
+		docStructureRef.current,
+		setDocStructure,
+		currentTab,
+		'doc',
+		docId,
+		navDataRef.current,
+		setNavData,
+		saveFileRef,
+		origDoc.name + ' copy',
+		true // Don't open file
+	);
+
+	// Find the editorState to copy
+	let editorStateToDuplicate;
+	if (navDataRef.current.currentDoc === origDoc.fileName) {
+		editorStateToDuplicate = editorStateRef.current;
+	} else {
+		editorStateToDuplicate = editorArchivesRef.current[origDoc.fileName].editorState;
+	}
+
+	// Remove wiki page links
+	const editorStateNoLinks = removeEntities(editorStateToDuplicate);
+
+	// Save the editorState to the file
+	saveFileRef.current(`doc${newDocId}.json`, editorStateNoLinks);
+};
+
+const removeEntities = (editorState) => {
+	console.log('editorState:', editorState);
+	const contentState = editorState.getCurrentContent();
+	const firstBlock = contentState.getFirstBlock();
+	const lastBlock = contentState.getLastBlock();
+
+	const emptySelectionState = SelectionState.createEmpty();
+	const entireSelectionState = emptySelectionState.merge({
+		anchorKey: firstBlock.getKey(),
+		anchorOffset: 0,
+		focusKey: lastBlock.getKey(),
+		focusOffset: lastBlock.getLength(),
+	});
+
+	const newContentState = Modifier.applyEntity(contentState, entireSelectionState, null);
+
+	return EditorState.push(editorState, newContentState, 'apply-entity');
+};

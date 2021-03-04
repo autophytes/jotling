@@ -33,7 +33,7 @@ import HiddenContextMenu from './hiddenContextMenu';
 import UploadImageForm from './forms/UploadImageForm';
 
 import { exportProject } from './export/export';
-import { loadProjectFiles } from './appMgmtFunctions';
+import { loadProjectFiles, duplicateDocument } from './appMgmtFunctions';
 
 // For an example of how we can use web workers. Webpack already configured. Doesn't work with Draft.
 //   https://willowtreeapps.com/ideas/improving-web-app-performance-with-web-worker
@@ -381,6 +381,20 @@ const AppMgmt = () => {
 				...prev,
 				rightIsPinned: true,
 			}));
+		});
+
+		ipcRenderer.on('duplicate-document', (e, { docId, currentTab }) => {
+			duplicateDocument({
+				docId,
+				currentTab,
+				navDataRef,
+				docStructureRef,
+				setDocStructure,
+				setNavData,
+				saveFileRef,
+				editorStateRef,
+				editorArchivesRef,
+			});
 		});
 	}, []);
 

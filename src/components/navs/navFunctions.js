@@ -284,7 +284,7 @@ export const addFile = (
 			folderStructure
 		);
 		let prevIndex = childrenArray.findIndex(
-			(item) => item.id === lastClickedId && item.type === lastClickedType
+			(item) => item.id === Number(lastClickedId) && item.type === lastClickedType
 		);
 		if (prevIndex > -1) {
 			insertIndex = prevIndex + 1;
