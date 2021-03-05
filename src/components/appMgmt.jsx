@@ -58,6 +58,7 @@ const AppMgmt = () => {
 		setMediaStructure,
 		wikiMetadata,
 		setWikiMetadata,
+		wikiMetadataRef,
 		mediaStructureRef,
 		project,
 		setProject,
@@ -394,6 +395,10 @@ const AppMgmt = () => {
 				saveFileRef,
 				editorStateRef,
 				editorArchivesRef,
+				mediaStructureRef,
+				setMediaStructure,
+				wikiMetadataRef,
+				setWikiMetadata,
 			});
 		});
 	}, []);

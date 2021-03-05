@@ -554,7 +554,10 @@ button.file-nav input {
 button.file-nav:not(.add-to-wiki):focus {
 	outline: none;
 	/* outline-color: var(--color-primary); */
-	background-color: rgba(var(--color-primary-rgb), 0.2);
+	/* background-color: rgba(var(--color-primary-rgb), 0.2); */
+	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2),
+		0 0 0 1px rgba(var(--color-primary-rgb), 1);
+	/* border: 1px solid var(--color-primary) !important; */
 }
 
 .file-nav .folder-contents {

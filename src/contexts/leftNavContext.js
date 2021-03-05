@@ -21,7 +21,7 @@ const LeftNavContextProvider = (props) => {
 	const [docStructure, setDocStructureOrig] = useState({});
 	const [linkStructure, setLinkStructureOrig] = useState({});
 	const [mediaStructure, setMediaStructureOrig] = useState({});
-	const [wikiMetadata, setWikiMetadata] = useState({});
+	const [wikiMetadata, setWikiMetadataOrig] = useState({});
 	const [project, setProjectOrig] = useState({ tempPath: '', jotsPath: '' });
 	const [navData, setNavDataOrig] = useState({
 		currentDoc: '',
@@ -55,6 +55,7 @@ const LeftNavContextProvider = (props) => {
 	const linkStructureRef = useRef(linkStructure);
 	const docStructureRef = useRef(docStructure);
 	const mediaStructureRef = useRef(mediaStructure);
+	const wikiMetadataRef = useRef(wikiMetadata);
 	const editorStateRef = useRef(EditorState.createEmpty());
 	const editorArchivesRef = useRef(editorArchives);
 	const navDataRef = useRef(navData);
@@ -73,6 +74,10 @@ const LeftNavContextProvider = (props) => {
 
 	const setMediaStructure = (value) => {
 		convertSetterToRefSetter(mediaStructureRef, setMediaStructureOrig, value);
+	};
+
+	const setWikiMetadata = (value) => {
+		convertSetterToRefSetter(wikiMetadataRef, setWikiMetadataOrig, value);
 	};
 
 	const setNavData = (value) => {
@@ -372,6 +377,7 @@ const LeftNavContextProvider = (props) => {
 				setMediaStructure,
 				wikiMetadata,
 				setWikiMetadata,
+				wikiMetadataRef,
 				isImageSelectedRef,
 				customStyles,
 				saveFile,

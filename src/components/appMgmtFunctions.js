@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { convertFromRaw, EditorState, Modifier, SelectionState } from 'draft-js';
+import { ContentState, convertFromRaw, EditorState, Modifier, SelectionState } from 'draft-js';
 
 import { getBlockPlainTextArray } from '../utils/draftUtils';
 import {
@@ -178,6 +178,9 @@ export const duplicateDocument = ({
 	saveFileRef,
 	editorStateRef,
 	editorArchivesRef,
+	mediaStructureRef,
+	setMediaStructure,
+	setWikiMetadata,
 }) => {
 	console.log('docId:', docId);
 
@@ -209,6 +212,7 @@ export const duplicateDocument = ({
 		origDoc.name + ' copy',
 		true // Don't open file
 	);
+	const newFileName = `doc${newDocId}.json`;
 
 	// Find the editorState to copy
 	let editorStateToDuplicate;
@@ -219,12 +223,37 @@ export const duplicateDocument = ({
 	}
 
 	// Remove wiki page links
-	const editorStateNoLinks = removeEntities(editorStateToDuplicate);
+	const editorStateLinks = removeEntities(editorStateToDuplicate);
+
+	// Update imageUseIds
+	const editorStateImages = updateImages(
+		editorStateLinks,
+		mediaStructureRef,
+		setMediaStructure,
+		newFileName
+	);
+
+	// Create the wikiMetadata entry
+	setWikiMetadata((prev) => ({
+		...prev,
+		wikis: {
+			...prev.wikis,
+			[newFileName]: { ...prev.wikis[origDoc.fileName] },
+		},
+	}));
 
 	// Save the editorState to the file
-	saveFileRef.current(`doc${newDocId}.json`, editorStateNoLinks);
+	saveFileRef.current(newFileName, editorStateImages, newFileName);
+
+	// Open the new document
+	setNavData((prev) => ({
+		...prev,
+		currentDoc: newFileName,
+		lastClicked: { type: 'doc', id: newDocId },
+	}));
 };
 
+// Remove all entities from an editorState
 const removeEntities = (editorState) => {
 	console.log('editorState:', editorState);
 	const contentState = editorState.getCurrentContent();
@@ -242,4 +271,75 @@ const removeEntities = (editorState) => {
 	const newContentState = Modifier.applyEntity(contentState, entireSelectionState, null);
 
 	return EditorState.push(editorState, newContentState, 'apply-entity');
+};
+
+// Update imageUseIds in the duplicated document, return new editorState
+const updateImages = (editorState, mediaStructureRef, setMediaStructure, newFileName) => {
+	const contentState = editorState.getCurrentContent();
+	let blocks = contentState.getBlocksAsArray();
+
+	let newMediaStructure = JSON.parse(JSON.stringify(mediaStructureRef.current));
+
+	// Looking for images on each block
+	const updatedBlocks = blocks.reduce((newBlocks, block) => {
+		// Pull images from the block
+		const data = block.getData();
+		const images = data.get('images');
+
+		// If no images, move on
+		if (!images) {
+			return [...newBlocks, block];
+		}
+
+		let newImages = [...images];
+
+		// Update the blocks and mediaStructure with new imageUseIds
+		images.forEach((image, i) => {
+			const imageEntry = newMediaStructure[image.imageId];
+			const maxId = imageEntry.uses
+				? Math.max(...Object.keys(imageEntry.uses).map((id) => Number(id)))
+				: 0;
+
+			// Ensure the property "uses" exists
+			if (!newMediaStructure[image.imageId].uses) {
+				newMediaStructure[image.imageId].uses = {};
+			}
+
+			// Update mediaStructure
+			newMediaStructure[image.imageId].uses[maxId + 1] = {
+				source: newFileName,
+			};
+
+			// Update the block images with the new useId
+			newImages[i] = {
+				...image,
+				imageUseId: maxId + 1,
+			};
+		});
+
+		const newBlockData = data.set('images', newImages);
+		const newBlock = block.set('data', newBlockData);
+
+		return [...newBlocks, newBlock];
+	}, []);
+
+	// SET MEDIA STRUCTURE
+	setMediaStructure(newMediaStructure);
+
+	// Update the blocks in the contentState
+	const newContentState = ContentState.createFromBlockArray(
+		updatedBlocks,
+		contentState.getEntityMap()
+	);
+
+	// Update the editorState
+	return EditorState.push(editorState, newContentState, 'change-block-data');
+
+	// Loop through all blocks
+	// Grab any "images" data
+	// For each image, in the mediaStructure
+	// Pull the image entry
+	// Find the max imageUseId and increment
+	// Add an imageUse entry for our duplicate documents
+	// Update the imageUseId in the image data in the editorState
 };
