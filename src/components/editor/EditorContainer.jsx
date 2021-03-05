@@ -357,6 +357,15 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 		return 'not-handled';
 	};
 
+	// Return key handler - converts shift+return to soft new line
+	const handleReturn = (e) => {
+		if (e.shiftKey) {
+			setEditorState(RichUtils.insertSoftNewline(editorState));
+			return 'handled';
+		}
+		return 'not-handled';
+	};
+
 	// Toggle spellcheck. If turning it off, have to rerender the editor to remove the lines.
 	const toggleSpellCheck = useCallback(
 		(e) => {
@@ -629,6 +638,7 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 							handleKeyCommand={handleKeyCommand}
 							handleBeforeInput={handleBeforeInput}
 							handleDrop={wrappedHandleDrop}
+							handleReturn={handleReturn}
 							customStyleMap={customStyleMap ? customStyleMap : defaultCustomStyleMap}
 							blockStyleFn={blockStyleFn}
 							blockRendererFn={blockRendererFn}
