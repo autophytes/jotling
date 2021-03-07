@@ -46,7 +46,7 @@ const NavFolderEmpty = ({ path, currentlyDragging }) => {
 		<span
 			className='file-nav folder title'
 			ref={folderRef}
-			style={{ ...folderStyles, fontStyle: 'italic', userSelect: 'none', maxWidth: '5rem' }}
+			style={{ ...folderStyles, fontStyle: 'italic', userSelect: 'none' }}
 			// onDragEnter={() => setFolderStyles({ borderBottom: '2px solid var(--color-primary)' })}
 			onDragLeave={() => setFolderStyles({})}
 			onDragOver={handleDragOver}
