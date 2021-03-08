@@ -138,54 +138,60 @@ const NavFolder = ({
 	}, [navData.editFile, child.id, openCloseFolder]);
 
 	return (
-		<button
-			className={'file-nav folder title' + (isOpen ? ' open' : '')}
-			data-context-menu-item-type='folder'
-			data-context-menu-item-id={child.id}
-			data-context-menu-current-tab={navData.currentTab}
+		<div
+			className='file-nav-button-wrapper'
 			style={folderStyles}
-			ref={folderRef}
-			draggable
-			onDragStart={handleDragStart}
 			onDragEnter={handleDragEnter}
 			onDragLeave={handleDragLeave}
-			onDragEnd={() => {
-				// Fires after onDrop.
-				setIsBeingDragged(false);
-				setCurrentlyDragging({ type: '', id: '', path: '' });
-			}}
 			onDragOver={handleDragOver}
-			onDrop={handleDrop}
-			onClick={() => navData.editFile !== 'folder-' + child.id && handleFolderClick(child.id)}
-			// onDoubleClick={() => setNavData({ ...navData, editFile: 'folder-' + child.id })}
-		>
-			<div className='svg-wrapper'>{isOpen ? <FolderOpenSVG /> : <FolderClosedSVG />}</div>
-			{navData.editFile === 'folder-' + child.id ? (
-				<input
-					type='text'
-					value={fileName}
-					autoFocus
-					onChange={(e) => setFileName(e.target.value)}
-					onBlur={(e) =>
-						saveFolderNameChange(
-							e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed'
-						)
-					}
-					onFocus={(e) => e.target.select()}
-					onKeyUp={(e) => {
-						if (e.key === 'Enter') {
-							e.target.blur();
+			onDrop={handleDrop}>
+			<button
+				className={'file-nav folder title' + (isOpen ? ' open' : '')}
+				data-context-menu-item-type='folder'
+				data-context-menu-item-id={child.id}
+				data-context-menu-current-tab={navData.currentTab}
+				// style={folderStyles}
+				ref={folderRef}
+				draggable
+				onDragStart={handleDragStart}
+				onDragEnd={() => {
+					// Fires after onDrop.
+					setIsBeingDragged(false);
+					setCurrentlyDragging({ type: '', id: '', path: '' });
+				}}
+				onClick={() =>
+					navData.editFile !== 'folder-' + child.id && handleFolderClick(child.id)
+				}
+				// onDoubleClick={() => setNavData({ ...navData, editFile: 'folder-' + child.id })}
+			>
+				<div className='svg-wrapper'>{isOpen ? <FolderOpenSVG /> : <FolderClosedSVG />}</div>
+				{navData.editFile === 'folder-' + child.id ? (
+					<input
+						type='text'
+						value={fileName}
+						autoFocus
+						onChange={(e) => setFileName(e.target.value)}
+						onBlur={(e) =>
+							saveFolderNameChange(
+								e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed'
+							)
 						}
-						if (e.key === 'Escape') {
-							setFileName(child.name);
-							setNavData({ ...navData, editFile: '' });
-						}
-					}}
-				/>
-			) : (
-				<span>{child.name}</span>
-			)}
-		</button>
+						onFocus={(e) => e.target.select()}
+						onKeyUp={(e) => {
+							if (e.key === 'Enter') {
+								e.target.blur();
+							}
+							if (e.key === 'Escape') {
+								setFileName(child.name);
+								setNavData({ ...navData, editFile: '' });
+							}
+						}}
+					/>
+				) : (
+					<span>{child.name}</span>
+				)}
+			</button>
+		</div>
 	);
 };
 

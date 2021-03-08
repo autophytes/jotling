@@ -93,12 +93,12 @@ const RightNav = () => {
 					</div>
 					<div className='right-nav-sections'>
 						<div
-							className={'nav-section-tab' + (activeTab === 'tags' ? ' active' : '')}
+							className={'nav-section-tab first' + (activeTab === 'tags' ? ' active' : '')}
 							onClick={() => setActiveTab('tags')}>
 							<TagSingleSVG />
 						</div>
 						<div
-							className={'nav-section-tab first' + (activeTab === 'document' ? ' active' : '')}
+							className={'nav-section-tab' + (activeTab === 'document' ? ' active' : '')}
 							onClick={() => setActiveTab('document')}>
 							<DocumentInfoSVG />
 						</div>

@@ -904,9 +904,9 @@ export const buildFileStructure = (
 						/>
 					) : (
 						<NavFolder
-							child={child}
 							path={[path, 'children'].join('/')}
 							{...{
+								child,
 								handleFolderClick,
 								openCloseFolder,
 								currentlyDragging,

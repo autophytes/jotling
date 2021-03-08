@@ -145,64 +145,68 @@ const NavDocument = ({
 	}, [navData.editFile, child.id, openCloseFolder]);
 
 	return (
-		<button
-			className={
-				'file-nav document' + (navData.currentDoc === child.fileName ? ' active' : '')
-			}
-			data-context-menu-item-type='doc'
-			data-context-menu-item-id={child.id}
-			data-context-menu-current-tab={navData.currentTab}
+		<div
+			className='file-nav-button-wrapper'
 			style={fileStyles}
-			ref={docRef}
-			draggable
-			onDragStart={() => {
-				setCurrentlyDragging({ type: 'doc', id: child.id, path });
-				setIsBeingDragged(true);
-			}}
-			// onDragEnter={() => setFileStyles({ borderBottom: '2px solid var(--color-primary)' })}
 			onDragLeave={() => setFileStyles({})}
-			onDragEnd={() => {
-				setCurrentlyDragging({ type: '', id: '', path: '' });
-				setIsBeingDragged(false);
-			}}
 			onDragOver={handleDragOver}
-			onDrop={handleDrop}
-			onClick={handleClick}
-			// onDoubleClick={() => setNavData({ ...navData, editFile: 'doc-' + child.id })}
-		>
-			<div className='svg-wrapper'>
-				<DocumentSingleSVG />
-			</div>
-			{navData.editFile === 'doc-' + child.id ? (
-				<input
-					type='text'
-					value={fileName}
-					autoFocus
-					onChange={(e) => setFileName(e.target.value)}
-					onBlur={(e) =>
-						saveDocNameChange(
-							e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed',
-							true
-						)
-					}
-					onFocus={(e) => e.target.select()}
-					onKeyUp={(e) => {
-						if (e.key === 'Enter') {
-							// saveDocNameChange(
-							// 	e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed'
-							// );
-							e.target.blur();
+			onDrop={handleDrop}>
+			<button
+				className={
+					'file-nav document' + (navData.currentDoc === child.fileName ? ' active' : '')
+				}
+				data-context-menu-item-type='doc'
+				data-context-menu-item-id={child.id}
+				data-context-menu-current-tab={navData.currentTab}
+				ref={docRef}
+				draggable
+				onDragStart={() => {
+					setCurrentlyDragging({ type: 'doc', id: child.id, path });
+					setIsBeingDragged(true);
+				}}
+				// onDragEnter={() => setFileStyles({ borderBottom: '2px solid var(--color-primary)' })}
+
+				onDragEnd={() => {
+					setCurrentlyDragging({ type: '', id: '', path: '' });
+					setIsBeingDragged(false);
+				}}
+				onClick={handleClick}
+				// onDoubleClick={() => setNavData({ ...navData, editFile: 'doc-' + child.id })}
+			>
+				<div className='svg-wrapper'>
+					<DocumentSingleSVG />
+				</div>
+				{navData.editFile === 'doc-' + child.id ? (
+					<input
+						type='text'
+						value={fileName}
+						autoFocus
+						onChange={(e) => setFileName(e.target.value)}
+						onBlur={(e) =>
+							saveDocNameChange(
+								e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed',
+								true
+							)
 						}
-						if (e.key === 'Escape') {
-							setFileName(child.name);
-							setNavData({ ...navData, editFile: '' });
-						}
-					}}
-				/>
-			) : (
-				<span>{child.name}</span>
-			)}
-		</button>
+						onFocus={(e) => e.target.select()}
+						onKeyUp={(e) => {
+							if (e.key === 'Enter') {
+								// saveDocNameChange(
+								// 	e.target.value ? updateQuotesInString(e.target.value) : 'Unnamed'
+								// );
+								e.target.blur();
+							}
+							if (e.key === 'Escape') {
+								setFileName(child.name);
+								setNavData({ ...navData, editFile: '' });
+							}
+						}}
+					/>
+				) : (
+					<span>{child.name}</span>
+				)}
+			</button>
+		</div>
 	);
 };
 

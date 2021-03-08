@@ -524,6 +524,7 @@ h2.editor-doc-title {
 .left-nav-content {
 	padding-right: 0.5rem;
 	padding-top: 0.25rem;
+	padding-left: 2px;
 }
 
 p.file-nav,
@@ -555,8 +556,7 @@ button.file-nav:not(.add-to-wiki):focus {
 	outline: none;
 	/* outline-color: var(--color-primary); */
 	/* background-color: rgba(var(--color-primary-rgb), 0.2); */
-	box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.2),
-		0 0 0 1px rgba(var(--color-primary-rgb), 1);
+	box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb), 1);
 	/* border: 1px solid var(--color-primary) !important; */
 }
 
@@ -586,10 +586,18 @@ button.file-nav:not(.add-to-wiki):focus {
 	align-items: center;
 	min-width: 5rem;
 	max-width: 100%;
+	padding: 2px 2px;
+	overflow: hidden;
+}
+
+.file-nav-button-wrapper .file-nav.folder.title,
+.file-nav-button-wrapper .file-nav.document {
+	margin: -3px 0;
+}
+
+.file-nav-button-wrapper {
 	border-top: 2px solid transparent;
 	border-bottom: 2px solid transparent;
-	margin: -1px 0;
-	overflow: hidden;
 }
 
 .file-nav.folder.title span,
