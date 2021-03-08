@@ -35,37 +35,13 @@ const HiddenContextMenu = () => {
 			// Emit an event to the back end that will create a context menu
 			// setBrowserParams('blue');
 			let newBrowserParams = {};
-			console.log('e: ', e);
-			// for (let element of e.path) {
-			// 	// DOCUMENT / FOLDER
-			// 	if (element.dataset && element.dataset.contextMenuItemType) {
-			// 		newBrowserParams = {
-			// 			type: element.dataset.contextMenuItemType,
-			// 			id: element.dataset.contextMenuItemId,
-			// 		};
-			// 		break;
-			// 	}
 
-			// 	// DOCUMENT TEXT (LINK)
-			// 	if (element.dataset && element.dataset.offsetKey) {
-			// 		console.log('building the document-text params');
-			// 		const selection = editorStateRef.current.getSelection();
-			// 		if (!selection.isCollapsed()) {
-			// 			console.log("selection isn't collapsed!");
-			// 			const hasLink = selectionHasEntityType(editorStateRef.current);
-			// 			newBrowserParams = {
-			// 				type: 'document-text',
-			// 				hasLink: hasLink,
-			//       };
-			//     }
-			//     break;
-			// 	}
-			// }
+			// e.path was not intentionally exposed as an API, but did work
+			// e.path.find((element) => {
 
-			console.log('e.path: ', e.path);
-
-			//
-			e.path.find((element) => {
+			// See if the element has data to attach
+			const eComposedPath = e.composedPath();
+			eComposedPath.find((element) => {
 				if (!element.dataset) {
 					return;
 				}
