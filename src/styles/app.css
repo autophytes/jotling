@@ -600,6 +600,11 @@ button.file-nav:not(.add-to-wiki):focus {
 	border-bottom: 2px solid transparent;
 }
 
+.file-nav-folder-placeholder {
+	border-top: 2px solid transparent;
+	height: 4px;
+}
+
 .file-nav.folder.title span,
 .file-nav.document span {
 	display: block;
@@ -2152,8 +2157,8 @@ input[type='number']::-webkit-outer-spin-button {
 	visibility: hidden;
 }
 
-.wiki-template-section-row:hover .wiki-template-section-drag-handle,
-.wiki-template-section-row:hover .wiki-template-section-close-handle {
+.wiki-template-section-row:not(.is-dragging):hover .wiki-template-section-drag-handle,
+.wiki-template-section-row:not(.is-dragging):hover .wiki-template-section-close-handle {
 	visibility: unset;
 }
 
@@ -2586,7 +2591,7 @@ textarea.tag-section-value::placeholder {
 	border-bottom: 2px solid var(--color-primary);
 }
 
-.wiki-template-title:hover .wiki-template-section-close-handle {
+.wiki-template-title:hover .wiki-template-section-close-handle:not(.is-dragging) {
 	visibility: unset;
 	cursor: pointer;
 }

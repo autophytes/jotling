@@ -48,6 +48,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	const [tags, setTags] = useState([]);
 	const [openTags, setOpenTags] = useState({});
 	const [deleted, setDeleted] = useState({ tags: [], fields: [] });
+	const [isDragging, setIsDragging] = useState(false);
 
 	const { wikiMetadata, setWikiMetadata } = useContext(LeftNavContext);
 	const { newTagTemplate, setNewTagTemplate } = useContext(RightNavContext);
@@ -273,6 +274,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 	const onDragEnd = (result) => {
 		// Check if order actually changed
 		if (!result.destination || result.destination.index === result.source.index) {
+			setIsDragging(false);
 			return;
 		}
 
@@ -289,6 +291,8 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 		let newTags = [...tags];
 		newTags[tagIndex].fields = reorderedFields;
 		setTags(newTags);
+
+		setIsDragging(false);
 	};
 
 	// If hitting enter when typing, select next field or create a new one
@@ -460,7 +464,10 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 								message={`'${tag.tagName}', it's fields, and all data you've stored in them`}
 								noOverlay
 								deleteFunc={() => updateTag(tag.id, true)}>
-								<div className='wiki-template-section-close-handle'>
+								<div
+									className={
+										'wiki-template-section-close-handle' + (isDragging ? ' is-dragging' : '')
+									}>
 									<TrashSVG />
 								</div>
 							</ConfirmDeleteButton>
@@ -468,7 +475,7 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 
 						<Collapse isOpen={openTags[tag.id]}>
 							<div className='wiki-template-section-list'>
-								<DragDropContext onDragEnd={onDragEnd}>
+								<DragDropContext onDragEnd={onDragEnd} onDragStart={() => setIsDragging(true)}>
 									<Droppable droppableId={tag.id.toString()}>
 										{(provided) => (
 											<div ref={provided.innerRef} {...provided.droppableProps}>
@@ -480,7 +487,10 @@ const TagTemplatesForm = ({ setDisplayModal }) => {
 														key={tag.tagName + field.id}>
 														{(provided) => (
 															<div
-																className='wiki-template-section-row'
+																className={
+																	'wiki-template-section-row' +
+																	(isDragging ? ' is-dragging' : '')
+																}
 																ref={provided.innerRef}
 																{...provided.draggableProps}>
 																{/* Drag Handle */}

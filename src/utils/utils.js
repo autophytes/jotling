@@ -159,15 +159,21 @@ export const updateChildName = (
 
 // Move a document/folder to a new destination, including the folder tree
 export const moveFileToPath = (currentFolder, moveFile, destFile, isTopBottom) => {
+	console.log('moveFile:', moveFile);
+	console.log('destFile:', destFile);
+
 	let { type, id, path } = moveFile;
 	let { type: destType, id: destId, path: destPath } = destFile;
 	let folder = JSON.parse(JSON.stringify(currentFolder));
 
+	// If dropping on the same document, don't move
+	if (type === destType && id === destId) {
+		return currentFolder;
+	}
+
 	// Trim leading '/' from the paths
 	path = path[0] === '/' ? path.slice(1) : path;
 	destPath = destPath[0] === '/' ? destPath.slice(1) : destPath;
-
-	console.log(destPath);
 
 	// Remove our file from it's original children path
 	let moveChildren = retrieveContentAtPropertyPath(path, folder);

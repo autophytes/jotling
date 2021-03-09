@@ -25,6 +25,7 @@ import DocumentSingleSVG from '../../assets/svg/DocumentSingleSVG';
 import Collapse from 'react-css-collapse';
 import { CharacterMetadata, ContentBlock, ContentState, EditorState, genKey } from 'draft-js';
 import { getBlockPlainTextArray } from '../../utils/draftUtils';
+import NavFolderPlaceholder from './left-nav/NavFolderPlaceholder';
 
 // If we have sections in the document, initialize the editorState with those sections
 export const initializeDocWithSections = (docStructure, currentDoc, filePath, saveFileRef) => {
@@ -864,7 +865,7 @@ export const buildFileStructure = (
 	currentlyDragging,
 	setCurrentlyDragging
 ) => {
-	return folder.children.map((child) => {
+	return folder.children.map((child, i) => {
 		// Rendering a document
 		if (child.type === 'doc') {
 			// If rendering the trash area, use the trash document component instead
@@ -938,6 +939,15 @@ export const buildFileStructure = (
 								/>
 							)}
 						</div>
+
+						{/* If the last folder is open, add a drop region below it */}
+						{isOpen && path === '' && i === folder.children.length - 1 && (
+							<NavFolderPlaceholder
+								path={[path, 'children'].join('/')}
+								folderId={child.id}
+								currentlyDragging={currentlyDragging}
+							/>
+						)}
 					</Collapse>
 				</div>
 			);
