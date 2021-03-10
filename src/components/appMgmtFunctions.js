@@ -223,7 +223,7 @@ export const duplicateDocument = ({
 	}
 
 	// Remove wiki page links
-	const editorStateLinks = removeEntities(editorStateToDuplicate);
+	const editorStateLinks = removeLinkEntities(editorStateToDuplicate);
 
 	// Update imageUseIds
 	const editorStateImages = updateImages(
@@ -253,22 +253,41 @@ export const duplicateDocument = ({
 	}));
 };
 
-// Remove all entities from an editorState
-const removeEntities = (editorState) => {
-	console.log('editorState:', editorState);
+// Remove all link entities from an editorState
+const removeLinkEntities = (editorState) => {
 	const contentState = editorState.getCurrentContent();
-	const firstBlock = contentState.getFirstBlock();
-	const lastBlock = contentState.getLastBlock();
-
+	const blockArray = contentState.getBlocksAsArray();
 	const emptySelectionState = SelectionState.createEmpty();
-	const entireSelectionState = emptySelectionState.merge({
-		anchorKey: firstBlock.getKey(),
-		anchorOffset: 0,
-		focusKey: lastBlock.getKey(),
-		focusOffset: lastBlock.getLength(),
-	});
 
-	const newContentState = Modifier.applyEntity(contentState, entireSelectionState, null);
+	// Iterate over the contentState as we remove links
+	let newContentState = contentState;
+
+	// Loop through the blocks
+	blockArray.forEach((block) => {
+		// Find all ranges for link entities
+		block.findEntityRanges(
+			(character) => {
+				const entityKey = character.getEntity();
+				if (entityKey === null) {
+					return false;
+				}
+				return ['LINK-SOURCE', 'LINK-DEST'].includes(
+					contentState.getEntity(entityKey).getType()
+				);
+			},
+			(start, end) => {
+				// Remove each link entity
+				const entitySelectionState = emptySelectionState.merge({
+					anchorKey: block.getKey(),
+					anchorOffset: start,
+					focusKey: block.getKey(),
+					focusOffset: end,
+				});
+
+				newContentState = Modifier.applyEntity(newContentState, entitySelectionState, null);
+			}
+		);
+	});
 
 	return EditorState.push(editorState, newContentState, 'apply-entity');
 };

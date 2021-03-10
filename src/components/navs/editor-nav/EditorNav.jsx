@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import Immutable from 'immutable';
 
 import AddToWikiPopper from './AddToWiki/AddToWikiPopper';
+import AddCommentPopper from './AddCommentPopper';
 import InlineStyleButton from './InlineStyleButton';
 import ColorPickerPopper from './ColorPickerPopper';
 
@@ -102,6 +103,8 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 		setShowAllTags,
 		displayWikiPopper,
 		setDisplayWikiPopper,
+		displayCommentPopper,
+		setDisplayCommentPopper,
 		setDocStructure,
 		linkStructure,
 		setLinkStructure,
@@ -463,6 +466,7 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 					{/* When rendering this overlay, we also need to render an application-wide overlay that, when clicked on, runs a callback function
                 to close the popper. This can later be used for confirmation messages and things like that. */}
 					{displayWikiPopper && <AddToWikiPopper />}
+					{displayCommentPopper && <AddCommentPopper />}
 				</span>
 			</nav>
 		</>

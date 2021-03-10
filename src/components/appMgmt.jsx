@@ -70,6 +70,7 @@ const AppMgmt = () => {
 		setEditorArchives,
 		peekWindowLinkId,
 		setDisplayWikiPopper,
+		setDisplayCommentPopper,
 		editorStateRef,
 		setEditorStateRef,
 		setSyncLinkIdList,
@@ -191,7 +192,7 @@ const AppMgmt = () => {
 		// Registers the ipcRenderer listeners
 
 		// Open Project - sets the new project paths
-		ipcRenderer.on('open-project', (event, { tempPath, jotsPath }) => {
+		ipcRenderer.on('open-project', (e, { tempPath, jotsPath }) => {
 			if (tempPath && typeof tempPath === 'string' && typeof jotsPath === 'string') {
 				setProject({
 					tempPath: tempPath,
@@ -201,27 +202,27 @@ const AppMgmt = () => {
 		});
 
 		// Save Project - queues EditorContainer to request a save
-		ipcRenderer.on('request-save-project', (event, shouldSave) => {
+		ipcRenderer.on('request-save-project', (e, shouldSave) => {
 			setSaveProject({ command: 'save' });
 		});
 
 		// Save As Project - queues EditorContainer to request a save as
-		ipcRenderer.on('request-save-as-project', (event, shouldSave) => {
+		ipcRenderer.on('request-save-as-project', (e, shouldSave) => {
 			setSaveProject({ command: 'save-as', options: { saveAs: true } });
 		});
 
 		// Save Project and Quit - queues EditorContainer to request a save and quit
-		ipcRenderer.on('request-save-and-quit', (event, shouldSave) => {
+		ipcRenderer.on('request-save-and-quit', (e, shouldSave) => {
 			setSaveProject({ command: 'save', options: { shouldQuit: true, shouldCleanup: true } });
 		});
 
 		// Save Project and Close - queues EditorContainer to request a save and quit
-		ipcRenderer.on('request-save-and-close', (event, shouldSave) => {
+		ipcRenderer.on('request-save-and-close', (e, shouldSave) => {
 			setSaveProject({ command: 'save', options: { shouldClose: true, shouldCleanup: true } });
 		});
 
 		// Save Project and Create New - queues EditorContainer to request a save and create new
-		ipcRenderer.on('request-save-and-create-new', (event, shouldSave) => {
+		ipcRenderer.on('request-save-and-create-new', (e, shouldSave) => {
 			setSaveProject({
 				command: 'save',
 				options: { shouldCreateNew: true, shouldCleanup: true },
@@ -229,7 +230,7 @@ const AppMgmt = () => {
 		});
 
 		// Save Project and Open - queues EditorContainer to request a save and open another project
-		ipcRenderer.on('request-save-and-open', (event, shouldSave, openJotsPath) => {
+		ipcRenderer.on('request-save-and-open', (e, shouldSave, openJotsPath) => {
 			setSaveProject({
 				command: 'save',
 				options: { shouldOpen: true, openJotsPath, shouldCleanup: true },
@@ -237,7 +238,7 @@ const AppMgmt = () => {
 		});
 
 		// Save Project and Open - queues EditorContainer to request a save and open another project
-		ipcRenderer.on('show-find-replace', (event, { replace, wholeProject }) => {
+		ipcRenderer.on('show-find-replace', (e, { replace, wholeProject }) => {
 			// Reset here
 			// setFindText('');
 
@@ -270,13 +271,13 @@ const AppMgmt = () => {
 			}
 		});
 
-		ipcRenderer.on('insert-link', (event) => {
+		ipcRenderer.on('insert-link', (e) => {
 			if (document.getSelection().toString().length) {
 				setDisplayWikiPopper(true);
 			}
 		});
 
-		ipcRenderer.on('remove-link', (event) => {
+		ipcRenderer.on('remove-link', (e) => {
 			// IMPLEMENT A FUNCTION TO REMOVE LINKS FROM THE SELECTION
 			console.log('will remove the link!');
 			const newEditorState = removeLinkSourceFromSelection(
@@ -288,7 +289,7 @@ const AppMgmt = () => {
 			setEditorStateRef.current(newEditorState);
 		});
 
-		ipcRenderer.on('insert-file', (event, { insertFileType, type, id, currentTab }) => {
+		ipcRenderer.on('insert-file', (e, { insertFileType, type, id, currentTab }) => {
 			// Call the addFile function with the refFileType, refFileId, currentTab, docStructure, setDocStructure
 			addFile(
 				insertFileType,
@@ -303,7 +304,7 @@ const AppMgmt = () => {
 			);
 		});
 
-		ipcRenderer.on('remove-file', (event, { removeFileType, id, currentTab }) => {
+		ipcRenderer.on('remove-file', (e, { removeFileType, id, currentTab }) => {
 			// Maybe only let users delete empty folders??
 			if (removeFileType === 'doc') {
 				moveDocToTrash(
@@ -327,14 +328,14 @@ const AppMgmt = () => {
 			}
 		});
 
-		ipcRenderer.on('rename-file', (event, { id, type }) => {
+		ipcRenderer.on('rename-file', (e, { id, type }) => {
 			setNavData((prev) => ({
 				...prev,
 				editFile: `${type}-${id}`,
 			}));
 		});
 
-		ipcRenderer.on('restore-doc', (event, { id }) => {
+		ipcRenderer.on('restore-doc', (e, { id }) => {
 			restoreDocument(
 				docStructureRef.current,
 				setDocStructure,
@@ -344,7 +345,7 @@ const AppMgmt = () => {
 			);
 		});
 
-		ipcRenderer.on('restore-folder', (event, { id }) => {
+		ipcRenderer.on('restore-folder', (e, { id }) => {
 			restoreFolder(
 				docStructureRef.current,
 				setDocStructure,
@@ -354,13 +355,13 @@ const AppMgmt = () => {
 			);
 		});
 
-		ipcRenderer.on('request-context-button', (event) => {
+		ipcRenderer.on('request-context-button', (e) => {
 			if (document.getSelection().toString().length) {
 				setDisplayWikiPopper(true);
 			}
 		});
 
-		ipcRenderer.on('request-export-project', (event, { extension }) => {
+		ipcRenderer.on('request-export-project', (e, { extension }) => {
 			exportProject({
 				editorStateRef,
 				editorArchivesRef,
@@ -371,7 +372,7 @@ const AppMgmt = () => {
 			});
 		});
 
-		ipcRenderer.on('show-wiki-tags', (event, { docId, docName }) => {
+		ipcRenderer.on('show-wiki-tags', (e, { docId, docName }) => {
 			console.log('docName:', docName);
 			setWikiMetadata((prev) => ({
 				...prev,
@@ -400,6 +401,12 @@ const AppMgmt = () => {
 				wikiMetadataRef,
 				setWikiMetadata,
 			});
+		});
+
+		ipcRenderer.on('insert-comment', (e) => {
+			if (document.getSelection().toString().length) {
+				setDisplayCommentPopper(true);
+			}
 		});
 	}, []);
 

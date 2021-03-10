@@ -374,7 +374,15 @@ const create = (win, options) => {
 					webContents(win).send('remove-link');
 				},
 			}),
-
+			addComment: () => ({
+				id: 'addComment',
+				label: 'Add Comment',
+				visible: browserParams.type === 'document-text',
+				enabled: true,
+				click() {
+					webContents(win).send('insert-comment');
+				},
+			}),
 			// defaultActions.insertDocument(),
 			// defaultActions.deleteDocument(),
 			// defaultActions.insertFolder(),
@@ -437,6 +445,7 @@ const create = (win, options) => {
 			defaultActions.showWikiTags(),
 			defaultActions.addLink(),
 			defaultActions.removeLink(),
+			defaultActions.addComment(),
 			defaultActions.separator(), // SEPARATOR Using this section for either links / renaming
 			defaultActions.renameFile(), // Renaming leftNav docs/folders
 			defaultActions.moveFolderToTrash(),

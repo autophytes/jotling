@@ -71,7 +71,7 @@ const HiddenContextMenu = () => {
 					// Don't return true b/c the document text up the chain should fire too
 				}
 
-				// DOCUMENT TEXT (LINK)
+				// DOCUMENT TEXT (LINKS / COMMENTS)
 				if (element.dataset.offsetKey) {
 					const selection = editorStateRef.current.getSelection();
 					if (!selection.isCollapsed()) {
