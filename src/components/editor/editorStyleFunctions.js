@@ -5,8 +5,10 @@ import {
 	Modifier,
 	DefaultDraftBlockRenderMap,
 } from 'draft-js';
+import Immutable from 'immutable';
 
 import { setBlockData, getSelectedBlocksList } from 'draftjs-utils';
+import { forEachBlockInSelection } from '../../utils/draftUtils';
 import { BlockImageContainer } from './editorComponents/BlockImageContainer';
 
 export const defaultCustomStyleMap = {
@@ -105,7 +107,17 @@ export const toggleInlineStyle = (
 // I'll use this and the one below in my EditorNav buttons
 export const toggleBlockType = (e, blockType, editorState, setEditorState) => {
 	e.preventDefault();
-	setEditorState(RichUtils.toggleBlockType(editorState, blockType));
+
+	// Used to reset the selection after the updates
+	const initialSelection = editorState.getSelection();
+
+	// Update the block type
+	const newEditorState = RichUtils.toggleBlockType(editorState, blockType);
+
+	// Set the selection back to the initial selection
+	const finalEditorState = EditorState.forceSelection(newEditorState, initialSelection);
+
+	setEditorState(finalEditorState);
 };
 
 // Handles Text Alignment
@@ -118,11 +130,41 @@ export const toggleTextAlign = (
 ) => {
 	e.preventDefault();
 
-	if (currentAlignment !== newAlignment) {
-		setEditorState(setBlockData(editorState, { 'text-align': newAlignment }));
-	} else {
-		setEditorState(setBlockData(editorState, { 'text-align': undefined }));
-	}
+	let newContentState = editorState.getCurrentContent();
+	const emptySelectionState = SelectionState.createEmpty();
+
+	// Used to reset the selection after the updates
+	const initialSelection = editorState.getSelection();
+
+	// Loop through each selected block
+	forEachBlockInSelection(editorState, (block) => {
+		// Pull the existing data
+		const data = block.getData();
+
+		// Update the data with the alignment
+		const alignData = Immutable.Map({
+			'text-align': currentAlignment !== newAlignment ? newAlignment : undefined,
+		});
+		const newData = data.merge(alignData);
+
+		// Select the block to update
+		const blockSelectionState = emptySelectionState.merge({
+			anchorKey: block.getKey(),
+			anchorOffset: 0,
+			focusKey: block.getKey(),
+			focusOffset: block.getLength(),
+		});
+
+		// Update the block data
+		newContentState = Modifier.setBlockData(newContentState, blockSelectionState, newData);
+	});
+
+	const newEditorState = EditorState.push(editorState, newContentState, 'change-block-data');
+
+	// Reset the selection to the initial selection
+	const finalEditorState = EditorState.forceSelection(newEditorState, initialSelection);
+
+	setEditorState(finalEditorState);
 };
 
 // CURRENTLY UNUSED
@@ -239,7 +281,9 @@ export const toggleTextCustomStyle = (
 	}
 
 	const newEditorState = EditorState.push(editorState, contentState, 'change-inline-style');
-	setEditorState(newEditorState);
+	const finalEditorState = EditorState.forceSelection(newEditorState, selectionState);
+
+	setEditorState(finalEditorState);
 	// DONE Need to generate a customStyleMap off of the customStyles in the docStructure
 
 	// Function that takes in the editorState, highlight/textColor, color itself

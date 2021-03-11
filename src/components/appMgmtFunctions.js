@@ -223,7 +223,10 @@ export const duplicateDocument = ({
 	}
 
 	// Remove wiki page links
-	const editorStateLinks = removeLinkEntities(editorStateToDuplicate);
+	const editorStateLinks = removeLinkEntities(editorStateToDuplicate, [
+		'LINK-SOURCE',
+		'LINK-DEST',
+	]);
 
 	// Update imageUseIds
 	const editorStateImages = updateImages(
@@ -253,8 +256,8 @@ export const duplicateDocument = ({
 	}));
 };
 
-// Remove all link entities from an editorState
-const removeLinkEntities = (editorState) => {
+// Remove all link entities from an entire editorState
+export const removeLinkEntities = (editorState, entityTypeArray) => {
 	const contentState = editorState.getCurrentContent();
 	const blockArray = contentState.getBlocksAsArray();
 	const emptySelectionState = SelectionState.createEmpty();
@@ -271,9 +274,7 @@ const removeLinkEntities = (editorState) => {
 				if (entityKey === null) {
 					return false;
 				}
-				return ['LINK-SOURCE', 'LINK-DEST'].includes(
-					contentState.getEntity(entityKey).getType()
-				);
+				return entityTypeArray.includes(contentState.getEntity(entityKey).getType());
 			},
 			(start, end) => {
 				// Remove each link entity

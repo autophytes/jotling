@@ -103,3 +103,32 @@ export const getBlockPlainTextArray = (editorState) => {
 		text: block.getText(),
 	}));
 };
+
+// Run a callback function for each block in a selection
+export const forEachBlockInSelection = (editorState, callbackFn) => {
+	const currentContent = editorState.getCurrentContent();
+	const selectionState = editorState.getSelection();
+	console.log('selectionState:', selectionState);
+
+	const startKey = selectionState.getStartKey();
+	const endKey = selectionState.getEndKey();
+	const lastKey = currentContent.getLastBlock().getKey();
+
+	let shouldContinue = true;
+	let block = currentContent.getBlockForKey(startKey);
+
+	// Loop through each block in the selection
+	while (shouldContinue) {
+		// Run the callback
+		callbackFn(block);
+
+		const blockKey = block.getKey();
+		// Stop if reached end of selection or document
+		if (blockKey === endKey || blockKey === lastKey) {
+			shouldContinue = false;
+		}
+
+		// Move to the next block
+		block = currentContent.getBlockAfter(blockKey);
+	}
+};

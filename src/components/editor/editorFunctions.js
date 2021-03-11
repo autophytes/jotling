@@ -25,6 +25,7 @@ import { FindReplaceDecorator } from './editorComponents/FindReplaceDecorator';
 import { BlockImageContainer } from './editorComponents/BlockImageContainer';
 import { CompoundDecorator } from './editorComponents/CompoundDecorator';
 import { WikiSectionDecorator } from './editorComponents/WikiSectionTitle';
+import { removeLinkEntities } from '../appMgmtFunctions';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
@@ -500,6 +501,78 @@ export const createTagLink = (
 	setEditorState(newEditorState);
 };
 
+// Create or update a new comment in a document
+export const createComment = (
+	tagName,
+	editorStateRef,
+	linkStructureRef,
+	currentDoc,
+	setEditorState,
+	setLinkStructure,
+	setSyncLinkIdList,
+	initialSectionKey
+) => {
+	// Clear out any existing links in the selection
+	const cleanedEditorState = removeLinkSourceFromSelection(
+		editorStateRef.current,
+		linkStructureRef.current,
+		setLinkStructure,
+		setSyncLinkIdList
+	);
+
+	// Increment the max id by 1, or start at 0
+	let arrayOfLinkIds = Object.keys(linkStructureRef.current.links).map((item) => Number(item));
+	let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 1;
+
+	const contentState = cleanedEditorState.getCurrentContent();
+	const selectionState = cleanedEditorState.getSelection();
+
+	// Apply the linkId as an entity to the selection
+	const contentStateWithEntity = contentState.createEntity('LINK-SOURCE', 'MUTABLE', {
+		linkId: newLinkId,
+	});
+	const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+	const contentStateWithLink = Modifier.applyEntity(
+		contentStateWithEntity,
+		selectionState,
+		entityKey
+	);
+	const newEditorState = EditorState.push(
+		cleanedEditorState,
+		contentStateWithLink,
+		'apply-entity'
+	);
+
+	// Get the selected text to include in the link
+	const selectedText = getTextSelection(contentStateWithLink, selectionState);
+
+	// Updating the linkStructure with the new link
+	let newLinkStructure = JSON.parse(JSON.stringify(linkStructureRef.current));
+
+	// Ensure the page tag links exist
+	if (!newLinkStructure.tagLinks[tagName]) {
+		newLinkStructure.tagLinks[tagName] = [];
+	}
+
+	newLinkStructure.tagLinks[tagName].push(newLinkId); // FIX EVENTUALLY
+	newLinkStructure.links[newLinkId] = {
+		source: currentDoc, // Source document
+		content: selectedText, // Selected text
+		alias: null,
+		sourceEntityKey: entityKey,
+		initialSectionKey: initialSectionKey, // Section to insert the link into
+	};
+
+	// Updating the linkStructure with the keyword the link is using
+	if (!newLinkStructure.docLinks.hasOwnProperty(currentDoc)) {
+		newLinkStructure.docLinks[currentDoc] = {};
+	}
+	newLinkStructure.docLinks[currentDoc][newLinkId] = tagName; // FIX EVENTUALLY
+
+	setLinkStructure(newLinkStructure);
+	setEditorState(newEditorState);
+};
+
 // Insert an image into a document
 export const insertImageBlockData = (imageId, imageUseId, editorState, setEditorState) => {
 	let contentState = editorState.getCurrentContent();
@@ -740,21 +813,10 @@ export const removeLinkSourceFromSelection = (
 		}
 	}
 
-	// DONE
-	// Find what linkId(s) we're removing from the selection
-	// For each link, determine if we are removing the entire link or only part
-	//    - We'll need to save the text from the link ranges to compare
-	// If we're removing everything, remove the link from the linkStructure (links, docLinks, tagLinks)
-	// Then set the syncLinkIdList to our partial links we need to remove
-
-	// DONE NOTE: if just removing a segment inside a link... the link should really be split
-	//   Maybe don't let people remove the middle of a link??
-
-	// In our LINK-DEST pages, if a link is completely removed, we need to remove the links from that page as well
-
-	// If we ever add any other entities and we only wnat to remove the LINK-SOURCE, this will be a problem
-	const newContentState = Modifier.applyEntity(contentState, selectionState, null);
-	const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
+	// Remove LINK-SOURCE entities
+	const newEditorState = removeLinkEntities(editorState, ['LINK-SOURCE']);
+	// const newContentState = Modifier.applyEntity(contentState, selectionState, null);
+	// const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
 
 	// I wonder if this will trigger too early, before the editor state has updated.
 	// If so, return the list and set it after we set the state.
