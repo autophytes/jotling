@@ -320,3 +320,66 @@ export const blockRendererFn = (contentBlock) => {
 		};
 	}
 };
+
+export const toggleTextComment = (commentId, editorState, setEditorState, removeOnly = '') => {
+	const selectionState = editorState.getSelection();
+
+	let usedStyleSet = new Set();
+	const fullStyleName = `COMMENT-${commentId}`;
+
+	// Accumulate all styles from all characters in the selection
+	const start = selectionState.getStartOffset();
+	const end = selectionState.getEndOffset();
+	const selectedBlocks = getSelectedBlocksList(editorState);
+	if (selectedBlocks.size > 0) {
+		// Loop through each block
+		for (let i = 0; i < selectedBlocks.size; i += 1) {
+			// If the first block, start at the selection start. Otherwise, 0.
+			let blockStart = i === 0 ? start : 0;
+
+			// If the last block, use the selection end. Otherwise, full block length.
+			let blockEnd =
+				i === selectedBlocks.size - 1 ? end : selectedBlocks.get(i).getText().length;
+
+			// If selection is collapsed, don't run for block.
+			if (blockStart !== blockEnd) {
+				// Loop through each character
+				for (let j = blockStart; j < blockEnd; j += 1) {
+					const inlineStylesAtOffset = selectedBlocks.get(i).getInlineStyleAt(j).toSet();
+
+					// Add the colors to the set
+					inlineStylesAtOffset.forEach((item) => usedStyleSet.add(item));
+				}
+			}
+		}
+	}
+
+	// NOTE: is this going to remove our current comment??
+
+	// Remove any comments currently in the selection
+	let contentState = editorState.getCurrentContent();
+	for (let style of usedStyleSet) {
+		if (style.slice(0, 'COMMENT'.length + 1) === `COMMENT-`) {
+			contentState = Modifier.removeInlineStyle(contentState, selectionState, style);
+		}
+	}
+
+	// Apply the comment unless it's remove only
+	if (removeOnly !== 'REMOVE') {
+		contentState = Modifier.applyInlineStyle(contentState, selectionState, fullStyleName);
+	}
+
+	const newEditorState = EditorState.push(editorState, contentState, 'change-inline-style');
+	const finalEditorState = EditorState.forceSelection(newEditorState, selectionState);
+
+	setEditorState(finalEditorState);
+	// DONE Need to generate a customStyleMap off of the customStyles in the docStructure
+
+	// Function that takes in the editorState, highlight/textColor, color itself
+	// Ensure the type is in the style map. If not, add it.
+	// List of all the applied styles for the selection
+	// If the entire selection is the new color we're applying, toggle off the highlight.
+
+	// Remove all highlight styles
+	// Apply the new highlight style
+};

@@ -16,6 +16,7 @@ import { SettingsContext } from '../../../contexts/settingsContext';
 import { selectionHasEntityType } from '../../editor/editorFunctions';
 
 import TextareaAutosize from 'react-textarea-autosize';
+import { toggleTextComment } from '../../editor/editorStyleFunctions';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
@@ -31,7 +32,12 @@ const AddToWikiPopper = () => {
 	const [comment, setComment] = useState('');
 
 	// CONTEXT
-	const { editorStyles, editorStateRef, setDisplayCommentPopper } = useContext(LeftNavContext);
+	const {
+		editorStyles,
+		editorStateRef,
+		setEditorStateRef,
+		setDisplayCommentPopper,
+	} = useContext(LeftNavContext);
 	const { editorSettings } = useContext(SettingsContext);
 
 	// Initial rebuild of referenceElement
@@ -80,16 +86,15 @@ const AddToWikiPopper = () => {
 
 	// Save on close
 	const handleSaveOnClose = () => {
-		// TO-DO - not sure how to store comment data
-		// Entities can't overlap, so that doesn't work.
-		// Data would have to hardcode offsets, hard to update
-		// Character metadata? But then inserting characters is a pain
-
 		// SAVE OUR COMMENT
-		// Create a new entity for our comment
+		// Create a new/update comment in the commentStructure
 		// find our selection
 		// apply the entity to the selection
 		// save
+
+		//
+
+		toggleTextComment(commentId, editorStateRef.current, setEditorStateRef.current);
 
 		setDisplayCommentPopper(false);
 	};
@@ -116,6 +121,7 @@ const AddToWikiPopper = () => {
 					minRows={1}
 					maxRows={6}
 					cols={1}
+					autoFocus
 					placeholder='New Comment'
 					className='tag-section-value'
 					style={{ minWidth: '15rem' }}

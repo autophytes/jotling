@@ -1,5 +1,5 @@
 // Import dependencies
-import React, { useState, useCallback, useEffect, useContext } from 'react';
+import React, { useState, useCallback, useEffect, useContext, useRef } from 'react';
 import { ipcRenderer } from 'electron';
 import { convertFromRaw, EditorState } from 'draft-js';
 
@@ -60,6 +60,7 @@ const AppMgmt = () => {
 		setWikiMetadata,
 		wikiMetadataRef,
 		mediaStructureRef,
+		commentStructure,
 		project,
 		setProject,
 		projectRef,
@@ -89,6 +90,9 @@ const AppMgmt = () => {
 	} = useContext(FindReplaceContext);
 	const { showEditorSettings } = useContext(SettingsContext);
 	const { setActiveTab: setRightNavActiveTab } = useContext(RightNavContext);
+
+	// REF
+	const syncDocumentWithFilesRef = useRef(null);
 
 	// HiddenContextMenu();
 	console.log('appMgmt refreshed!!');
@@ -128,64 +132,46 @@ const AppMgmt = () => {
 		}
 	}, [project]);
 
+	// Create syncDocumentWithFilesRef function
+	useEffect(() => {
+		syncDocumentWithFilesRef.current = (fileName, fileObj) => {
+			if (isProjectLoaded) {
+				ipcRenderer.invoke(
+					'save-single-document',
+					project.tempPath,
+					project.jotsPath,
+					fileName,
+					fileObj
+				);
+				console.log('Saving ', fileName);
+			}
+		};
+	}, [project, isProjectLoaded]);
+
 	// Saves the docStructure after every change
 	useEffect(() => {
-		if (isProjectLoaded) {
-			ipcRenderer.invoke(
-				'save-single-document',
-				project.tempPath,
-				project.jotsPath,
-				'documentStructure.json',
-				docStructure
-			);
-			console.log('Saving document structure.');
-			// console.log('to project.tempPath:', project.tempPath);
-		}
-	}, [docStructure, isProjectLoaded, project]);
+		syncDocumentWithFilesRef.current('documentStructure.json', docStructure);
+	}, [docStructure]);
 
 	// Saves the linkStructure after every change
 	useEffect(() => {
-		if (isProjectLoaded) {
-			ipcRenderer.invoke(
-				'save-single-document',
-				project.tempPath,
-				project.jotsPath,
-				'linkStructure.json',
-				linkStructure
-			);
-			console.log('Saving link structure.');
-		}
-	}, [linkStructure, isProjectLoaded, project]);
+		syncDocumentWithFilesRef.current('linkStructure.json', linkStructure);
+	}, [linkStructure]);
 
 	// Saves the mediaStructure after every change
 	useEffect(() => {
-		if (isProjectLoaded) {
-			ipcRenderer.invoke(
-				'save-single-document',
-				project.tempPath,
-				project.jotsPath,
-				'mediaStructure.json',
-				mediaStructure
-			);
-			console.log('Saving media structure.');
-		}
-	}, [mediaStructure, isProjectLoaded, project]);
+		syncDocumentWithFilesRef.current('mediaStructure.json', mediaStructure);
+	}, [mediaStructure]);
 
 	// Saves the wikiMetadata after every change
 	useEffect(() => {
-		if (isProjectLoaded) {
-			ipcRenderer.invoke(
-				'save-single-document',
-				project.tempPath,
-				project.jotsPath,
-				'wikiMetadata.json',
-				wikiMetadata
-			);
-			// console.log('wikiMetadata:', wikiMetadata);
-			console.log('Saving wiki metadata.');
-			// console.log('to project.tempPath:', project.tempPath);
-		}
-	}, [wikiMetadata, isProjectLoaded, project]);
+		syncDocumentWithFilesRef.current('wikiMetadata.json', wikiMetadata);
+	}, [wikiMetadata]);
+
+	// Saves the wikiMetadata after every change
+	useEffect(() => {
+		syncDocumentWithFilesRef.current('commentStructure.json', commentStructure);
+	}, [commentStructure]);
 
 	// Registers ipcRenderer listeners
 	useEffect(() => {

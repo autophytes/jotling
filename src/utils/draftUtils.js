@@ -108,7 +108,6 @@ export const getBlockPlainTextArray = (editorState) => {
 export const forEachBlockInSelection = (editorState, callbackFn) => {
 	const currentContent = editorState.getCurrentContent();
 	const selectionState = editorState.getSelection();
-	console.log('selectionState:', selectionState);
 
 	const startKey = selectionState.getStartKey();
 	const endKey = selectionState.getEndKey();
