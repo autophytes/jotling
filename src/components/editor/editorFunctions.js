@@ -18,6 +18,7 @@ import {
 } from '../../utils/draftUtils';
 import { stripOutEscapeCharacters } from '../../utils/utils';
 import { findAllDocsInFolder } from '../navs/navFunctions';
+import { removeLinkEntities } from '../appMgmtFunctions';
 
 import { LinkSourceDecorator, LinkDestDecorator } from './editorComponents/LinkDecorators';
 import { HighlightTagDecorator } from './editorComponents/HighlightTagDecorator';
@@ -25,15 +26,36 @@ import { FindReplaceDecorator } from './editorComponents/FindReplaceDecorator';
 import { BlockImageContainer } from './editorComponents/BlockImageContainer';
 import { CompoundDecorator } from './editorComponents/CompoundDecorator';
 import { WikiSectionDecorator } from './editorComponents/WikiSectionTitle';
-import { removeLinkEntities } from '../appMgmtFunctions';
+import CommentDecorator from './editorComponents/CommentDecorator';
 
 function getEntityStrategy(type) {
 	return function (contentBlock, callback, contentState) {
+		// Note to self: this is how the findEntityRanges function works
+		// Draft def: https://github.com/facebook/draft-js/blob/30963636d118eabc0ddab4936a53b36a05aea6ed/src/model/immutable/ContentBlock.js
+		// Underlying func: https://gitlab.rumblinglabs.com/vendor/draft-js/-/blob/0.10-stable/src/model/immutable/findRangesImmutable.js
+
 		contentBlock.findEntityRanges((character) => {
 			const entityKey = character.getEntity();
 			if (entityKey === null) {
 				return false;
 			}
+
+			return contentState.getEntity(entityKey).getType() === type;
+		}, callback);
+	};
+}
+
+// TO-DO!
+function getStyleStrategy(type) {
+	return function (contentBlock, callback, contentState) {
+		// FIND STYLE RANGES
+
+		contentBlock.findEntityRanges((character) => {
+			const entityKey = character.getEntity();
+			if (entityKey === null) {
+				return false;
+			}
+
 			return contentState.getEntity(entityKey).getType() === type;
 		}, callback);
 	};
@@ -57,7 +79,6 @@ function getBlockDataStrategy(blockDataProp) {
 }
 
 const buildFindWithRegexFunction = (findTextArray, findRegisterRef, editorStateRef) => {
-	console.log('findTextArray:', findTextArray);
 	var regexMetachars = /[(){[*+?.\\^$|]/g;
 	// Escape regex metacharacters in the text
 	for (var i = 0; i < findTextArray.length; i++) {
@@ -136,6 +157,10 @@ const defaultDecorator = [
 	{
 		strategy: getBlockStrategy('wiki-section'),
 		component: WikiSectionDecorator,
+	},
+	{
+		strategy: getStyleStrategy('COMMENT'),
+		component: CommentDecorator,
 	},
 ];
 
@@ -430,7 +455,7 @@ export const scrollToBlock = (blockKey, element = document) => {
 };
 
 // Creating a new source tag link
-export const createTagLink = (
+export const createWikiLink = (
 	tagName,
 	editorStateRef,
 	linkStructureRef,
@@ -440,7 +465,10 @@ export const createTagLink = (
 	setSyncLinkIdList,
 	initialSectionKey
 ) => {
+	console.log('selection: ', editorStateRef.current.getSelection());
+
 	// Clear out any existing links in the selection
+	// PROBLEM IN THIS FUNCTION - removing ALL links, and the last removed is the new selection
 	const cleanedEditorState = removeLinkSourceFromSelection(
 		editorStateRef.current,
 		linkStructureRef.current,
@@ -450,16 +478,20 @@ export const createTagLink = (
 
 	// Increment the max id by 1, or start at 0
 	let arrayOfLinkIds = Object.keys(linkStructureRef.current.links).map((item) => Number(item));
+	console.log('arrayOfLinkIds:', arrayOfLinkIds);
 	let newLinkId = arrayOfLinkIds.length ? Math.max(...arrayOfLinkIds) + 1 : 1;
+	console.log('newLinkId:', newLinkId);
 
 	const contentState = cleanedEditorState.getCurrentContent();
 	const selectionState = cleanedEditorState.getSelection();
+	console.log('selectionState:', selectionState);
 
 	// Apply the linkId as an entity to the selection
 	const contentStateWithEntity = contentState.createEntity('LINK-SOURCE', 'MUTABLE', {
 		linkId: newLinkId,
 	});
 	const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+	console.log('entityKey:', entityKey);
 	const contentStateWithLink = Modifier.applyEntity(
 		contentStateWithEntity,
 		selectionState,
@@ -791,6 +823,7 @@ export const removeLinkSourceFromSelection = (
 	let shouldResyncLinkStructure = false;
 	let newLinkStructure = JSON.parse(JSON.stringify(linkStructure));
 
+	// Remove links from linkStructure
 	for (let id of linkIds) {
 		let content = linkStructure.links[id].content;
 		if (linkData[id] === content) {
@@ -814,7 +847,8 @@ export const removeLinkSourceFromSelection = (
 	}
 
 	// Remove LINK-SOURCE entities
-	const newEditorState = removeLinkEntities(editorState, ['LINK-SOURCE']);
+	// THIS IS THE PROBLEM - it's removing all link entities, not just from selection
+	const newEditorState = removeLinkEntities(editorState, ['LINK-SOURCE'], selectionState);
 	// const newContentState = Modifier.applyEntity(contentState, selectionState, null);
 	// const newEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
 
@@ -865,7 +899,7 @@ const grabSelectionLinkIdsAndContent = (editorState) => {
 
 				// Starting block - Only use the portion of the link inside our selection
 				if (currentBlockKey === startBlockKey) {
-					if (adjEnd < startOffset) {
+					if (adjEnd <= startOffset) {
 						skip = true;
 					}
 					adjStart = Math.max(startOffset, adjStart);
@@ -873,10 +907,10 @@ const grabSelectionLinkIdsAndContent = (editorState) => {
 
 				// Ending block - Only use the portion of the link inside our selection
 				if (currentBlockKey === endBlockKey) {
-					if (adjStart > endOffset) {
+					if (adjStart > endOffset - 1) {
 						skip = true;
 					}
-					adjEnd = Math.min(endOffset, adjEnd);
+					adjEnd = Math.min(endOffset - 1, adjEnd);
 				}
 
 				if (!skip) {

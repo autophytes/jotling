@@ -5,7 +5,7 @@ import { LeftNavContext } from '../../../../contexts/leftNavContext';
 import BackArrowSVG from '../../../../assets/svg/BackArrowSVG';
 import FolderOpenSVG from '../../../../assets/svg/FolderOpenSVG';
 
-import { createTagLink } from '../../../editor/editorFunctions';
+import { createWikiLink } from '../../../editor/editorFunctions';
 import { addFile } from '../../navFunctions';
 import { findFilePath, findFirstFileAlongPathWithProp } from '../../../../utils/utils';
 import PickSection from './PickSection';
@@ -83,7 +83,6 @@ const PickFolder = ({
 				}
 
 				// Add the file to the given folder
-				// Might need add file to return the file we've created?
 				const { id: newDocId } = addFile(
 					'doc',
 					docStructureRef.current,
@@ -99,7 +98,7 @@ const PickFolder = ({
 				);
 
 				// Create the link to the new wiki document
-				createTagLink(
+				createWikiLink(
 					newDocId, // Need to return the doc id from addFile
 					editorStateRef,
 					linkStructureRef,

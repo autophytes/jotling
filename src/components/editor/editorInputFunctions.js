@@ -182,14 +182,13 @@ export const manuallyHandleReplaceText = (editorState, char) => {
 		focusOffset: selection.getAnchorOffset() + 1,
 	});
 
-	const newEditorState = EditorState.forceSelection(editorState, newSelectionState);
-	console.log('final seleciton state: ', newEditorState.getSelection());
-
-	const finalEditorState = EditorState.push(
-		newEditorState,
+	const updatedEditorState = EditorState.push(
+		editorState,
 		newContentState,
 		'insert-characters'
 	);
+
+	const finalEditorState = EditorState.forceSelection(updatedEditorState, newSelectionState);
 
 	skipEditorStatesBeforeMS = Date.now();
 	console.log('skipEditorStatesBeforeMS set:', skipEditorStatesBeforeMS);

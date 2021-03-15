@@ -22,6 +22,18 @@ import { toggleTextComment } from '../../editor/editorStyleFunctions';
 let referenceElement = new LinkSelectionRangeRef();
 
 const AddToWikiPopper = () => {
+	// CONTEXT
+	const {
+		editorStyles,
+		editorStateRef,
+		setEditorStateRef,
+		setDisplayCommentPopper,
+		navDataRef,
+		commentStructure,
+		setCommentStructure,
+	} = useContext(LeftNavContext);
+	const { editorSettings } = useContext(SettingsContext);
+
 	// STATE
 	const [leftOffset, setLeftOffset] = useState(0);
 	const [rightOffset, setRightOffset] = useState(0);
@@ -30,15 +42,7 @@ const AddToWikiPopper = () => {
 	const [showPickSection, setShowPickSection] = useState(false);
 	const [shouldUpdatePopper, setShouldUpdatePopper] = useState(false);
 	const [comment, setComment] = useState('');
-
-	// CONTEXT
-	const {
-		editorStyles,
-		editorStateRef,
-		setEditorStateRef,
-		setDisplayCommentPopper,
-	} = useContext(LeftNavContext);
-	const { editorSettings } = useContext(SettingsContext);
+	const [selection] = useState(editorStateRef.current.getSelection());
 
 	// Initial rebuild of referenceElement
 	useEffect(() => {
@@ -92,9 +96,27 @@ const AddToWikiPopper = () => {
 		// apply the entity to the selection
 		// save
 
-		//
+		/* 
+      commentStructure = {
+        12: {
+          comment: 'This is the song that never ends...',
+          doc: 'doc5.json'
+        }
+      }
+    */
 
-		toggleTextComment(commentId, editorStateRef.current, setEditorStateRef.current);
+		// STILL NEED TO ENABLE EDITING COMMENTS
+
+		// Store the comment in the commentStructure
+		const commentId = updateComment({
+			comment,
+			commentStructure,
+			setCommentStructure,
+			navDataRef,
+		});
+
+		// Currently only works for new comments - eventually add edit
+		toggleTextComment(commentId, editorStateRef.current, setEditorStateRef.current, selection);
 
 		setDisplayCommentPopper(false);
 	};
@@ -121,7 +143,7 @@ const AddToWikiPopper = () => {
 					minRows={1}
 					maxRows={6}
 					cols={1}
-					autoFocus
+					// autoFocus
 					placeholder='New Comment'
 					className='tag-section-value'
 					style={{ minWidth: '15rem' }}
@@ -136,3 +158,23 @@ const AddToWikiPopper = () => {
 };
 
 export default AddToWikiPopper;
+
+// Adds a new comment to the commentStructure - NEED TO UPDATE FOR EDIT
+const updateComment = ({ comment, commentStructure, setCommentStructure, navDataRef }) => {
+	// Increment the max id for the new comment id
+	const commentIds = Object.keys(commentStructure).map((id) => Number(id));
+	const newId = Math.max(...(commentIds.length ? commentIds : [0])) + 1;
+
+	// Create the new comment object
+	const newComment = {
+		doc: navDataRef.current.currentDoc,
+		comment,
+	};
+
+	setCommentStructure((prev) => ({
+		...prev,
+		[newId]: newComment,
+	}));
+
+	return newId;
+};

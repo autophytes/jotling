@@ -32,6 +32,14 @@ const defaultTextColor = {
 	userColorList: [],
 };
 
+const defaultLineHeight = 1.15;
+const defaultParagraphSpacing = 1.2;
+const defaultFontSize = 20;
+const defaultFontSettings = {
+	currentFont: 'PT Sans',
+	recentlyUsedFonts: ['PT Sans'],
+};
+
 const SettingsContextProvider = (props) => {
 	// STATE
 	const [editorSettings, setEditorSettings] = useState({
@@ -46,13 +54,10 @@ const SettingsContextProvider = (props) => {
 	const [textColor, setTextColor] = useState(defaultTextColor);
 	const [showEditorSettings, setShowEditorSettings] = useState(false);
 	const [fontList, setFontList] = useState([]);
-	const [lineHeight, setLineHeight] = useState(1.15);
-	const [paragraphSpacing, setParagraphSpacing] = useState(1.2);
-	const [fontSize, setFontSize] = useState(20);
-	const [fontSettings, setFontSettings] = useState({
-		currentFont: 'PT Sans',
-		recentlyUsedFonts: ['PT Sans'],
-	});
+	const [lineHeight, setLineHeight] = useState(defaultLineHeight);
+	const [paragraphSpacing, setParagraphSpacing] = useState(defaultParagraphSpacing);
+	const [fontSize, setFontSize] = useState(defaultFontSize);
+	const [fontSettings, setFontSettings] = useState(defaultFontSettings);
 
 	// Update the CSS with new line heights
 	useEffect(() => {
@@ -83,14 +88,14 @@ const SettingsContextProvider = (props) => {
 			}
 		}
 
-		const newHighlightColor = {
-			...highlightColor,
-			...store.get(`highlightColor`, {}),
-		};
-		const newTextColor = {
-			...textColor,
-			...store.get(`textColor`, {}),
-		};
+		// const newHighlightColor = {
+		// 	...highlightColor,
+		// 	...store.get(`highlightColor`, {}),
+		// };
+		// const newTextColor = {
+		// 	...textColor,
+		// 	...store.get(`textColor`, {}),
+		// };
 
 		// Load in our primary color
 		const rootElement = document.querySelector(':root');
@@ -99,8 +104,12 @@ const SettingsContextProvider = (props) => {
 		rootElement.style.setProperty('--color-backdrop', newEditorSettings.backdropColor);
 
 		setEditorSettings(newEditorSettings);
-		setHighlightColor(newHighlightColor);
-		setTextColor(newTextColor);
+		setHighlightColor(store.get('highlightColor', defaultHighlightColor));
+		setTextColor(store.get('textColor', defaultTextColor));
+
+		setLineHeight(store.get('lineHeight', defaultLineHeight));
+		setParagraphSpacing(store.get('paragraphSpacing', defaultParagraphSpacing));
+		setFontSize(store.get('fontSize', defaultFontSize));
 	}, []);
 
 	// Synchronize the editorSettings electron-store
@@ -109,16 +118,20 @@ const SettingsContextProvider = (props) => {
 			store.set(`editorSettings.${prop}`, editorSettings[prop]);
 		}
 
-		store.set(`highlightColor`, highlightColor);
-		store.set(`textColor`, textColor);
-
-		// for (let prop in highlightColor) {
-		// 	store.set(`highlightColor.${prop}`, highlightColor[prop]);
-		// }
-		// for (let prop in textColor) {
-		// 	store.set(`textColor.${prop}`, textColor[prop]);
-		// }
-	}, [editorSettings, highlightColor, textColor]);
+		store.set('highlightColor', highlightColor);
+		store.set('textColor', textColor);
+		store.set('lineHeight', lineHeight);
+		store.set('paragraphSpacing', paragraphSpacing);
+		store.set('fontSize', fontSize);
+	}, [
+		editorSettings,
+		highlightColor,
+		textColor,
+		lineHeight,
+		paragraphSpacing,
+		fontSize,
+		fontSettings,
+	]);
 
 	// Load available fonts
 	useEffect(() => {

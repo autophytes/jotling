@@ -321,8 +321,14 @@ export const blockRendererFn = (contentBlock) => {
 	}
 };
 
-export const toggleTextComment = (commentId, editorState, setEditorState, removeOnly = '') => {
-	const selectionState = editorState.getSelection();
+export const toggleTextComment = (
+	commentId,
+	editorState,
+	setEditorState,
+	selection,
+	removeOnly = ''
+) => {
+	const selectionState = selection;
 
 	let usedStyleSet = new Set();
 	const fullStyleName = `COMMENT-${commentId}`;
@@ -355,6 +361,8 @@ export const toggleTextComment = (commentId, editorState, setEditorState, remove
 	}
 
 	// NOTE: is this going to remove our current comment??
+	// Revisit when editing comments
+	// If removing a full comment, remove from the comment structure somehow
 
 	// Remove any comments currently in the selection
 	let contentState = editorState.getCurrentContent();
@@ -366,6 +374,8 @@ export const toggleTextComment = (commentId, editorState, setEditorState, remove
 
 	// Apply the comment unless it's remove only
 	if (removeOnly !== 'REMOVE') {
+		console.log('selectionState:', selectionState);
+		console.log('fullStyleName:', fullStyleName);
 		contentState = Modifier.applyInlineStyle(contentState, selectionState, fullStyleName);
 	}
 

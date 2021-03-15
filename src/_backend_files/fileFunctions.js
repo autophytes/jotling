@@ -12,6 +12,7 @@ const {
 	linkStructureTemplate,
 	mediaStructureTemplate,
 	wikiMetadataTemplate,
+	commentStructureTemplate,
 } = require('./structureTemplates');
 
 // Create a new blank project
@@ -23,17 +24,17 @@ const createNewProjectStructure = (projectTempDirectory) => {
 	fs.mkdirSync(path.join(projectTempDirectory, 'docs'));
 	fs.mkdirSync(path.join(projectTempDirectory, 'media'));
 
-	let newDocStructure = JSON.stringify(docStructureTemplate);
-	fs.writeFileSync(path.join(projectTempDirectory, 'documentStructure.json'), newDocStructure);
+	const newDocStructure = JSON.stringify(docStructureTemplate);
+	const newLinkStructure = JSON.stringify(linkStructureTemplate);
+	const newMediaStructure = JSON.stringify(mediaStructureTemplate);
+	const newWikiMetadata = JSON.stringify(wikiMetadataTemplate);
+	const commentStructure = JSON.stringify(commentStructureTemplate);
 
-	let newLinkStructure = JSON.stringify(linkStructureTemplate);
-	fs.writeFileSync(path.join(projectTempDirectory, 'linkStructure.json'), newLinkStructure);
-
-	let newMediaStructure = JSON.stringify(mediaStructureTemplate);
-	fs.writeFileSync(path.join(projectTempDirectory, 'mediaStructure.json'), newMediaStructure);
-
-	let newWikiMetadata = JSON.stringify(wikiMetadataTemplate);
 	fs.writeFileSync(path.join(projectTempDirectory, 'wikiMetadata.json'), newWikiMetadata);
+	fs.writeFileSync(path.join(projectTempDirectory, 'documentStructure.json'), newDocStructure);
+	fs.writeFileSync(path.join(projectTempDirectory, 'linkStructure.json'), newLinkStructure);
+	fs.writeFileSync(path.join(projectTempDirectory, 'mediaStructure.json'), newMediaStructure);
+	fs.writeFileSync(path.join(projectTempDirectory, 'commentStructure.json'), commentStructure);
 };
 
 // Creates a temp folder and extracts a project to that folder

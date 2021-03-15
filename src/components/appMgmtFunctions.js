@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'electron';
 import { ContentState, convertFromRaw, EditorState, Modifier, SelectionState } from 'draft-js';
 
-import { getBlockPlainTextArray } from '../utils/draftUtils';
+import { getBlockPlainTextArray, getBlocksForSelection } from '../utils/draftUtils';
 import {
 	findFirstDocInFolder,
 	retrieveContentAtPropertyPath,
@@ -9,12 +9,21 @@ import {
 } from '../utils/utils';
 import { addFile } from './navs/navFunctions';
 
+import {
+	docStructureTemplate,
+	linkStructureTemplate,
+	mediaStructureTemplate,
+	wikiMetadataTemplate,
+	commentStructureTemplate,
+} from '../_backend_files/structureTemplates';
+
 // Loads the document / structures when the project changes
 export const loadProjectFiles = async ({
 	setDocStructure,
 	setLinkStructure,
 	setMediaStructure,
 	setWikiMetadata,
+	setCommentStructure,
 	setNavData,
 	setIsProjectLoaded,
 	setEditorArchives,
@@ -25,6 +34,7 @@ export const loadProjectFiles = async ({
 	await loadLinkStructure({ tempPath, setLinkStructure });
 	await loadMediaStructure({ tempPath, setMediaStructure });
 	await loadWikiMetadata({ tempPath, setWikiMetadata });
+	await loadCommentStructure({ tempPath, setCommentStructure });
 	await loadAllDocuments({ tempPath, setEditorArchives });
 
 	setIsProjectLoaded(true);
@@ -42,7 +52,10 @@ const loadDocStructure = async ({
 		tempPath,
 		'documentStructure.json'
 	);
-	setDocStructure(newDocStructure.fileContents);
+
+	setDocStructure(
+		newDocStructure.alreadyExists ? newDocStructure.fileContents : docStructureTemplate
+	);
 
 	resetCurrentDoc({ docStructureRef, setNavData, tempPath });
 };
@@ -54,7 +67,9 @@ const loadLinkStructure = async ({ tempPath, setLinkStructure }) => {
 		tempPath,
 		'linkStructure.json'
 	);
-	setLinkStructure(newLinkStructure.fileContents);
+	setLinkStructure(
+		newLinkStructure.alreadyExists ? newLinkStructure.fileContents : linkStructureTemplate
+	);
 };
 
 // Loads the document media structure (function)
@@ -64,19 +79,36 @@ const loadMediaStructure = async ({ tempPath, setMediaStructure }) => {
 		tempPath,
 		'mediaStructure.json'
 	);
-	setMediaStructure(newMediaStructure.fileContents);
+	setMediaStructure(
+		newMediaStructure.alreadyExists ? newMediaStructure.fileContents : mediaStructureTemplate
+	);
 };
 
 // Loads the document media structure (function)
 const loadWikiMetadata = async ({ tempPath, setWikiMetadata }) => {
-	console.log('READING NEW METADATA tempPath:', tempPath);
 	const newWikiMetadata = await ipcRenderer.invoke(
 		'read-single-document',
 		tempPath,
 		'wikiMetadata.json'
 	);
-	console.log('newWikiMetadata:', newWikiMetadata);
-	setWikiMetadata(newWikiMetadata.fileContents);
+	setWikiMetadata(
+		newWikiMetadata.alreadyExists ? newWikiMetadata.fileContents : wikiMetadataTemplate
+	);
+};
+
+// Loads the document comment structure (function)
+const loadCommentStructure = async ({ tempPath, setCommentStructure }) => {
+	const newCommentStructure = await ipcRenderer.invoke(
+		'read-single-document',
+		tempPath,
+		'commentStructure.json'
+	);
+
+	setCommentStructure(
+		newCommentStructure.alreadyExists
+			? newCommentStructure.fileContents
+			: commentStructureTemplate
+	);
 };
 
 // Load an object with all raw document contents
@@ -256,11 +288,22 @@ export const duplicateDocument = ({
 	}));
 };
 
-// Remove all link entities from an entire editorState
-export const removeLinkEntities = (editorState, entityTypeArray) => {
+// Remove all link entities from an entire editorState or selection if provided
+export const removeLinkEntities = (editorState, entityTypeArray, selection = null) => {
 	const contentState = editorState.getCurrentContent();
-	const blockArray = contentState.getBlocksAsArray();
+	const savedSelection = selection ? selection : editorState.getSelection();
+	console.log('savedSelection:', savedSelection);
 	const emptySelectionState = SelectionState.createEmpty();
+
+	const selStart = selection ? selection.getStartOffset() : null;
+	const startKey = selection ? selection.getStartKey() : null;
+	const selEnd = selection ? selection.getEndOffset() : null;
+	const endKey = selection ? selection.getEndKey() : null;
+
+	// Select the blocks to remove links from
+	const blockArray = selection
+		? getBlocksForSelection(editorState)
+		: contentState.getBlocksAsArray();
 
 	// Iterate over the contentState as we remove links
 	let newContentState = contentState;
@@ -277,11 +320,31 @@ export const removeLinkEntities = (editorState, entityTypeArray) => {
 				return entityTypeArray.includes(contentState.getEntity(entityKey).getType());
 			},
 			(start, end) => {
+				const blockKey = block.getKey();
+
+				// If we provided a manual selection, adjust the start/end
+				if (selection) {
+					// If the first block
+					if (blockKey === startKey) {
+						start = Math.max(start, selStart);
+						end = Math.max(end, selStart + 1);
+					}
+
+					// If the last block
+					if (blockKey === endKey) {
+						start = Math.min(start, selEnd - 1);
+						end = Math.min(end, selEnd);
+					}
+				}
+
+				// NEED TO TEST THIS - test adding multiblock entities over old entities
+				// Also test... i can't remember
+
 				// Remove each link entity
 				const entitySelectionState = emptySelectionState.merge({
-					anchorKey: block.getKey(),
+					anchorKey: blockKey,
 					anchorOffset: start,
-					focusKey: block.getKey(),
+					focusKey: blockKey,
 					focusOffset: end,
 				});
 
@@ -290,7 +353,10 @@ export const removeLinkEntities = (editorState, entityTypeArray) => {
 		);
 	});
 
-	return EditorState.push(editorState, newContentState, 'apply-entity');
+	const finalEditorState = EditorState.push(editorState, newContentState, 'apply-entity');
+
+	// Restore the original selection
+	return EditorState.acceptSelection(finalEditorState, savedSelection);
 };
 
 // Update imageUseIds in the duplicated document, return new editorState

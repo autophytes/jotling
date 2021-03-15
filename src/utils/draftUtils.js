@@ -86,6 +86,30 @@ export const getBlockKeysForSelection = (editorState) => {
 	return keyArray;
 };
 
+// Returns an array of the blocks in the selection
+export const getBlocksForSelection = (editorState) => {
+	const selection = editorState.getSelection();
+	const contentState = editorState.getCurrentContent();
+	const startKey = selection.getStartKey();
+	const endKey = selection.getEndKey();
+
+	let blockArray = [contentState.getBlockForKey(startKey)];
+
+	// If start and end are the same, just return the start
+	if (startKey === endKey) {
+		return blockArray;
+	}
+
+	let iterateKey = startKey;
+	// Loop from the start until we find the endKey
+	while (iterateKey !== endKey) {
+		iterateKey = contentState.getKeyAfter(iterateKey);
+		blockArray.push(contentState.getBlockForKey(iterateKey));
+	}
+
+	return blockArray;
+};
+
 // Returns an array of all blockKeys in the contentState
 export const getAllBlockKeys = (contentState) => {
 	const blockArray = contentState.getBlocksAsArray();
@@ -104,10 +128,10 @@ export const getBlockPlainTextArray = (editorState) => {
 	}));
 };
 
-// Run a callback function for each block in a selection
-export const forEachBlockInSelection = (editorState, callbackFn) => {
+// Run a callback function for each block in a selection (can manually choose selection)
+export const forEachBlockInSelection = (editorState, callbackFn, selection = null) => {
 	const currentContent = editorState.getCurrentContent();
-	const selectionState = editorState.getSelection();
+	const selectionState = selection ? selection : editorState.getSelection();
 
 	const startKey = selectionState.getStartKey();
 	const endKey = selectionState.getEndKey();

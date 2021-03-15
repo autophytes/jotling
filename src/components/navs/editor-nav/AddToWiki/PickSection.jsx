@@ -5,7 +5,7 @@ import { LeftNavContext } from '../../../../contexts/leftNavContext';
 import SectionsSVG from '../../../../assets/svg/SectionsSVG';
 import BackArrowSVG from '../../../../assets/svg/BackArrowSVG';
 
-import { createTagLink } from '../../../editor/editorFunctions';
+import { createWikiLink } from '../../../editor/editorFunctions';
 import { addFile, insertNewSectionInClosedDoc } from '../../navFunctions';
 import { findFilePath, retrieveContentAtPropertyPath } from '../../../../utils/utils';
 
@@ -53,7 +53,7 @@ const PickSection = ({
 			);
 		}
 
-		createTagLink(
+		createWikiLink(
 			selectedDocId,
 			editorStateRef,
 			linkStructureRef,
@@ -120,7 +120,7 @@ const PickSection = ({
 			blockKey = newSectionBlockKey;
 		}
 
-		createTagLink(
+		createWikiLink(
 			newDocId,
 			editorStateRef, // The source document
 			linkStructureRef,

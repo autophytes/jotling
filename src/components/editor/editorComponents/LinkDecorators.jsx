@@ -111,6 +111,7 @@ const LinkSourceDecorator = ({
 	}, [linkId, syncLinkIdList]);
 
 	// Scroll to the clicked-on link from the right nav
+	// NOTE: IS THIS STILL SCROLLING? I DON'T THINK IT IS
 	useEffect(() => {
 		if (linkId !== null && scrollToLinkId === linkId) {
 			setScrollToLinkId(null);
@@ -127,8 +128,6 @@ const LinkSourceDecorator = ({
 
 	useEffect(() => {
 		if (linkId || linkId === 0) {
-			console.log('linkStructure: ', linkStructureRef.current.docLinks);
-			console.log('currentDoc: ', navData.currentDoc);
 			let newTagName = linkStructureRef.current.docLinks[navData.currentDoc][linkId];
 			setTagName(newTagName);
 		}
@@ -384,25 +383,6 @@ const LinkDestBlock = (props) => {
 			<EditorBlock {...props} />
 		</div>
 	);
-	// return (
-	// 	<div
-	// 		className={
-	// 			'link-dest-decorator' +
-	// 			(showAllTags || hoverDestLinkId === linkId ? ' active' : '')
-	// 		}
-	// 		style={{ position: 'relative' }}
-	// 		onMouseEnter={handleHoverStart}
-	// 		onMouseLeave={handleHoverLeave}>
-	// 		<div className='peek-wrapper' contentEditable={false}>
-	// 			<button
-	// 				className='peek-destination-decorator'
-	// 				onClick={() => setPeekWindowLinkId(linkId)}>
-	// 				Peek
-	// 			</button>
-	// 		</div>
-	// 		<EditorBlock {...props} />
-	// 	</div>
-	// );
 };
 
 // Gets the Link ID for the entity

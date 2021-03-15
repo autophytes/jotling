@@ -9,7 +9,7 @@ import { SettingsContext } from '../../../contexts/settingsContext';
 
 import EllipsisSVG from '../../../assets/svg/EllipsisSVG';
 
-import { createTagLink, selectionHasEntityType } from '../editorFunctions';
+import { createWikiLink, selectionHasEntityType } from '../editorFunctions';
 import { findAllDocsInFolder } from '../../navs/navFunctions';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
@@ -161,7 +161,7 @@ const AddLinkPopper = ({ setDisplayWikiPopper }) => {
 								(i === 0 ? ' first' : i === allTags.length - 1 ? ' last' : '')
 							}
 							onClick={() => {
-								createTagLink(
+								createWikiLink(
 									item,
 									editorStateRef,
 									linkStructureRef,

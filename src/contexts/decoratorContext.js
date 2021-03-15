@@ -8,6 +8,7 @@ const DecoratorContextProvider = (props) => {
 	// STATE
 	const [hoverSourceLinkId, setHoverSourceLinkId] = useState(null);
 	const [hoverDestLinkId, setHoverDestLinkId] = useState(null);
+	const [hoverCommentId, setHoverCommentId] = useState(null);
 
 	return (
 		<DecoratorContext.Provider
@@ -16,6 +17,8 @@ const DecoratorContextProvider = (props) => {
 				setHoverSourceLinkId,
 				hoverDestLinkId,
 				setHoverDestLinkId,
+				hoverCommentId,
+				setHoverCommentId,
 			}}>
 			{props.children}
 		</DecoratorContext.Provider>

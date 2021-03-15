@@ -56,9 +56,12 @@ const wikiMetadataTemplate = {
 	wikis: {},
 };
 
+const commentStructureTemplate = {};
+
 module.exports = {
 	docStructureTemplate,
 	linkStructureTemplate,
 	mediaStructureTemplate,
 	wikiMetadataTemplate,
+	commentStructureTemplate,
 };

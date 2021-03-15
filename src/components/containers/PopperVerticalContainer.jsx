@@ -12,6 +12,7 @@ const PopperVerticalContainer = ({
 }) => {
 	// REFS
 	const popperElementRef = useRef(null);
+	const closeFnRef = useRef(closeFn);
 
 	// POPPER
 	const { styles, attributes, forceUpdate } = usePopper(
@@ -40,6 +41,11 @@ const PopperVerticalContainer = ({
 		}
 	);
 
+	// Update the closeFnRef so the event handlers get the current function
+	useEffect(() => {
+		closeFnRef.current = closeFn;
+	}, [closeFn]);
+
 	useEffect(() => {
 		if (shouldUpdatePopper) {
 			console.log('updating the popper positioning');
@@ -57,7 +63,7 @@ const PopperVerticalContainer = ({
 			if (e.keyCode === 27) {
 				e.stopPropagation();
 				console.log('escape key - closing popper');
-				closeFn();
+				closeFnRef.current();
 			}
 		};
 
@@ -65,7 +71,7 @@ const PopperVerticalContainer = ({
 			if (popperElementRef.current && !popperElementRef.current.contains(e.target)) {
 				e.stopPropagation();
 				console.log('external click - closing popper');
-				closeFn();
+				closeFnRef.current();
 			}
 		};
 
