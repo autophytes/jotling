@@ -71,6 +71,15 @@ const HiddenContextMenu = () => {
 					// Don't return true b/c the document text up the chain should fire too
 				}
 
+				// DOCUMENT COMMENTS
+				if (element.dataset.contextMenuCommentId) {
+					newBrowserParams = {
+						...newBrowserParams,
+						commentId: element.dataset.contextMenuCommentId,
+						blockKey: element.dataset.contextMenuBlockKey,
+					};
+				}
+
 				// DOCUMENT TEXT (LINKS / COMMENTS)
 				if (element.dataset.offsetKey) {
 					const selection = editorStateRef.current.getSelection();

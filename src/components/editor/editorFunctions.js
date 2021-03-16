@@ -50,13 +50,14 @@ function getStyleStrategy(type) {
 	return function (contentBlock, callback, contentState) {
 		// FIND STYLE RANGES
 
-		contentBlock.findEntityRanges((character) => {
-			const entityKey = character.getEntity();
-			if (entityKey === null) {
+		contentBlock.findStyleRanges((character) => {
+			const charStyles = character.getStyle();
+
+			if (charStyles.size === 0 || !charStyles) {
 				return false;
 			}
 
-			return contentState.getEntity(entityKey).getType() === type;
+			return charStyles.find((value, key) => key.slice(0, type.length) === type);
 		}, callback);
 	};
 }
@@ -159,7 +160,7 @@ const defaultDecorator = [
 		component: WikiSectionDecorator,
 	},
 	{
-		strategy: getStyleStrategy('COMMENT'),
+		strategy: getStyleStrategy('COMMENT-'),
 		component: CommentDecorator,
 	},
 ];

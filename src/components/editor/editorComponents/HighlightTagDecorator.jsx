@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
+import { useChildDecorator } from '../editorCustomHooks';
 
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
@@ -20,30 +21,11 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 // start: number,
 
 const HighlightTagDecorator = ({ children, decoratedText, childDecorator = {} }) => {
-	// CHILD DECORATOR
-	let {
-		currentIndex,
-		getNextComponentIndex,
-		getComponentForIndex,
-		getComponentProps,
-	} = childDecorator;
-	const [componentIndex, setComponentIndex] = useState(-1);
-
 	const { showAllTags } = useContext(LeftNavContext);
 
-	console.log('HIGHLIGHT TAG DECORATOR rendered');
-
-	useEffect(() => {
-		if (getNextComponentIndex) {
-			const newComponentIndex = getNextComponentIndex(currentIndex);
-			setComponentIndex(newComponentIndex);
-		}
-	}, [getNextComponentIndex, currentIndex]);
-
-	const Component = useMemo(
-		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
-		[componentIndex, getComponentForIndex]
-	);
+	// CHILD DECORATOR
+	const { Component, componentProps } = useChildDecorator(childDecorator);
+	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	return (
 		<span
@@ -52,7 +34,7 @@ const HighlightTagDecorator = ({ children, decoratedText, childDecorator = {} })
 			data-context-menu-show-tag-name={decoratedText}>
 			{Component ? (
 				<Component
-					{...getComponentProps(componentIndex)}
+					{...componentProps}
 					childDecorator={{
 						currentIndex: componentIndex,
 						getNextComponentIndex,

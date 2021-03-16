@@ -3,6 +3,7 @@ import { Modifier, SelectionState, EditorState } from 'draft-js';
 
 import { FindReplaceContext } from '../../../contexts/findReplaceContext';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
+import { useChildDecorator } from '../editorCustomHooks';
 
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
@@ -27,23 +28,8 @@ const FindReplaceDecorator = ({ children, blockKey, start, childDecorator = {} }
 	const [isCurrentResult, setIsCurrentResult] = useState(false);
 
 	// CHILD DECORATOR
-	let {
-		currentIndex,
-		getNextComponentIndex,
-		getComponentForIndex,
-		getComponentProps,
-	} = childDecorator;
-	const [componentIndex, setComponentIndex] = useState(-1);
-	useEffect(() => {
-		if (getNextComponentIndex) {
-			const newComponentIndex = getNextComponentIndex(currentIndex);
-			setComponentIndex(newComponentIndex);
-		}
-	}, [getNextComponentIndex, currentIndex]);
-	const Component = useMemo(
-		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
-		[componentIndex, getComponentForIndex]
-	);
+	const { Component, componentProps } = useChildDecorator(childDecorator);
+	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	// CONTEXT
 	const {
@@ -117,7 +103,7 @@ const FindReplaceDecorator = ({ children, blockKey, start, childDecorator = {} }
 		>
 			{Component ? (
 				<Component
-					{...getComponentProps(componentIndex)}
+					{...componentProps}
 					childDecorator={{
 						currentIndex: componentIndex,
 						getNextComponentIndex,

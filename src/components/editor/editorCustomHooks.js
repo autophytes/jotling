@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext, useCallback, useRef } from 'react';
+import { useEffect, useState, useContext, useCallback, useRef, useMemo } from 'react';
 import { EditorState } from 'draft-js';
 import {
 	defaultCompositeDecorator,
@@ -84,6 +84,39 @@ export const useDecorator = (currentDoc, setEditorState) => {
 	}, [decorator]);
 
 	return decorator;
+};
+
+export const useChildDecorator = (childDecorator) => {
+	let {
+		currentIndex,
+		getNextComponentIndex,
+		getComponentForIndex,
+		getComponentProps,
+	} = childDecorator;
+
+	const [componentIndex, setComponentIndex] = useState(-1);
+
+	// Set the component index
+	useEffect(() => {
+		if (getNextComponentIndex) {
+			const newComponentIndex = getNextComponentIndex(currentIndex);
+			setComponentIndex(newComponentIndex);
+		}
+	}, [getNextComponentIndex, currentIndex]);
+
+	// Pull Component
+	const Component = useMemo(
+		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
+		[componentIndex, getComponentForIndex]
+	);
+
+	// Pull Component Props
+	const componentProps = useMemo(
+		() => (componentIndex !== -1 ? getComponentProps(componentIndex) : {}),
+		[componentIndex, getComponentProps]
+	);
+
+	return { Component, componentProps };
 };
 
 // Get down in the element tree to our blocks

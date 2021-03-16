@@ -20,16 +20,15 @@ const DecoratorComponentComposition = (props) => {
 
 	const getNextComponentIndex = useCallback(
 		(componentIndex) => {
-			console.log('componentIndex:', componentIndex);
 			let slicedTuple = componentIndex > -1 ? keyTuple.slice(componentIndex + 1) : keyTuple;
-			console.log('slicedTuple:', slicedTuple);
+
 			let slicedIndex = slicedTuple.findIndex((item) => item !== null);
-			console.log('slicedIndex:', slicedIndex);
+
 			let newComponentIndex =
 				componentIndex > -1 && slicedIndex > -1
 					? slicedIndex + componentIndex + 1
 					: slicedIndex;
-			console.log('newComponentIndex:', newComponentIndex);
+
 			return newComponentIndex;
 		},
 		[keyTuple]

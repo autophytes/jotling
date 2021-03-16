@@ -4,6 +4,7 @@ import { EditorBlock } from 'draft-js';
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { RightNavContext } from '../../../contexts/rightNavContext';
 import { DecoratorContext } from '../../../contexts/decoratorContext';
+import { useChildDecorator } from '../editorCustomHooks';
 
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
@@ -49,30 +50,8 @@ const CommentDecorator = ({
 	const [commentId, setCommentId] = useState(null);
 
 	// CHILD DECORATOR
-	let {
-		currentIndex,
-		getNextComponentIndex,
-		getComponentForIndex,
-		getComponentProps,
-	} = childDecorator;
-	const [componentIndex, setComponentIndex] = useState(-1);
-	useEffect(() => {
-		if (getNextComponentIndex) {
-			const newComponentIndex = getNextComponentIndex(currentIndex);
-			console.log('newComponentIndex:', newComponentIndex);
-			setComponentIndex(newComponentIndex);
-		}
-	}, [getNextComponentIndex, currentIndex]);
-
-	const Component = useMemo(
-		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
-		[componentIndex, getComponentForIndex]
-	);
-	const componentProps = useMemo(
-		() => (componentIndex !== -1 ? getComponentProps(componentIndex) : {}),
-		[componentIndex, getComponentProps]
-	);
-	// END CHILD DECORATOR
+	const { Component, componentProps } = useChildDecorator(childDecorator);
+	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	// On load, grab the commentId
 	useEffect(() => {
@@ -117,8 +96,10 @@ const CommentDecorator = ({
 	return (
 		<span
 			style={{ borderBottom: '1px solid red' }}
-			onMouseEnter={!showAllTags ? handleHoverStart : null}
-			onMouseLeave={!showAllTags ? handleHoverLeave : null}>
+			onMouseEnter={handleHoverStart}
+			onMouseLeave={handleHoverLeave}
+			data-context-menu-comment-id={commentId}
+			data-context-menu-block-key={blockKey}>
 			{Component ? (
 				<Component
 					{...componentProps}

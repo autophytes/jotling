@@ -43,6 +43,10 @@ const AddToWikiPopper = () => {
 	const [shouldUpdatePopper, setShouldUpdatePopper] = useState(false);
 	const [comment, setComment] = useState('');
 	const [selection] = useState(editorStateRef.current.getSelection());
+	console.log('selection:', selection);
+
+	// REF
+	const textareaRef = useRef(null);
 
 	// Initial rebuild of referenceElement
 	useEffect(() => {
@@ -121,6 +125,10 @@ const AddToWikiPopper = () => {
 		setDisplayCommentPopper(false);
 	};
 
+	useLayoutEffect(() => {
+		setTimeout(() => textareaRef.current.focus(), 0);
+	}, []);
+
 	// Reposition the popper when changing sections we're viewing
 	useLayoutEffect(() => {
 		setShouldUpdatePopper(true);
@@ -143,7 +151,7 @@ const AddToWikiPopper = () => {
 					minRows={1}
 					maxRows={6}
 					cols={1}
-					// autoFocus
+					ref={textareaRef}
 					placeholder='New Comment'
 					className='tag-section-value'
 					style={{ minWidth: '15rem' }}

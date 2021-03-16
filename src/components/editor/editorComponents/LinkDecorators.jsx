@@ -3,6 +3,7 @@ import { EditorBlock } from 'draft-js';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { DecoratorContext } from '../../../contexts/decoratorContext';
+import { useChildDecorator } from '../editorCustomHooks';
 
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
@@ -62,29 +63,8 @@ const LinkSourceDecorator = ({
 	const [showActive, setShowActive] = useState(false);
 
 	// CHILD DECORATOR
-	let {
-		currentIndex,
-		getNextComponentIndex,
-		getComponentForIndex,
-		getComponentProps,
-	} = childDecorator;
-	const [componentIndex, setComponentIndex] = useState(-1);
-	useEffect(() => {
-		if (getNextComponentIndex) {
-			const newComponentIndex = getNextComponentIndex(currentIndex);
-			console.log('newComponentIndex:', newComponentIndex);
-			setComponentIndex(newComponentIndex);
-		}
-	}, [getNextComponentIndex, currentIndex]);
-
-	const Component = useMemo(
-		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
-		[componentIndex, getComponentForIndex]
-	);
-	const componentProps = useMemo(
-		() => (componentIndex !== -1 ? getComponentProps(componentIndex) : {}),
-		[componentIndex, getComponentProps]
-	);
+	const { Component, componentProps } = useChildDecorator(childDecorator);
+	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	// On load (or decorator change - overwriting parts of links does this), grab the entity linkId
 	useEffect(() => {
@@ -221,28 +201,8 @@ const LinkDestDecorator = ({
 	const [isAliased, setIsAliased] = useState(false);
 
 	// CHILD DECORATOR
-	let {
-		currentIndex,
-		getNextComponentIndex,
-		getComponentForIndex,
-		getComponentProps,
-	} = childDecorator;
-	const [componentIndex, setComponentIndex] = useState(-1);
-	useEffect(() => {
-		if (getNextComponentIndex) {
-			const newComponentIndex = getNextComponentIndex(currentIndex);
-			console.log('newComponentIndex:', newComponentIndex);
-			setComponentIndex(newComponentIndex);
-		}
-	}, [getNextComponentIndex, currentIndex]);
-	const Component = useMemo(
-		() => (componentIndex !== -1 ? getComponentForIndex(componentIndex) : null),
-		[componentIndex, getComponentForIndex]
-	);
-	const componentProps = useMemo(
-		() => (componentIndex !== -1 ? getComponentProps(componentIndex) : {}),
-		[componentIndex, getComponentProps]
-	);
+	const { Component, componentProps } = useChildDecorator(childDecorator);
+	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	// On load, grab the entity linkId
 	useEffect(() => {
