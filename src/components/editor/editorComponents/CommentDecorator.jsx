@@ -63,8 +63,8 @@ const CommentDecorator = ({
 		const styles = block.getInlineStyleAt(start).toArray();
 
 		// Find the COMMENT style, pull the commentId
-		const commentStyle = styles.find((item) => item.slice(0, 7) === 'COMMENT');
-		const newCommentId = Number(commentStyle.slice(7));
+		const commentStyle = styles.find((item) => item.slice(0, 8) === 'COMMENT-');
+		const newCommentId = Number(commentStyle.slice(8));
 
 		setCommentId(newCommentId);
 	}, []);

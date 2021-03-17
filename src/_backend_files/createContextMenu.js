@@ -355,7 +355,7 @@ const create = (win, options) => {
 			}),
 			addLink: () => ({
 				id: 'addLink',
-				label: browserParams.hasLink ? 'Add to Different Wiki' : 'Add to Wiki',
+				label: browserParams.hasLinkSource ? 'Add to Different Wiki' : 'Add to Wiki',
 				visible: browserParams.type === 'document-text',
 				enabled:
 					!browserParams.hasLinkDest &&
@@ -368,7 +368,7 @@ const create = (win, options) => {
 			removeLink: () => ({
 				id: 'removeLink',
 				label: 'Remove from Wiki',
-				visible: browserParams.type === 'document-text' && browserParams.hasLink,
+				visible: browserParams.type === 'document-text' && browserParams.hasLinkSource,
 				enabled: !browserParams.hasLinkDest && !browserParams.inMiddleOfLink,
 				click() {
 					webContents(win).send('remove-link');
@@ -376,11 +376,20 @@ const create = (win, options) => {
 			}),
 			addComment: () => ({
 				id: 'addComment',
-				label: 'Add Comment',
+				label: browserParams.hasComment ? 'Add to Different Comment' : 'Add Comment',
 				visible: browserParams.type === 'document-text',
-				enabled: true,
+				enabled: !browserParams.inMiddleOfComment && !browserParams.hasWikiSection,
 				click() {
 					webContents(win).send('insert-comment');
+				},
+			}),
+			removeComment: () => ({
+				id: 'removeLink',
+				label: 'Remove Comment',
+				visible: browserParams.type === 'document-text' && browserParams.hasComment,
+				enabled: !browserParams.inMiddleOfComment,
+				click() {
+					webContents(win).send('remove-comment');
 				},
 			}),
 			// defaultActions.insertDocument(),
@@ -446,6 +455,7 @@ const create = (win, options) => {
 			defaultActions.addLink(),
 			defaultActions.removeLink(),
 			defaultActions.addComment(),
+			defaultActions.removeComment(),
 			defaultActions.separator(), // SEPARATOR Using this section for either links / renaming
 			defaultActions.renameFile(), // Renaming leftNav docs/folders
 			defaultActions.moveFolderToTrash(),

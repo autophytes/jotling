@@ -992,6 +992,57 @@ export const selectionHasEntityType = (editorState, entityType) => {
 	return false;
 };
 
+// Check if any character in the selection has the given style (of a certain prefix)
+export const selectionHasStylePrefix = (editorState, prefix) => {
+	const currentContent = editorState.getCurrentContent();
+	const selection = editorState.getSelection();
+	const startBlockKey = selection.getStartKey();
+	const startOffset = selection.getStartOffset();
+	const endBlockKey = selection.getEndKey();
+	const endOffset = selection.getEndOffset();
+
+	// Find the first block to increment over
+	let block = currentContent.getBlockForKey(startBlockKey);
+
+	// Loop through all the blocks in the selection
+	let finished = false;
+	while (!finished) {
+		const currentBlockKey = block.getKey();
+		const charList = block.getCharacterList();
+		const length = currentBlockKey === endBlockKey ? endOffset : block.getLength();
+
+		// Loop through all characters in the selection in the given block
+		let i = currentBlockKey === startBlockKey ? startOffset : 0;
+		for (i; i < length; i++) {
+			const character = charList.get(i);
+			const charStyles = character.getStyle();
+
+			if (charStyles.size === 0 || !charStyles) {
+				continue;
+			}
+
+			// If we find our matching style, return true
+			const styleMatch = charStyles.find(
+				(value, key) => key.slice(0, prefix.length) === prefix
+			);
+			if (styleMatch) {
+				// WE FOUND OUR MATCH, DO THE THING
+				return true;
+			}
+		}
+
+		// Check if the last block in the selection
+		if (currentBlockKey === endBlockKey) {
+			finished = true;
+		}
+
+		// Increment to the next block
+		block = currentContent.getBlockAfter(currentBlockKey);
+	}
+
+	return false;
+};
+
 // Checks if selection is inside a LINK-SOURCE
 export const selectionInMiddleOfLink = (editorState) => {
 	const currentContent = editorState.getCurrentContent();
@@ -1001,11 +1052,13 @@ export const selectionInMiddleOfLink = (editorState) => {
 	const endBlockKey = selection.getEndKey();
 	const endOffset = selection.getEndOffset();
 
+	// Find the block containing the character before the selection
 	let startBlock =
 		startOffset === 0
 			? currentContent.getBlockBefore(startBlockKey)
 			: currentContent.getBlockForKey(startBlockKey);
 
+	// Find the block containing the character after the selection
 	let endBlock = currentContent.getBlockForKey(endBlockKey);
 	let isSelectionAtBlockEnd = endBlock.getLength() <= endOffset; // >= ?
 	if (isSelectionAtBlockEnd) {
@@ -1017,17 +1070,74 @@ export const selectionInMiddleOfLink = (editorState) => {
 		return false;
 	}
 
+	// Find the starting and ending entities
 	let startEntityKey = startBlock.getEntityAt(
 		startOffset === 0 ? startBlock.getLength() - 1 : startOffset - 1
 	);
 	let endEntityKey = endBlock.getEntityAt(isSelectionAtBlockEnd ? 0 : endOffset);
 
+	// If they match and are LINK-SOURCE, then return true
 	if (startEntityKey && startEntityKey === endEntityKey) {
 		let entity = currentContent.getEntity(startEntityKey);
 
 		if (entity.getType() === 'LINK-SOURCE') {
 			return true;
 		}
+	}
+
+	return false;
+};
+
+// Check if the entire selection is within a single style with a given prefix
+export const selectionInMiddleOfStylePrefix = (editorState, prefix) => {
+	const currentContent = editorState.getCurrentContent();
+	const selection = editorState.getSelection();
+	const startBlockKey = selection.getStartKey();
+	const startOffset = selection.getStartOffset();
+	const endBlockKey = selection.getEndKey();
+	const endOffset = selection.getEndOffset();
+
+	// Find the block containing the character before the selection
+	let startBlock =
+		startOffset === 0
+			? currentContent.getBlockBefore(startBlockKey)
+			: currentContent.getBlockForKey(startBlockKey);
+
+	// Find the block containing the character after the selection
+	let endBlock = currentContent.getBlockForKey(endBlockKey);
+	const isSelectionAtBlockEnd = endBlock.getLength() <= endOffset; // >= ?
+	if (isSelectionAtBlockEnd) {
+		endBlock = currentContent.getBlockAfter(endBlockKey);
+	}
+
+	// If at the start/end of the document, can't be in the middle of a link.
+	if (!endBlock || !startBlock) {
+		return false;
+	}
+
+	// Find the matching style for the character before the start
+	const startCharList = startBlock.getCharacterList();
+	const startIndex = startOffset === 0 ? startBlock.getLength() - 1 : startOffset - 1;
+	const startChar = startCharList.get(startIndex);
+	const startStyles = startChar.getStyle();
+	const startStyleMatch = startStyles.find(
+		(value, key) => key.slice(0, prefix.length) === prefix
+	);
+	if (!startStyleMatch) {
+		return false;
+	}
+
+	// Find the matching style for the character after the end
+	const endCharList =
+		startBlockKey === endBlockKey ? startCharList : endBlock.getCharacterList();
+	const endIndex = endOffset;
+	const endChar = endCharList.get(endIndex);
+	const endStyles = endChar.getStyle();
+	const endStyleMatch = endStyles.find((value, key) => key.slice(0, prefix.length) === prefix);
+
+	// If the styles are the same, return true
+	if (!!endStyleMatch && startStyleMatch === endStyleMatch) {
+		return true;
 	}
 
 	return false;

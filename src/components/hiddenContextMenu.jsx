@@ -6,7 +6,9 @@ import { LeftNavContext } from '../contexts/leftNavContext';
 import {
 	selectionContainsBlockType,
 	selectionHasEntityType,
+	selectionHasStylePrefix,
 	selectionInMiddleOfLink,
+	selectionInMiddleOfStylePrefix,
 } from './editor/editorFunctions';
 import { findAllDocsInFolder } from './navs/navFunctions';
 
@@ -72,6 +74,7 @@ const HiddenContextMenu = () => {
 				}
 
 				// DOCUMENT COMMENTS
+				// TO-DO - need to check if selection contains comments, etc. like we do for links
 				if (element.dataset.contextMenuCommentId) {
 					newBrowserParams = {
 						...newBrowserParams,
@@ -84,6 +87,7 @@ const HiddenContextMenu = () => {
 				if (element.dataset.offsetKey) {
 					const selection = editorStateRef.current.getSelection();
 					if (!selection.isCollapsed()) {
+						const hasComment = selectionHasStylePrefix(editorStateRef.current, 'COMMENT-');
 						const hasLinkDest = selectionHasEntityType(editorStateRef.current, 'LINK-DEST');
 						const hasWikiSection = selectionContainsBlockType(
 							editorStateRef.current,
@@ -101,13 +105,23 @@ const HiddenContextMenu = () => {
 							inMiddleOfLink = selectionInMiddleOfLink(editorStateRef.current);
 						}
 
+						let inMiddleOfComment = false;
+						if (hasComment) {
+							inMiddleOfComment = selectionInMiddleOfStylePrefix(
+								editorStateRef.current,
+								'COMMENT-'
+							);
+						}
+
 						newBrowserParams = {
 							...newBrowserParams,
 							type: 'document-text',
-							hasLink: hasLinkSource,
-							hasLinkDest: hasLinkDest,
-							hasWikiSection: hasWikiSection,
-							inMiddleOfLink: inMiddleOfLink,
+							hasLinkSource,
+							hasLinkDest,
+							hasWikiSection,
+							hasComment,
+							inMiddleOfLink,
+							inMiddleOfComment,
 						};
 					}
 				}
