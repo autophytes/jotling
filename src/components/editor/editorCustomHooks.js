@@ -116,7 +116,7 @@ export const useChildDecorator = (childDecorator) => {
 		[componentIndex, getComponentProps]
 	);
 
-	return { Component, componentProps };
+	return { Component, componentProps, componentIndex };
 };
 
 // Get down in the element tree to our blocks

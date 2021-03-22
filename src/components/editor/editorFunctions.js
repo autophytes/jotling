@@ -1089,9 +1089,12 @@ export const selectionInMiddleOfLink = (editorState) => {
 };
 
 // Check if the entire selection is within a single style with a given prefix
-export const selectionInMiddleOfStylePrefix = (editorState, prefix) => {
-	const currentContent = editorState.getCurrentContent();
-	const selection = editorState.getSelection();
+export const selectionInMiddleOfStylePrefix = (
+	currentContent,
+	selection,
+	prefix,
+	checkEitherSide = false
+) => {
 	const startBlockKey = selection.getStartKey();
 	const startOffset = selection.getStartOffset();
 	const endBlockKey = selection.getEndKey();
@@ -1111,29 +1114,41 @@ export const selectionInMiddleOfStylePrefix = (editorState, prefix) => {
 	}
 
 	// If at the start/end of the document, can't be in the middle of a link.
-	if (!endBlock || !startBlock) {
+	if ((!endBlock || !startBlock) && !checkEitherSide) {
 		return false;
 	}
 
 	// Find the matching style for the character before the start
-	const startCharList = startBlock.getCharacterList();
-	const startIndex = startOffset === 0 ? startBlock.getLength() - 1 : startOffset - 1;
-	const startChar = startCharList.get(startIndex);
-	const startStyles = startChar.getStyle();
-	const startStyleMatch = startStyles.find(
-		(value, key) => key.slice(0, prefix.length) === prefix
-	);
-	if (!startStyleMatch) {
-		return false;
+	let startStyleMatch;
+	let startCharList;
+	if (startBlock) {
+		startCharList = startBlock.getCharacterList();
+		const startIndex = startOffset === 0 ? startBlock.getLength() - 1 : startOffset - 1;
+		const startChar = startCharList.get(startIndex);
+		const startStyles = startChar.getStyle();
+		startStyleMatch = startStyles.find((value, key) => key.slice(0, prefix.length) === prefix);
+
+		// If we need both sides to match and the start doesn't, return false
+		if (!startStyleMatch && !checkEitherSide) {
+			return false;
+		}
 	}
 
 	// Find the matching style for the character after the end
-	const endCharList =
-		startBlockKey === endBlockKey ? startCharList : endBlock.getCharacterList();
-	const endIndex = endOffset;
-	const endChar = endCharList.get(endIndex);
-	const endStyles = endChar.getStyle();
-	const endStyleMatch = endStyles.find((value, key) => key.slice(0, prefix.length) === prefix);
+	let endStyleMatch;
+	if (endBlock) {
+		const endCharList =
+			startBlockKey === endBlockKey ? startCharList : endBlock.getCharacterList();
+		const endIndex = endOffset;
+		const endChar = endCharList.get(endIndex);
+		const endStyles = endChar.getStyle();
+		endStyleMatch = endStyles.find((value, key) => key.slice(0, prefix.length) === prefix);
+	}
+
+	// If we're only checking whether EITHER side has a match
+	if (checkEitherSide) {
+		return !startStyleMatch && !endStyleMatch;
+	}
 
 	// If the styles are the same, return true
 	if (!!endStyleMatch && startStyleMatch === endStyleMatch) {
@@ -1327,3 +1342,5 @@ export const replaceSingleFindMatch = (
 
 	return newEditorState;
 };
+
+export const checkIfStyleContainedInSelection = (contentState, selectionState, style) => {};

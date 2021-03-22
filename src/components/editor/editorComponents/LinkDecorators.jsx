@@ -63,7 +63,7 @@ const LinkSourceDecorator = ({
 	const [showActive, setShowActive] = useState(false);
 
 	// CHILD DECORATOR
-	const { Component, componentProps } = useChildDecorator(childDecorator);
+	const { Component, componentProps, componentIndex } = useChildDecorator(childDecorator);
 	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	// On load (or decorator change - overwriting parts of links does this), grab the entity linkId
@@ -201,7 +201,7 @@ const LinkDestDecorator = ({
 	const [isAliased, setIsAliased] = useState(false);
 
 	// CHILD DECORATOR
-	const { Component, componentProps } = useChildDecorator(childDecorator);
+	const { Component, componentProps, componentIndex } = useChildDecorator(childDecorator);
 	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	// On load, grab the entity linkId

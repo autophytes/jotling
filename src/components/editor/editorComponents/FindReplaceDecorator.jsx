@@ -28,7 +28,7 @@ const FindReplaceDecorator = ({ children, blockKey, start, childDecorator = {} }
 	const [isCurrentResult, setIsCurrentResult] = useState(false);
 
 	// CHILD DECORATOR
-	const { Component, componentProps } = useChildDecorator(childDecorator);
+	const { Component, componentProps, componentIndex } = useChildDecorator(childDecorator);
 	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	// CONTEXT

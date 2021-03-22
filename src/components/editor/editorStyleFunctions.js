@@ -10,6 +10,7 @@ import Immutable from 'immutable';
 import { setBlockData, getSelectedBlocksList } from 'draftjs-utils';
 import { forEachBlockInSelection } from '../../utils/draftUtils';
 import { BlockImageContainer } from './editorComponents/BlockImageContainer';
+import { selectionInMiddleOfStylePrefix } from './editorFunctions';
 
 export const defaultCustomStyleMap = {
 	STRIKETHROUGH: {
@@ -322,13 +323,14 @@ export const blockRendererFn = (contentBlock) => {
 };
 
 export const toggleTextComment = (
-	commentId,
+	commentId = 0,
 	editorState,
 	setEditorState,
-	selection,
+	setCommentStructure,
+	selection = null,
 	removeOnly = ''
 ) => {
-	const selectionState = selection;
+	const selectionState = selection ? selection : editorState.getSelection();
 
 	let usedStyleSet = new Set();
 	const fullStyleName = `COMMENT-${commentId}`;
@@ -360,14 +362,30 @@ export const toggleTextComment = (
 		}
 	}
 
-	// NOTE: is this going to remove our current comment??
-	// Revisit when editing comments
-	// If removing a full comment, remove from the comment structure somehow
-
 	// Remove any comments currently in the selection
 	let contentState = editorState.getCurrentContent();
 	for (let style of usedStyleSet) {
-		if (style.slice(0, 'COMMENT'.length + 1) === `COMMENT-`) {
+		if (style !== fullStyleName && style.slice(0, 'COMMENT'.length + 1) === `COMMENT-`) {
+			// For each style that we're removing, check the selection before/after ours
+			// If this has our style, do nothing. If neither have it, remove from comment structure
+			// Exempt the current fullStyleName
+
+			const isContainedInSelection = selectionInMiddleOfStylePrefix(
+				contentState,
+				selectionState,
+				style,
+				true
+			);
+
+			console.log('isContainedInSelection:', isContainedInSelection);
+			const commentId = Number(style.slice(-(style.length - 8)));
+			setCommentStructure((prev) => {
+				let newCommentStructure = { ...prev };
+				delete newCommentStructure[commentId];
+				return newCommentStructure;
+			});
+			// If so, remove from commentStructure
+
 			contentState = Modifier.removeInlineStyle(contentState, selectionState, style);
 		}
 	}

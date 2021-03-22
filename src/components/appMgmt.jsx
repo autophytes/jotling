@@ -25,6 +25,7 @@ import {
 	restoreFolder,
 	moveFolderToTrash,
 } from './navs/navFunctions';
+import { toggleTextComment } from './editor/editorStyleFunctions';
 
 import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
@@ -396,6 +397,25 @@ const AppMgmt = () => {
 				setDisplayCommentPopper(true);
 			}
 		});
+
+		ipcRenderer.on('remove-comment', (e) => {
+			if (document.getSelection().toString().length) {
+				toggleTextComment(
+					null,
+					editorStateRef.current,
+					setEditorStateRef.current,
+					setCommentStructure,
+					null,
+					'REMOVE'
+				);
+			}
+		});
+
+		// REGISTER REMOVE COMMENT
+		// See comment on hover
+		// Fix comment styles
+		// Edit existing comment
+		// Build the comment pane
 	}, []);
 
 	return (

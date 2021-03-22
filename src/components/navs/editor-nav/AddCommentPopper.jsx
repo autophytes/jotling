@@ -120,7 +120,13 @@ const AddToWikiPopper = () => {
 		});
 
 		// Currently only works for new comments - eventually add edit
-		toggleTextComment(commentId, editorStateRef.current, setEditorStateRef.current, selection);
+		toggleTextComment(
+			commentId,
+			editorStateRef.current,
+			setEditorStateRef.current,
+			setCommentStructure,
+			selection
+		);
 
 		setDisplayCommentPopper(false);
 	};

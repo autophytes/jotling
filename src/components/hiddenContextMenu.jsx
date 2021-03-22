@@ -108,7 +108,8 @@ const HiddenContextMenu = () => {
 						let inMiddleOfComment = false;
 						if (hasComment) {
 							inMiddleOfComment = selectionInMiddleOfStylePrefix(
-								editorStateRef.current,
+								editorStateRef.current.getCurrentContent(),
+								editorStateRef.current.getSelection(),
 								'COMMENT-'
 							);
 						}

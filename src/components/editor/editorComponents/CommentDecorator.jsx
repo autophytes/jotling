@@ -50,7 +50,7 @@ const CommentDecorator = ({
 	const [commentId, setCommentId] = useState(null);
 
 	// CHILD DECORATOR
-	const { Component, componentProps } = useChildDecorator(childDecorator);
+	const { Component, componentProps, componentIndex } = useChildDecorator(childDecorator);
 	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	// On load, grab the commentId

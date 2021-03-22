@@ -24,7 +24,7 @@ const HighlightTagDecorator = ({ children, decoratedText, childDecorator = {} })
 	const { showAllTags } = useContext(LeftNavContext);
 
 	// CHILD DECORATOR
-	const { Component, componentProps } = useChildDecorator(childDecorator);
+	const { Component, componentProps, componentIndex } = useChildDecorator(childDecorator);
 	let { getNextComponentIndex, getComponentForIndex, getComponentProps } = childDecorator;
 
 	return (
