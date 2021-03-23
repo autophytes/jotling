@@ -43,6 +43,7 @@ const CommentDecorator = ({
 	childDecorator = {},
 }) => {
 	// CONTEXT
+	const { setCommentStructure } = useContext(LeftNavContext);
 	const { scrollToCommentId, setScrollToCommentId } = useContext(RightNavContext);
 	const { hoverCommentId, setHoverCommentId } = useContext(DecoratorContext);
 
@@ -67,7 +68,25 @@ const CommentDecorator = ({
 		const newCommentId = Number(commentStyle.slice(8));
 
 		setCommentId(newCommentId);
+
+		// Remove shouldDelete property
+		setCommentStructure((prev) => {
+			// If the comment is flagged for deletion, clean it up
+			if (prev[newCommentId].shouldDelete) {
+				return {
+					...prev,
+					[newCommentId]: {
+						...prev[newCommentId],
+						shouldDelete: false,
+					},
+				};
+			} else {
+				// Otherwise, return the original structure
+				return prev;
+			}
+		});
 	}, []);
+
 	// }, [entityKey, linkId]);
 
 	// TO-DO: Scroll to the clicked-on link from the right nav

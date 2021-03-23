@@ -378,12 +378,21 @@ export const toggleTextComment = (
 			);
 
 			console.log('isContainedInSelection:', isContainedInSelection);
-			const commentId = Number(style.slice(-(style.length - 8)));
-			setCommentStructure((prev) => {
-				let newCommentStructure = { ...prev };
-				delete newCommentStructure[commentId];
-				return newCommentStructure;
-			});
+			if (isContainedInSelection) {
+				const commentId = Number(style.slice(-(style.length - 8)));
+				setCommentStructure((prev) => {
+					let newCommentStructure = {
+						...prev,
+						[commentId]: {
+							...prev[commentId],
+							shouldDelete: true,
+						},
+					};
+					// delete newCommentStructure[commentId];
+
+					return newCommentStructure;
+				});
+			}
 			// If so, remove from commentStructure
 
 			contentState = Modifier.removeInlineStyle(contentState, selectionState, style);

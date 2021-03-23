@@ -412,10 +412,16 @@ const AppMgmt = () => {
 		});
 
 		// REGISTER REMOVE COMMENT
+		// COURTESY OF KPWN243:::
+		// Update to queue up the deletion from commentStructure on close
+		// Adding a delete flag in the commentStructure
+		// On project close, remove delete flagged comments from comment structure
+		// Comment decorators need to check for and remove delete flags
 		// See comment on hover
 		// Fix comment styles
 		// Edit existing comment
 		// Build the comment pane
+		// NOTE: redo might not get rid of it again?
 	}, []);
 
 	return (
