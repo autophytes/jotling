@@ -1,5 +1,6 @@
-import React, { useContext, useState, useEffect, useMemo } from 'react';
+import React, { useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { EditorBlock } from 'draft-js';
+import { usePopper } from 'react-popper';
 
 import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { RightNavContext } from '../../../contexts/rightNavContext';
@@ -31,6 +32,17 @@ import { useChildDecorator } from '../editorCustomHooks';
 // From starting block, if start is 0, check the block before to see if it has that key
 // If so, add {blockKey, start, end} to the START of the array as well
 
+function generateGetBoundingClientRect(x = 0, y = 0) {
+	return () => ({
+		width: 0,
+		height: 0,
+		top: y - 20,
+		right: x,
+		bottom: y - 20,
+		left: x,
+	});
+}
+
 // SOURCE LINK
 const CommentDecorator = ({
 	children,
@@ -43,12 +55,29 @@ const CommentDecorator = ({
 	childDecorator = {},
 }) => {
 	// CONTEXT
-	const { setCommentStructure } = useContext(LeftNavContext);
+	const { commentStructure, setCommentStructure } = useContext(LeftNavContext);
 	const { scrollToCommentId, setScrollToCommentId } = useContext(RightNavContext);
-	const { hoverCommentId, setHoverCommentId } = useContext(DecoratorContext);
+	// const { hoverCommentId, setHoverCommentId } = useContext(DecoratorContext);
 
 	// STATE
 	const [commentId, setCommentId] = useState(null);
+	const [comment, setComment] = useState('');
+	const [showPopper, setShowPopper] = useState(false);
+	console.log('showPopper:', showPopper);
+	const [virtualMouseEl, setVirtualMouseEl] = useState({
+		getBoundingClientRect: generateGetBoundingClientRect(),
+	});
+
+	// POPPER
+	//   Note - using state is to monitor for changes - https://popper.js.org/react-popper/v2/
+	const [commentDecoratorEl, setCommentDecoratorEl] = useState(null);
+	const [popperEl, setPopperEl] = useState(null);
+	const [popperArrowEl, setPopperArrowEl] = useState(null);
+
+	const { styles, attributes } = usePopper(virtualMouseEl, popperEl, {
+		modifiers: [{ name: 'arrow', options: { element: popperArrowEl } }],
+		placement: 'top',
+	});
 
 	// CHILD DECORATOR
 	const { Component, componentProps, componentIndex } = useChildDecorator(childDecorator);
@@ -87,7 +116,16 @@ const CommentDecorator = ({
 		});
 	}, []);
 
-	// }, [entityKey, linkId]);
+	// Load in the comment
+	useEffect(() => {
+		if (commentId) {
+			const newComment = commentStructure[commentId];
+			if (newComment) {
+				setComment(newComment.comment);
+			}
+		}
+		// We want to refresh the comment whenever the commentStructure changes
+	}, [commentId, commentStructure]);
 
 	// TO-DO: Scroll to the clicked-on link from the right nav
 	useEffect(() => {
@@ -97,42 +135,73 @@ const CommentDecorator = ({
 		}
 	}, [scrollToCommentId, commentId]);
 
+	const handleHoverMouseMove = useCallback(({ clientX: x, clientY: y }) => {
+		console.log('handleHover: ', x, y);
+		setVirtualMouseEl({ getBoundingClientRect: generateGetBoundingClientRect(x, y) });
+	}, []);
+
 	// TO DO - display a popper on hover
 	// Since possible multi-decorator, display popper from parent somewhere
 	// Find the full range of the comment and display
 	const handleHoverStart = (e) => {
+		e.persist();
+		handleHoverMouseMove(e);
+		console.log('e:', e);
 		e.preventDefault();
-		setHoverCommentId(commentId);
+		// INITIALIZE MOUSE POSITION
+		document.addEventListener('mousemove', handleHoverMouseMove);
+		setShowPopper(true);
 	};
 
 	const handleHoverLeave = (e) => {
+		console.log('hover leave');
 		e.preventDefault();
-		if (hoverCommentId === commentId) {
-			setHoverCommentId(null);
-		}
+		// if (hoverCommentId === commentId) {
+		document.removeEventListener('mousemove', handleHoverMouseMove);
+		setShowPopper(false);
+		// }
 	};
 
 	return (
-		<span
-			style={{ borderBottom: '1px solid red' }}
-			onMouseEnter={handleHoverStart}
-			onMouseLeave={handleHoverLeave}
-			data-context-menu-comment-id={commentId}
-			data-context-menu-block-key={blockKey}>
-			{Component ? (
-				<Component
-					{...componentProps}
-					childDecorator={{
-						currentIndex: componentIndex,
-						getNextComponentIndex,
-						getComponentForIndex,
-						getComponentProps,
-					}}
-				/>
-			) : (
-				children
+		<>
+			<span
+				style={{ borderBottom: '2px solid #ff005229' }}
+				ref={setCommentDecoratorEl}
+				onMouseEnter={handleHoverStart}
+				onMouseLeave={handleHoverLeave}
+				data-context-menu-comment-id={commentId}
+				data-context-menu-block-key={blockKey}>
+				{Component ? (
+					<Component
+						{...componentProps}
+						childDecorator={{
+							currentIndex: componentIndex,
+							getNextComponentIndex,
+							getComponentForIndex,
+							getComponentProps,
+						}}
+					/>
+				) : (
+					children
+				)}
+			</span>
+
+			{/* COMMENT POPPER */}
+			{!!showPopper && (
+				<div
+					ref={setPopperEl}
+					className='comment-decorator-popper'
+					style={styles.popper}
+					{...attributes.popper}>
+					{comment}
+					<div
+						ref={setPopperArrowEl}
+						className='comment-decorator-popper-arrow'
+						style={styles.arrow}
+					/>
+				</div>
 			)}
-		</span>
+		</>
 	);
 };
 
