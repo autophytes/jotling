@@ -3,6 +3,7 @@ import { usePopper } from 'react-popper';
 
 const PopperVerticalContainer = ({
 	referenceElement,
+	placement = 'right',
 	closeFn,
 	children,
 	leftOffset = 50,
@@ -19,7 +20,7 @@ const PopperVerticalContainer = ({
 		referenceElement,
 		popperElementRef.current,
 		{
-			placement: 'right',
+			placement: placement,
 			modifiers: [
 				// { name: 'arrow', options: { element: arrowElement.current } },
 				{

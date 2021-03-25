@@ -420,3 +420,37 @@ export const toggleTextComment = (
 	// Remove all highlight styles
 	// Apply the new highlight style
 };
+
+export const selectEntireComment = (commentId, startBlockKey, editorState) => {
+	const contentState = editorState.getCurrentContent();
+	const startingBlock = contentState.getBlockForKey(startBlockKey);
+
+	const emptySelectionState = SelectionState.createEmpty();
+	let startingSelection = null;
+
+	startingBlock.findStyleRanges(
+		(character) => {
+			const charStyles = character.getStyle();
+
+			if (charStyles.size === 0 || !charStyles) {
+				return false;
+			}
+
+			return charStyles.find((value, key) => key === `COMMENT-${commentId}`);
+		},
+		(start, end) => {
+			// Build a selection state with our comment style range
+			startingSelection = emptySelectionState.merge({
+				anchorKey: startBlockKey,
+				anchorOffset: start,
+				focusKey: startBlockKey,
+				focusOffset: end,
+			});
+		}
+	);
+
+	// TO-DO We then need to check the blocks before / after if the start / end of the comment range
+	//   is at the start/end of the block
+
+	return startingSelection;
+};

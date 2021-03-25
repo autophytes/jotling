@@ -384,12 +384,24 @@ const create = (win, options) => {
 				},
 			}),
 			removeComment: () => ({
-				id: 'removeLink',
+				id: 'removeComment',
 				label: 'Remove Comment',
 				visible: browserParams.type === 'document-text' && browserParams.hasComment,
 				enabled: !browserParams.inMiddleOfComment,
 				click() {
 					webContents(win).send('remove-comment');
+				},
+			}),
+			editComment: () => ({
+				id: 'editComment',
+				label: 'Edit Comment',
+				visible: !!browserParams.commentId,
+				enabled: true,
+				click() {
+					webContents(win).send('edit-comment', {
+						commentId: browserParams.commentId,
+						blockKey: browserParams.commentId,
+					});
 				},
 			}),
 			// defaultActions.insertDocument(),
@@ -456,6 +468,7 @@ const create = (win, options) => {
 			defaultActions.removeLink(),
 			defaultActions.addComment(),
 			defaultActions.removeComment(),
+			defaultActions.editComment(),
 			defaultActions.separator(), // SEPARATOR Using this section for either links / renaming
 			defaultActions.renameFile(), // Renaming leftNav docs/folders
 			defaultActions.moveFolderToTrash(),

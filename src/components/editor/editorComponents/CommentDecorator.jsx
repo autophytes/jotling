@@ -63,7 +63,7 @@ const CommentDecorator = ({
 	const [commentId, setCommentId] = useState(null);
 	const [comment, setComment] = useState('');
 	const [showPopper, setShowPopper] = useState(false);
-	console.log('showPopper:', showPopper);
+
 	const [virtualMouseEl, setVirtualMouseEl] = useState({
 		getBoundingClientRect: generateGetBoundingClientRect(),
 	});
@@ -136,30 +136,28 @@ const CommentDecorator = ({
 	}, [scrollToCommentId, commentId]);
 
 	const handleHoverMouseMove = useCallback(({ clientX: x, clientY: y }) => {
-		console.log('handleHover: ', x, y);
 		setVirtualMouseEl({ getBoundingClientRect: generateGetBoundingClientRect(x, y) });
 	}, []);
 
-	// TO DO - display a popper on hover
-	// Since possible multi-decorator, display popper from parent somewhere
-	// Find the full range of the comment and display
+	// Display the popper over the mouse on hover
 	const handleHoverStart = (e) => {
 		e.persist();
-		handleHoverMouseMove(e);
-		console.log('e:', e);
 		e.preventDefault();
+
 		// INITIALIZE MOUSE POSITION
+		handleHoverMouseMove(e);
+
+		// Add listener to position the popper with the mouse
 		document.addEventListener('mousemove', handleHoverMouseMove);
+
 		setShowPopper(true);
 	};
 
 	const handleHoverLeave = (e) => {
-		console.log('hover leave');
 		e.preventDefault();
-		// if (hoverCommentId === commentId) {
+
 		document.removeEventListener('mousemove', handleHoverMouseMove);
 		setShowPopper(false);
-		// }
 	};
 
 	return (

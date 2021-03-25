@@ -16,17 +16,18 @@ import { SettingsContext } from '../../../contexts/settingsContext';
 import { selectionHasEntityType } from '../../editor/editorFunctions';
 
 import TextareaAutosize from 'react-textarea-autosize';
-import { toggleTextComment } from '../../editor/editorStyleFunctions';
+import { selectEntireComment, toggleTextComment } from '../../editor/editorStyleFunctions';
 
 // Prevents the constructor from constantly rerunning, and saves the selection.
 let referenceElement = new LinkSelectionRangeRef();
 
-const AddToWikiPopper = () => {
+const AddCommentPopper = () => {
 	// CONTEXT
 	const {
 		editorStyles,
 		editorStateRef,
 		setEditorStateRef,
+		displayCommentPopper,
 		setDisplayCommentPopper,
 		navDataRef,
 		commentStructure,
@@ -37,42 +38,47 @@ const AddToWikiPopper = () => {
 	// STATE
 	const [leftOffset, setLeftOffset] = useState(0);
 	const [rightOffset, setRightOffset] = useState(0);
-	const [isInvalid, setIsInvalid] = useState(false);
-	const [showPickFolder, setShowPickFolder] = useState(false);
-	const [showPickSection, setShowPickSection] = useState(false);
 	const [shouldUpdatePopper, setShouldUpdatePopper] = useState(false);
+	const [editCommentId, setEditCommentId] = useState(false);
+	const [editBlockKey, setEditBlockKey] = useState(false);
 	const [comment, setComment] = useState('');
 	const [selection] = useState(editorStateRef.current.getSelection());
-	console.log('selection:', selection);
 
 	// REF
 	const textareaRef = useRef(null);
 
+	// If editing an existing comment, load the comment
+	useEffect(() => {
+		if (typeof displayCommentPopper === 'object') {
+			const commentId = displayCommentPopper.commentId;
+			const blockKey = displayCommentPopper.blockKey;
+
+			setComment(commentStructure[commentId].comment);
+
+			setEditCommentId(commentId);
+			setEditBlockKey(blockKey);
+		} else {
+			setEditCommentId(false);
+			setEditBlockKey(false);
+		}
+	}, [commentStructure, displayCommentPopper]);
+
 	// Initial rebuild of referenceElement
 	useEffect(() => {
-		console.log('recreating the referenceElement');
 		referenceElement = new LinkSelectionRangeRef();
-	}, []);
-
-	// TO-DO - maybe evaluate for existing comments
-	// Check if a LINK-DEST is selected. If so, disable popper.
-	useEffect(() => {
-		const hasLinkDest = selectionHasEntityType(editorStateRef.current, 'LINK-DEST');
-		if (hasLinkDest) {
-			setIsInvalid(true);
-		}
 	}, []);
 
 	// Adds a scroll listener to reposition our reference element.
 	// Managed here to remove on unmount
 	useEffect(() => {
 		referenceElement.update();
-		// !isInvalid && popperInputRef.current.focus();
+
 		window.addEventListener('scroll', referenceElement.update);
+
 		return () => {
 			window.removeEventListener('scroll', referenceElement.update);
 		};
-	}, [referenceElement, isInvalid]);
+	}, [referenceElement]);
 
 	// Calculates the left and right popper boundaries
 	useEffect(() => {
@@ -94,58 +100,60 @@ const AddToWikiPopper = () => {
 
 	// Save on close
 	const handleSaveOnClose = () => {
-		// SAVE OUR COMMENT
-		// Create a new/update comment in the commentStructure
-		// find our selection
-		// apply the entity to the selection
-		// save
-
-		/* 
-      commentStructure = {
-        12: {
-          comment: 'This is the song that never ends...',
-          doc: 'doc5.json'
-        }
-      }
-    */
-
-		// STILL NEED TO ENABLE EDITING COMMENTS
-
-		// Store the comment in the commentStructure
+		// Store the comment in the commentStructure. Update if have an editCommentId.
 		const commentId = updateComment({
 			comment,
 			commentStructure,
 			setCommentStructure,
 			navDataRef,
+			editCommentId,
 		});
 
-		// Currently only works for new comments - eventually add edit
-		toggleTextComment(
-			commentId,
-			editorStateRef.current,
-			setEditorStateRef.current,
-			setCommentStructure,
-			selection
-		);
+		// For new comments, add the comment metadata to the document text
+		if (!editCommentId && comment !== '') {
+			toggleTextComment(
+				commentId,
+				editorStateRef.current,
+				setEditorStateRef.current,
+				setCommentStructure,
+				selection
+			);
+		}
+
+		// If deleting the content of an existing comment, remove the comment metadata
+		if (editCommentId && comment === '') {
+			// Select the entire comment
+			const wholeCommentSelection = selectEntireComment(
+				commentId,
+				editBlockKey,
+				editorStateRef.current
+			);
+
+			// Remove the comment metadata from the entire comment
+			toggleTextComment(
+				null,
+				editorStateRef.current,
+				setEditorStateRef.current,
+				setCommentStructure,
+				wholeCommentSelection,
+				'REMOVE'
+			);
+		}
 
 		setDisplayCommentPopper(false);
 	};
 
+	// Focus the text input after the selection has loaded
 	useLayoutEffect(() => {
 		setTimeout(() => textareaRef.current.focus(), 0);
 	}, []);
-
-	// Reposition the popper when changing sections we're viewing
-	useLayoutEffect(() => {
-		setShouldUpdatePopper(true);
-		console.log('should have fired the popper update');
-	}, [showPickFolder, showPickSection]);
 
 	return (
 		<PopperVerticalContainer
 			{...{
 				leftOffset,
 				rightOffset,
+				placement: 'top',
 				referenceElement,
 				shouldUpdatePopper,
 				setShouldUpdatePopper,
@@ -171,13 +179,21 @@ const AddToWikiPopper = () => {
 	);
 };
 
-export default AddToWikiPopper;
+export default AddCommentPopper;
 
-// Adds a new comment to the commentStructure - NEED TO UPDATE FOR EDIT
-const updateComment = ({ comment, commentStructure, setCommentStructure, navDataRef }) => {
+// Adds a new comment to the commentStructure
+const updateComment = ({
+	comment,
+	commentStructure,
+	setCommentStructure,
+	navDataRef,
+	editCommentId = 0,
+}) => {
 	// Increment the max id for the new comment id
 	const commentIds = Object.keys(commentStructure).map((id) => Number(id));
-	const newId = Math.max(...(commentIds.length ? commentIds : [0])) + 1;
+	const newId = editCommentId
+		? editCommentId
+		: Math.max(...(commentIds.length ? commentIds : [0])) + 1;
 
 	// Create the new comment object
 	const newComment = {
@@ -185,10 +201,17 @@ const updateComment = ({ comment, commentStructure, setCommentStructure, navData
 		comment,
 	};
 
-	setCommentStructure((prev) => ({
-		...prev,
-		[newId]: newComment,
-	}));
+	setCommentStructure((prev) => {
+		// If the comment is blank, delete from commentStructure
+		if (comment === '') {
+			let newCommentStructure = JSON.parse(JSON.stringify(prev));
+			delete newCommentStructure[newId];
+			return newCommentStructure;
+		} else {
+			// Otherwise, update the comment
+			return { ...prev, [newId]: newComment };
+		}
+	});
 
 	return newId;
 };

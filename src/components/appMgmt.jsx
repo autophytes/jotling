@@ -394,7 +394,7 @@ const AppMgmt = () => {
 
 		ipcRenderer.on('insert-comment', (e) => {
 			if (document.getSelection().toString().length) {
-				setDisplayCommentPopper(true);
+				setDisplayCommentPopper('NEW');
 			}
 		});
 
@@ -409,6 +409,10 @@ const AppMgmt = () => {
 					'REMOVE'
 				);
 			}
+		});
+
+		ipcRenderer.on('edit-comment', (e, { commentId, blockKey }) => {
+			setDisplayCommentPopper({ commentId: Number(commentId), blockKey: blockKey });
 		});
 
 		// REGISTER REMOVE COMMENT
