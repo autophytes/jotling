@@ -10,6 +10,7 @@ const {
 	requestShowFindReplace,
 	requestInsertLink,
 	requestExport,
+	requestInsertComment,
 } = require('./fileFunctions');
 const { createWindow } = require('./createWindow');
 
@@ -199,6 +200,14 @@ const registerMenu = () => {
 					registerAccelerator: true,
 					acceleratorWorksWhenHidden: true,
 					click: requestInsertLink,
+					enabled: isWindowOpen,
+				},
+				{
+					label: 'Insert Comment',
+					accelerator: 'CmdOrCtrl+/',
+					registerAccelerator: true,
+					acceleratorWorksWhenHidden: true,
+					click: requestInsertComment,
 					enabled: isWindowOpen,
 				},
 				// FIND

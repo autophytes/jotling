@@ -331,6 +331,7 @@ export const toggleTextComment = (
 	removeOnly = ''
 ) => {
 	const selectionState = selection ? selection : editorState.getSelection();
+	const initialEditorState = EditorState.acceptSelection(editorState, selectionState);
 
 	let usedStyleSet = new Set();
 	const fullStyleName = `COMMENT-${commentId}`;
@@ -338,7 +339,7 @@ export const toggleTextComment = (
 	// Accumulate all styles from all characters in the selection
 	const start = selectionState.getStartOffset();
 	const end = selectionState.getEndOffset();
-	const selectedBlocks = getSelectedBlocksList(editorState);
+	const selectedBlocks = getSelectedBlocksList(initialEditorState);
 	if (selectedBlocks.size > 0) {
 		// Loop through each block
 		for (let i = 0; i < selectedBlocks.size; i += 1) {
@@ -363,9 +364,13 @@ export const toggleTextComment = (
 	}
 
 	// Remove any comments currently in the selection
-	let contentState = editorState.getCurrentContent();
+	let contentState = initialEditorState.getCurrentContent();
+	console.log('usedStyleSet:', usedStyleSet);
 	for (let style of usedStyleSet) {
-		if (style !== fullStyleName && style.slice(0, 'COMMENT'.length + 1) === `COMMENT-`) {
+		if (
+			// style !== fullStyleName &&
+			style.slice(0, 'COMMENT'.length + 1) === `COMMENT-`
+		) {
 			// For each style that we're removing, check the selection before/after ours
 			// If this has our style, do nothing. If neither have it, remove from comment structure
 			// Exempt the current fullStyleName
@@ -406,7 +411,11 @@ export const toggleTextComment = (
 		contentState = Modifier.applyInlineStyle(contentState, selectionState, fullStyleName);
 	}
 
-	const newEditorState = EditorState.push(editorState, contentState, 'change-inline-style');
+	const newEditorState = EditorState.push(
+		initialEditorState,
+		contentState,
+		'change-inline-style'
+	);
 	const finalEditorState = EditorState.forceSelection(newEditorState, selectionState);
 
 	setEditorState(finalEditorState);
@@ -421,36 +430,92 @@ export const toggleTextComment = (
 	// Apply the new highlight style
 };
 
+// Returns a selectionState containing the entire comment for a given commentId
 export const selectEntireComment = (commentId, startBlockKey, editorState) => {
+	console.log('editorState:', editorState);
+	console.log('startBlockKey:', startBlockKey);
 	const contentState = editorState.getCurrentContent();
 	const startingBlock = contentState.getBlockForKey(startBlockKey);
 
 	const emptySelectionState = SelectionState.createEmpty();
-	let startingSelection = null;
+	let newSelection = null;
 
-	startingBlock.findStyleRanges(
-		(character) => {
-			const charStyles = character.getStyle();
+	// First argument in the findStyleRanges functions
+	const findCommentStyleRange = (character) => {
+		const charStyles = character.getStyle();
+		if (charStyles.size === 0 || !charStyles) {
+			return false;
+		}
+		return charStyles.find((value, key) => key === `COMMENT-${commentId}`);
+	};
 
-			if (charStyles.size === 0 || !charStyles) {
-				return false;
-			}
+	// Pull the comment range in the starting block
+	startingBlock.findStyleRanges(findCommentStyleRange, (start, end) => {
+		// Build a selection state with our comment style range
+		newSelection = emptySelectionState.merge({
+			anchorKey: startBlockKey,
+			anchorOffset: start,
+			focusKey: startBlockKey,
+			focusOffset: end,
+		});
+	});
 
-			return charStyles.find((value, key) => key === `COMMENT-${commentId}`);
-		},
-		(start, end) => {
-			// Build a selection state with our comment style range
-			startingSelection = emptySelectionState.merge({
-				anchorKey: startBlockKey,
+	// Checking blocks BEFORE
+	let startOffset = newSelection.getAnchorOffset();
+	while (startOffset === 0) {
+		// Grab the block before
+		const beforeBlock = contentState.getBlockBefore(newSelection.getAnchorKey());
+		if (!beforeBlock) {
+			startOffset = 1;
+			continue;
+		}
+
+		// Find the range of the same comment
+		beforeBlock.findStyleRanges(findCommentStyleRange, (start, end) => {
+			// Iterate on the starting selection, moving the start forward
+			newSelection = newSelection.merge({
+				anchorKey: beforeBlock.getKey(),
 				anchorOffset: start,
-				focusKey: startBlockKey,
+			});
+		});
+
+		startOffset = newSelection.getAnchorOffset();
+
+		// If there was no comment in the block, break the loop
+		if (newSelection.getAnchorKey() !== beforeBlock.getKey()) {
+			startOffset = 1;
+		}
+	}
+
+	// Checking blocks AFTER
+	let endOffset = newSelection.getFocusOffset();
+	let endBlock = contentState.getBlockForKey(newSelection.getFocusKey());
+	let isEndOfBlock = endBlock.getLength() === endOffset;
+	while (isEndOfBlock) {
+		// Grab the block after
+		const afterBlock = contentState.getBlockAfter(newSelection.getFocusKey());
+		if (!afterBlock) {
+			isEndOfBlock = false;
+			continue;
+		}
+
+		// Find the range of the same comment
+		afterBlock.findStyleRanges(findCommentStyleRange, (start, end) => {
+			// Iterate on the starting selection, moving the start forward
+			newSelection = newSelection.merge({
+				focusKey: afterBlock.getKey(),
 				focusOffset: end,
 			});
+		});
+
+		endOffset = newSelection.getFocusOffset();
+		isEndOfBlock = afterBlock.getLength() === endOffset;
+
+		// If there was no comment in the block, break the loop
+		if (newSelection.getFocusKey() !== afterBlock.getKey()) {
+			isEndOfBlock = false;
 		}
-	);
+	}
 
-	// TO-DO We then need to check the blocks before / after if the start / end of the comment range
-	//   is at the start/end of the block
-
-	return startingSelection;
+	return newSelection;
 };

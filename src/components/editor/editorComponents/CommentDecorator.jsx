@@ -160,6 +160,11 @@ const CommentDecorator = ({
 		setShowPopper(false);
 	};
 
+	// Remove listener on unmount
+	useEffect(() => {
+		return () => document.removeEventListener('mousemove', handleHoverMouseMove);
+	}, []);
+
 	return (
 		<>
 			<span

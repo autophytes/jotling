@@ -25,7 +25,7 @@ import {
 	restoreFolder,
 	moveFolderToTrash,
 } from './navs/navFunctions';
-import { toggleTextComment } from './editor/editorStyleFunctions';
+import { selectEntireComment, toggleTextComment } from './editor/editorStyleFunctions';
 
 import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
@@ -398,7 +398,7 @@ const AppMgmt = () => {
 			}
 		});
 
-		ipcRenderer.on('remove-comment', (e) => {
+		ipcRenderer.on('trim-comment', (e) => {
 			if (document.getSelection().toString().length) {
 				toggleTextComment(
 					null,
@@ -411,15 +411,31 @@ const AppMgmt = () => {
 			}
 		});
 
+		ipcRenderer.on('remove-comment', (e, { commentId, blockKey }) => {
+			const wholeCommentSelection = selectEntireComment(
+				commentId,
+				blockKey,
+				editorStateRef.current
+			);
+
+			toggleTextComment(
+				null,
+				editorStateRef.current,
+				setEditorStateRef.current,
+				setCommentStructure,
+				wholeCommentSelection,
+				'REMOVE'
+			);
+		});
+
 		ipcRenderer.on('edit-comment', (e, { commentId, blockKey }) => {
 			setDisplayCommentPopper({ commentId: Number(commentId), blockKey: blockKey });
 		});
 
 		// REGISTER REMOVE COMMENT
 		// COURTESY OF KPWN243:::
-		// See comment on hover (but disable when editing comment)
-		// Fix comment styles
-		// Edit existing comment
+		// Shortcut to add comment needs to edit the comment if we're already in one.
+		//   Right now it can split an existing comment in half. Not good.
 		// Build the comment pane
 		// NOTE: redo might not get rid of it again?
 	}, []);

@@ -383,13 +383,13 @@ const create = (win, options) => {
 					webContents(win).send('insert-comment');
 				},
 			}),
-			removeComment: () => ({
-				id: 'removeComment',
-				label: 'Remove Comment',
+			trimComment: () => ({
+				id: 'trimComment',
+				label: 'Trim Comment',
 				visible: browserParams.type === 'document-text' && browserParams.hasComment,
 				enabled: !browserParams.inMiddleOfComment,
 				click() {
-					webContents(win).send('remove-comment');
+					webContents(win).send('trim-comment');
 				},
 			}),
 			editComment: () => ({
@@ -400,7 +400,19 @@ const create = (win, options) => {
 				click() {
 					webContents(win).send('edit-comment', {
 						commentId: browserParams.commentId,
-						blockKey: browserParams.commentId,
+						blockKey: browserParams.blockKey,
+					});
+				},
+			}),
+			removeComment: () => ({
+				id: 'removeComment',
+				label: 'Remove Comment',
+				visible: !!browserParams.commentId,
+				enabled: true,
+				click() {
+					webContents(win).send('remove-comment', {
+						commentId: browserParams.commentId,
+						blockKey: browserParams.blockKey,
 					});
 				},
 			}),
@@ -467,8 +479,9 @@ const create = (win, options) => {
 			defaultActions.addLink(),
 			defaultActions.removeLink(),
 			defaultActions.addComment(),
-			defaultActions.removeComment(),
 			defaultActions.editComment(),
+			defaultActions.trimComment(),
+			defaultActions.removeComment(),
 			defaultActions.separator(), // SEPARATOR Using this section for either links / renaming
 			defaultActions.renameFile(), // Renaming leftNav docs/folders
 			defaultActions.moveFolderToTrash(),

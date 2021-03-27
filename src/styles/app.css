@@ -2630,6 +2630,10 @@ textarea.tag-section-value::placeholder {
 	user-select: none;
 }
 
+.comment-decorator-popper * {
+	user-select: none;
+}
+
 .comment-decorator-popper-arrow,
 .comment-decorator-popper-arrow::before {
 	position: absolute;

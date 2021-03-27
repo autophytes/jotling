@@ -417,6 +417,11 @@ const requestInsertLink = async () => {
 	mainWindow.webContents.send('insert-link');
 };
 
+const requestInsertComment = async () => {
+	let mainWindow = getMainWindow();
+	mainWindow.webContents.send('insert-comment');
+};
+
 const requestExport = async (extension) => {
 	let mainWindow = getMainWindow();
 	mainWindow.webContents.send('request-export-project', { extension });
@@ -435,6 +440,7 @@ module.exports = {
 	removeOldTempFilesSync,
 	requestShowFindReplace,
 	requestInsertLink,
+	requestInsertComment,
 	updateRecentProjects,
 	requestExport,
 	getMainWindow,

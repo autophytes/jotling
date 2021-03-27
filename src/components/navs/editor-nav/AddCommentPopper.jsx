@@ -53,7 +53,9 @@ const AddCommentPopper = () => {
 			const commentId = displayCommentPopper.commentId;
 			const blockKey = displayCommentPopper.blockKey;
 
-			setComment(commentStructure[commentId].comment);
+			if (commentStructure[commentId]) {
+				setComment(commentStructure[commentId].comment);
+			}
 
 			setEditCommentId(commentId);
 			setEditBlockKey(blockKey);
@@ -128,6 +130,7 @@ const AddCommentPopper = () => {
 				editBlockKey,
 				editorStateRef.current
 			);
+			console.log('wholeCommentSelection:', wholeCommentSelection);
 
 			// Remove the comment metadata from the entire comment
 			toggleTextComment(
