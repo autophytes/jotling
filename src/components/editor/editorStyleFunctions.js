@@ -8,7 +8,7 @@ import {
 import Immutable from 'immutable';
 
 import { setBlockData, getSelectedBlocksList } from 'draftjs-utils';
-import { forEachBlockInSelection } from '../../utils/draftUtils';
+import { forEachBlockInSelection, getBlocksForSelection } from '../../utils/draftUtils';
 import { BlockImageContainer } from './editorComponents/BlockImageContainer';
 import { selectionInMiddleOfStylePrefix } from './editorFunctions';
 
@@ -443,7 +443,7 @@ export const selectEntireComment = (commentId, startBlockKey, editorState) => {
 	// First argument in the findStyleRanges functions
 	const findCommentStyleRange = (character) => {
 		const charStyles = character.getStyle();
-		if (charStyles.size === 0 || !charStyles) {
+		if (!charStyles || charStyles.size === 0) {
 			return false;
 		}
 		return charStyles.find((value, key) => key === `COMMENT-${commentId}`);
@@ -518,4 +518,58 @@ export const selectEntireComment = (commentId, startBlockKey, editorState) => {
 	}
 
 	return newSelection;
+};
+
+// Returns the first commentId in a text selection or null
+export const findFirstCommentInSelection = (editorState) => {
+	const selectionState = editorState.getSelection();
+	const startBlockKey = selectionState.getStartKey();
+	const endBlockKey = selectionState.getEndKey();
+
+	// Loop through all blocks in the selection
+	const blockArray = getBlocksForSelection(editorState);
+	for (let block of blockArray) {
+		const charList = block.getCharacterList();
+		const blockKey = block.getKey();
+
+		// Adust the starting and ending character index to use
+		let startIndex = 0;
+		let endIndex = charList.size - 1; // Note: if empty block, will be -1
+
+		if (blockKey === startBlockKey) {
+			startIndex = selectionState.getStartOffset();
+		}
+		if (blockKey === endBlockKey) {
+			endIndex = selectionState.getEndOffset();
+		}
+
+		// Looping through the selected characters
+		for (let i = startIndex; i < endIndex; i++) {
+			if (!charList.size) {
+				continue;
+			}
+
+			// Grab the styles on the character
+			const character = charList.get(i);
+			const charStyles = character.getStyle();
+			if (!charStyles || charStyles.size === 0) {
+				continue;
+			}
+
+			// If the character style contains a comment, return that commentId
+			const commentStyle = charStyles.find((value, key) => key.slice(0, 8) === 'COMMENT-');
+			if (commentStyle) {
+				return {
+					commentId: Number(commentStyle.slice(8)),
+					blockKey: blockKey,
+				};
+			}
+		}
+	}
+
+	// If no comment was found, return null
+	return {
+		commentId: null,
+		blockKey: null,
+	};
 };

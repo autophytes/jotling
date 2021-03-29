@@ -25,7 +25,11 @@ import {
 	restoreFolder,
 	moveFolderToTrash,
 } from './navs/navFunctions';
-import { selectEntireComment, toggleTextComment } from './editor/editorStyleFunctions';
+import {
+	findFirstCommentInSelection,
+	selectEntireComment,
+	toggleTextComment,
+} from './editor/editorStyleFunctions';
 
 import PeekDocument from './editor/PeekDocument';
 import EditorSettings from './navs/top-nav/EditorSettings';
@@ -392,9 +396,31 @@ const AppMgmt = () => {
 			});
 		});
 
-		ipcRenderer.on('insert-comment', (e) => {
+		ipcRenderer.on('insert-comment', (e, { editIfExisting }) => {
 			if (document.getSelection().toString().length) {
-				setDisplayCommentPopper('NEW');
+				// If calling from the top menu or shortcut, check if there is already a comment
+				const { commentId, blockKey } = editIfExisting
+					? findFirstCommentInSelection(editorStateRef.current)
+					: {};
+
+				// If already have a comment
+				if (commentId) {
+					// Select the comment
+					const wholeCommentSelection = selectEntireComment(
+						commentId,
+						blockKey,
+						editorStateRef.current
+					);
+					setEditorStateRef.current(
+						EditorState.forceSelection(editorStateRef.current, wholeCommentSelection)
+					);
+
+					// Display the edit comment popper
+					setDisplayCommentPopper({ commentId: commentId, blockKey: blockKey });
+				} else {
+					// Otherwise, insert a new comment
+					setDisplayCommentPopper('NEW');
+				}
 			}
 		});
 
@@ -434,8 +460,6 @@ const AppMgmt = () => {
 
 		// REGISTER REMOVE COMMENT
 		// COURTESY OF KPWN243:::
-		// Shortcut to add comment needs to edit the comment if we're already in one.
-		//   Right now it can split an existing comment in half. Not good.
 		// Build the comment pane
 		// NOTE: redo might not get rid of it again?
 	}, []);

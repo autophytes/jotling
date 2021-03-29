@@ -419,7 +419,7 @@ const requestInsertLink = async () => {
 
 const requestInsertComment = async () => {
 	let mainWindow = getMainWindow();
-	mainWindow.webContents.send('insert-comment');
+	mainWindow.webContents.send('insert-comment', { editIfExisting: true });
 };
 
 const requestExport = async (extension) => {

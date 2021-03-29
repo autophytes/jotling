@@ -55,9 +55,9 @@ const CommentDecorator = ({
 	childDecorator = {},
 }) => {
 	// CONTEXT
-	const { commentStructure, setCommentStructure } = useContext(LeftNavContext);
+	const { commentStructure, setCommentStructure, showAllTags } = useContext(LeftNavContext);
 	const { scrollToCommentId, setScrollToCommentId } = useContext(RightNavContext);
-	// const { hoverCommentId, setHoverCommentId } = useContext(DecoratorContext);
+	const { hoverCommentId, setHoverCommentId } = useContext(DecoratorContext);
 
 	// STATE
 	const [commentId, setCommentId] = useState(null);
@@ -151,6 +151,7 @@ const CommentDecorator = ({
 		document.addEventListener('mousemove', handleHoverMouseMove);
 
 		setShowPopper(true);
+		setHoverCommentId(commentId);
 	};
 
 	const handleHoverLeave = (e) => {
@@ -158,6 +159,7 @@ const CommentDecorator = ({
 
 		document.removeEventListener('mousemove', handleHoverMouseMove);
 		setShowPopper(false);
+		setHoverCommentId((prev) => (prev === commentId ? false : prev));
 	};
 
 	// Remove listener on unmount
@@ -168,7 +170,11 @@ const CommentDecorator = ({
 	return (
 		<>
 			<span
-				style={{ borderBottom: '2px solid #ff005229' }}
+				style={
+					showAllTags || hoverCommentId === commentId
+						? { borderBottom: '2px solid rgba(var(--color-primary-rgb), 0.3)' }
+						: {}
+				}
 				ref={setCommentDecoratorEl}
 				onMouseEnter={handleHoverStart}
 				onMouseLeave={handleHoverLeave}

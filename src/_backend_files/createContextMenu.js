@@ -380,7 +380,7 @@ const create = (win, options) => {
 				visible: browserParams.type === 'document-text',
 				enabled: !browserParams.inMiddleOfComment && !browserParams.hasWikiSection,
 				click() {
-					webContents(win).send('insert-comment');
+					webContents(win).send('insert-comment', { editIfExisting: false });
 				},
 			}),
 			trimComment: () => ({
