@@ -9,6 +9,7 @@ import SettingsDocSVG from '../../../assets/svg/SettingsDocSVG';
 import DocumentInfoSVG from '../../../assets/svg/DocumentInfoSVG';
 import RightNavContent from './RightNavContent';
 import RightNavTags from './RightNavTags/RightNavTags';
+import RightNavComments from './RightNavComments';
 
 const RightNav = () => {
 	// STATE
@@ -98,8 +99,8 @@ const RightNav = () => {
 							<TagSingleSVG />
 						</div>
 						<div
-							className={'nav-section-tab' + (activeTab === 'document' ? ' active' : '')}
-							onClick={() => setActiveTab('document')}>
+							className={'nav-section-tab' + (activeTab === 'comments' ? ' active' : '')}
+							onClick={() => setActiveTab('comments')}>
 							<DocumentInfoSVG />
 						</div>
 						<div
@@ -111,6 +112,7 @@ const RightNav = () => {
 
 					{/* <RightNavContent {...{ activeTab }} /> */}
 					{activeTab === 'tags' && <RightNavTags {...{ activeTab }} />}
+					{activeTab === 'comments' && <RightNavComments {...{ activeTab }} />}
 
 					<div className='right-nav-footer'>
 						<div>current version</div>

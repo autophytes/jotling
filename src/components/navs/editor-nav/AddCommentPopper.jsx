@@ -41,6 +41,7 @@ const AddCommentPopper = () => {
 	const [shouldUpdatePopper, setShouldUpdatePopper] = useState(false);
 	const [editCommentId, setEditCommentId] = useState(false);
 	const [editBlockKey, setEditBlockKey] = useState(false);
+	const [blockKey, setBlockKey] = useState(false);
 	const [comment, setComment] = useState('');
 	const [selection] = useState(editorStateRef.current.getSelection());
 
@@ -51,14 +52,15 @@ const AddCommentPopper = () => {
 	useEffect(() => {
 		if (typeof displayCommentPopper === 'object') {
 			const commentId = displayCommentPopper.commentId;
-			const blockKey = displayCommentPopper.blockKey;
+			const newBlockKey = displayCommentPopper.blockKey;
 
 			if (commentStructure[commentId]) {
 				setComment(commentStructure[commentId].comment);
 			}
 
 			setEditCommentId(commentId);
-			setEditBlockKey(blockKey);
+			setEditBlockKey(newBlockKey);
+			setBlockKey(newBlockKey);
 		} else {
 			setEditCommentId(false);
 			setEditBlockKey(false);
@@ -109,6 +111,7 @@ const AddCommentPopper = () => {
 			setCommentStructure,
 			navDataRef,
 			editCommentId,
+			blockKey,
 		});
 
 		// For new comments, add the comment metadata to the document text
@@ -191,6 +194,7 @@ const updateComment = ({
 	setCommentStructure,
 	navDataRef,
 	editCommentId = 0,
+	blockKey,
 }) => {
 	// Increment the max id for the new comment id
 	const commentIds = Object.keys(commentStructure).map((id) => Number(id));
@@ -201,6 +205,7 @@ const updateComment = ({
 	// Create the new comment object
 	const newComment = {
 		doc: navDataRef.current.currentDoc,
+		blockKey,
 		comment,
 	};
 

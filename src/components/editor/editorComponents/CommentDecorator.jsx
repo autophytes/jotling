@@ -101,12 +101,13 @@ const CommentDecorator = ({
 		// Remove shouldDelete property
 		setCommentStructure((prev) => {
 			// If the comment is flagged for deletion, clean it up
-			if (prev[newCommentId].shouldDelete) {
+			if (prev[newCommentId].shouldDelete || prev[newCommentId].blockKey !== blockKey) {
 				return {
 					...prev,
 					[newCommentId]: {
 						...prev[newCommentId],
 						shouldDelete: false,
+						blockKey: blockKey,
 					},
 				};
 			} else {
@@ -114,7 +115,7 @@ const CommentDecorator = ({
 				return prev;
 			}
 		});
-	}, []);
+	}, [decoratedText]);
 
 	// Load in the comment
 	useEffect(() => {
@@ -175,6 +176,7 @@ const CommentDecorator = ({
 						? { borderBottom: '2px solid rgba(var(--color-primary-rgb), 0.3)' }
 						: {}
 				}
+				className={`tempclass-${commentId}`}
 				ref={setCommentDecoratorEl}
 				onMouseEnter={handleHoverStart}
 				onMouseLeave={handleHoverLeave}
