@@ -506,9 +506,10 @@ h2.editor-doc-title {
 	font-size: 1.1rem;
 	font-weight: bold;
 	margin: 0.5rem 0 0 0;
-	padding: 0;
+	padding: 0 calc(1rem + 6px);
 	text-align: center;
 	user-select: none;
+	word-break: break-word;
 	/* text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1); */
 }
 
@@ -2617,6 +2618,17 @@ textarea.tag-section-value::placeholder {
 	border-radius: 0.25rem;
 }
 
+.comment-decorator.active {
+	border-bottom: 2px solid rgba(var(--color-primary-rgb), 0.3);
+	transition: 0ms ease border-color;
+}
+
+.comment-decorator:not(:hover):not(.active) {
+	transition-duration: 2000ms;
+	transition-delay: 2000ms;
+	border-bottom: 2px solid transparent;
+}
+
 .comment-decorator-popper {
 	display: inline-block;
 	background: #ffffff;
@@ -2628,6 +2640,7 @@ textarea.tag-section-value::placeholder {
 	border-radius: 4px;
 	box-shadow: 0 6px 9px -2px rgb(0 0 0 / 20%), 0 3px 6px -2px rgb(0 0 0 / 12%);
 	user-select: none;
+	z-index: 10;
 }
 
 .comment-decorator-popper * {
@@ -2687,4 +2700,28 @@ textarea.tag-section-value::placeholder {
 	> .comment-decorator-popper-arrow::before {
 	border-left: none;
 	border-bottom: none;
+}
+
+.right-nav-comments-wrapper {
+	/* margin-left: 0.5rem; */
+	padding-top: 0.5rem;
+}
+
+.right-nav-comment {
+	white-space: pre-wrap;
+	/* margin: 0.25rem 0; */
+	margin: 0;
+	padding: 0.25rem 0.5rem;
+	cursor: pointer;
+	border-radius: 0.25rem;
+}
+
+.right-nav-comment:hover {
+	background-color: rgba(var(--color-primary-rgb), 0.2);
+}
+
+.nav-button.right-nav-header {
+	position: absolute;
+	right: 0;
+	margin-top: 0.5rem;
 }

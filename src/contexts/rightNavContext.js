@@ -7,6 +7,7 @@ const RightNavContextProvider = (props) => {
 	const [newTagTemplate, setNewTagTemplate] = useState('');
 	const [activeTab, setActiveTab] = useState('tags');
 	const [scrollToCommentId, setScrollToCommentId] = useState(null);
+	const [focusCommentId, setFocusCommentId] = useState(null);
 
 	return (
 		<RightNavContext.Provider
@@ -17,6 +18,8 @@ const RightNavContextProvider = (props) => {
 				setActiveTab,
 				scrollToCommentId,
 				setScrollToCommentId,
+				focusCommentId,
+				setFocusCommentId,
 			}}>
 			{props.children}
 		</RightNavContext.Provider>

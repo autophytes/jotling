@@ -443,7 +443,7 @@ const EditorNav = React.memo(({ spellCheck, toggleSpellCheck, editorRef, navSett
 						<ChainSVG />
 					</button>
 
-					{/* Show / Hide Keys/Links */}
+					{/* Show / Hide Keys/Links/Comments */}
 					<button
 						className={'nav-button' + (showAllTags ? ' active' : '')}
 						title='Show Wiki Links'

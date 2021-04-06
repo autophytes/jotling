@@ -7,13 +7,21 @@ import { LeftNavContext } from '../../../../contexts/leftNavContext';
 import AddTagPopper from './AddTagPopper';
 import { findFilePath, retrieveContentAtPropertyPath } from '../../../../utils/utils';
 import { convertSetterToRefSetter } from '../../../../utils/contextUtils';
+import EyeSVG from '../../../../assets/svg/EyeSVG';
+import EyeHideSVG from '../../../../assets/svg/EyeHideSVG';
 
 let fieldTimeouts = {};
 
 const RightNavTags = ({ activeTab }) => {
-	const { wikiMetadata, setWikiMetadata, navData, docStructure, editorStyles } = useContext(
-		LeftNavContext
-	);
+	const {
+		wikiMetadata,
+		setWikiMetadata,
+		navData,
+		docStructure,
+		editorStyles,
+		showAllTags,
+		setShowAllTags,
+	} = useContext(LeftNavContext);
 	const { currentDoc, currentDocTab } = navData;
 	const { displayDoc: metadataDisplayDoc } = wikiMetadata;
 	const { rightNav } = editorStyles;
@@ -275,7 +283,27 @@ const RightNavTags = ({ activeTab }) => {
 
 	return (
 		<>
-			<p className='left-nav-section-title'>{currentDocName}</p>
+			<div
+				style={{
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+					position: 'relative',
+				}}>
+				<p className='left-nav-section-title'>{currentDocName}</p>
+
+				{/* Show / Hide Keys/Links/Comments */}
+				<button
+					className={'nav-button right-nav-header' + (showAllTags ? ' active' : '')}
+					style={{ justifySelf: 'flex-end' }}
+					title='Show Wiki Links'
+					onMouseDown={(e) => {
+						e.preventDefault();
+						setShowAllTags(!showAllTags);
+					}}>
+					{showAllTags ? <EyeSVG /> : <EyeHideSVG />}
+				</button>
+			</div>
 
 			<div className='tags-row'>
 				{tags.map((tag) => (

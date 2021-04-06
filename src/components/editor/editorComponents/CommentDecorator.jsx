@@ -55,14 +55,19 @@ const CommentDecorator = ({
 	childDecorator = {},
 }) => {
 	// CONTEXT
-	const { commentStructure, setCommentStructure, showAllTags } = useContext(LeftNavContext);
-	const { scrollToCommentId, setScrollToCommentId } = useContext(RightNavContext);
+	const { commentStructure, setCommentStructure, showAllTags, navData } = useContext(
+		LeftNavContext
+	);
+	const { scrollToCommentId, setScrollToCommentId, focusCommentId } = useContext(
+		RightNavContext
+	);
 	const { hoverCommentId, setHoverCommentId } = useContext(DecoratorContext);
 
 	// STATE
 	const [commentId, setCommentId] = useState(null);
 	const [comment, setComment] = useState('');
 	const [showPopper, setShowPopper] = useState(false);
+	const [initialCurrentDoc] = useState(navData.currentDoc);
 
 	const [virtualMouseEl, setVirtualMouseEl] = useState({
 		getBoundingClientRect: generateGetBoundingClientRect(),
@@ -70,7 +75,7 @@ const CommentDecorator = ({
 
 	// POPPER
 	//   Note - using state is to monitor for changes - https://popper.js.org/react-popper/v2/
-	const [commentDecoratorEl, setCommentDecoratorEl] = useState(null);
+	// const [commentDecoratorEl, setCommentDecoratorEl] = useState(null);
 	const [popperEl, setPopperEl] = useState(null);
 	const [popperArrowEl, setPopperArrowEl] = useState(null);
 
@@ -115,7 +120,7 @@ const CommentDecorator = ({
 				return prev;
 			}
 		});
-	}, [decoratedText]);
+	}, [decoratedText, navData.currentDoc]);
 
 	// Load in the comment
 	useEffect(() => {
@@ -168,16 +173,36 @@ const CommentDecorator = ({
 		return () => document.removeEventListener('mousemove', handleHoverMouseMove);
 	}, []);
 
+	const cleanupFnRef = useRef(() => null);
+	cleanupFnRef.current = useCallback(() => {
+		if (navData.currentDoc === initialCurrentDoc) {
+			// Check whether the document has changed
+			// If it hasn't, check whether the comment is found in the paragraphs before/after
+			// Be sure to handle empty paragraphs
+			// If the starting blockKey doesn't exist, just check the whole document for the comment
+			// If it's not there, then clean up the comment
+		}
+	}, [navData.currentDoc, initialCurrentDoc]);
+
+	// Additional to-do: make sure that the context menu checking whether in middle of links
+	// doesn't blow up on empty blocks
+
+	useEffect(() => {
+		return () => {
+			cleanupFnRef.current();
+		};
+	}, []);
+
 	return (
 		<>
 			<span
-				style={
-					showAllTags || hoverCommentId === commentId
-						? { borderBottom: '2px solid rgba(var(--color-primary-rgb), 0.3)' }
-						: {}
+				className={
+					'comment-decorator' +
+					(showAllTags || hoverCommentId === commentId || focusCommentId === commentId
+						? ' active'
+						: '')
 				}
-				className={`tempclass-${commentId}`}
-				ref={setCommentDecoratorEl}
+				// ref={setCommentDecoratorEl}
 				onMouseEnter={handleHoverStart}
 				onMouseLeave={handleHoverLeave}
 				data-context-menu-comment-id={commentId}
