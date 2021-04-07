@@ -573,3 +573,36 @@ export const findFirstCommentInSelection = (editorState) => {
 		blockKey: null,
 	};
 };
+
+export const checkIfBlockHasStyle = (block, styleName) => {
+	console.log('styleName:', styleName);
+	const charList = block.getCharacterList();
+
+	console.log('checkIfBlockHasStyle blockKey: ', block.getKey());
+
+	// Looping through the selected characters
+	console.log('charList.size:', charList.size);
+	for (let i = 0; i < charList.size; i++) {
+		if (!charList.size) {
+			continue;
+		}
+
+		// Grab the styles on the character
+		const character = charList.get(i);
+		const charStyles = character.getStyle();
+		if (!charStyles || charStyles.size === 0) {
+			continue;
+		}
+
+		// If the character style contains a comment, return that commentId
+		const commentStyle = charStyles.find((value, key) => key === styleName);
+
+		// Return true if we found a matching style
+		if (commentStyle) {
+			return true;
+		}
+	}
+
+	// No matching style found
+	return false;
+};

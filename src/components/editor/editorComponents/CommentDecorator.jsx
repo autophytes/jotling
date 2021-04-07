@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { EditorBlock } from 'draft-js';
 import { usePopper } from 'react-popper';
 
@@ -6,6 +6,7 @@ import { LeftNavContext } from '../../../contexts/leftNavContext';
 import { RightNavContext } from '../../../contexts/rightNavContext';
 import { DecoratorContext } from '../../../contexts/decoratorContext';
 import { useChildDecorator } from '../editorCustomHooks';
+import { checkIfBlockHasStyle } from '../editorStyleFunctions';
 
 // PROPS INCLUDE
 // blockKey: BlockNodeKey,
@@ -55,9 +56,13 @@ const CommentDecorator = ({
 	childDecorator = {},
 }) => {
 	// CONTEXT
-	const { commentStructure, setCommentStructure, showAllTags, navData } = useContext(
-		LeftNavContext
-	);
+	const {
+		commentStructure,
+		setCommentStructure,
+		showAllTags,
+		navData,
+		editorStateRef,
+	} = useContext(LeftNavContext);
 	const { scrollToCommentId, setScrollToCommentId, focusCommentId } = useContext(
 		RightNavContext
 	);
@@ -175,21 +180,101 @@ const CommentDecorator = ({
 
 	const cleanupFnRef = useRef(() => null);
 	cleanupFnRef.current = useCallback(() => {
+		// Check whether the document has changed
 		if (navData.currentDoc === initialCurrentDoc) {
-			// Check whether the document has changed
+			// TODO - I believe this editorState we're getting is stale
+			const currentContent = editorStateRef.current.getCurrentContent();
+			const startingBlock = currentContent.getBlockForKey(blockKey);
+			const commentStyle = `COMMENT-${commentId}`;
+			console.log('commentStyle:', commentStyle);
+
+			// If the current block still exists, check the blocks before and after
+			if (startingBlock) {
+				// Check if the starting block contains the comment
+				if (checkIfBlockHasStyle(startingBlock, commentStyle)) {
+					// Found another instance of the comment, so no cleanup necessary
+					return true;
+				}
+
+				// Checks blocks either before or after the start for a given comment id
+				const checkBlocksBeforeAfter = (direction) => {
+					console.log('direction:', direction);
+					// Check blocks before
+					let checkedBefore = false;
+					let beforeKey = blockKey;
+					while (!checkedBefore) {
+						console.log('beforeKey:', beforeKey);
+						let beforeBlock =
+							direction === 'BEFORE'
+								? currentContent.getBlockBefore(beforeKey)
+								: currentContent.getBlockAfter(beforeKey);
+
+						// If we found the start of the document, done checking before
+						if (!beforeBlock) {
+							console.log('!beforeBlock:', !beforeBlock);
+							checkedBefore = true;
+							continue;
+						}
+
+						// If no block length, keep searching before
+						if (!beforeBlock.getLength()) {
+							console.log('!beforeBlock.getLength():', !beforeBlock.getLength());
+							beforeKey = beforeBlock.getKey();
+							continue;
+						}
+
+						// This the final block we will check
+						checkedBefore = true;
+
+						if (checkIfBlockHasStyle(beforeBlock, commentStyle)) {
+							console.log('block had style!');
+							return true; // Exit the cleanup function. No cleanup necessary.
+						}
+					}
+					return false;
+				};
+
+				// Look for blocks before/after the starting block for the comment
+				if (checkBlocksBeforeAfter('BEFORE') || checkBlocksBeforeAfter('AFTER')) {
+					// Found another instance of the comment, so no cleanup necessary
+					return true;
+				}
+
+				// Did not find the comment in any block
+				return false;
+			} else {
+				// If we don't have a starting block, check all blocks for the comment
+				const blockArray = currentContent.getBlocksAsArray();
+
+				for (const block of blockArray) {
+					// If we find the comment in a block, return true
+					if (checkIfBlockHasStyle(block, commentStyle)) {
+						return true;
+					}
+				}
+
+				// Did not find the comment in any block
+				return false;
+			}
+
 			// If it hasn't, check whether the comment is found in the paragraphs before/after
 			// Be sure to handle empty paragraphs
 			// If the starting blockKey doesn't exist, just check the whole document for the comment
 			// If it's not there, then clean up the comment
 		}
-	}, [navData.currentDoc, initialCurrentDoc]);
+
+		// if we did switch to another document, the unmount was expected
+	}, [navData.currentDoc, initialCurrentDoc, commentId, blockKey]);
 
 	// Additional to-do: make sure that the context menu checking whether in middle of links
 	// doesn't blow up on empty blocks
+	// TODO - also make sure selectionInMiddleOfStylePrefix on delete comment doesn't blow up on empty blocks
 
 	useEffect(() => {
 		return () => {
-			cleanupFnRef.current();
+			// TODO - clean up the comment if needed
+			const foundComment = cleanupFnRef.current();
+			console.log('foundComment:', foundComment);
 		};
 	}, []);
 

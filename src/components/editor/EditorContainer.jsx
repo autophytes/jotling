@@ -96,16 +96,16 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 	);
 
 	// EDITOR STATE
-	const [editorState, setEditorState] = useState(EditorState.createEmpty());
+	const [editorState, setEditorStateOrig] = useState(EditorState.createEmpty());
 	// Updates the editorStateRef with the updated editorState
-	useEffect(() => {
-		editorStateRef.current = editorState;
-	}, [editorState]);
+	// useEffect(() => {
+	// 	editorStateRef.current = editorState;
+	// }, [editorState]);
 
-	// const setEditorState = useCallback((value) => {
-	// 	// console.log('setEditorState is being called');
-	// 	convertSetterToRefSetter(editorStateRef, setEditorStateOrig, value);
-	// }, []);
+	const setEditorState = useCallback((value) => {
+		// console.log('setEditorState is being called');
+		convertSetterToRefSetter(editorStateRef, setEditorStateOrig, value);
+	}, []);
 
 	// STATE
 	const [spellCheck, setSpellCheck] = useState(false);
