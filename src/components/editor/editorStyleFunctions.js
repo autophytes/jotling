@@ -575,13 +575,10 @@ export const findFirstCommentInSelection = (editorState) => {
 };
 
 export const checkIfBlockHasStyle = (block, styleName) => {
-	console.log('styleName:', styleName);
 	const charList = block.getCharacterList();
 
-	console.log('checkIfBlockHasStyle blockKey: ', block.getKey());
 
 	// Looping through the selected characters
-	console.log('charList.size:', charList.size);
 	for (let i = 0; i < charList.size; i++) {
 		if (!charList.size) {
 			continue;

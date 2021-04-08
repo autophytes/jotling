@@ -180,13 +180,13 @@ const CommentDecorator = ({
 
 	const cleanupFnRef = useRef(() => null);
 	cleanupFnRef.current = useCallback(() => {
-		// Check whether the document has changed
-		if (navData.currentDoc === initialCurrentDoc) {
-			// TODO - I believe this editorState we're getting is stale
+		// Check if the comment id still exists on the page
+		const stillHaveCommentOnPage = () => {
+			// Check whether the document has changed
+
 			const currentContent = editorStateRef.current.getCurrentContent();
 			const startingBlock = currentContent.getBlockForKey(blockKey);
 			const commentStyle = `COMMENT-${commentId}`;
-			console.log('commentStyle:', commentStyle);
 
 			// If the current block still exists, check the blocks before and after
 			if (startingBlock) {
@@ -198,12 +198,10 @@ const CommentDecorator = ({
 
 				// Checks blocks either before or after the start for a given comment id
 				const checkBlocksBeforeAfter = (direction) => {
-					console.log('direction:', direction);
 					// Check blocks before
 					let checkedBefore = false;
 					let beforeKey = blockKey;
 					while (!checkedBefore) {
-						console.log('beforeKey:', beforeKey);
 						let beforeBlock =
 							direction === 'BEFORE'
 								? currentContent.getBlockBefore(beforeKey)
@@ -211,14 +209,12 @@ const CommentDecorator = ({
 
 						// If we found the start of the document, done checking before
 						if (!beforeBlock) {
-							console.log('!beforeBlock:', !beforeBlock);
 							checkedBefore = true;
 							continue;
 						}
 
 						// If no block length, keep searching before
 						if (!beforeBlock.getLength()) {
-							console.log('!beforeBlock.getLength():', !beforeBlock.getLength());
 							beforeKey = beforeBlock.getKey();
 							continue;
 						}
@@ -227,7 +223,6 @@ const CommentDecorator = ({
 						checkedBefore = true;
 
 						if (checkIfBlockHasStyle(beforeBlock, commentStyle)) {
-							console.log('block had style!');
 							return true; // Exit the cleanup function. No cleanup necessary.
 						}
 					}
@@ -261,20 +256,36 @@ const CommentDecorator = ({
 			// Be sure to handle empty paragraphs
 			// If the starting blockKey doesn't exist, just check the whole document for the comment
 			// If it's not there, then clean up the comment
-		}
+		};
 
-		// if we did switch to another document, the unmount was expected
+		// If haven't changed page and don't have comment on page, flag comment for deletion
+		if (navData.currentDoc === initialCurrentDoc && !stillHaveCommentOnPage()) {
+			setCommentStructure((prev) => {
+				// If the comment is not yet flagged for deletion, flag it
+				if (!prev[commentId].shouldDelete) {
+					return {
+						...prev,
+						[commentId]: {
+							...prev[commentId],
+							shouldDelete: true,
+						},
+					};
+				} else {
+					// Otherwise, return the original structure
+					return prev;
+				}
+			});
+		}
 	}, [navData.currentDoc, initialCurrentDoc, commentId, blockKey]);
 
 	// Additional to-do: make sure that the context menu checking whether in middle of links
-	// doesn't blow up on empty blocks
+	// doesn't blow up on empty blocks`
 	// TODO - also make sure selectionInMiddleOfStylePrefix on delete comment doesn't blow up on empty blocks
 
+	// On component unmount, check if we need to delete the comment
 	useEffect(() => {
 		return () => {
-			// TODO - clean up the comment if needed
-			const foundComment = cleanupFnRef.current();
-			console.log('foundComment:', foundComment);
+			cleanupFnRef.current();
 		};
 	}, []);
 

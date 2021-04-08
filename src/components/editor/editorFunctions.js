@@ -1098,20 +1098,27 @@ export const selectionInMiddleOfStylePrefix = (
 	const startBlockKey = selection.getStartKey();
 	const startOffset = selection.getStartOffset();
 	const endBlockKey = selection.getEndKey();
-	const endOffset = selection.getEndOffset();
+	let endOffset = selection.getEndOffset();
 
 	// Find the block containing the character before the selection
 	let startBlock =
 		startOffset === 0
-			? currentContent.getBlockBefore(startBlockKey)
+			? getNonEmptyBlockBeforeAfter(currentContent, startBlockKey, 'BEFORE')
 			: currentContent.getBlockForKey(startBlockKey);
 
 	// Find the block containing the character after the selection
 	let endBlock = currentContent.getBlockForKey(endBlockKey);
-	const isSelectionAtBlockEnd = endBlock.getLength() <= endOffset; // >= ?
-	if (isSelectionAtBlockEnd) {
-		endBlock = currentContent.getBlockAfter(endBlockKey);
+	if (endBlock.getLength() === endOffset || !endBlock.getLength()) {
+		endBlock = getNonEmptyBlockBeforeAfter(currentContent, endBlockKey, 'AFTER');
+		endOffset = 0;
 	}
+
+	// TODO - apply the getNonEmptyBlockAfter to the selectionInMiddleOfLink function
+
+	// const isSelectionAtBlockEnd = endBlock.getLength() <= endOffset; // >= ?
+	// if (isSelectionAtBlockEnd) {
+	// 	endBlock = currentContent.getBlockAfter(endBlockKey);
+	// }
 
 	// If at the start/end of the document, can't be in the middle of a link.
 	if ((!endBlock || !startBlock) && !checkEitherSide) {
@@ -1137,8 +1144,7 @@ export const selectionInMiddleOfStylePrefix = (
 	// Find the matching style for the character after the end
 	let endStyleMatch;
 	if (endBlock) {
-		const endCharList =
-			startBlockKey === endBlockKey ? startCharList : endBlock.getCharacterList();
+		const endCharList = endBlock.getCharacterList();
 		const endIndex = endOffset;
 		const endChar = endCharList.get(endIndex);
 		const endStyles = endChar.getStyle();
@@ -1156,6 +1162,35 @@ export const selectionInMiddleOfStylePrefix = (
 	}
 
 	return false;
+};
+
+// Gets the first block BEFORE/AFTER a block key that is not empty
+const getNonEmptyBlockBeforeAfter = (currentContent, blockKey, direction) => {
+	if (!blockKey) {
+		return null;
+	}
+
+	// Check blocks before
+	let beforeKey = blockKey;
+	while (true) {
+		let beforeBlock =
+			direction === 'BEFORE'
+				? currentContent.getBlockBefore(beforeKey)
+				: currentContent.getBlockAfter(beforeKey);
+
+		// If we found the start of the document, done checking before
+		if (!beforeBlock) {
+			return null;
+		}
+
+		// If no block length, keep searching before
+		if (!beforeBlock.getLength()) {
+			beforeKey = beforeBlock.getKey();
+			continue;
+		}
+
+		return beforeBlock;
+	}
 };
 
 // Returns true if a selected block matches the block type
