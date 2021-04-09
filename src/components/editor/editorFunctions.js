@@ -1050,19 +1050,19 @@ export const selectionInMiddleOfLink = (editorState) => {
 	const startBlockKey = selection.getStartKey();
 	const startOffset = selection.getStartOffset();
 	const endBlockKey = selection.getEndKey();
-	const endOffset = selection.getEndOffset();
+	let endOffset = selection.getEndOffset();
 
 	// Find the block containing the character before the selection
 	let startBlock =
 		startOffset === 0
-			? currentContent.getBlockBefore(startBlockKey)
+			? getNonEmptyBlockBeforeAfter(currentContent, startBlockKey, 'BEFORE')
 			: currentContent.getBlockForKey(startBlockKey);
 
 	// Find the block containing the character after the selection
 	let endBlock = currentContent.getBlockForKey(endBlockKey);
-	let isSelectionAtBlockEnd = endBlock.getLength() <= endOffset; // >= ?
-	if (isSelectionAtBlockEnd) {
-		endBlock = currentContent.getBlockAfter(endBlockKey);
+	if (endBlock.getLength() === endOffset || !endBlock.getLength()) {
+		endBlock = getNonEmptyBlockBeforeAfter(currentContent, endBlockKey, 'AFTER');
+		endOffset = 0;
 	}
 
 	// If at the start/end of the document, can't be in the middle of a link.
@@ -1071,10 +1071,10 @@ export const selectionInMiddleOfLink = (editorState) => {
 	}
 
 	// Find the starting and ending entities
-	let startEntityKey = startBlock.getEntityAt(
+	const startEntityKey = startBlock.getEntityAt(
 		startOffset === 0 ? startBlock.getLength() - 1 : startOffset - 1
 	);
-	let endEntityKey = endBlock.getEntityAt(isSelectionAtBlockEnd ? 0 : endOffset);
+	const endEntityKey = endBlock.getEntityAt(endOffset);
 
 	// If they match and are LINK-SOURCE, then return true
 	if (startEntityKey && startEntityKey === endEntityKey) {
@@ -1112,13 +1112,6 @@ export const selectionInMiddleOfStylePrefix = (
 		endBlock = getNonEmptyBlockBeforeAfter(currentContent, endBlockKey, 'AFTER');
 		endOffset = 0;
 	}
-
-	// TODO - apply the getNonEmptyBlockAfter to the selectionInMiddleOfLink function
-
-	// const isSelectionAtBlockEnd = endBlock.getLength() <= endOffset; // >= ?
-	// if (isSelectionAtBlockEnd) {
-	// 	endBlock = currentContent.getBlockAfter(endBlockKey);
-	// }
 
 	// If at the start/end of the document, can't be in the middle of a link.
 	if ((!endBlock || !startBlock) && !checkEitherSide) {

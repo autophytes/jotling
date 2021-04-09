@@ -427,20 +427,26 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 		let continueForward = true;
 		let forwardKey = currentBlockKey;
 
+		// Loop until we've found the beginning/end of the link
 		while (continueForward) {
+			// Grab the next block
 			let contentBlock =
 				direction === 'BEFORE'
 					? contentState.getBlockAfter(forwardKey)
 					: contentState.getBlockBefore(forwardKey);
 
+			// If the block doesn't exist, we've found the start/end of the page. Stop searching.
 			if (!contentBlock) {
 				continueForward = false;
 				continue;
 			}
 			forwardKey = contentBlock.getKey();
 
-			let contentToAdd, linkStart, linkEnd;
+			// If the block is empty we still need to synchronize an empty string
+			let contentToAdd = !contentBlock.getLength() ? '' : null;
 
+			// Find the linked text in the block to synchronize
+			let linkStart, linkEnd;
 			contentBlock.findEntityRanges(
 				(value) => {
 					let newEntityKey = value.getEntity();
@@ -456,19 +462,21 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 				}
 			);
 
-			if (contentToAdd) {
+			// If we have content we need to synchronize, add to the start/end of the blocks to sync
+			if (contentToAdd !== null) {
 				if (direction === 'BEFORE') {
 					contentArray.push(contentToAdd);
-					if (linkEnd !== contentBlock.getLength()) {
+					if (linkEnd !== contentBlock.getLength() && contentToAdd !== '') {
 						continueForward = false;
 					}
 				} else {
 					contentArray.unshift(contentToAdd);
-					if (linkStart !== 0) {
+					if (linkStart !== 0 && contentToAdd !== '') {
 						continueForward = false;
 					}
 				}
 			} else {
+				// If nothing else to add, done checking this direction
 				continueForward = false;
 			}
 		}
