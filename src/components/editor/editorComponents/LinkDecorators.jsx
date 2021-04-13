@@ -219,6 +219,16 @@ const LinkDestDecorator = ({
 		}
 	}, []);
 
+	useEffect(() => {
+		return () => {
+			const block = contentState.getBlockForKey(blockKey);
+			console.log('decorator unmount blockKey:', blockKey);
+			const blockData = block.getData();
+			const linkId = blockData.get('linkDestId');
+			console.log('decorator unmount linkId:', linkId);
+		};
+	}, [contentState]);
+
 	// Update our linkStructure if the link is alised
 	useEffect(() => {
 		if (!isAliased) {
@@ -499,4 +509,4 @@ const getAllEntityContent = (editorStateRef, currentBlockKey, currentStart, curr
 	// If so, add {blockKey, start, end} to the START of the array as well
 };
 
-export { LinkSourceDecorator, LinkDestDecorator, LinkDestBlock };
+export { LinkSourceDecorator, LinkDestDecorator };

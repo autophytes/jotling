@@ -284,6 +284,62 @@ const EditorContainer = ({ saveProject, setSaveProject }) => {
 			// Going to have to deal with the link stuff differently (they're entities)
 		}
 
+		// Handle DELETE in empty blocks
+		if (command === 'delete') {
+			const selection = editorState.getSelection();
+			if (selection && selection.isCollapsed()) {
+				console.log('selection:', selection);
+				const currentContent = editorState.getCurrentContent();
+				const blockKey = selection.getStartKey();
+				const block = currentContent.getBlockForKey(blockKey);
+
+				if (block && block.getLength() === 0) {
+					// console.log('preOnBackspace editorState:', editorState);
+					// let newEditorState = RichUtils.onBackspace(editorState);
+					// console.log('onBackspace newEditorState:', newEditorState);
+
+					const nextBlockKey = currentContent.getKeyAfter(blockKey);
+					let newSelectionState = selection;
+					if (nextBlockKey) {
+						const emptySelectionState = SelectionState.createEmpty();
+						newSelectionState = emptySelectionState.merge({
+							anchorKey: nextBlockKey,
+							anchorOffset: 0,
+							focusKey: nextBlockKey,
+							focusOffset: 0,
+						});
+
+						// newEditorState = EditorState.forceSelection(newEditorState, newSelectionState);
+					}
+
+					const newBlockMap = currentContent.getBlockMap().delete(blockKey);
+					const newCurrentContent = currentContent.merge({
+						blockMap: newBlockMap,
+						selectionAfter: selection,
+					});
+
+					const finalEditorState = EditorState.push(
+						editorState,
+						newCurrentContent,
+						'remove-range'
+					);
+
+					setEditorState(EditorState.forceSelection(finalEditorState, newSelectionState));
+
+					return 'handled';
+				}
+
+				// Delete this block.
+				// Move cursor to start of next block.
+			}
+
+			// Block length of 0
+			// Selection is collapsed
+
+			// If this is the case, delete the current block and move the cursor to the start
+			// of the next block
+		}
+
 		// If not custom handled, use the default handling
 		// NOTE: RichUtils only handles backspace/delete if collapsed selection
 		let newEditorState = RichUtils.handleKeyCommand(editorState, command);

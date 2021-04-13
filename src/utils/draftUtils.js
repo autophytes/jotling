@@ -155,3 +155,10 @@ export const forEachBlockInSelection = (editorState, callbackFn, selection = nul
 		block = currentContent.getBlockAfter(blockKey);
 	}
 };
+
+// TODO - function that takes in two blocks and returns merged block data
+// Don't merge links, maybe other exceptions? Maybe better to define by what we DO merge
+// We need to make sure images (and maybe others) are kept
+// We'll need to check almost every keystroke for this... if we've selected across paragraphs
+//   and type something, it'll collapse those together. But without handling the keystroke itself,
+//   I'm not sure we can fix this easily. Maybe something in the de-render of the image itself?

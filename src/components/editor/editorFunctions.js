@@ -73,6 +73,7 @@ function getBlockStrategy(blockType) {
 function getBlockDataStrategy(blockDataProp) {
 	return function (contentBlock, callback, contentState) {
 		const blockData = contentBlock.getData();
+
 		if (blockData.has(blockDataProp)) {
 			callback(0, contentBlock.getLength());
 		}
@@ -209,6 +210,7 @@ export const defaultCompositeDecorator = new CompositeDecorator(defaultDecorator
 // UPDATE: if ##topOfPage, insert as first block. ##bottomOfPage is last block.
 // Otherwise, insert after the block key in the initialSectionKey
 
+// Synchronizes LINK-DEST links
 export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 	let contentState = editorState.getCurrentContent();
 	let blockArray = contentState.getBlocksAsArray();
@@ -222,6 +224,19 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		// Get block data
 		const blockData = block.getData();
 		const linkId = blockData.get('linkDestId');
+		console.log('blockKey:', block.getKey());
+		console.log('linkId:', linkId);
+
+		// TODO -  FOR EMPTY BLOCKS IN THE MIDDLE OF LINKS, DOES IT HAVE A LINKID???
+		// Issue - if adding a multiblock link with a blank block in the middle, and then adding content
+		// to that blank block, it keeps adding extra junk to the page
+		// TODO - check if when deleting a block in the middle of a link on a link-source page,
+		// make sure that deletion is registered
+		// Issue - when linking multiple blocks to Crag's Edge, when loading from the editor archives, the
+		// linkDestId is already missing from blocks 2 and 3 in the block data. Save file is grabbing
+		// the current editorState which is already missing those links
+		//   IF we link to crag's edge, delete it, then link 3 blocks again, the issue is already
+		//   there the first time.
 
 		// Skip this block if no linkDestId
 		if (!linkId) {
@@ -255,6 +270,8 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			endOffset: block.getLength(),
 		};
 	}
+
+	// ON SECOND RENDER OF THE PAGE, WE LOSE THE SUBSEQUENT LINK IDS BETWEEN HERE AND EDITORSTATE.PUSH
 
 	// Grabbing all links that should be included on the page
 	const docId = currentDoc.slice(3, -5);
@@ -350,6 +367,24 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 	let linkContentState = newEditorState.getCurrentContent();
 
+	console.log('nonAliasedLinks:', nonAliasedLinks);
+	// {
+	//   1: {
+	//   blockList: [
+	//       "cquap",
+	//       "a0v34",
+	//       "8quo5"
+	//     ],
+	//     endBlockKey: "8quo5",
+	//     endOffset: 110,
+	//     startBlockKey: "cquap",
+	//     startOffset: 0
+	//   }
+	// }
+
+	// TODO THE ERROR IS IN THIS FOR LOOP vvv on the second page load
+	// Somehow on load 2, the 2nd two block keys have changed
+
 	// Sychronize the existing links on the page (non-aliased)
 	for (const linkId of Object.keys(nonAliasedLinks)) {
 		let linkData = nonAliasedLinks[linkId];
@@ -369,8 +404,8 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			}
 		}
 
-		const selectionState = SelectionState.createEmpty();
-		const linkSelectionState = selectionState.merge({
+		const emptySelectionState = SelectionState.createEmpty();
+		const linkSelectionState = emptySelectionState.merge({
 			anchorKey: anchorKey,
 			anchorOffset: anchorOffset,
 			focusKey: linkData.endBlockKey,
@@ -384,7 +419,8 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 			continue;
 		}
 
-		// Update the link text
+		// Replace all of the text into a single block. If the text has line breaks, we'll split it
+		// up into new blocks.
 		linkContentState = Modifier.replaceText(
 			linkContentState,
 			linkSelectionState,
@@ -398,7 +434,7 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 		let newLineIndex = blockText.lastIndexOf('\n');
 
 		while (newLineIndex !== -1) {
-			const newLineSelectionState = selectionState.merge({
+			const newLineSelectionState = emptySelectionState.merge({
 				anchorKey: blockKey,
 				anchorOffset: newLineIndex,
 				focusKey: blockKey,
@@ -407,14 +443,43 @@ export const updateLinkEntities = (editorState, linkStructure, currentDoc) => {
 
 			linkContentState = Modifier.splitBlock(linkContentState, newLineSelectionState);
 
+			// Add the linkId to the newly created block
+			const newBlock = linkContentState.getBlockAfter(blockKey);
+			const newBlockData = newBlock.getData();
+			const updatedBlockData = newBlockData.set('linkDestId', Number(linkId));
+			const newBlockSelectionState = emptySelectionState.merge({
+				anchorKey: newBlock.getKey(),
+				anchorOffset: 0,
+				focusKey: newBlock.getKey(), // Ending position
+				focusOffset: 0,
+			});
+			linkContentState = Modifier.setBlockData(
+				linkContentState,
+				newBlockSelectionState,
+				updatedBlockData
+			);
+
 			block = linkContentState.getBlockForKey(blockKey);
 			blockText = block.getText();
 			newLineIndex = blockText.lastIndexOf('\n');
 		}
 	}
 
+	console.log('// Push the new content block into the editorState 2:');
 	// Push the new content block into the editorState
 	newEditorState = EditorState.push(newEditorState, linkContentState, 'insert-characters');
+	console.log('// Finished push the new content block into the editorState 2:');
+
+	// DELETE ME
+	const newCurrentContent = newEditorState.getCurrentContent();
+	const newBlockArray = newCurrentContent.getBlocksAsArray();
+	for (let block of newBlockArray) {
+		// Get block data
+		const blockData = block.getData();
+		const linkId = blockData.get('linkDestId');
+		console.log('end blockKey:', block.getKey());
+		console.log('end linkId:', linkId);
+	}
 
 	return newEditorState;
 };
